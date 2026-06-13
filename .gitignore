@@ -1,0 +1,56 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.venv/
+venv/
+*.egg-info/
+
+# Secrets — CRITICAL: never commit API keys.
+# The API reads OPENAI_API_KEY from .env; without this line a single
+# `git add .` could leak the key into history.
+.env
+.env.*
+*.key
+
+# Scrape outputs (large, regeneratable)
+scrapes/
+benchmark/summary.csv
+benchmark/runs/
+
+# Poster outputs (~140 MB of generated PNGs; regeneratable from profiles).
+# Force-add specific keepers with `git add -f` — e.g. the reusable Imagen
+# backgrounds in outputs/posters/backgrounds/ that CLAUDE.md says to reuse.
+outputs/
+
+# Cloud-sync and OS artifacts (Google Drive / OneDrive / macOS)
+desktop.ini
+.DS_Store
+Thumbs.db
+
+# Archives and packed snapshots (don't commit zipped copies of the repo)
+*.zip
+*.tar
+*.tar.gz
+repomix.config.json.txt
+project_light.zip
+
+# Sync-conflict duplicates (e.g. "graders (1).py")
+*\ (1).*
+*\ (2).*
+* copy.*
+
+# Local scratch / diagnostics (move keepers into tools/ or scripts/)
+inspect_*.py
+verify_*.py
+api_*.json
+*_diagnostic.txt
+error_log.txt
+candidate_check.txt
+phone_diagnostic.txt
+
+# IDE
+.vscode/
+.idea/
+*.swp

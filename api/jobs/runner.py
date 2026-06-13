@@ -1,0 +1,310 @@
+"""Pipeline stage runner.
+
+Drives the manifest → profile pipeline stage-by-stage, emitting
+StageEvents between stages so the SSE endpoint can stream progress.
+
+Runs in a worker thread (via asyncio.to_thread) because:
+- The scraper uses Playwright (synchronous)
+- The OpenAI SDK calls are blocking
+- We don't want to stall the FastAPI event loop for 30+ seconds
+
+Cross-thread event pushes go through JobStore.emit_threadsafe()
+which marshals back to the original loop via call_soon_threadsafe.
+
+The pipeline imports the SAME functions the CLI uses. No duplication.
+"""
+from __future__ import annotations
+
+import logging
+import os
+import time
+import traceback
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any, Optional
+
+# Pipeline imports — identical to what the CLI uses.
+from business_profile.llm.caller import Caller, MockCaller, OpenAICaller
+from business_profile.llm.evidence_pack import build_evidence_pack
+from business_profile.llm.extractor import run_llm_extraction
+from business_profile.llm.validator import validate_llm_extraction
+from business_profile.merger import merge_profile
+from business_profile.rules.orchestrator import apply_rules
+from scraper import scrape as scraper_scrape
+
+from ..schemas import Stage, StageEvent, StageStatus
+from .store import JobStore
+
+logger = logging.getLogger(__name__)
+
+
+# ---------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------
+
+def _now() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+def _make_event(
+    job_id: str, stage: Stage, status: StageStatus,
+    duration_ms: int = 0,
+    payload: Optional[dict[str, Any]] = None,
+    error: Optional[str] = None,
+) -> StageEvent:
+    return StageEvent(
+        job_id=job_id, stage=stage, status=status, timestamp=_now(),
+        duration_ms=duration_ms, payload=payload, error=error,
+    )
+
+
+# ---------------------------------------------------------------------
+# The main runner
+# ---------------------------------------------------------------------
+
+def run_pipeline_job(
+    job_id: str,
+    url: str,
+    store: JobStore,
+    *,
+    skip_llm: bool = False,
+    model: str = "gpt-4o-mini",
+    persist_to_disk: bool = True,
+    caller_factory: Optional[Any] = None,  # for tests: callable returning a Caller
+    scraper_fn: Optional[Any] = None,      # for tests: callable replacing scraper.scrape
+    output_root: str = "scrapes",
+) -> None:
+    """Run the full pipeline for one job. Called in a worker thread.
+
+    Emits a stream of StageEvents via store.emit_threadsafe(). On any
+    stage failure, emits an ERROR event for that stage and stops; the
+    job transitions to FAILED automatically via the store's status
+    transition rules.
+
+    On success, emits a FINAL/DONE event with the profile in payload
+    (truncated) and stores the full profile via set_result_threadsafe.
+    Optionally persists the profile to disk next to the manifest.
+    """
+    emit = lambda stage, status, **kw: store.emit_threadsafe(
+        job_id, _make_event(job_id, stage, status, **kw),
+    )
+
+    try:
+        # ---- 1. Scrape ----
+        emit(Stage.SCRAPE, StageStatus.STARTED)
+        t0 = time.monotonic()
+        scrape_fn = scraper_fn or scraper_scrape
+        manifest, out_dir = scrape_fn(url, output_root)
+        scrape_ms = int((time.monotonic() - t0) * 1000)
+        manifest_path = str(Path(out_dir) / "manifest.json")
+        emit(
+            Stage.SCRAPE, StageStatus.DONE, duration_ms=scrape_ms,
+            payload={
+                "manifest_path": manifest_path,
+                "pages_succeeded": manifest.scrape_meta.pages_succeeded,
+                "pages_attempted": manifest.scrape_meta.pages_attempted,
+                "ready_for_extraction": manifest.readiness.ready_for_extraction,
+                "languages": [e.code for e in manifest.languages],
+                "failures": len(manifest.failures),
+            },
+        )
+        if not manifest.readiness.ready_for_extraction:
+            # Scrape ran but produced nothing useful — fail fast
+            raise RuntimeError(
+                f"Scrape not ready for extraction: missing {manifest.readiness.major_missing}",
+            )
+
+        # ---- 2. Rules ----
+        emit(Stage.RULES, StageStatus.STARTED)
+        t0 = time.monotonic()
+        rules_profile = apply_rules(manifest, manifest_path=manifest_path)
+        rules_ms = int((time.monotonic() - t0) * 1000)
+        emit(
+            Stage.RULES, StageStatus.DONE, duration_ms=rules_ms,
+            payload={
+                "extractors_used": rules_profile.extraction_meta.rule_extractors_used,
+                "fields_extracted": rules_profile.quality.fields_extracted,
+                "fields_missing": rules_profile.quality.fields_missing,
+                "major_missing": rules_profile.quality.major_missing,
+            },
+        )
+
+        # If skipping LLM, jump straight to FINAL with the rules-only profile
+        if skip_llm:
+            # Persist if requested
+            profile_path: Optional[str] = None
+            if persist_to_disk:
+                profile_path = str(Path(out_dir) / "business_profile.json")
+                Path(profile_path).write_text(
+                    rules_profile.model_dump_json(indent=2),
+                    encoding="utf-8",
+                )
+            profile_dict = rules_profile.model_dump(mode="json")
+            store.set_result_threadsafe(
+                job_id, profile_dict,
+                manifest_path=manifest_path, profile_path=profile_path,
+            )
+            emit(
+                Stage.FINAL, StageStatus.DONE,
+                payload={
+                    "ready_for_strategy": rules_profile.quality.ready_for_strategy,
+                    "fields_extracted": rules_profile.quality.fields_extracted,
+                    "fields_inferred": rules_profile.quality.fields_inferred,
+                    "fields_missing": rules_profile.quality.fields_missing,
+                    "llm_skipped": True,
+                    "profile_path": profile_path,
+                },
+            )
+            return
+
+        # ---- 3. Evidence pack ----
+        emit(Stage.EVIDENCE_PACK, StageStatus.STARTED)
+        t0 = time.monotonic()
+        pack = build_evidence_pack(manifest, rules_profile)
+        pack_ms = int((time.monotonic() - t0) * 1000)
+        emit(
+            Stage.EVIDENCE_PACK, StageStatus.DONE, duration_ms=pack_ms,
+            payload={
+                "blocks_total_in_manifest": pack.blocks_total_in_manifest,
+                "blocks_after_filter": pack.blocks_after_filter,
+                "block_count": pack.block_count,
+                "page_type_distribution": pack.page_type_distribution,
+                "missing_fields": pack.missing_fields,
+            },
+        )
+
+        # ---- 4. LLM extraction ----
+        emit(Stage.LLM, StageStatus.STARTED)
+        t0 = time.monotonic()
+        if caller_factory is not None:
+            caller: Caller = caller_factory()
+        else:
+            caller = OpenAICaller(model=model)
+        # v0.2-b1: surface the rules-derived category so the offerings
+        # prompt can swap in per-category guidance.
+        rules_category_value = (
+            rules_profile.category.value.value
+            if rules_profile.category.value is not None
+            else None
+        )
+        llm_result = run_llm_extraction(
+            pack, caller, rules_category=rules_category_value,
+        )
+        llm_ms = int((time.monotonic() - t0) * 1000)
+        # v0.2-b1: detect silent failure for the LLM stage's DONE event.
+        # If the pipeline asked for LLM (skip_llm=False) but every group
+        # call failed, emit a warning in the event payload so the SSE
+        # consumer can render a red banner instead of a green check.
+        llm_warning: Optional[str] = None
+        if not skip_llm and llm_result.total_calls == 0:
+            llm_warning = "llm_silent_failure: 0/4 group calls succeeded"
+        emit(
+            Stage.LLM, StageStatus.DONE, duration_ms=llm_ms,
+            payload={
+                "calls": llm_result.total_calls,
+                "failed": llm_result.total_failed,
+                "input_tokens": llm_result.total_input_tokens,
+                "output_tokens": llm_result.total_output_tokens,
+                "cost_usd": llm_result.total_cost_usd,
+                "model": llm_result.model,
+                "warning": llm_warning,
+            },
+        )
+
+        # ---- 5. Validate ----
+        emit(Stage.VALIDATE, StageStatus.STARTED)
+        t0 = time.monotonic()
+        payload = validate_llm_extraction(llm_result, pack)
+        validate_ms = int((time.monotonic() - t0) * 1000)
+        emit(
+            Stage.VALIDATE, StageStatus.DONE, duration_ms=validate_ms,
+            payload={
+                "rejections": payload.diagnostics.total_rejections,
+                "fields_dropped": payload.diagnostics.fields_dropped,
+                "items_dropped": dict(payload.diagnostics.items_dropped),
+                # v0.2-b1: candidate visibility + blacklist visibility
+                "candidates_seen": dict(payload.diagnostics.candidates_seen),
+                "blacklist_rejections": {
+                    k: len(v) for k, v in
+                    payload.diagnostics.blacklist_rejections.items()
+                },
+            },
+        )
+
+        # ---- 6. Merge ----
+        emit(Stage.MERGE, StageStatus.STARTED)
+        t0 = time.monotonic()
+        final_profile = merge_profile(
+            rules_profile, payload, llm_result, expected_llm=not skip_llm,
+        )
+        merge_ms = int((time.monotonic() - t0) * 1000)
+        emit(
+            Stage.MERGE, StageStatus.DONE, duration_ms=merge_ms,
+            payload={
+                "ready_for_strategy": final_profile.quality.ready_for_strategy,
+                "ready_for_poster": final_profile.quality.ready_for_poster,
+                "poster_blockers": list(final_profile.quality.poster_blockers),
+                "offerings_extraction_note": final_profile.offerings_extraction_note,
+                "llm_silent_failure": final_profile.llm_silent_failure,
+                "fields_extracted": final_profile.quality.fields_extracted,
+                "fields_inferred": final_profile.quality.fields_inferred,
+                "fields_missing": final_profile.quality.fields_missing,
+                "major_missing": final_profile.quality.major_missing,
+            },
+        )
+
+        # ---- 7. Persist (audit trail) ----
+        profile_path = None
+        if persist_to_disk:
+            profile_path = str(Path(out_dir) / "business_profile.json")
+            Path(profile_path).write_text(
+                final_profile.model_dump_json(indent=2),
+                encoding="utf-8",
+            )
+
+        # ---- 8. Final ----
+        profile_dict = final_profile.model_dump(mode="json")
+        store.set_result_threadsafe(
+            job_id, profile_dict,
+            manifest_path=manifest_path, profile_path=profile_path,
+        )
+        emit(
+            Stage.FINAL, StageStatus.DONE,
+            payload={
+                "ready_for_strategy": final_profile.quality.ready_for_strategy,
+                "ready_for_poster": final_profile.quality.ready_for_poster,
+                "poster_blockers": list(final_profile.quality.poster_blockers),
+                "offerings_extraction_note": final_profile.offerings_extraction_note,
+                "llm_silent_failure": final_profile.llm_silent_failure,
+                "schema_version": final_profile.schema_version,
+                "llm_cost_usd": final_profile.extraction_meta.llm_cost_usd,
+                "llm_calls": final_profile.extraction_meta.llm_calls,
+                "profile_path": profile_path,
+            },
+        )
+
+    except Exception as e:  # noqa: BLE001
+        logger.exception("Pipeline failed for job %s: %s", job_id, e)
+        # Tag the error to the current stage (best effort — check job state)
+        current_stage = _infer_failed_stage(store, job_id)
+        emit(
+            current_stage, StageStatus.ERROR,
+            error=f"{type(e).__name__}: {e}",
+            payload={"traceback": traceback.format_exc(limit=8)},
+        )
+
+
+def _infer_failed_stage(store: JobStore, job_id: str) -> Stage:
+    """Best-effort: return the last STARTED stage as the failed stage."""
+    job = store.get(job_id)
+    if job is None:
+        return Stage.FINAL
+    for ev in reversed(job.events):
+        if ev.status == StageStatus.STARTED:
+            return ev.stage
+    return Stage.SCRAPE
+
+
+def has_openai_key() -> bool:
+    """Used by the run route to fail fast if LLM is requested but key is missing."""
+    return bool(os.environ.get("OPENAI_API_KEY"))

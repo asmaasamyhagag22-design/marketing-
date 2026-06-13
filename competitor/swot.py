@@ -1,0 +1,230 @@
+"""SWOT synthesizer.
+
+Derives the SWOT *mechanically* from the Comparative Gap Matrix so every point is
+traceable to a sourced cell — no free-form generation. Mapping:
+
+    ahead  on any dimension            -> Strength    (you beat peers)
+    behind on a SCRAPED capability     -> Weakness    (internal, fixable)
+    behind on a PLACES dimension        -> Threat      (market position vs peers)
+    whitespace                          -> Opportunity (gap across you + peers)
+
+Review themes (optional, supplied by the theme extractor you build next) augment:
+    complaint theme common to peers     -> Threat (a risk you share) or, if marked
+                                           an unmet need, an Opportunity
+    praise theme common to peers         -> context for Threats
+
+Each SWOTItem carries `citation` (the sources) and `evidence` (the underlying
+detail), which is what you show in the defense.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from typing import List, Optional
+
+from .matrix import ComparativeGapMatrix, DimensionGap, DIMENSIONS
+
+
+@dataclass
+class ReviewTheme:
+    """A theme extracted from competitor reviews (the next module produces these)."""
+    polarity: str                       # "praise" | "complaint"
+    text: str                           # e.g. "long wait times"
+    support: List[str] = field(default_factory=list)   # citations (which peers / how many reviews)
+    is_unmet_need: bool = False         # True => treat as an Opportunity rather than a Threat
+
+
+@dataclass
+class SWOTItem:
+    text: str
+    citation: List[str]                 # sources backing this point
+    evidence: str                       # the underlying matrix detail / theme
+
+
+@dataclass
+class SWOT:
+    strengths: List[SWOTItem] = field(default_factory=list)
+    weaknesses: List[SWOTItem] = field(default_factory=list)
+    opportunities: List[SWOTItem] = field(default_factory=list)
+    threats: List[SWOTItem] = field(default_factory=list)
+    notes: List[str] = field(default_factory=list)
+    mode: str = "competitive"           # "competitive" | "standalone"
+
+
+STANDALONE_LABEL = "Standalone Strategic Analysis (No Competitors Found)"
+STANDALONE_THIN_LABEL = "Standalone Strategic Analysis (competitor comparison too thin)"
+
+
+_SCRAPED_CAPABILITY_KEYS = {
+    "online_booking", "whatsapp", "shows_reviews", "cta_count",
+    "offerings_count", "bilingual", "trust_count", "social_count",
+}
+
+
+def synthesize_swot(
+    matrix: ComparativeGapMatrix,
+    themes: Optional[List[ReviewTheme]] = None,
+) -> SWOT:
+    themes = themes or []
+    swot = SWOT()
+    n_peers = len(matrix.competitors)
+
+    for gap in matrix.gaps:
+        if gap.verdict == "ahead":
+            swot.strengths.append(SWOTItem(gap.detail, _cite_ahead(gap), gap.detail))
+        elif gap.verdict == "behind":
+            if gap.dimension.source == "scraped":
+                # Internal lens: you lack/lag on something on your own site.
+                swot.weaknesses.append(SWOTItem(gap.detail, _cite_behind(gap), gap.detail))
+                # External lens: a real competitor outperforming you on a site
+                # dimension is also a THREAT. This is what populates Threats for
+                # ECOMMERCE / web-discovered peers (which carry NO Places dims) —
+                # without it, an online SWOT's Threats quadrant is always empty.
+                # Grounded: cites the same leading peer(s); only when peers exist.
+                if n_peers > 0:
+                    swot.threats.append(SWOTItem(
+                        text=f"Competitors lead on {gap.dimension.label} where you are behind.",
+                        citation=_cite_behind(gap),
+                        evidence=gap.detail,
+                    ))
+            else:  # places dimension -> market-position threat
+                swot.threats.append(SWOTItem(gap.detail, _cite_places(gap), gap.detail))
+        elif gap.verdict == "whitespace":
+            swot.opportunities.append(SWOTItem(gap.detail, _cite_whitespace(gap, n_peers), gap.detail))
+
+    # review themes (when provided by the extractor you build next)
+    for t in themes:
+        item = SWOTItem(text=t.text, citation=list(t.support) or ["competitor reviews"],
+                        evidence=f"{t.polarity} theme across peers")
+        if t.polarity == "complaint" and t.is_unmet_need:
+            # peers fail at this -> a differentiation opening for you
+            swot.opportunities.append(SWOTItem(
+                text=f"Peers are criticized for {t.text} — an opening to differentiate.",
+                citation=item.citation, evidence=item.evidence))
+        elif t.polarity == "complaint":
+            swot.threats.append(SWOTItem(
+                text=f"{t.text} is a recurring complaint in the category.",
+                citation=item.citation, evidence=item.evidence))
+        # praise themes are kept as notes (context), not forced into a quadrant
+        elif t.polarity == "praise":
+            swot.notes.append(f"Category strength to match: {t.text} ({_short(item.citation)})")
+
+    # ---- Standalone degrade -------------------------------------------------
+    # The competitive synthesis above is purely peer-gap-driven, so with no peers
+    # (or a comparison too thin to clear the evidence bar) it yields nothing.
+    # Rather than emit an empty SWOT, fall back to a profile-only analysis built
+    # from the subject's OWN scraped dimensions. Still fully grounded: UNKNOWN
+    # (None) cells are skipped — we never infer a value (rule #4).
+    competitive_empty = not any(
+        [swot.strengths, swot.weaknesses, swot.opportunities, swot.threats]
+    )
+    if n_peers == 0 or competitive_empty:
+        s, w = _standalone_from_subject(matrix)
+        swot.strengths.extend(s)
+        swot.weaknesses.extend(w)
+        swot.mode = "standalone"
+        swot.notes.insert(0, STANDALONE_LABEL if n_peers == 0 else STANDALONE_THIN_LABEL)
+        swot.notes.append(
+            "Opportunities/Threats need market comparison; supply competitors "
+            "(or a review-theme source) to populate them."
+        )
+
+    if not any([swot.strengths, swot.weaknesses, swot.opportunities, swot.threats]):
+        swot.notes.append("No subject dimensions were known either — the scrape "
+                          "yielded no comparable signal (all cells UNKNOWN).")
+    return swot
+
+
+# ---------------------------------------------------------------------------
+# Standalone (profile-only) synthesis
+# ---------------------------------------------------------------------------
+
+def _standalone_from_subject(matrix: ComparativeGapMatrix):
+    """Derive Strengths/Weaknesses from the subject's own scraped dimensions.
+
+    Grounded in the subject's scrape; cites the dimension + 'your scraped site'.
+    UNKNOWN (None) cells are skipped so we never infer. Counts are the already-
+    deduped values from the matrix (no inflated 'N social links').
+    """
+    vals = matrix.subject.values
+    strengths: List[SWOTItem] = []
+    weaknesses: List[SWOTItem] = []
+    for dim in DIMENSIONS:
+        if dim.source != "scraped":
+            continue
+        v = vals.get(dim.key)
+        if v is None:                       # UNKNOWN — never inferred
+            continue
+        cite = ["your scraped site", dim.key]
+        ev = f"subject {dim.key}={v}"
+        if dim.kind == "bool":
+            if v:
+                strengths.append(SWOTItem(f"{dim.label}: present on site", cite, ev))
+            else:
+                weaknesses.append(SWOTItem(f"{dim.label}: not detected on site", cite, ev))
+        elif dim.kind == "count":
+            if v and v > 0:
+                strengths.append(SWOTItem(f"{dim.label}: {v}", cite, ev))
+            else:
+                weaknesses.append(SWOTItem(f"{dim.label}: none detected", cite, ev))
+    return strengths, weaknesses
+
+
+# ---------------------------------------------------------------------------
+# citation builders
+# ---------------------------------------------------------------------------
+
+def _cite_ahead(gap: DimensionGap) -> List[str]:
+    cites = ["your profile"]
+    if gap.dimension.kind == "bool":
+        without = [k for k, v in gap.competitor_values.items() if not v]
+        if without:
+            cites.append(f"peers without it: {_short(without)}")
+    else:
+        cites.append("Places: peer average" if gap.dimension.source == "places"
+                     else "your scraped site vs peers")
+    return cites
+
+
+def _cite_behind(gap: DimensionGap) -> List[str]:
+    cites = ["your profile"]
+    if gap.dimension.kind == "bool":
+        with_it = [k for k, v in gap.competitor_values.items() if v]
+        if with_it:
+            cites.append(f"peers with it: {_short(with_it)}")
+    return cites
+
+
+def _cite_places(gap: DimensionGap) -> List[str]:
+    label = "Places review volume" if gap.dimension.key == "review_count" else "Places ratings"
+    return [label, f"{len(gap.competitor_values)} peers"]
+
+
+def _cite_whitespace(gap: DimensionGap, n_peers: int) -> List[str]:
+    return ["your profile", f"{len(gap.competitor_values)}/{n_peers} peers also lack it"]
+
+
+def _short(names, k=3):
+    names = list(names)
+    head = ", ".join(str(n) for n in names[:k])
+    return head + (f" +{len(names) - k} more" if len(names) > k else "")
+
+
+# ---------------------------------------------------------------------------
+# pretty-print (for quick inspection / defense)
+# ---------------------------------------------------------------------------
+
+def format_swot(swot: SWOT) -> str:
+    out = ["SWOT — STANDALONE (profile-only)" if swot.mode == "standalone"
+           else "SWOT — COMPETITIVE"]
+    for title, items in (("STRENGTHS", swot.strengths), ("WEAKNESSES", swot.weaknesses),
+                         ("OPPORTUNITIES", swot.opportunities), ("THREATS", swot.threats)):
+        out.append(f"\n{title} ({len(items)})")
+        for it in items:
+            out.append(f"  • {it.text}")
+            out.append(f"      ↳ cite: {'; '.join(it.citation)}")
+    if swot.notes:
+        out.append("\nNOTES")
+        for n in swot.notes:
+            out.append(f"  - {n}")
+    return "\n".join(out)

@@ -1,0 +1,796 @@
+"""Crawler orchestrator.
+
+Drives the full scrape:
+1. Normalize URL and load robots.txt.
+2. Fetch homepage. If blocked or empty -> record failure and stop.
+3. Extract everything from homepage (text blocks, metadata, visual,
+   links, forms, contact, images).
+4. From discovered internal links, classify and tier them.
+5. Fetch top-N high/medium-tier pages within budget, extracting from
+   each.
+6. Aggregate site-wide structures (links, contact, languages).
+7. Compute readiness.
+8. Return ScrapeManifest.
+
+Writes intermediate artifacts (HTML, screenshots, clean text) to disk
+under <output_root>/<domain>_<timestamp>/.
+"""
+from __future__ import annotations
+
+import logging
+import time
+from pathlib import Path
+from typing import Optional
+
+from playwright.sync_api import sync_playwright
+
+from .config import (
+    INTER_PAGE_DELAY_SECONDS,
+    MAX_INTERNAL_PAGES,
+    TOTAL_BUDGET_SECONDS,
+    VIEWPORT_HEIGHT,
+    VIEWPORT_WIDTH,
+)
+from .classify.page_type import classify_homepage, classify_url
+from .errors import ErrorCode
+from .extractors.contact import extract_contact, fill_addresses_from_schema_org
+from .extractors.forms import extract_forms
+from .extractors.images import extract_images_of_interest
+from .extractors.links import build_inventory, extract_links_from_html
+from .extractors.metadata import extract_metadata, merge_metadata
+from .extractors.text_blocks import extract_text_blocks
+from .extractors.visual import build_visual_identity, extract_from_page
+from .fetcher import fetch_page, make_browser_context
+from .language import detect_languages
+from .readiness import compute_readiness
+from .robots import can_fetch, load_robots
+from .time_utils import utc_now
+from .schemas import (
+    FailureRecord,
+    LinkCategory,
+    PageRecord,
+    PageTier,
+    PageType,
+    ScrapeManifest,
+    ScrapeMeta,
+    SiteMetadata,
+    TextBlock,
+)
+from .url_utils import (
+    get_domain_slug,
+    normalize_url,
+    resolve,
+    same_registrable_host,
+)
+
+logger = logging.getLogger(__name__)
+
+
+# ---------------------------------------------------------------------
+# Output dirs
+# ---------------------------------------------------------------------
+
+def _make_output_dir(input_url: str, output_root: str) -> Path:
+    slug = get_domain_slug(input_url)
+    ts = utc_now().strftime("%Y%m%d_%H%M%S")
+    out = Path(output_root) / f"{slug}_{ts}"
+    (out / "raw").mkdir(parents=True, exist_ok=True)
+    (out / "clean").mkdir(parents=True, exist_ok=True)
+    return out
+
+
+def _page_slug(url: str, page_type: PageType, index: int) -> str:
+    """A short, filesystem-safe slug for per-page artifact filenames."""
+    return f"{index:02d}_{page_type.value}"
+
+
+def _write_page_artifacts(
+    out_dir: Path,
+    slug: str,
+    html: str,
+    clean_text: str,
+    full_png: bytes,
+    viewport_png: bytes,
+) -> dict[str, str]:
+    paths = {}
+    if html:
+        p = out_dir / "raw" / f"{slug}.html"
+        p.write_text(html, encoding="utf-8", errors="replace")
+        paths["html_path"] = str(p)
+    if clean_text:
+        p = out_dir / "clean" / f"{slug}.txt"
+        p.write_text(clean_text, encoding="utf-8", errors="replace")
+        paths["clean_text_path"] = str(p)
+    if full_png:
+        p = out_dir / "raw" / f"{slug}_full.png"
+        p.write_bytes(full_png)
+        paths["screenshot_full_path"] = str(p)
+    if viewport_png:
+        p = out_dir / "raw" / f"{slug}_viewport.png"
+        p.write_bytes(viewport_png)
+        paths["screenshot_viewport_path"] = str(p)
+    return paths
+
+
+# ---------------------------------------------------------------------
+# Sub-page selection
+# ---------------------------------------------------------------------
+
+def _select_subpages_to_fetch(
+    homepage_links,
+    site_url: str,
+    homepage_url: str,
+    cap: int = MAX_INTERNAL_PAGES,
+    *,
+    extra_urls: Optional[list[str]] = None,
+) -> list[tuple[str, PageType, PageTier, str]]:
+    """From homepage links (and optional sitemap-discovered URLs), pick
+    the top-N internal pages to fetch.
+
+    Returns a list of (url, page_type, tier, anchor_text), deduped by
+    normalized URL, ordered by tier (HIGH > MEDIUM > LOW). Skips
+    homepage itself and SKIP-tier pages.
+
+    `extra_urls` is an optional flat list of URLs (typically from
+    sitemap.xml). Each is classified by URL only (no anchor text),
+    runs through the same tier/priority pipeline, and is deduped
+    against homepage-discovered links by normalized URL. Homepage
+    links are processed first so that any URL found in both sources
+    keeps its homepage anchor text (which carries more signal than
+    a sitemap entry).
+    """
+    homepage_norm = normalize_url(homepage_url)
+    by_norm: dict[str, tuple[str, PageType, PageTier, str]] = {}
+
+    tier_rank = {PageTier.HIGH: 0, PageTier.MEDIUM: 1, PageTier.LOW: 2, PageTier.SKIP: 99}
+
+    for link in homepage_links:
+        if link.category not in (LinkCategory.INTERNAL, LinkCategory.CTA):
+            continue
+        if not same_registrable_host(link.href, site_url):
+            continue
+        norm = normalize_url(link.href)
+        if norm == homepage_norm:
+            continue
+        pt, tier = classify_url(link.href, link.anchor_text)
+        if tier == PageTier.SKIP:
+            continue
+        # Prefer the higher-tier classification if we've seen this URL before
+        existing = by_norm.get(norm)
+        if existing is None or tier_rank[tier] < tier_rank[existing[2]]:
+            by_norm[norm] = (norm, pt, tier, link.anchor_text)
+
+    # PR-1: merge in extra URLs (typically from sitemap.xml). Classify by
+    # URL only (no anchor text). Homepage anchor text wins on collisions
+    # because it carries more signal — sitemap entries have no anchor.
+    for raw_url in (extra_urls or []):
+        if not same_registrable_host(raw_url, site_url):
+            continue
+        norm = normalize_url(raw_url)
+        if norm == homepage_norm:
+            continue
+        if norm in by_norm:
+            # Already discovered via homepage links; keep that entry's anchor text.
+            continue
+        pt, tier = classify_url(raw_url, anchor_text="")
+        if tier == PageTier.SKIP:
+            continue
+        by_norm[norm] = (norm, pt, tier, "")
+
+    # Sort by tier rank, then by page-type priority within tier.
+    # Lower number = higher priority. Ordering reflects what's most useful
+    # for the LLM evidence pack: contact + offerings pages first, then
+    # location/admissions, then narrative pages, then peripheral content.
+    type_priority = {
+        PageType.HOMEPAGE: -1,
+        # HIGH tier — offerings and contact
+        PageType.CONTACT: 0,
+        PageType.SERVICES: 1,
+        PageType.PRODUCTS: 2,
+        PageType.MENU: 3,
+        PageType.DELIVERY_ORDER: 4,
+        PageType.PRICING: 5,
+        PageType.BOOKING: 6,
+        PageType.BRANCHES_LOCATIONS: 7,
+        PageType.COURSES: 8,
+        PageType.PROGRAMS: 9,
+        PageType.ADMISSIONS: 10,
+        PageType.CATERING: 11,
+        # MEDIUM tier — narrative and social proof
+        PageType.ABOUT: 20,
+        PageType.PORTFOLIO: 21,
+        PageType.TESTIMONIALS: 22,
+        PageType.EVENTS: 23,
+        PageType.OFFERS: 24,
+        PageType.FAQ: 25,
+        # LOW tier — peripheral
+        PageType.GALLERY: 30,
+        PageType.BLOG: 31,
+        PageType.CAREERS: 32,
+        # Catch-all + skip
+        PageType.OTHER: 50,
+        PageType.LEGAL: 99,
+    }
+    candidates = list(by_norm.values())
+    candidates.sort(key=lambda c: (tier_rank[c[2]], type_priority.get(c[1], 50)))
+    return candidates[:cap]
+
+
+# ---------------------------------------------------------------------
+# Per-page extraction
+# ---------------------------------------------------------------------
+
+def _process_fetched_page(
+    fetch_result,
+    page_obj,
+    page_type: PageType,
+    tier: PageTier,
+    out_dir: Path,
+    page_index: int,
+) -> tuple[PageRecord, list, SiteMetadata, list]:
+    """Extract everything from a fetched page."""
+
+    slug = _page_slug(fetch_result.final_url, page_type, page_index)
+
+    # Text blocks
+    text_blocks: list[TextBlock] = []
+    if page_obj is not None:
+        text_blocks = extract_text_blocks(page_obj, fetch_result.final_url)
+
+    # Forms
+    forms = extract_forms(fetch_result.html, fetch_result.final_url)
+
+    # Metadata
+    metadata = extract_metadata(fetch_result.html, fetch_result.final_url)
+
+    # Content quality
+    try:
+        from .extractors.content_quality import extract_content_quality
+
+        cleaned_main_text, has_meaningful_content = (
+            extract_content_quality(
+                fetch_result.html,
+                fetch_result.final_url,
+            )
+        )
+
+    except Exception:
+        cleaned_main_text, has_meaningful_content = (None, False)
+
+    # Next.js __NEXT_DATA__
+    try:
+        from .extractors.next_data import extract_next_data
+
+        next_data_result = extract_next_data(
+            fetch_result.html,
+            fetch_result.final_url,
+        )
+
+    except Exception:
+        from .extractors.next_data import NextDataResult
+
+        next_data_result = NextDataResult()
+
+    # Links
+    links = extract_links_from_html(
+        fetch_result.html,
+        fetch_result.final_url,
+        fetch_result.url,
+        text_blocks,
+    )
+
+    # Images
+    images = extract_images_of_interest(
+        fetch_result.html,
+        fetch_result.final_url,
+        metadata.og_image,
+    )
+
+    # Artifacts
+    artifacts = _write_page_artifacts(
+        out_dir,
+        slug,
+        fetch_result.html,
+        fetch_result.rendered_text,
+        fetch_result.full_screenshot_bytes,
+        fetch_result.viewport_screenshot_bytes,
+    )
+
+    # Failures
+    page_failures = []
+
+    if getattr(fetch_result, "partial_content", False):
+        page_failures.append(
+            FailureRecord(
+                code=ErrorCode.TIMEOUT,
+                message=(
+                    getattr(fetch_result, "partial_reason", None)
+                    or "timeout_partial_content_salvaged"
+                ),
+                page_url=fetch_result.final_url,
+            )
+        )
+
+    # -----------------------------------------------------------------
+    # Merge next_data results
+    # -----------------------------------------------------------------
+
+    if next_data_result.found:
+
+        # Schema blocks
+        if next_data_result.schema_blocks:
+
+            try:
+                from .extractors.structured_data import (
+                    dedupe_schema_blocks,
+                )
+
+                combined = (
+                    list(metadata.schema_org)
+                    + list(next_data_result.schema_blocks)
+                )
+
+                metadata = metadata.model_copy(
+                    update={
+                        "schema_org": dedupe_schema_blocks(combined)
+                    }
+                )
+
+            except Exception:
+
+                metadata = metadata.model_copy(
+                    update={
+                        "schema_org": (
+                            list(metadata.schema_org)
+                            + list(next_data_result.schema_blocks)
+                        )
+                    }
+                )
+
+        # CTA candidates
+        if next_data_result.cta_candidates:
+
+            existing = {
+                (
+                    (getattr(l, "anchor_text", "") or "")
+                    .strip()
+                    .lower(),
+
+                    normalize_url(
+                        getattr(l, "href", "")
+                    ),
+                )
+                for l in links
+            }
+
+            for c in next_data_result.cta_candidates:
+
+                key = (
+                    (c.anchor_text or "")
+                    .strip()
+                    .lower(),
+
+                    normalize_url(c.href),
+                )
+
+                if key not in existing:
+                    existing.add(key)
+                    links.append(c)
+
+        # inferred internal urls
+        if next_data_result.inferred_internal:
+
+            existing_urls = {
+                normalize_url(
+                    getattr(l, "href", "")
+                )
+                for l in links
+            }
+
+            for inferred_link in next_data_result.inferred_internal:
+
+                inferred_norm = normalize_url(
+                    inferred_link.href
+                )
+
+                if inferred_norm not in existing_urls:
+                    existing_urls.add(inferred_norm)
+                    links.append(inferred_link)
+
+    # -----------------------------------------------------------------
+    # Dominance heuristic
+    # -----------------------------------------------------------------
+
+    dom_text_chars = sum(
+        len(b.text)
+        for b in text_blocks
+        if b.text
+    )
+
+    next_data_likely_dominant = (
+        next_data_result.found
+        and (
+            next_data_result.payload_size_bytes
+            > 10 * max(dom_text_chars, 1)
+        )
+    )
+
+    # -----------------------------------------------------------------
+    # Final PageRecord
+    # -----------------------------------------------------------------
+
+    record = PageRecord(
+        url=fetch_result.url,
+        final_url=fetch_result.final_url,
+        http_status=fetch_result.http_status,
+        fetched_at=fetch_result.fetched_at,
+        fetch_duration_ms=fetch_result.duration_ms,
+        page_type=page_type,
+        tier=tier,
+        content_hash=fetch_result.content_hash,
+        screenshot_hash=fetch_result.screenshot_hash,
+        html_path=artifacts.get("html_path"),
+        clean_text_path=artifacts.get("clean_text_path"),
+        screenshot_full_path=artifacts.get(
+            "screenshot_full_path"
+        ),
+        screenshot_viewport_path=artifacts.get(
+            "screenshot_viewport_path"
+        ),
+        viewport_width=VIEWPORT_WIDTH,
+        viewport_height=VIEWPORT_HEIGHT,
+        text_blocks=text_blocks,
+        forms=forms,
+        failures=page_failures,
+        cleaned_main_text=cleaned_main_text,
+        has_meaningful_content=has_meaningful_content,
+        next_data_found=next_data_result.found,
+        next_data_payload_size_bytes=(
+            next_data_result.payload_size_bytes
+        ),
+        next_data_likely_dominant=(
+            next_data_likely_dominant
+        ),
+    )
+
+    return (
+        record,
+        links,
+        metadata,
+        images,
+        next_data_result.phones,
+    )
+# ---------------------------------------------------------------------
+# Top-level scrape entry point
+# ---------------------------------------------------------------------
+
+def scrape(input_url: str, output_root: str = "scrapes") -> tuple[ScrapeManifest, Path]:
+    """Scrape one business URL and return (manifest, output_dir).
+
+    Always returns a manifest, even on failure — failures are
+    recorded inside.
+    """
+    started = time.monotonic()
+    normalized = normalize_url(input_url)
+    out_dir = _make_output_dir(normalized, output_root)
+
+    manifest = ScrapeManifest(
+        scrape_meta=ScrapeMeta(
+            input_url=input_url,
+            normalized_url=normalized,
+            scraped_at=utc_now(),
+        ),
+        robots=load_robots(normalized)[1],  # placeholder; replaced below
+        readiness=_empty_readiness(),
+    )
+
+    # ---- robots.txt -----------------------------------------------
+    rp, robots_record = load_robots(normalized)
+    manifest.robots = robots_record
+    if not robots_record.allowed:
+        manifest.failures.append(FailureRecord(
+            code=ErrorCode.ROBOTS_DISALLOWED,
+            message="Homepage disallowed by robots.txt",
+            page_url=normalized,
+        ))
+        manifest.scrape_meta.duration_ms = int((time.monotonic() - started) * 1000)
+        manifest.readiness = compute_readiness(manifest)
+        _write_manifest(manifest, out_dir)
+        return manifest, out_dir
+
+    # ---- Sitemap discovery (PR-1) ---------------------------------
+    # Pull URLs from Sitemap: directives in robots.txt and, if those
+    # weren't present, try the default /sitemap.xml location. URLs are
+    # same-host filtered and capped (see scraper.sitemap). Failures
+    # are recorded as notes but never block the crawl.
+    try:
+        from .sitemap import discover_sitemap_urls
+        sitemap_result = discover_sitemap_urls(normalized, robots_record)
+        if sitemap_result.notes:
+            manifest.notes.extend(f"sitemap:{n}" for n in sitemap_result.notes)
+    except Exception as exc:  # never fail the scrape because of sitemap issues
+        logger.warning("sitemap discovery raised: %s", exc)
+        from .sitemap import SitemapDiscoveryResult
+        sitemap_result = SitemapDiscoveryResult()
+        manifest.notes.append("sitemap:discovery_raised_exception")
+
+    # ---- Browser session ------------------------------------------
+    all_links = []
+    all_html_by_page: dict[str, str] = {}
+    all_text_blocks_by_page: dict[str, list[TextBlock]] = {}
+    all_page_texts: list[str] = []
+    html_lang_hints: list[str] = []
+    site_metadata = SiteMetadata()
+    visual_built = False
+    # 2026-05 PR-next-data: phones extracted from Next.js __NEXT_DATA__
+    # i18n keys flow up to manifest.contact alongside DOM/href-derived
+    # phones at the manifest-finalization step below.
+    all_next_data_phones: list = []
+
+    with sync_playwright() as pw:
+        # --disable-http2: some servers/CDNs reset HTTP/2 from headless Chromium,
+        # causing net::ERR_HTTP2_PROTOCOL_ERROR before any page can load (MEASURED
+        # on lcwaikiki.eg, 2026-06-11: 1 page attempted, 0 succeeded, RENDER_ERROR).
+        # Forcing HTTP/1.1 is a universally-safe transport fallback (works
+        # everywhere, marginally slower) — NOT anti-bot evasion.
+        browser = pw.chromium.launch(headless=True, args=["--disable-http2"])
+        try:
+            context = make_browser_context(browser)
+            try:
+                # ---- Fetch homepage -------------------------------
+                home_result = fetch_page(context, normalized, keep_page=True)
+                manifest.scrape_meta.pages_attempted += 1
+                manifest.scrape_meta.bytes_downloaded += home_result.bytes_downloaded
+
+                if not home_result.ok:
+                    manifest.failures.append(FailureRecord(
+                        code=home_result.error_code or ErrorCode.UNKNOWN_ERROR,
+                        message=home_result.error_message or "homepage fetch failed",
+                        page_url=normalized,
+                    ))
+                    if home_result._page is not None:
+                        try:
+                            home_result._page.close()
+                        except Exception:
+                            pass
+                    # Tier-3 Deep Search fallback: the direct scrape got nothing
+                    # first-party (bot wall / empty / network). Recover SECONDARY
+                    # evidence from web search before giving up. This is honest and
+                    # supplementary — it does NOT flip readiness to ready.
+                    try:
+                        from .deep_search import gather_deep_search_evidence
+                        manifest.deep_search = gather_deep_search_evidence(normalized)
+                        if manifest.deep_search and manifest.deep_search.used:
+                            manifest.notes.append(
+                                "deep_search fallback used (blocked/empty scrape): "
+                                f"name={manifest.deep_search.business_name!r}, "
+                                f"{len(manifest.deep_search.social_links)} social, "
+                                f"{len(manifest.deep_search.sources)} sources."
+                            )
+                    except Exception as exc:                       # never crash the run
+                        manifest.notes.append(f"deep_search fallback errored: {exc!r}")
+                    manifest.scrape_meta.duration_ms = int((time.monotonic() - started) * 1000)
+                    manifest.readiness = compute_readiness(manifest)
+                    _write_manifest(manifest, out_dir)
+                    return manifest, out_dir
+
+                manifest.scrape_meta.final_url = home_result.final_url
+                manifest.scrape_meta.pages_succeeded += 1
+
+                # Visual identity from homepage (only place we read computed CSS)
+                computed = extract_from_page(home_result._page, home_result.final_url)
+                manifest.visual = build_visual_identity(
+                    home_result.full_screenshot_bytes, computed, home_result.final_url
+                )
+                visual_built = True
+
+                # Process homepage extractions
+                home_type, home_tier = classify_homepage(home_result.final_url)
+                home_record, home_links, home_meta, home_images, home_nd_phones = _process_fetched_page(
+                    home_result, home_result._page, home_type, home_tier, out_dir, 0
+                )
+
+                # Close the live homepage page
+                try:
+                    home_result._page.close()
+                except Exception:
+                    pass
+
+                manifest.pages.append(home_record)
+                all_links.extend(home_links)
+                all_html_by_page[home_result.final_url] = home_result.html
+                all_text_blocks_by_page[home_result.final_url] = home_record.text_blocks
+                all_page_texts.append(home_result.rendered_text)
+                all_next_data_phones.extend(home_nd_phones)
+                if home_meta.html_lang:
+                    html_lang_hints.append(home_meta.html_lang)
+                site_metadata = merge_metadata(home_meta, site_metadata)
+                manifest.images_of_interest.extend(home_images)
+
+                # ---- Select subpages -----------------------------
+                subpages = _select_subpages_to_fetch(
+                    home_links, normalized, home_result.final_url,
+                    extra_urls=sitemap_result.urls,
+                )
+
+                # ---- Fetch subpages within budget ----------------
+                for i, (sub_url, pt, tier, anchor) in enumerate(subpages, start=1):
+                    elapsed = time.monotonic() - started
+                    if elapsed > TOTAL_BUDGET_SECONDS:
+                        manifest.scrape_meta.budget_exceeded = True
+                        manifest.notes.append(
+                            f"Budget exceeded after {i-1} subpages (elapsed {elapsed:.1f}s)"
+                        )
+                        break
+
+                    if not can_fetch(rp, sub_url):
+                        manifest.failures.append(FailureRecord(
+                            code=ErrorCode.ROBOTS_DISALLOWED,
+                            message="Subpage disallowed by robots.txt",
+                            page_url=sub_url,
+                        ))
+                        continue
+
+                    # Polite delay
+                    delay = max(INTER_PAGE_DELAY_SECONDS, manifest.robots.crawl_delay_seconds)
+                    time.sleep(delay)
+
+                    manifest.scrape_meta.pages_attempted += 1
+                    sub_result = fetch_page(context, sub_url, keep_page=True)
+                    manifest.scrape_meta.bytes_downloaded += sub_result.bytes_downloaded
+
+                    if not sub_result.ok:
+                        manifest.failures.append(FailureRecord(
+                            code=sub_result.error_code or ErrorCode.UNKNOWN_ERROR,
+                            message=sub_result.error_message or "subpage fetch failed",
+                            page_url=sub_url,
+                        ))
+                        if sub_result._page is not None:
+                            try:
+                                sub_result._page.close()
+                            except Exception:
+                                pass
+                        continue
+
+                    manifest.scrape_meta.pages_succeeded += 1
+
+                    sub_record, sub_links, sub_meta, sub_images, sub_nd_phones = _process_fetched_page(
+                        sub_result, sub_result._page, pt, tier, out_dir, i
+                    )
+                    try:
+                        sub_result._page.close()
+                    except Exception:
+                        pass
+
+                    manifest.pages.append(sub_record)
+                    all_links.extend(sub_links)
+                    all_html_by_page[sub_result.final_url] = sub_result.html
+                    all_text_blocks_by_page[sub_result.final_url] = sub_record.text_blocks
+                    all_page_texts.append(sub_result.rendered_text)
+                    all_next_data_phones.extend(sub_nd_phones)
+                    if sub_meta.html_lang:
+                        html_lang_hints.append(sub_meta.html_lang)
+                    site_metadata = merge_metadata(site_metadata, sub_meta)
+                    manifest.images_of_interest.extend(sub_images)
+
+            finally:
+                try:
+                    context.close()
+                except Exception:
+                    pass
+        finally:
+            try:
+                browser.close()
+            except Exception:
+                pass
+
+    # ---- Site-wide aggregations -----------------------------------
+    manifest.site_metadata = site_metadata
+    manifest.contact = extract_contact(all_html_by_page, all_text_blocks_by_page)
+    # 2026-05 PR-next-data: merge Next.js-derived phones (whitelisted
+    # i18n hotline keys) into manifest.contact.phones. Dedupe against
+    # the DOM/href-derived phones already there by digit-string.
+    if all_next_data_phones:
+        seen = set()
+        for p in manifest.contact.phones:
+            key = p.e164 or p.raw
+            if key:
+                seen.add(key)
+        for p in all_next_data_phones:
+            key = p.e164 or p.raw
+            if not key or key in seen:
+                continue
+            seen.add(key)
+            manifest.contact.phones.append(p)
+    # Enrich contact addresses from schema.org PostalAddress
+    if manifest.pages:
+        fill_addresses_from_schema_org(
+            manifest.contact, site_metadata.schema_org, manifest.pages[0].final_url
+        )
+    manifest.links = build_inventory(all_links)
+    manifest.languages = detect_languages(all_page_texts, html_lang_hints)
+
+    if not visual_built:
+        # Should not happen since homepage build is required, but guard
+        manifest.notes.append("Visual identity was not extracted (no homepage screenshot)")
+
+    if not manifest.links.internal:
+        manifest.notes.append("No internal links discovered from homepage")
+        manifest.failures.append(FailureRecord(
+            code=ErrorCode.NO_INTERNAL_LINKS_FOUND,
+            message="Homepage had no usable internal links",
+            page_url=manifest.scrape_meta.final_url or normalized,
+        ))
+
+    # Finalize
+    manifest.scrape_meta.duration_ms = int((time.monotonic() - started) * 1000)
+
+    # PR-1: ScrapeDiagnostics — small counts that explain "how
+    # comprehensive was the crawl". The business_profile readiness
+    # layer (Stage F-readiness) reads these to decide whether
+    # single-page evidence is a hard block or a soft warning.
+    from .schemas import ScrapeDiagnostics
+    # PR-3: prefer the trafilatura-derived `has_meaningful_content`
+    # signal when it's populated. Falls back to "has any text_blocks"
+    # for pages where content_quality couldn't run (e.g. trafilatura
+    # missing). The fallback preserves the pre-PR-3 behavior.
+    def _page_carries_real_text(p) -> bool:
+        if getattr(p, "has_meaningful_content", False):
+            return True
+        # Fallback: pages with text_blocks but no content_quality signal
+        # (could be a legacy manifest, or trafilatura wasn't installed).
+        if p.cleaned_main_text is None and p.text_blocks:
+            return True
+        return False
+    pages_with_text = sum(1 for p in manifest.pages if _page_carries_real_text(p))
+    pages_failed = sum(
+        1 for f in manifest.failures
+        if f.code in (ErrorCode.ROBOTS_DISALLOWED, ErrorCode.UNKNOWN_ERROR)
+        or (f.page_url and f.page_url != normalized)
+    )
+    # `pages_discovered` reflects all URLs that survived classification
+    # (homepage + sitemap, post-dedupe), before the per-scrape budget
+    # potentially cut them off. We approximate from what we see in the
+    # manifest plus any uncrawled candidates: in practice equal to
+    # pages_attempted when budget wasn't exceeded.
+    discovered = max(
+        manifest.scrape_meta.pages_attempted,
+        len(manifest.pages) + len(sitemap_result.urls),
+    )
+
+    manifest.scrape_diagnostics = ScrapeDiagnostics(
+        pages_discovered=discovered,
+        pages_scraped=manifest.scrape_meta.pages_succeeded,
+        pages_with_text_blocks=pages_with_text,
+        pages_failed=pages_failed,
+        sitemap_used=sitemap_result.sitemap_used,
+        sitemap_urls_found=sitemap_result.sitemap_urls_found,
+        js_rendering_used=True,
+    )
+
+    manifest.readiness = compute_readiness(manifest)
+
+    _write_manifest(manifest, out_dir)
+    return manifest, out_dir
+
+
+# ---------------------------------------------------------------------
+# helpers
+# ---------------------------------------------------------------------
+
+def _empty_readiness():
+    from .schemas import ReadinessReport
+    return ReadinessReport(
+        has_homepage=False, has_internal_pages=False,
+        has_contact_signals=False, has_visual_signals=False,
+        has_cta_candidates=False, has_metadata=False,
+        major_missing=[], ready_for_extraction=False,
+    )
+
+
+def _write_manifest(manifest: ScrapeManifest, out_dir: Path) -> None:
+    p = out_dir / "manifest.json"
+    p.write_text(
+        manifest.model_dump_json(indent=2, exclude_none=False),
+        encoding="utf-8",
+    )
