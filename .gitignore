@@ -47,8 +47,13 @@ verify_*.py
 api_*.json
 *_diagnostic.txt
 error_log.txt
+error.txt
+output.txt
 candidate_check.txt
 phone_diagnostic.txt
+
+# Claude Code local settings (personal/machine-specific; shared settings.json stays tracked)
+.claude/settings.local.json
 
 # IDE
 .vscode/
