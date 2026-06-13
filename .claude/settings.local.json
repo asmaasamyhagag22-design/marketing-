@@ -59,7 +59,8 @@
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" --max-time 5 http://localhost:3000)",
       "PowerShell(try { \\(Get-Command python -ErrorAction Stop\\).Source } catch { 'no python on PATH' }; try { \\(Get-Command py -ErrorAction Stop\\).Source } catch { 'no py launcher' }; @\\('C:\\\\Users\\\\asmaa\\\\anaconda3\\\\envs\\\\marketing_scraper\\\\python.exe', 'C:\\\\Users\\\\Admin\\\\anaconda3\\\\envs\\\\marketing_scraper\\\\python.exe', 'C:\\\\Users\\\\Admin\\\\miniconda3\\\\envs\\\\marketing_scraper\\\\python.exe', 'C:\\\\ProgramData\\\\anaconda3\\\\envs\\\\marketing_scraper\\\\python.exe'\\) | ForEach-Object { \"$_ : $\\(Test-Path $_\\)\" })",
       "Bash(\"C:/Users/Admin/.conda/envs/marketing_scraper/python.exe\" -m pytest tests/test_web_discovery.py -q)",
-      "Bash(\"C:/Users/Admin/.conda/envs/marketing_scraper/python.exe\" -m pytest -q)"
+      "Bash(\"C:/Users/Admin/.conda/envs/marketing_scraper/python.exe\" -m pytest -q)",
+      "Bash(\"C:/Users/Admin/.conda/envs/marketing_scraper/python.exe\" -m pytest \"tests/test_benchmark_graders \\(1\\).py\" tests/test_text_contact_scan_and_grader.py -q)"
     ]
   }
 }

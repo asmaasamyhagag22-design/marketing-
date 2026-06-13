@@ -405,6 +405,20 @@ pinned). Full suite RUN: was 9 failed / 476 passed; after the web-discovery fix 
   (~140 MB of generated PNGs) to `.gitignore` — `git add -f` to keep specific reusable
   Imagen backgrounds.
 
+## Done — benchmark graders + report built (suite 0 skips) (2026-06-13) ✅
+Built the two modules the harness + tests required (`benchmark/runner.py` already
+imported them): `benchmark/graders.py` (`Grade`, `UrlGradeSet.avg_score(only_swot_critical=)`,
+the 8 structural `grade_*` + the `grade_fuzzy_*` graders, `grade_profile` -> 16 grades /
+7 SWOT-critical; helpers `_norm` NFKD diacritics + `_strip_chrome`) and
+`benchmark/report.py` (`aggregate` + `write_results_json`/`write_report_md`). Scoring was
+DERIVED from the existing spec (`tests/test_benchmark_graders`), not invented: name =
+exact / chrome-stripped / brand-token / non-Latin-via-URL-slug; offerings tier-aware;
+fuzzy = token coverage (full->1.0, >=25%->0.5, else 0.0); no ground truth -> score None
+(ungraded, excluded from averages). The `@requires_graders` guards now no-op (modules
+exist) so those tests RUN. MEASURED: full suite **518 passed, 0 skipped, 0 failed**
+(was 477 / 9 skipped); `benchmark.runner` imports clean. Scores against
+`benchmark/urls.json` + `ground_truth.json` on a live run; only the unit spec is checked here.
+
 ## Backlog (each its own measured fix)
 - **Consume deep_search in build_profile:** emit a degraded, secondary-sourced
   profile when the first-party scrape was blocked (confidence policy = product call).
@@ -418,13 +432,6 @@ pinned). Full suite RUN: was 9 failed / 476 passed; after the web-discovery fix 
 - Wire `subject_places` into `build_matrix` (n=1 -> n=3; fills the THREATS quadrant).
 - SSRF depth: crawler-followed sub-page/sitemap links + DNS-rebinding (pin resolved IP).
 - contact_phone rubric: treat WhatsApp as equivalent to phone for MENA markets.
-- Build `benchmark/graders.py` + `benchmark/report.py` from their spec in
-  `tests/test_benchmark_graders` (`Grade`/`UrlGradeSet`, the `grade_*` + `grade_fuzzy_*`
-  structural/fuzzy graders, `grade_profile`, `_norm`/`_strip_chrome`, `aggregate`).
-  `benchmark/` has `run.py`/`runner.py`/`__init__.py` but no `graders.py`. The 8
-  `grade_*` tests are skip-guarded until it lands (see Done above) so the suite is green.
-  (The old "8 fail + 4 collection errors" note was stale: RE-MEASURED = 8 fail, 0
-  collection errors; now 0 fail / skipped.)
 - Web-discovery aggregator denylist is HOST-BASED only (`_AGGREGATOR_HOSTS`), so a
   listicle on an unlisted domain (observed live: "The 15 Best Running Shoes of 2026")
   passes as a peer. Measure prevalence on real SERP output before adding title/pattern
