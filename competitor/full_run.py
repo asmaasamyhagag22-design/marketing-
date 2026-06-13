@@ -111,6 +111,9 @@ def main():
                     help="skip the Anthropic review-theme extraction step")
     ap.add_argument("--json", action="store_true",
                     help="print the SWOT as JSON to stdout (progress goes to stderr)")
+    ap.add_argument("--out", default=None,
+                    help="path to write the full result JSON (profile + competitors + "
+                         "SWOT). Default: result.json inside the scrape's output folder.")
     args = ap.parse_args()
 
     # Progress -> stderr when --json, so stdout stays valid, pipeable JSON.
@@ -123,7 +126,7 @@ def main():
         return 2
 
     say("[1/5] scraping subject site: %s" % args.url)
-    manifest, _ = scrape(args.url)
+    manifest, scrape_dir = scrape(args.url)
 
     say("[2/5] building BusinessProfile (OpenAI extraction)...")
     caller = _make_caller()
@@ -176,10 +179,41 @@ def main():
 
     swot = synthesize_swot(matrix, themes=themes)
 
+    # --- consolidated result -> output file ------------------------------------
+    # Everything the run produced, grounded: the subject profile, the discovered
+    # competitors (with their why_selected provenance), and the cited SWOT. The
+    # profile is pydantic (model_dump); competitors + SWOT are dataclasses (asdict).
+    import dataclasses
+    import json as _json
+    from datetime import datetime, timezone
+
+    swot_json = dataclasses.asdict(swot)            # mode + 4 quadrants + notes
+    result_doc = {
+        "subject_url": args.url,
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "subject_category": _category_str(profile),
+        "competitor_count": n,
+        "scrapable_benchmarks": scrapable,
+        "discovery_notes": list(getattr(result, "notes", []) or []),
+        "profile": (
+            profile.model_dump(mode="json")
+            if hasattr(profile, "model_dump") else str(profile)
+        ),
+        "competitors": [dataclasses.asdict(c) for c in result.competitors],
+        "swot": swot_json,
+    }
+
+    out_path = Path(args.out) if args.out else (Path(scrape_dir) / "result.json")
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(
+        _json.dumps(result_doc, ensure_ascii=False, indent=2, default=str),
+        encoding="utf-8",
+    )
+    say("\n[ok] wrote full result (profile + competitors + SWOT) -> %s"
+        % out_path.resolve())
+
     if args.json:
-        import dataclasses
-        import json as _json
-        payload = dataclasses.asdict(swot)          # mode + 4 quadrants + notes
+        payload = dict(swot_json)
         payload["competitor_count"] = n
         print(_json.dumps(payload, ensure_ascii=False, indent=2))
     else:

@@ -57,6 +57,8 @@ URL
 - Scrape a URL -> manifest:           `python -m scraper <url>` (writes scrapes/<slug>/manifest.json)
 - Manifest -> BusinessProfile JSON:    `python -m business_profile <manifest.json> -o profile.json`
 - Full competitor -> SWOT on one URL: `python -m competitor.full_run <url>` (route_discovery; standalone on 0 peers)
+    Writes a consolidated `result.json` (profile + competitors + SWOT) into the scrape's
+    output folder (`scrapes/<slug>_<ts>/result.json`); override the path with `--out PATH`.
     flags: `--json` (SWOT as JSON to stdout, progress to stderr), `--no-themes` (skip Anthropic).
 - Poster from a profile JSON:          `python -m poster <profile.json> --out poster.png`
     flags: `--no-image` (offline stub bg), `--static-concept` (skip LLM art-director).
@@ -418,6 +420,19 @@ fuzzy = token coverage (full->1.0, >=25%->0.5, else 0.0); no ground truth -> sco
 exist) so those tests RUN. MEASURED: full suite **518 passed, 0 skipped, 0 failed**
 (was 477 / 9 skipped); `benchmark.runner` imports clean. Scores against
 `benchmark/urls.json` + `ground_truth.json` on a live run; only the unit spec is checked here.
+
+## Done — full_run writes a consolidated result file (2026-06-13) ✅
+`competitor/full_run.py` previously only PRINTED the SWOT to stdout. It now also
+WRITES a consolidated `result.json` after a run: `subject_url`, `generated_at`,
+`subject_category`, `competitor_count`, `scrapable_benchmarks`, `discovery_notes`, the
+full `profile` (pydantic `model_dump(mode="json")`), the discovered `competitors`
+(dataclass `asdict`, incl. each peer's `why_selected` provenance), and the cited
+`swot`. Default path = `result.json` inside the scrape's own output folder (`scrape()`
+returns that dir); `--out PATH` overrides. The `--json` stdout (SWOT-only, for piping)
+is unchanged. Serialization is robust (`model_dump` for pydantic, `asdict` for
+dataclasses; `default=str` safety net). No test drove full_run (`test_orchestrator_full_run`
+is the rules orchestrator, unrelated) — suite stays **518 passed**. NOTE: a live run
+still costs OpenAI extraction + Places/Serper calls and scrapes live sites; not run in CI.
 
 ## Backlog (each its own measured fix)
 - **Consume deep_search in build_profile:** emit a degraded, secondary-sourced
