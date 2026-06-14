@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 from pathlib import Path
 from typing import Optional
 
@@ -16,23 +17,51 @@ from .ffmpeg_tools import run_ffmpeg
 
 logger = logging.getLogger(__name__)
 
-# OpenAI TTS: tts-1 is fast/cheap; voices are multilingual enough for AR/EN ad reads.
-_DEFAULT_MODEL = "tts-1"
+# OpenAI TTS. gpt-4o-mini-tts accepts an `instructions` param to STEER the
+# delivery (accent/emotion/pace) — so we can ask for an Egyptian-Arabic read. The
+# underlying voices are English-leaning, so this approximates the dialect, it is not
+# a native ar-EG voice; for that, wire Azure ar-EG (Salma/Shakir) or ElevenLabs.
+# Override via REEL_TTS_MODEL / REEL_TTS_VOICE / REEL_TTS_INSTRUCTIONS.
+_DEFAULT_MODEL = "gpt-4o-mini-tts"
 _DEFAULT_VOICE = "onyx"
+_FALLBACK_MODEL = "tts-1"
+
+# Arabic-presentation detection -> Egyptian-accent instruction.
+_AR_RE = re.compile(r"[؀-ۿݐ-ݿﭐ-﷿ﹰ-﻿]")
 
 
-def _tts_segment(client, text: str, out: Path, *, model: str, voice: str) -> bool:
-    """Synthesize one line to mp3. Returns False on failure."""
+def _instructions_for(lines: list[str]) -> str:
+    env = os.environ.get("REEL_TTS_INSTRUCTIONS")
+    if env:
+        return env
+    joined = " ".join(lines or [])
+    if _AR_RE.search(joined):
+        return (
+            "Speak in authentic, natural EGYPTIAN ARABIC (Cairo dialect / اللهجة المصرية), "
+            "NOT Modern Standard Arabic. Warm, confident, charismatic — like a premium "
+            "Egyptian food-brand ad voice-over artist. Energetic but smooth, with natural "
+            "Egyptian intonation and rhythm."
+        )
+    return ("Warm, confident, premium brand ad voice-over — energetic but smooth, natural.")
+
+
+def _tts_segment(client, text: str, out: Path, *, model: str, voice: str,
+                 instructions: str) -> bool:
+    """Synthesize one line to mp3. Tries the steerable model with `instructions`,
+    then falls back to the basic model. Returns False on failure."""
+    import re as _re  # noqa: F401  (module-level re already imported)
     text = (text or "").strip()
     if not text:
         return False
-    try:
-        resp = client.audio.speech.create(model=model, voice=voice, input=text)
-        resp.stream_to_file(str(out))
-        return out.is_file() and out.stat().st_size > 0
-    except Exception as e:  # noqa: BLE001
-        logger.warning("tts segment failed: %s", e)
-        return False
+    for mdl, kw in ((model, {"instructions": instructions}), (_FALLBACK_MODEL, {})):
+        try:
+            resp = client.audio.speech.create(model=mdl, voice=voice, input=text, **kw)
+            resp.stream_to_file(str(out))
+            if out.is_file() and out.stat().st_size > 0:
+                return True
+        except Exception as e:  # noqa: BLE001
+            logger.warning("tts segment failed (model=%s): %s", mdl, e)
+    return False
 
 
 def synth_voiceover(
@@ -40,8 +69,8 @@ def synth_voiceover(
     durations: list[float],
     out_path: str | Path,
     *,
-    model: str = _DEFAULT_MODEL,
-    voice: str = _DEFAULT_VOICE,
+    model: Optional[str] = None,
+    voice: Optional[str] = None,
     api_key: Optional[str] = None,
 ) -> Optional[Path]:
     """Build a single narration track aligned to `durations` (one entry per scene).
@@ -54,6 +83,9 @@ def synth_voiceover(
     except ImportError:
         return None
     client = OpenAI(api_key=key)
+    model = model or os.environ.get("REEL_TTS_MODEL") or _DEFAULT_MODEL
+    voice = voice or os.environ.get("REEL_TTS_VOICE") or _DEFAULT_VOICE
+    instructions = _instructions_for(lines)
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -64,7 +96,7 @@ def synth_voiceover(
         for i, (line, dur) in enumerate(zip(lines, durations)):
             scene_aud = tmpd / f"scene{i}.wav"
             raw = tmpd / f"raw{i}.mp3"
-            if _tts_segment(client, line, raw, model=model, voice=voice):
+            if _tts_segment(client, line, raw, model=model, voice=voice, instructions=instructions):
                 # Pad with trailing silence (or trim) so the line exactly fills the
                 # scene; a short lead-in delay keeps it off the hard cut.
                 run_ffmpeg([
