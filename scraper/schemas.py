@@ -81,6 +81,7 @@ class ImageRole(str, Enum):
     LOGO = "logo"
     HERO = "hero"
     OG_IMAGE = "og_image"
+    CONTENT = "content"   # real on-page photo (food/interior/product/team), logo-excluded
 
 
 # ---------------------------------------------------------------------
