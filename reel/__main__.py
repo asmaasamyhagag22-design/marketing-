@@ -39,13 +39,19 @@ def main() -> int:
 
     from reel import build_reel_brief, build_storyboard
     from reel.compositor import render_reel
-    from reel.video_provider import StubVideoProvider, default_video_provider
+    from reel.video_provider import (
+        KenBurnsProvider, StubVideoProvider, default_video_provider,
+    )
 
     ap = argparse.ArgumentParser(description="profile.json -> marketing reel (.mp4)")
     ap.add_argument("profile", help="path to a BusinessProfile JSON")
     ap.add_argument("--out", default=None, help="output .mp4 (default: outputs/reels/<name>.mp4)")
     ap.add_argument("--no-video", action="store_true",
                     help="use the offline stub (brand gradients) instead of Veo")
+    ap.add_argument("--real", action="store_true",
+                    help="FAITHFUL mode: animate the business's REAL scraped photo "
+                         "(Ken Burns), no AI-invented scenes. Falls back to a brand "
+                         "gradient if the scrape found no real photo (only a logo).")
     ap.add_argument("--music", default=None, help="optional audio track to mux (mp3/m4a/wav)")
     ap.add_argument("--scale", type=float, default=1.0, help="resolution scale (0.5 = fast preview)")
     ap.add_argument("--max-seconds", type=float, default=20.0, help="cap total reel length")
@@ -73,7 +79,25 @@ def main() -> int:
 
     brief = build_reel_brief(profile)
     storyboard = build_storyboard(brief, profile=profile, caller=caller, max_total_s=args.max_seconds)
-    provider = StubVideoProvider() if args.no_video else default_video_provider()
+
+    if args.real:
+        # FAITHFUL: animate the business's REAL on-page photos (logos excluded
+        # upstream) so the reel comes from the actual place. Prefer the full content
+        # set; fall back to the single hero, then to a brand gradient.
+        real_imgs = list(storyboard.content_images)
+        if not real_imgs and storyboard.reference_image_url:
+            real_imgs = [storyboard.reference_image_url]
+        if real_imgs:
+            print(f"   [real] {len(real_imgs)} real photo(s) from the business",
+                  file=sys.stderr)
+        else:
+            print("   warning: --real but the scrape surfaced no real business photo "
+                  "(logo only); falling back to a brand gradient.", file=sys.stderr)
+        provider = KenBurnsProvider(images=real_imgs, fallback_palette=storyboard.palette_hex)
+    elif args.no_video:
+        provider = StubVideoProvider()
+    else:
+        provider = default_video_provider()
     out = Path(args.out) if args.out else Path("outputs/reels") / f"{profile_path.stem}.mp4"
 
     print(f"[reel] {storyboard.business_name}  dir={storyboard.primary_dir}  "

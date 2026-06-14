@@ -83,6 +83,30 @@ def _contact_lines(brief: PosterBrief, profile: Optional[dict]) -> list[str]:
     return out[:4]
 
 
+def _reference_image_url(profile: Optional[dict]) -> Optional[str]:
+    """The scraped photographic hero image (profile.visual.hero_image_url), used as
+    the Veo image-to-video seed. Photo-only (logos are excluded upstream). A cheap
+    scheme check here keeps this hermetic; the real SSRF/DNS guard runs at fetch
+    time in the video provider (same discipline as the poster logo fetch)."""
+    visual = (profile or {}).get("visual") or {}
+    src = (visual.get("hero_image_url") or "").strip() if isinstance(visual, dict) else ""
+    return src if src.startswith(("http://", "https://")) else None
+
+
+def _content_images(profile: Optional[dict]) -> list[str]:
+    """The brand's real on-page photos (profile.visual.content_images), logos
+    excluded upstream. The faithful Ken Burns reel animates these."""
+    visual = (profile or {}).get("visual") or {}
+    if not isinstance(visual, dict):
+        return []
+    out = []
+    for s in (visual.get("content_images") or []):
+        s = (s or "").strip()
+        if s.startswith(("http://", "https://")):
+            out.append(s)
+    return out[:12]
+
+
 def _fit_durations(scenes: list[ReelScene], max_total_s: float) -> None:
     """Scale durations to fit `max_total_s`; if the per-scene minimum makes scaling
     overshoot, drop the lowest-priority OPTIONAL scene and rescale."""
@@ -176,5 +200,7 @@ def build_storyboard(
         logo_text=brief.logo_text,
         heading_font=brief.heading_font,
         body_font=brief.body_font,
+        reference_image_url=_reference_image_url(profile),
+        content_images=_content_images(profile),
         warnings=list(brief.warnings),
     )

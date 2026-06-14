@@ -51,6 +51,16 @@ class Storyboard(BaseModel):
     heading_font: Optional[str] = Field(default=None, max_length=80)
     body_font: Optional[str] = Field(default=None, max_length=80)
 
+    # Scraped PHOTOGRAPHIC brand reference (profile.visual.hero_image_url). When
+    # set, Veo seeds the brand-bookend scenes (intro/outro) via image-to-video so
+    # the reel resembles the brand's REAL imagery (#4). None -> pure text-to-video.
+    reference_image_url: Optional[str] = Field(default=None, max_length=1000)
+
+    # The brand's REAL on-page photos (profile.visual.content_images), logos
+    # excluded. The FAITHFUL reel (Ken Burns) animates THESE so it comes from the
+    # actual place. Empty when the scrape found only a logo.
+    content_images: list[str] = Field(default_factory=list, max_length=12)
+
     music_path: Optional[str] = None
     warnings: list[str] = Field(default_factory=list)
 

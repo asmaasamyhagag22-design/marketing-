@@ -518,18 +518,46 @@ Test: `tests/test_link_inventory_dedup.py::test_ecommerce_shop_links_classify_as
 Suite 535 passed. NOTE: saved manifests need a RE-SCRAPE to populate the new CTAs
 (classification happens at scrape time); the code is correct for fresh scrapes.
 
+## Done — scraper collects REAL content photos + FAITHFUL reel from the place (2026-06-14) ✅
+The user's core demand: a reel "جاي من المكان اصلا" (from the real place), not a
+Veo-invented scene. Root cause MEASURED: the scrape had no real photos to use.
+- **WHY (measured on elkbabgi):** the image extractor read ONLY `<img src>`, but
+  modern sites (Strikingly/Wix/Squarespace) serve photos as CSS backgrounds
+  (`style background-image`, `data-bg`) and lazy `data-src`, mostly protocol-relative
+  `//`. So the scraper kept **1 of 27 images — the logo** — and threw every photo
+  away. WORSE: that 1 "hero" WAS the logo (gold lion crest), so the earlier Veo i2v
+  was seeding from the LOGO and hallucinating a whole open-air restaurant (exactly the
+  user's "دا عبث"). The elkbabgi site actually has ~26 real photos (stuffed pigeon,
+  the chef pouring molokhia, the palace interior, the real feast table).
+- **FIX (scraper):** `ImageRole.CONTENT` (`scraper/schemas.py`) + rewritten
+  `scraper/extractors/images.py::_collect_content_images` — gathers photos from
+  `<img>` (src + lazy data-src/srcset) + inline `style` background-image + `data-bg`
+  attrs; normalizes `//`/relative; excludes logos/icons/svg/header-nav-footer chrome;
+  dedups by filename (collapses CDN transform variants). MEASURED live re-scrape:
+  elkbabgi `images_of_interest` CONTENT 0 -> **20**.
+- **FIX (profile):** `VisualIdentitySummary.content_images` surfaced in
+  `from_visual._content_images` — logos excluded via `_logo_basenames` (incl.
+  logo_candidates: a real photo is never a logo candidate), jpeg-first, capped 12.
+- **FIX (reel):** new `reel.video_provider.KenBurnsProvider` — FAITHFUL: animates the
+  real photos with a slow ffmpeg `zoompan` (one per scene, varied focal preset),
+  cover-cropped to 9:16, gradient fallback ONLY if all fail. On a per-scene fetch
+  failure it cycles to the NEXT real photo (CDN is flaky) — not a gradient. Wired as
+  `python -m reel <profile> --real` (KenBurns); `Storyboard.content_images`. VERIFIED:
+  every elkbabgi scene is a REAL photo of the actual place + verbatim text, zero
+  invention -> `outputs/reels/elkbabgi_real_place.mp4`.
+- **#4 reframed:** the Veo i2v plumbing (hero_image_url surfacing, `_load_reference_image`,
+  reference threading, `_hero_image_url`+`_logo_srcs` logo-exclusion) is KEPT — it now
+  serves this faithful path (and a future Veo seed would use a real CONTENT photo, not
+  the logo). The faithful **KenBurns-on-real-photos** is the shipped default for
+  grounding; generative Veo stays an option but is NOT the way we claim "from the place".
+Tests: `tests/test_content_images.py` (4), `tests/test_reel_reference_image.py` (15).
+Suite 540 passed. NOTE: live Veo/scrape cost money; the faithful reel is offline (ffmpeg).
+
 ## Backlog (each its own measured fix)
-- **Reel #4 — condition generation on scraped images — PROTOTYPED then BLOCKED
-  (2026-06-14, see memory `reel-4-image-seeding-blocked`).** Built end-to-end (Veo
-  image-to-video, live-verified on elkbabgi) but **UNCOMMITTED / not shipped**: the
-  premise fails because the scraper can't reliably hand a real PHOTO — MEASURED
-  **14/59 manifests have `hero == the selected logo`** (Azza Fahmy emits the seal in
-  multiple color variants, so an exact-src guard still leaks), and even a real photo
-  yields Veo-invented settings (elkbabgi's open-air garden) — not faithful. Plumbing
-  sits in the working tree (business_profile/schemas hero_image_url; from_visual
-  `_hero_image_url`+`_logo_srcs`; reel/{schemas,storyboard,compositor,video_provider};
-  tests/test_reel_reference_image.py). BLOCKER for any resume: a reliable
-  real-photo-vs-logo classifier. Awaiting the user's faithfulness direction.
+- **Logo-vs-photo on multi-variant seals:** Azza Fahmy emits its seal in several
+  color variants; only the selected one is excluded by filename, so a variant can leak
+  into `content_images`. Most sites are clean (jpeg-first ordering helps). Measure
+  prevalence before adding perceptual/transparency detection.
 - **Scraper page cap is thin on big catalogs:** `config.MAX_INTERNAL_PAGES = 7` ->
   Azza Fahmy scraped 4 of 204 discovered pages. Make the cap / page-selection adaptive
   for large stores (prioritize collections/category pages). Measure coverage vs cost

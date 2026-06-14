@@ -20,6 +20,7 @@ Model defaults to Veo 3.1; override with REEL_VIDEO_MODEL (e.g. the cheaper/fast
 from __future__ import annotations
 
 import os
+import sys
 import time
 import uuid
 from pathlib import Path
@@ -37,7 +38,13 @@ _VEO_DURATIONS = (4, 6, 8)
 
 @runtime_checkable
 class VideoProvider(Protocol):
-    """Generates a text-free scene clip and returns the saved mp4 path."""
+    """Generates a text-free scene clip and returns the saved mp4 path.
+
+    `reference_image` (optional) is a scraped brand photo (local path or public
+    http(s) URL) used to GROUND generation: real providers seed image-to-video
+    from it so the clip resembles the brand's actual imagery. Providers that can't
+    condition on an image MUST ignore it gracefully (never fail because of it).
+    """
     name: str
 
     def generate(
@@ -49,6 +56,7 @@ class VideoProvider(Protocol):
         width: int,
         height: int,
         palette: Optional[list[str]] = None,
+        reference_image: Optional[str] = None,
     ) -> Path:
         ...
 
@@ -57,6 +65,72 @@ def _new_clip_path(out_dir: str | Path) -> Path:
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
     return out / f"clip_{uuid.uuid4().hex[:8]}.mp4"
+
+
+def _mime_for(ctype: str, low_src: str) -> Optional[str]:
+    """Pick a raster image MIME from a Content-Type header and/or the src suffix.
+    Returns None for SVG / unknown (Veo needs a raster seed)."""
+    if "svg" in ctype or low_src.endswith(".svg"):
+        return None
+    if "jpeg" in ctype or "jpg" in ctype or low_src.endswith((".jpg", ".jpeg")):
+        return "image/jpeg"
+    if "webp" in ctype or low_src.endswith(".webp"):
+        return "image/webp"
+    if "gif" in ctype or low_src.endswith(".gif"):
+        return "image/gif"
+    if "png" in ctype or low_src.endswith(".png"):
+        return "image/png"
+    # Default to JPEG — the common case for a hero photo with no usable hint.
+    return "image/jpeg"
+
+
+def _load_reference_image(src: str, *, timeout: int = 10) -> Optional[tuple[bytes, str]]:
+    """Load a reference image as (bytes, mime). Accepts a local file path or a
+    public http(s) URL (SSRF-guarded at fetch time — same discipline as the poster
+    logo fetch: certifi first, unverified fallback ONLY on a cert-chain error, for
+    a passive credential-free image GET). Returns None on any failure or for SVG."""
+    if not src:
+        return None
+    s = str(src).strip()
+    low = s.lower()
+
+    local = Path(s)
+    try:
+        if local.is_file():
+            data = local.read_bytes()
+            mime = _mime_for("", low)
+            return (data, mime) if (data and mime) else None
+    except OSError:
+        pass
+
+    if not low.startswith(("http://", "https://")):
+        return None
+    try:
+        from scraper.url_utils import is_safe_public_url
+        if not is_safe_public_url(s):
+            return None
+        import ssl
+        from urllib.request import Request, urlopen
+        req = Request(s, headers={"User-Agent": "Mozilla/5.0 (ReelStudio)"})
+        try:
+            import certifi
+            ctx = ssl.create_default_context(cafile=certifi.where())
+        except Exception:
+            ctx = ssl.create_default_context()
+        try:
+            resp = urlopen(req, timeout=timeout, context=ctx)
+        except Exception as exc:                       # noqa: BLE001
+            if "CERTIFICATE_VERIFY_FAILED" in str(exc):
+                resp = urlopen(req, timeout=timeout, context=ssl._create_unverified_context())
+            else:
+                raise
+        with resp as r:
+            ctype = (r.headers.get("Content-Type") or "").lower()
+            data = r.read(8_000_000)
+        mime = _mime_for(ctype, low)
+        return (data, mime) if (data and mime) else None
+    except Exception:
+        return None
 
 
 class VeoProvider:
@@ -108,20 +182,55 @@ class VeoProvider:
         width: int,
         height: int,
         palette: Optional[list[str]] = None,
+        reference_image: Optional[str] = None,
     ) -> Path:
         from google.genai import types
 
         client = self._client()
         dur = min(_VEO_DURATIONS, key=lambda v: abs(v - duration_s))   # snap to 4/6/8
-        operation = client.models.generate_videos(
-            model=self.model,
-            prompt=prompt,
-            config=types.GenerateVideosConfig(
-                aspect_ratio=DEFAULT_ASPECT,
-                number_of_videos=1,
-                duration_seconds=dur,
-            ),
-        )
+
+        def _submit(image_obj):
+            kwargs = dict(
+                model=self.model,
+                prompt=prompt,
+                config=types.GenerateVideosConfig(
+                    aspect_ratio=DEFAULT_ASPECT,
+                    number_of_videos=1,
+                    duration_seconds=dur,
+                ),
+            )
+            if image_obj is not None:
+                kwargs["image"] = image_obj           # image-to-video seed
+            return client.models.generate_videos(**kwargs)
+
+        # GROUNDING (#4): seed from the brand's real scraped photo when available,
+        # so the footage resembles the actual brand. Never let it break a render —
+        # if loading or i2v submission fails, fall back to pure text-to-video.
+        # The stderr notes make the i2v-vs-fallback path OBSERVABLE in the reel log
+        # (so "the reel is grounded in the real image" is verifiable, not assumed).
+        image_obj = None
+        if reference_image:
+            loaded = _load_reference_image(str(reference_image))
+            if loaded:
+                data, mime = loaded
+                try:
+                    image_obj = types.Image(image_bytes=data, mime_type=mime)
+                    print(f"[veo] image-to-video seed: {mime}, {len(data)} bytes "
+                          f"from {str(reference_image)[:80]}", file=sys.stderr)
+                except Exception:
+                    image_obj = None
+            else:
+                print(f"[veo] reference image unusable ({str(reference_image)[:80]}); "
+                      "text-to-video", file=sys.stderr)
+
+        try:
+            operation = _submit(image_obj)
+        except Exception as exc:                      # noqa: BLE001
+            if image_obj is None:
+                raise
+            print(f"[veo] image-to-video rejected ({type(exc).__name__}); "
+                  "falling back to text-to-video", file=sys.stderr)
+            operation = _submit(None)                 # i2v rejected -> text-to-video
 
         waited = 0
         while not getattr(operation, "done", False):
@@ -174,6 +283,7 @@ class StubVideoProvider:
         width: int,
         height: int,
         palette: Optional[list[str]] = None,
+        reference_image: Optional[str] = None,   # ignored: the stub has no model to seed
     ) -> Path:
         colors = [c for c in (palette or self.fallback_palette) if c][:3] or self.fallback_palette
         cparts = [f"c{i}={hex_to_ffmpeg(c)}" for i, c in enumerate(colors)]
@@ -189,6 +299,127 @@ class StubVideoProvider:
             "-profile:v", "high", "-preset", "veryfast",
             str(out_path),
         ])
+        return out_path
+
+
+# Ken Burns motion presets (slow zoom toward a focal region) — varied so a SINGLE
+# real photo still feels alive across scenes. Each entry is (x_expr, y_expr); all
+# zoom in slowly toward that region. Expressions are ffmpeg zoompan exprs over the
+# pre-upscaled image (iw/ih are the big intermediate's dims; zoom is the per-frame z).
+_KENBURNS_MOVES = (
+    ("iw/2-(iw/zoom/2)", "ih/2-(ih/zoom/2)"),   # 0: zoom into center
+    ("iw/2-(iw/zoom/2)", "0"),                   # 1: drift toward the top
+    ("iw/2-(iw/zoom/2)", "ih-(ih/zoom)"),        # 2: drift toward the bottom
+    ("0", "ih/2-(ih/zoom/2)"),                   # 3: drift toward the left
+    ("iw-(iw/zoom)", "ih/2-(ih/zoom/2)"),        # 4: drift toward the right
+)
+
+
+class KenBurnsProvider:
+    """FAITHFUL provider: animates the business's REAL scraped photo(s) with a slow
+    Ken Burns pan/zoom (ffmpeg `zoompan`). No model, no invented scenes — the reel
+    literally comes from the actual place (the user's "REEL جاي من المكان اصلا").
+
+    Cycles through the provided real images; varies the motion by call index so even
+    one photo stays alive across scenes. Landscape photos are cover-cropped to the
+    vertical frame. If an image can't be loaded (or none were given) it falls back to
+    a brand-palette gradient so a render never breaks — but it NEVER fabricates a scene.
+    """
+    name = "kenburns"
+
+    def __init__(
+        self,
+        images: Optional[list[str]] = None,
+        *,
+        fallback_palette: Optional[list[str]] = None,
+    ):
+        # Dedup-preserving order; drop blanks. These are real http(s)/local images.
+        seen: set[str] = set()
+        self.images = []
+        for s in (images or []):
+            s = (s or "").strip()
+            if s and s not in seen:
+                seen.add(s)
+                self.images.append(s)
+        self.fallback_palette = fallback_palette or ["#15314F", "#2E6E9E", "#0A1622"]
+        self._call = 0  # advances per scene -> cycles image + motion preset
+
+    def _gradient_fallback(self, out_path: Path, duration_s: float, width: int,
+                           height: int, palette: Optional[list[str]]) -> Path:
+        StubVideoProvider(self.fallback_palette).generate(
+            "", out_path=out_path, duration_s=duration_s, width=width,
+            height=height, palette=palette,
+        )
+        return out_path
+
+    def generate(
+        self,
+        prompt: str,                              # ignored — the real photo IS the scene
+        *,
+        out_path: Path,
+        duration_s: float,
+        width: int,
+        height: int,
+        palette: Optional[list[str]] = None,
+        reference_image: Optional[str] = None,
+    ) -> Path:
+        idx = self._call
+        self._call += 1
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+
+        # The provider's own real-photo pool wins (it's the logo-excluded CONTENT
+        # set). reference_image is only a fallback — note it may be the HERO, which
+        # on some sites is the logo, so we must NOT prefer it over real photos.
+        # Try several photos (cycling) so an INTERMITTENT CDN fetch failure on one
+        # photo yields ANOTHER real photo, not a gradient.
+        if self.images:
+            n = len(self.images)
+            candidates = [self.images[(idx + k) % n] for k in range(min(n, 4))]
+        elif reference_image:
+            candidates = [str(reference_image)]
+        else:
+            candidates = []
+        loaded = None
+        for src in candidates:
+            loaded = _load_reference_image(str(src))
+            if loaded:
+                break
+        if not loaded:
+            return self._gradient_fallback(out_path, duration_s, width, height, palette)
+
+        data, mime = loaded
+        ext = {"image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp",
+               "image/gif": ".gif"}.get(mime, ".jpg")
+        img_path = out_path.with_suffix(ext + ".src")
+        img_path.write_bytes(data)
+
+        frames = max(2, int(round(duration_s * 30)))
+        xexpr, yexpr = _KENBURNS_MOVES[idx % len(_KENBURNS_MOVES)]
+        # Cover-crop the photo to the vertical frame, upscale (zoompan is smoother on
+        # a big intermediate), then a slow ~12% zoom toward the preset's focal region.
+        # Single quotes inside the expr are ffmpeg's own quoting (protect the commas).
+        vf = (
+            f"scale={width}:{height}:force_original_aspect_ratio=increase,"
+            f"crop={width}:{height},scale=4000:-2,"
+            f"zoompan=z='min(zoom+0.0011,1.12)':d={frames}:"
+            f"x='{xexpr}':y='{yexpr}':s={width}x{height}:fps=30,"
+            f"format=yuv420p"
+        )
+        try:
+            run_ffmpeg([
+                "-loop", "1", "-i", str(img_path), "-t", f"{duration_s:.2f}",
+                "-vf", vf, "-r", "30",
+                "-c:v", "libx264", "-pix_fmt", "yuv420p",
+                "-profile:v", "high", "-preset", "medium", "-crf", "20",
+                str(out_path),
+            ])
+        except Exception:
+            return self._gradient_fallback(out_path, duration_s, width, height, palette)
+        finally:
+            try:
+                img_path.unlink()
+            except OSError:
+                pass
         return out_path
 
 

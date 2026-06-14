@@ -266,6 +266,18 @@ class VisualIdentitySummary(BaseModel):
     heading_font: Optional[str] = None
     logo_url: Optional[str] = None
 
+    # Best PHOTOGRAPHIC brand reference image (HERO above-fold > HERO > OG image),
+    # surfaced from manifest.images_of_interest. Used to GROUND generation — Veo
+    # image-to-video seeds the reel from the brand's real imagery (#4). None when
+    # the scrape found no usable hero/og image. NOT a logo (logos live above).
+    hero_image_url: Optional[str] = None
+
+    # The brand's REAL on-page photos (food/interior/product/team), surfaced from
+    # manifest.images_of_interest CONTENT role with logos excluded. This is what
+    # lets the reel come FROM THE PLACE (Ken Burns over real photos) instead of an
+    # invented scene. Empty when the scrape found only a logo. Verbatim URLs.
+    content_images: list[str] = Field(default_factory=list)
+
     # v0.2 structured logo fields.
     primary_logo: Optional[LogoCandidateSummary] = None
     logo_candidates: list[LogoCandidateSummary] = Field(default_factory=list)

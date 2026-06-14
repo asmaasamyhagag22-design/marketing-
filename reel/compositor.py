@@ -58,14 +58,20 @@ def render_reel(
         )
 
         # 2) per scene: text-free clip -> normalize + overlay text (alpha fade).
+        # GROUNDING (#4): seed image-to-video from the brand's real scraped photo,
+        # but only on the brand-bookend scenes (intro + outro) — so the reel OPENS
+        # and CLOSES grounded in real imagery while the middle beats stay varied
+        # b-roll (seeding every scene from one hero frame looks repetitive).
         norm_clips: list[Path] = []
         for i, scene in enumerate(storyboard.scenes):
+            ref = storyboard.reference_image_url if scene.kind in ("intro", "outro") else None
             raw = provider.generate(
                 scene.visual_prompt,
                 out_path=tmpd / f"raw{i}.mp4",
                 duration_s=scene.duration_s,
                 width=W, height=H,
                 palette=storyboard.palette_hex,
+                reference_image=ref,
             )
             norm = tmpd / f"norm{i}.mp4"
             d = scene.duration_s
