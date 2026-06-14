@@ -58,13 +58,15 @@ def render_reel(
         )
 
         # 2) per scene: text-free clip -> normalize + overlay text (alpha fade).
-        # GROUNDING (#4): seed image-to-video from the brand's real scraped photo,
-        # but only on the brand-bookend scenes (intro + outro) — so the reel OPENS
-        # and CLOSES grounded in real imagery while the middle beats stay varied
-        # b-roll (seeding every scene from one hero frame looks repetitive).
+        # GROUNDING: every scene is SEEDED from its own REAL scraped photo
+        # (scene.seed_image_url, a distinct content photo). KenBurns animates it;
+        # Veo 3.1 brings it to life. So the whole reel comes from the real place,
+        # not one repeated frame. Falls back to the hero only if a scene has no seed.
         norm_clips: list[Path] = []
         for i, scene in enumerate(storyboard.scenes):
-            ref = storyboard.reference_image_url if scene.kind in ("intro", "outro") else None
+            ref = scene.seed_image_url or (
+                storyboard.reference_image_url if scene.kind in ("intro", "outro") else None
+            )
             raw = provider.generate(
                 scene.visual_prompt,
                 out_path=tmpd / f"raw{i}.mp4",

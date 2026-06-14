@@ -25,11 +25,30 @@ _OFFERING_PER_ITEM_S = 0.8
 _VALUE_S = 4.0
 _CONTACT_S = 3.4
 _OUTRO_S = 3.2
+_GALLERY_S = 2.6                # pure animated-real-photo b-roll shot
 
 _MIN_SCENE_S = 1.5
 
-# Drop order when over the length cap (intro + outro are never dropped).
-_DROP_PRIORITY = ["value_prop", "contact", "offering"]
+# Drop order when over the length cap (intro + outro are never dropped). Gallery
+# b-roll is the first to go — it's the "extra" the photo pool lets us add.
+_DROP_PRIORITY = ["gallery", "value_prop", "contact", "offering"]
+
+
+def _i2v_motion_prompt(brief: PosterBrief) -> str:
+    """The prompt for a scene SEEDED from a real photo. It steers MOTION only and
+    forbids changing the scene — so Veo 3.1 brings the REAL photo to life (a gentle
+    camera move + ambient motion) instead of inventing a new place. The seed photo
+    IS the content; the prompt must not fight it."""
+    tone = (brief.tone or "premium").strip().lower()
+    return (
+        f"Bring this real photograph of {brief.business_name} to life with subtle, "
+        "natural, photorealistic motion: a gentle slow camera push-in or drift, soft "
+        "ambient movement (rising steam, flickering warm light, slight motion of "
+        "people, hands, and fabric), shallow depth of field. KEEP the real scene, "
+        "people, food, setting, and colors EXACTLY as in the image — do NOT add, "
+        "remove, replace, or restyle any object, and add NO text, words, or signage. "
+        f"Cinematic, {tone}, documentary-real, vertical 9:16."
+    )
 
 
 def _social_lines(brief: PosterBrief, limit: int = 2) -> list[str]:
@@ -135,56 +154,65 @@ def _fit_durations(scenes: list[ReelScene], max_total_s: float) -> None:
 
 def build_storyboard(
     brief: PosterBrief, *, profile: Optional[dict] = None, caller: Optional[Any] = None,
-    max_total_s: float = 20.0,
+    max_total_s: float = 28.0, target_scenes: int = 10,
+    selected_images: Optional[list[str]] = None,
 ) -> Storyboard:
     """Compose the ordered, length-capped scene list. `profile` (the serialized
     BusinessProfile) grounds the footage; `caller` (an OpenAI caller) enables the
-    LLM art-director so the scene is DERIVED from the brand's persona — one call per
-    reel, shared by all scenes — falling back to deterministic templates when absent.
-    The contact scene uses the clean phone/email."""
+    LLM art-director so a TEXT-TO-VIDEO fallback scene is DERIVED from the brand's
+    persona. When the scrape has real photos, EACH scene is SEEDED from one (cycling
+    through `content_images`) — Veo 3.1 then animates the real place and `gallery`
+    b-roll scenes fill up to `target_scenes` so it reads as a real reel, not a
+    static slideshow. The contact scene uses the clean phone/email."""
     primary_dir = "rtl" if (is_rtl(brief.headline) or is_rtl(brief.business_name)) else "ltr"
-    # One LLM art-director call per reel (shared across scenes); None -> templates.
+    # One LLM art-director call per reel — only used for the no-seed (text-to-video)
+    # fallback prompt; seeded scenes use the faithful motion prompt instead.
     base_scene = build_brand_scene(brief, profile, caller)
-    scenes: list[ReelScene] = []
+    # `selected_images` (vision-curated real photos) overrides the raw content set
+    # when provided — so logos/QR/partner badges never become scenes. None means
+    # "not curated"; fall back to the profile's content_images.
+    content = selected_images if selected_images is not None else _content_images(profile)
 
-    def vp(kind: str) -> str:
-        return build_scene_prompt(kind, brief, profile=profile, base_scene=base_scene)
-
-    # 1) Intro — strongest verbatim brand line (always present).
-    scenes.append(ReelScene(
-        kind="intro", duration_s=_INTRO_S, visual_prompt=vp("intro"),
-        headline=brief.headline, source_field="headline",
-    ))
-
-    # 2) Offerings — verbatim names, stacked (skipped when none).
+    # ---- ordered scene SPECS (text + kind + duration), outro held until the end ----
+    specs: list[dict] = [dict(kind="intro", duration_s=_INTRO_S,
+                              headline=brief.headline, source_field="headline")]
     if brief.offerings:
         items = brief.offerings[:3]
-        scenes.append(ReelScene(
+        specs.append(dict(
             kind="offering",
             duration_s=round(_OFFERING_BASE_S + _OFFERING_PER_ITEM_S * len(items), 2),
-            visual_prompt=vp("offering"), sublines=items, source_field="offerings",
-        ))
-
-    # 3) Value prop — description sentence, when distinct from the headline.
+            sublines=items, source_field="offerings"))
     if brief.subheadline and brief.subheadline.strip() and brief.subheadline != brief.headline:
-        scenes.append(ReelScene(
-            kind="value_prop", duration_s=_VALUE_S, visual_prompt=vp("value_prop"),
-            sublines=[brief.subheadline], source_field="subheadline",
-        ))
-
-    # 4) Contact — phone first, then email + socials (skipped when none).
+        specs.append(dict(kind="value_prop", duration_s=_VALUE_S,
+                          sublines=[brief.subheadline], source_field="subheadline"))
     contact_lines = _contact_lines(brief, profile)
     if contact_lines:
-        scenes.append(ReelScene(
-            kind="contact", duration_s=_CONTACT_S, visual_prompt=vp("contact"),
-            sublines=contact_lines, source_field="contact_channels/social",
-        ))
+        specs.append(dict(kind="contact", duration_s=_CONTACT_S,
+                          sublines=contact_lines, source_field="contact_channels/social"))
+    outro_spec = dict(kind="outro", duration_s=_OUTRO_S,
+                      headline=brief.business_name, cta_text=brief.cta_text,
+                      source_field="name/cta")
 
-    # 5) Outro — brand name + the REAL scraped CTA (always present).
-    scenes.append(ReelScene(
-        kind="outro", duration_s=_OUTRO_S, visual_prompt=vp("outro"),
-        headline=brief.business_name, cta_text=brief.cta_text, source_field="name/cta",
-    ))
+    # ---- gallery b-roll: only when we have real photos to animate. Fill up to
+    # target_scenes (incl. outro), bounded so we don't make more gallery shots than
+    # there are distinct unused photos (avoids the same photo twice back-to-back).
+    n_with_outro = len(specs) + 1
+    if content:
+        n_gallery = max(0, min(target_scenes - n_with_outro, len(content) - n_with_outro))
+        for _ in range(n_gallery):
+            specs.append(dict(kind="gallery", duration_s=_GALLERY_S, source_field="content_image"))
+    specs.append(outro_spec)
+
+    # ---- assign a real-photo SEED + the right prompt to each scene ----
+    scenes: list[ReelScene] = []
+    for i, spec in enumerate(specs):
+        seed = content[i % len(content)] if content else None
+        if seed:
+            prompt = _i2v_motion_prompt(brief)          # animate the REAL photo
+        else:
+            base_kind = spec["kind"] if spec["kind"] != "gallery" else "intro"
+            prompt = build_scene_prompt(base_kind, brief, profile=profile, base_scene=base_scene)
+        scenes.append(ReelScene(visual_prompt=prompt, seed_image_url=seed, **spec))
 
     _fit_durations(scenes, max_total_s)
 
@@ -201,6 +229,6 @@ def build_storyboard(
         heading_font=brief.heading_font,
         body_font=brief.body_font,
         reference_image_url=_reference_image_url(profile),
-        content_images=_content_images(profile),
+        content_images=list(content),   # the CURATED real-photo set actually used
         warnings=list(brief.warnings),
     )

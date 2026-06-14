@@ -13,7 +13,7 @@ from pydantic import BaseModel, Field
 # Vertical short-video canvas (Instagram Reels / TikTok / YouTube Shorts).
 REEL_W, REEL_H = 1080, 1920
 
-SceneKind = Literal["intro", "offering", "value_prop", "contact", "outro"]
+SceneKind = Literal["intro", "offering", "value_prop", "contact", "outro", "gallery"]
 
 
 class ReelScene(BaseModel):
@@ -31,6 +31,10 @@ class ReelScene(BaseModel):
     sublines: list[str] = Field(default_factory=list)   # verbatim secondary lines
     cta_text: Optional[str] = None           # verbatim CTA label
     source_field: str = "unknown"            # provenance (e.g. "tagline", "offerings")
+    # The REAL scraped photo this scene is built from. KenBurns animates it; Veo
+    # 3.1 image-to-video uses it as the first frame and brings it to life. So the
+    # generated motion is LEARNED FROM the real place, not invented.
+    seed_image_url: Optional[str] = None
 
 
 class Storyboard(BaseModel):

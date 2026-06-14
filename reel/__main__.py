@@ -49,15 +49,21 @@ def main() -> int:
     ap.add_argument("--no-video", action="store_true",
                     help="use the offline stub (brand gradients) instead of Veo")
     ap.add_argument("--real", action="store_true",
-                    help="FAITHFUL mode: animate the business's REAL scraped photo "
-                         "(Ken Burns), no AI-invented scenes. Falls back to a brand "
-                         "gradient if the scrape found no real photo (only a logo).")
+                    help="FAITHFUL OFFLINE mode: animate the business's REAL scraped "
+                         "photos with Ken Burns (ffmpeg), no AI. Default (no flag) uses "
+                         "Veo 3.1 to bring those same real photos to life (image-to-video).")
+    ap.add_argument("--frames", type=int, default=10,
+                    help="target number of scenes/shots (default 10), bounded by the "
+                         "number of real photos the scrape found")
     ap.add_argument("--music", default=None, help="optional audio track to mux (mp3/m4a/wav)")
     ap.add_argument("--scale", type=float, default=1.0, help="resolution scale (0.5 = fast preview)")
-    ap.add_argument("--max-seconds", type=float, default=20.0, help="cap total reel length")
+    ap.add_argument("--max-seconds", type=float, default=28.0, help="cap total reel length")
     ap.add_argument("--no-logo", action="store_true", help="skip the logo overlay")
     ap.add_argument("--static-scene", action="store_true",
                     help="skip the LLM art-director; use deterministic per-category scenes")
+    ap.add_argument("--no-select", action="store_true",
+                    help="skip the vision photo-curator (use ALL scraped content images; "
+                         "may include partner logos / QR codes / icons)")
     args = ap.parse_args()
 
     profile_path = Path(args.profile)
@@ -78,7 +84,33 @@ def main() -> int:
             caller = None
 
     brief = build_reel_brief(profile)
-    storyboard = build_storyboard(brief, profile=profile, caller=caller, max_total_s=args.max_seconds)
+
+    # VISION CURATION: show every scraped content image to a vision model with the
+    # brand identity and keep ONLY real, on-brand PHOTOS — so partner/sponsor logos,
+    # QR codes, icons, and stock graphics never become reel scenes. Off with
+    # --no-select; honest-degrades to all images when no OpenAI key.
+    selected = None
+    if not args.no_select:
+        from reel.image_select import select_brand_photos
+        raw_photos = (profile.get("visual") or {}).get("content_images") or []
+        if raw_photos:
+            def _f(k):
+                fld = profile.get(k)
+                return fld.get("value") if isinstance(fld, dict) else fld
+            selected = select_brand_photos(
+                raw_photos, business_name=brief.business_name,
+                category=str(brief.category or _f("category") or ""),
+                description=str(_f("description") or ""),
+                max_keep=max(2, args.frames),
+            )
+            print(f"   [curate] {len(selected)}/{len(raw_photos)} images are real on-brand photos",
+                  file=sys.stderr)
+
+    storyboard = build_storyboard(
+        brief, profile=profile, caller=caller,
+        max_total_s=args.max_seconds, target_scenes=max(2, args.frames),
+        selected_images=selected,
+    )
 
     if args.real:
         # FAITHFUL: animate the business's REAL on-page photos (logos excluded

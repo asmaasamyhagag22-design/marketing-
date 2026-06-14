@@ -367,18 +367,15 @@ class KenBurnsProvider:
         self._call += 1
         out_path.parent.mkdir(parents=True, exist_ok=True)
 
-        # The provider's own real-photo pool wins (it's the logo-excluded CONTENT
-        # set). reference_image is only a fallback — note it may be the HERO, which
-        # on some sites is the logo, so we must NOT prefer it over real photos.
-        # Try several photos (cycling) so an INTERMITTENT CDN fetch failure on one
-        # photo yields ANOTHER real photo, not a gradient.
+        # The scene's own seed (reference_image, a real CONTENT photo) wins; the
+        # provider's pool is the fallback. Try several (cycling) so an INTERMITTENT
+        # CDN fetch failure on one photo yields ANOTHER real photo, not a gradient.
+        candidates: list[str] = []
+        if reference_image:
+            candidates.append(str(reference_image))
         if self.images:
             n = len(self.images)
-            candidates = [self.images[(idx + k) % n] for k in range(min(n, 4))]
-        elif reference_image:
-            candidates = [str(reference_image)]
-        else:
-            candidates = []
+            candidates += [self.images[(idx + k) % n] for k in range(min(n, 4))]
         loaded = None
         for src in candidates:
             loaded = _load_reference_image(str(src))
