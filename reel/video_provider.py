@@ -84,6 +84,36 @@ def _mime_for(ctype: str, low_src: str) -> Optional[str]:
     return "image/jpeg"
 
 
+def _to_vertical_seed(data: bytes, *, width: int = 768, height: int = 1366) -> tuple[bytes, str]:
+    """Make a FULL-FRAME 9:16 seed so Veo i2v doesn't letterbox a landscape photo.
+
+    Default 'cover' crops to fill (sharp, professional, the standard reel look).
+    Set REEL_SEED_FILL=blur to instead CONTAIN the whole photo over a blurred copy
+    (keeps every edge, slightly softer), or REEL_SEED_FILL=none to pass through.
+    Returns (jpeg_bytes, 'image/jpeg'); falls back to the input on any error."""
+    mode = (os.getenv("REEL_SEED_FILL") or "cover").lower()
+    if mode == "none":
+        return data, "image/jpeg"
+    try:
+        import io
+        from PIL import Image, ImageEnhance, ImageFilter, ImageOps
+        img = Image.open(io.BytesIO(data)).convert("RGB")
+        if mode == "blur":
+            bg = ImageOps.fit(img, (width, height), method=Image.LANCZOS)
+            bg = ImageEnhance.Brightness(bg.filter(ImageFilter.GaussianBlur(40))).enhance(0.55)
+            fg = img.copy()
+            fg.thumbnail((width, height), Image.LANCZOS)
+            bg.paste(fg, ((width - fg.width) // 2, (height - fg.height) // 2))
+            canvas = bg
+        else:  # cover
+            canvas = ImageOps.fit(img, (width, height), method=Image.LANCZOS)
+        buf = io.BytesIO()
+        canvas.save(buf, format="JPEG", quality=88)
+        return buf.getvalue(), "image/jpeg"
+    except Exception:
+        return data, "image/jpeg"
+
+
 def _load_reference_image(src: str, *, timeout: int = 10) -> Optional[tuple[bytes, str]]:
     """Load a reference image as (bytes, mime). Accepts a local file path or a
     public http(s) URL (SSRF-guarded at fetch time — same discipline as the poster
@@ -213,6 +243,9 @@ class VeoProvider:
             loaded = _load_reference_image(str(reference_image))
             if loaded:
                 data, mime = loaded
+                # Letterbox-free: reframe the seed to a full 9:16 canvas so Veo
+                # outputs a full-frame vertical clip (no black bars on landscape photos).
+                data, mime = _to_vertical_seed(data)
                 try:
                     image_obj = types.Image(image_bytes=data, mime_type=mime)
                     print(f"[veo] image-to-video seed: {mime}, {len(data)} bytes "

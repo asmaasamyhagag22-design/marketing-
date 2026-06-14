@@ -104,6 +104,19 @@ def test_stub_provider_accepts_reference_image_kwarg():
     assert "reference_image" in inspect.signature(StubVideoProvider.generate).parameters
 
 
+def test_vertical_seed_reframes_landscape_to_9x16():
+    """A landscape seed is reframed to 9:16 so Veo i2v outputs full-frame (no bars)."""
+    import io
+    from PIL import Image
+    from reel.video_provider import _to_vertical_seed
+    buf = io.BytesIO()
+    Image.new("RGB", (1600, 900), (180, 90, 40)).save(buf, format="JPEG")
+    out, mime = _to_vertical_seed(buf.getvalue())
+    w, h = Image.open(io.BytesIO(out)).size
+    assert mime == "image/jpeg"
+    assert abs((w / h) - (9 / 16)) < 0.01
+
+
 # ---------------------------------------------------------------------
 # Compositor seeds ONLY the brand bookends (intro + outro)
 # ---------------------------------------------------------------------
