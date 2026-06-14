@@ -1,0 +1,126 @@
+"""ffmpeg compositor: storyboard -> final .mp4.
+
+Text is rendered by Chromium (reel.textlayer) as transparent PNGs — the browser
+shapes Arabic correctly (connected, RTL), which the bundled ffmpeg/libass does
+NOT. So ffmpeg's only text job is to OVERLAY those PNGs (with an alpha fade) on
+each scene clip; it never shapes text itself.
+
+Stages (kept separate so a failure is legible):
+  1. Render one transparent text PNG per scene (single browser session).
+  2. Per scene: the provider generates a text-free clip; normalize to a uniform
+     WxH / fps / timebase / pix_fmt and overlay the scene's text PNG (alpha fade).
+  3. Concat the scene clips (hard cuts; identical params -> stream copy).
+  4. Mux optional music with fades; finalize H.264 + faststart.
+
+Hard cuts + per-scene text fades (robust) rather than xfade crossfades (a future
+polish item).
+"""
+from __future__ import annotations
+
+import tempfile
+from pathlib import Path
+from typing import Optional
+
+from .ffmpeg_tools import run_ffmpeg
+from .schemas import REEL_H, REEL_W, ReelRenderResult, Storyboard
+from .textlayer import render_text_layers
+from .video_provider import VideoProvider
+
+
+def _even(n: float) -> int:
+    return int(n) // 2 * 2          # libx264 yuv420p needs even dimensions
+
+
+def render_reel(
+    storyboard: Storyboard,
+    *,
+    provider: VideoProvider,
+    out_path: str | Path,
+    fps: int = 30,
+    scale: float = 1.0,
+    music_path: Optional[str | Path] = None,
+    include_logo: bool = True,
+) -> ReelRenderResult:
+    """Render the storyboard to `out_path`. `scale` (<1) renders a faster, smaller
+    preview; the text PNGs are rendered at the same scaled size so overlay is 1:1."""
+    out_path = Path(out_path)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    W, H = _even(REEL_W * scale), _even(REEL_H * scale)
+    fade = 0.4
+    fallback_used = (provider.name == "stub")
+
+    with tempfile.TemporaryDirectory(prefix="reel_") as tmp:
+        tmpd = Path(tmp)
+
+        # 1) text layer PNGs (Chromium shapes Arabic correctly).
+        text_pngs = render_text_layers(
+            storyboard, width=W, height=H, out_dir=tmpd, include_logo=include_logo,
+        )
+
+        # 2) per scene: text-free clip -> normalize + overlay text (alpha fade).
+        norm_clips: list[Path] = []
+        for i, scene in enumerate(storyboard.scenes):
+            raw = provider.generate(
+                scene.visual_prompt,
+                out_path=tmpd / f"raw{i}.mp4",
+                duration_s=scene.duration_s,
+                width=W, height=H,
+                palette=storyboard.palette_hex,
+            )
+            norm = tmpd / f"norm{i}.mp4"
+            d = scene.duration_s
+            fout = max(0.0, d - fade)
+            # Text layer: fade in/out (alpha) AND a slide-up entrance (overlay y
+            # eases from a small offset to 0 over ~0.5s) so the text feels alive,
+            # not static. The y expression is single-quoted to protect its commas
+            # inside the filtergraph.
+            fc = (
+                f"[0:v]scale={W}:{H}:force_original_aspect_ratio=increase,"
+                f"crop={W}:{H},settb=AVTB,fps={fps},format=yuv420p[bg];"
+                f"[1:v]format=rgba,fade=t=in:st=0:d={fade}:alpha=1,"
+                f"fade=t=out:st={fout:.2f}:d={fade}:alpha=1[tx];"
+                f"[bg][tx]overlay=x=0:y='(main_h*0.03)*max(0,1-t/0.5)':format=auto,"
+                f"format=yuv420p[v]"
+            )
+            run_ffmpeg([
+                "-i", str(raw), "-loop", "1", "-i", str(text_pngs[i]),
+                "-filter_complex", fc, "-map", "[v]", "-t", f"{d:.2f}",
+                "-c:v", "libx264", "-pix_fmt", "yuv420p",
+                "-profile:v", "high", "-preset", "medium", "-crf", "20",
+                str(norm),
+            ])
+            norm_clips.append(norm)
+
+        # 3) concat (identical params -> stream copy).
+        listfile = tmpd / "concat.txt"
+        listfile.write_text(
+            "".join(f"file '{c.as_posix()}'\n" for c in norm_clips), encoding="utf-8"
+        )
+        bg = tmpd / "bg.mp4"
+        run_ffmpeg(["-f", "concat", "-safe", "0", "-i", str(listfile), "-c", "copy", str(bg)])
+
+        # 4) finalize, muxing optional music with fades.
+        has_audio = False
+        if music_path and Path(music_path).is_file():
+            total = storyboard.total_duration_s
+            run_ffmpeg([
+                "-i", str(bg), "-i", str(Path(music_path).resolve()),
+                "-filter_complex",
+                f"[1:a]afade=t=in:st=0:d=1.0,"
+                f"afade=t=out:st={max(0.0, total - 1.5):.2f}:d=1.5[a]",
+                "-map", "0:v", "-map", "[a]",
+                "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-shortest",
+                "-movflags", "+faststart", str(out_path.resolve()),
+            ])
+            has_audio = True
+        else:
+            run_ffmpeg([
+                "-i", str(bg), "-c", "copy", "-movflags", "+faststart",
+                str(out_path.resolve()),
+            ])
+
+    return ReelRenderResult(
+        reel_path=str(out_path), filename=out_path.name,
+        width=W, height=H, duration_s=storyboard.total_duration_s, fps=fps,
+        provider=provider.name, fallback_used=fallback_used, has_audio=has_audio,
+    )

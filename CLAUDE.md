@@ -434,7 +434,70 @@ dataclasses; `default=str` safety net). No test drove full_run (`test_orchestrat
 is the rules orchestrator, unrelated) — suite stays **518 passed**. NOTE: a live run
 still costs OpenAI extraction + Places/Serper calls and scrapes live sites; not run in CI.
 
+## Done — Reel Studio (Veo + Playwright/ffmpeg) + prompt grounding (2026-06-14) ✅
+NEW `reel/` package — a vertical 1080x1920 marketing REEL from a BusinessProfile,
+the moving sibling of the poster. `python -m reel <profile.json> [--out x.mp4]`
+(flags: `--no-video` offline stub, `--static-scene` skip LLM, `--music`, `--scale`,
+`--no-logo`). Flow: profile -> build_reel_brief (REUSES the poster's verbatim
+selectors) -> build_storyboard (timed, evidence-only, RTL-aware, length-capped scenes)
+-> VideoProvider per scene -> ffmpeg compositor (concat + overlay + music) -> mp4.
+- VIDEO (`reel/video_provider.py`): VideoProvider protocol + VeoProvider (google-genai;
+  auto-detects a Gemini API key OR Vertex ADC) + StubVideoProvider (offline ffmpeg
+  gradient). Default model `veo-3.1-generate-preview`, override `REEL_VIDEO_MODEL`.
+  MEASURED on THIS machine: Veo runs via VERTEX (project image-498715,
+  `veo-3.0-generate-001`) and produced a real reel; **`veo-3.1-generate-preview` is
+  404 NOT_FOUND** on that project (preview not provisioned); the Gemini-API-key path
+  **403s (API_KEY_SERVICE_BLOCKED = billing/key restriction)**.
+- TEXT OVERLAY via Playwright, NOT libass: the bundled Windows ffmpeg's libass does
+  NOT shape Arabic (isolated, disconnected glyphs — VERIFIED), so the text layer is
+  rendered as transparent PNGs by Chromium (correct Arabic shaping; reuses the
+  poster's approach) and overlaid by ffmpeg with a slide+fade entrance. Phone/email
+  use dir=ltr inside the RTL reel. `reel/ffmpeg_tools.py` uses imageio-ffmpeg's
+  bundled ffmpeg (libx264/aac; no system ffmpeg or browser-for-video needed).
+- ART DIRECTOR (`reel/art_director.py`): `build_brand_scene` — an LLM (OpenAI
+  gpt-4o-mini, the SAME caller the poster uses) invents ONE text-free, on-brand
+  b-roll SCENE from the verbatim persona, so two brands in one category get
+  DIFFERENT, identity-true footage; deterministic per-category templates are the
+  no-caller fallback. MEASURED: digilians -> Cairo classroom/tech (no food),
+  elkbabgi -> Egyptian oriental grill — distinct + on-brand.
+GROUNDING FIXES (from a prompt-audit workflow) so generated output derives from the
+REAL profile, not category templates:
+- PALETTE (`poster/from_profile._extract_palette`): stop DISCARDING the real scraped
+  brand_palette/accent_colors for a hardcoded category swatch on a non-fatal warning;
+  lead with primary_brand_color. MEASURED: digilians #133B69 (was generic #0B1F3A),
+  NTI #B95A36, elkbabgi #8B5542. Fixes BOTH poster and reel (reel reuses the brief).
+- FOOD LEAK (`reel/art_director._BEAT`): the camera beats hardcoded "food/guests/
+  hospitable" into EVERY vertical -> an EDUCATION reel showed food. Beats are now
+  category-neutral; food lives only in `_restaurant_scene`. MEASURED: digilians/NTI
+  = 0 food words across all scenes; elkbabgi keeps kebab/grills (correct).
+- CATEGORY (`build_poster_brief`): trust the scraped category EvidencedField; only
+  keyword-infer when absent (a misclassification cascaded into palette + scene).
+- OFFERINGS (`business_profile/llm/prompts.py`): stop padding — prefer specific named
+  items, honest-empty over filler, forbid the brand name / 'menu'/'diverse menu'.
+  (LLM compliance partial — a real improvement, not perfect.)
+SCRAPER (`scraper/fetcher._scroll_to_load`): now dwells at the footer + waits for
+networkidle before capture. MEASURED on elkbabgi.com (a Strikingly site): footer
+social links are JS-injected on scroll -> social 0 -> 5. Universal (any lazy site).
+New deps: imageio-ffmpeg (used), arabic-reshaper + python-bidi (only used by the now-
+orphaned `reel/subtitles.py` libass path — see backlog). Tests stay 518 passed; live
+Veo/OpenAI calls cost money and are not in CI.
+
 ## Backlog (each its own measured fix)
+- **Reel #4 — condition generation on the brand's real logo/scraped images:** add a
+  reference_image to ImageProvider.generate (Imagen conditioning) + VideoProvider.generate
+  (Veo image-to-video); surface `manifest.images_of_interest` (HERO/OG) onto the profile;
+  populate a `PosterBrief.reference_image_url` (else primary_logo), SSRF-guarded. The
+  biggest remaining grounding gap — scraped images never reach the generators today.
+- **#6 — LLM-extract a clean business NAME:** add `name` to IdentityResponse +
+  build_identity_prompt (strip chrome like 'Website'/'Official'); consume in build.py.
+  Rule-based name leaks 'Qasr Elkbabgi Website' into every headline/outro.
+- **Delete dead `poster/art_director.build_art_direction`** (+ _category_key/_choose_layout/
+  _layout_prompt) + orphaned poster/image_providers.py + render_pillow.py — hardcoded
+  per-category templates, no live caller, but entangled with api/routes/poster.py's
+  PosterArtDirection import; untangle first.
+- **`reel/subtitles.py` is orphaned** after the Playwright pivot (compositor uses
+  textlayer.py, not libass). Remove it + arabic-reshaper/python-bidi, or keep as a
+  documented libass fallback.
 - **Consume deep_search in build_profile:** emit a degraded, secondary-sourced
   profile when the first-party scrape was blocked (confidence policy = product call).
 - Scraper finds 0 logo_candidates on some sites (mumm_io, spclinic_net,

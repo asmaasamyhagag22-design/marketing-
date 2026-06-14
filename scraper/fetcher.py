@@ -142,21 +142,41 @@ def _detect_bot_protection(text: str, title: str) -> Optional[ErrorCode]:
 
 
 def _scroll_to_load(page: Page) -> None:
-    """Trigger lazy-loaded content by scrolling to the bottom, then back."""
+    """Scroll through the page to trigger lazy-loaded content, DWELLING at the
+    bottom so async footer widgets finish before we capture the DOM.
+
+    MEASURED (elkbabgi.com, a Strikingly site): the footer social links are
+    injected by JS only after the footer has been in view for ~1s. The old
+    fast scroll (120ms/step, then immediately back to top) captured the DOM
+    before the widget rendered -> social/logo silently dropped. We now scroll to
+    a stable bottom, dwell, and wait for network to settle before capturing.
+    Universal (helps any lazy-loading site), not site-specific.
+    """
     try:
         page.evaluate(
             """async () => {
                 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
-                const total = document.body.scrollHeight;
-                const step = window.innerHeight * 0.8;
-                for (let y = 0; y < total; y += step) {
-                    window.scrollTo(0, y);
-                    await sleep(120);
+                let last = -1;
+                for (let i = 0; i < 40; i++) {
+                    window.scrollBy(0, Math.max(400, window.innerHeight * 0.9));
+                    await sleep(250);
+                    const reached = window.scrollY + window.innerHeight;
+                    const h = document.body.scrollHeight;
+                    if (reached >= h - 5) {
+                        if (h === last) break;     // stable bottom reached
+                        last = h;                  // grew (lazy content) -> keep going
+                    }
                 }
+                await sleep(1400);                 // dwell for lazy footer widgets
                 window.scrollTo(0, 0);
-                await sleep(200);
+                await sleep(250);
             }"""
         )
+        # Late XHR-driven widgets (e.g. a social-icons footer) need a final beat.
+        try:
+            page.wait_for_load_state("networkidle", timeout=3000)
+        except PWTimeout:
+            pass
     except PWError:
         # Best-effort; not fatal
         pass

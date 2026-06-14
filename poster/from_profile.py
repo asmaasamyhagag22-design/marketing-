@@ -245,31 +245,47 @@ def _palette_looks_unreliable(profile: dict[str, Any]) -> bool:
 def _extract_palette(profile: dict[str, Any], category: str) -> tuple[list[str], Optional[str]]:
     visual = profile.get("visual") or {}
 
+    # Prefer the cleaned, background-stripped brand colors the scraper already
+    # computed. GROUNDING FIX: only fall back to a category swatch when the brand
+    # gave us NO usable color. Previously a non-fatal warning
+    # ('weak_brand_palette_confidence' / a 'background' marker) threw away the REAL
+    # brand palette — e.g. digilians #133b69 -> generic education #0B1F3A — which
+    # is exactly the "wrong colors" the poster AND reel showed (the reel reuses
+    # this brief). _palette_looks_unreliable is no longer a reason to DISCARD.
     raw_palette = (
-        visual.get("brand_palette")
+        visual.get("accent_colors")
+        or visual.get("brand_palette")
         or visual.get("palette_hex")
         or visual.get("raw_palette")
         or []
     )
+    exclude = {
+        str(c).upper()
+        for c in (visual.get("background_colors") or []) + (visual.get("neutral_colors") or [])
+        if _is_hex(c)
+    }
 
     palette: list[str] = []
     for color in raw_palette:
         if _is_hex(color):
             normalized = str(color).upper()
-            if normalized not in palette:
+            if normalized not in palette and normalized not in exclude:
                 palette.append(normalized)
 
     primary = visual.get("primary_brand_color") or visual.get("primary_color")
     primary_color = str(primary).upper() if _is_hex(primary) else None
 
-    # If palette is weak/background-heavy, prefer category-safe fallback.
-    # This prevents one bad screenshot/background palette from dominating the poster.
-    if not palette or _palette_looks_unreliable(profile):
+    # Fall back to the category swatch ONLY when no real brand color exists at all.
+    if not palette and not primary_color:
         palette = _fallback_palette_for_category(category)
         primary_color = palette[0]
 
-    if primary_color is None:
+    if primary_color is None and palette:
         primary_color = palette[0]
+
+    # Lead the palette with the real primary brand color so it drives the scene.
+    if primary_color:
+        palette = [primary_color] + [c for c in palette if c != primary_color]
 
     return palette[:5], primary_color
 
@@ -644,7 +660,12 @@ def _select_headline(
 
 def build_poster_brief(profile: dict[str, Any]) -> PosterBrief:
     business_name = _clean_business_name(_field_value(profile, "name"))
-    category = _infer_category(profile)
+    # GROUNDING: trust the scraped/extracted category (the EvidencedField on the
+    # profile) when present; only fall back to keyword inference when it is absent.
+    # Stops a keyword re-classification from overriding the real category and
+    # cascading into the palette fallback + art-director scene.
+    _scraped_cat = _field_value(profile, "category")
+    category = str(_scraped_cat).strip().lower() if _scraped_cat else _infer_category(profile)
 
     description = _field_value(profile, "description")
     tone = _field_value(profile, "tone_of_voice")
