@@ -64,6 +64,12 @@ def main() -> int:
     ap.add_argument("--no-select", action="store_true",
                     help="skip the vision photo-curator (use ALL scraped content images; "
                          "may include partner logos / QR codes / icons)")
+    ap.add_argument("--creative", action="store_true",
+                    help="CREATIVE mode: Claude Opus directs the reel (per-scene Veo 3.1 "
+                         "prompts + voice-over) from the identity + real photos. Veo 3.1 "
+                         "brings each real photo to life; OpenAI TTS narrates.")
+    ap.add_argument("--no-voiceover", action="store_true",
+                    help="(creative mode) skip the AI voice-over narration")
     args = ap.parse_args()
 
     profile_path = Path(args.profile)
@@ -106,6 +112,32 @@ def main() -> int:
             print(f"   [curate] {len(selected)}/{len(raw_photos)} images are real on-brand photos",
                   file=sys.stderr)
 
+    out = Path(args.out) if args.out else Path("outputs/reels") / f"{profile_path.stem}.mp4"
+
+    # CREATIVE MODE: Opus directs + Veo 3.1 executes + TTS narrates. Falls through to
+    # the deterministic storyboard below if Opus can't design a reel (no key / no photos).
+    if args.creative:
+        from reel.creative import render_creative_reel
+        photos = selected if selected is not None else \
+            ((profile.get("visual") or {}).get("content_images") or [])
+        provider = StubVideoProvider() if args.no_video else default_video_provider()
+        print(f"[creative] Opus directing {args.frames} scenes from {len(photos)} real photos; "
+              f"provider={provider.name}", file=sys.stderr)
+        result, creative = render_creative_reel(
+            profile, brief, photos, provider=provider, out_path=out,
+            n_scenes=max(3, args.frames), scale=args.scale,
+            include_logo=not args.no_logo, music_path=args.music,
+            with_voiceover=not args.no_voiceover,
+        )
+        if result is not None:
+            print(f"\n[ok] CREATIVE reel -> {Path(result.reel_path).resolve()}")
+            print(f"     concept: {creative.concept[:90]}")
+            print(f"     {result.width}x{result.height}  {result.duration_s}s  "
+                  f"audio={result.has_audio}  provider={result.provider}")
+            return 0
+        print("   [creative] Opus could not design a reel; falling back to storyboard.",
+              file=sys.stderr)
+
     storyboard = build_storyboard(
         brief, profile=profile, caller=caller,
         max_total_s=args.max_seconds, target_scenes=max(2, args.frames),
@@ -130,7 +162,6 @@ def main() -> int:
         provider = StubVideoProvider()
     else:
         provider = default_video_provider()
-    out = Path(args.out) if args.out else Path("outputs/reels") / f"{profile_path.stem}.mp4"
 
     print(f"[reel] {storyboard.business_name}  dir={storyboard.primary_dir}  "
           f"scenes={len(storyboard.scenes)}  total={storyboard.total_duration_s}s  "

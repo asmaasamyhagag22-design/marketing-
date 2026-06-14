@@ -39,6 +39,7 @@ def render_reel(
     fps: int = 30,
     scale: float = 1.0,
     music_path: Optional[str | Path] = None,
+    voiceover_path: Optional[str | Path] = None,
     include_logo: bool = True,
 ) -> ReelRenderResult:
     """Render the storyboard to `out_path`. `scale` (<1) renders a faster, smaller
@@ -107,10 +108,32 @@ def render_reel(
         bg = tmpd / "bg.mp4"
         run_ffmpeg(["-f", "concat", "-safe", "0", "-i", str(listfile), "-c", "copy", str(bg)])
 
-        # 4) finalize, muxing optional music with fades.
-        has_audio = False
-        if music_path and Path(music_path).is_file():
-            total = storyboard.total_duration_s
+        # 4) finalize, muxing optional voice-over (primary) + music (ducked under it).
+        total = storyboard.total_duration_s
+        has_vo = bool(voiceover_path and Path(voiceover_path).is_file())
+        has_music = bool(music_path and Path(music_path).is_file())
+        has_audio = has_vo or has_music
+        if has_vo and has_music:
+            # VO at full level; music faded + ducked to a quiet bed beneath it.
+            run_ffmpeg([
+                "-i", str(bg), "-i", str(Path(voiceover_path).resolve()),
+                "-i", str(Path(music_path).resolve()),
+                "-filter_complex",
+                f"[2:a]volume=0.18,afade=t=in:st=0:d=1.0,"
+                f"afade=t=out:st={max(0.0, total - 1.5):.2f}:d=1.5[m];"
+                f"[1:a][m]amix=inputs=2:duration=first:dropout_transition=0[a]",
+                "-map", "0:v", "-map", "[a]",
+                "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-shortest",
+                "-movflags", "+faststart", str(out_path.resolve()),
+            ])
+        elif has_vo:
+            run_ffmpeg([
+                "-i", str(bg), "-i", str(Path(voiceover_path).resolve()),
+                "-map", "0:v", "-map", "1:a",
+                "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-shortest",
+                "-movflags", "+faststart", str(out_path.resolve()),
+            ])
+        elif has_music:
             run_ffmpeg([
                 "-i", str(bg), "-i", str(Path(music_path).resolve()),
                 "-filter_complex",
@@ -120,7 +143,6 @@ def render_reel(
                 "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-shortest",
                 "-movflags", "+faststart", str(out_path.resolve()),
             ])
-            has_audio = True
         else:
             run_ffmpeg([
                 "-i", str(bg), "-c", "copy", "-movflags", "+faststart",
