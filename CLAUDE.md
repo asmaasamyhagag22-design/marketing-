@@ -500,12 +500,42 @@ Microsoft, bare "Website" all unchanged). Tests:
 `tests/test_rules.py::test_name_strips_chrome_from_og_site_name` +
 `::test_strip_chrome_is_conservative`. Suite 518 passed.
 
+## Done — ecommerce CTA classification (Azza Fahmy) (2026-06-14) ✅
+MEASURED weakness surfaced by Azza Fahmy (Shopify jewelry): the CTA degraded to a
+generic "Visit website" because `existing_ctas` was EMPTY — **17 of 63 saved
+manifests extract 0 CTAs**. Root cause (NOT a render/crawl4ai problem — Playwright
+rendered fine: logo conf 1.0, 11 products, 225 internal links): the real shop
+entry-points ARE scraped as `<a>` ("Catalog" -> /collections/all, "VIEW ALL" ->
+/collections) but the CTA classifier's verb list missed them, so they fell to plain
+`internal`. Fix: added ecommerce shop verbs to `scraper/config.CTA_VERBS`
+(catalog / shop all / view all / browse / view|shop collection + Arabic تسوق / تصفح /
+الكتالوج / عرض الكل). `shop *` / `order *` already matched via the startswith rule;
+these are the non-"shop" phrasings. MEASURED across 63 manifests (re-classified):
+Azza Fahmy 0 -> 2 ("Catalog","VIEW ALL"); only 2 other sites touched (+2,+1); **no
+flooding** (collection NAMES like "Earrings"/"EL NUR" stay internal, not CTAs).
+Zero-hallucination intact (anchor+URL are real evidence). Universal (any store).
+Test: `tests/test_link_inventory_dedup.py::test_ecommerce_shop_links_classify_as_cta`.
+Suite 535 passed. NOTE: saved manifests need a RE-SCRAPE to populate the new CTAs
+(classification happens at scrape time); the code is correct for fresh scrapes.
+
 ## Backlog (each its own measured fix)
-- **Reel #4 — condition generation on the brand's real logo/scraped images:** add a
-  reference_image to ImageProvider.generate (Imagen conditioning) + VideoProvider.generate
-  (Veo image-to-video); surface `manifest.images_of_interest` (HERO/OG) onto the profile;
-  populate a `PosterBrief.reference_image_url` (else primary_logo), SSRF-guarded. The
-  biggest remaining grounding gap — scraped images never reach the generators today.
+- **Reel #4 — condition generation on scraped images — PROTOTYPED then BLOCKED
+  (2026-06-14, see memory `reel-4-image-seeding-blocked`).** Built end-to-end (Veo
+  image-to-video, live-verified on elkbabgi) but **UNCOMMITTED / not shipped**: the
+  premise fails because the scraper can't reliably hand a real PHOTO — MEASURED
+  **14/59 manifests have `hero == the selected logo`** (Azza Fahmy emits the seal in
+  multiple color variants, so an exact-src guard still leaks), and even a real photo
+  yields Veo-invented settings (elkbabgi's open-air garden) — not faithful. Plumbing
+  sits in the working tree (business_profile/schemas hero_image_url; from_visual
+  `_hero_image_url`+`_logo_srcs`; reel/{schemas,storyboard,compositor,video_provider};
+  tests/test_reel_reference_image.py). BLOCKER for any resume: a reliable
+  real-photo-vs-logo classifier. Awaiting the user's faithfulness direction.
+- **Scraper page cap is thin on big catalogs:** `config.MAX_INTERNAL_PAGES = 7` ->
+  Azza Fahmy scraped 4 of 204 discovered pages. Make the cap / page-selection adaptive
+  for large stores (prioritize collections/category pages). Measure coverage vs cost
+  (more pages = more render time + LLM tokens) before raising.
+- **Page-type misclassification:** Azza Fahmy's terms-of-service page was labeled
+  `services`. Tighten the page-type classifier (terms/privacy/legal != services).
 - **Delete dead `poster/art_director.build_art_direction`** (+ _category_key/_choose_layout/
   _layout_prompt) + orphaned poster/image_providers.py + render_pillow.py — hardcoded
   per-category templates, no live caller, but entangled with api/routes/poster.py's

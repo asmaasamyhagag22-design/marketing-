@@ -90,3 +90,26 @@ def test_other_buckets_untouched_and_cta_still_surfaced_in_internal():
     # ...but internal keeps BOTH CTA appends (unconditional) + the real internal
     assert len(inv.internal) == 3
     assert len(inv.external) == 1
+
+
+def test_ecommerce_shop_links_classify_as_cta():
+    """An ecommerce store's real shop entry-points ('Catalog', 'VIEW ALL') are
+    scraped as <a> but were missed before — the CTA degraded to a generic
+    'Visit website'. MEASURED on Azza Fahmy: cta_candidates 0 -> 2. Collection
+    NAMES ('Earrings') must NOT become CTAs (would flood the bucket)."""
+    from scraper.extractors.links import extract_links_from_html
+    site = "https://shop.example/"
+    html = (
+        '<a href="/collections/all">Catalog</a>'
+        '<a href="/collections">VIEW ALL</a>'
+        '<a href="/collections/earrings">Earrings</a>'   # collection NAME -> internal, not CTA
+        '<a href="/about">About us</a>'                  # not a CTA
+        '<a href="/تسوق">تسوق</a>'                        # Arabic shop CTA
+    )
+    links = extract_links_from_html(html, site, site)
+    ctas = {l.anchor_text for l in links if l.category == LinkCategory.CTA}
+    assert "Catalog" in ctas
+    assert "VIEW ALL" in ctas
+    assert "تسوق" in ctas
+    assert "Earrings" not in ctas     # product category name, not a CTA
+    assert "About us" not in ctas

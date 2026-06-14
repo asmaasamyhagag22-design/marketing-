@@ -173,6 +173,12 @@ CTA_VERBS = {
     "call us",
     "schedule", "start", "try free", "try now", "download", "apply",
     "reserve", "reserve now", "claim", "learn more",
+    # English — ECOMMERCE shop entry-points (added 2026-06-14 from Azza Fahmy:
+    # the real shop CTAs were scraped as <a> ("Catalog", "VIEW ALL") but missed,
+    # so the CTA degraded to a generic "Visit website" on a store. "shop *"/"order *"
+    # already match via the startswith rule; these are the non-"shop" phrasings.)
+    "catalog", "shop all", "view all", "browse", "explore the collection",
+    "view collection", "shop the collection", "shop collection",
     # English — restaurant/food-ordering CTAs (added 2026-05 from Buffalo Burger benchmark).
     # NOTE: "menu" alone is special-cased in _is_cta_anchor so it only matches
     # as an exact anchor, not as a substring of "menu of the day".
@@ -188,6 +194,8 @@ CTA_VERBS = {
     "اطلب دلوقتي", "حمل التطبيق", "حمّل التطبيق",
     "القائمة", "المنيو", "السلة", "عربة التسوق",
     "توصيل", "ديليفري",
+    # Arabic — ecommerce shop entry-points (added 2026-06-14)
+    "تسوق", "تسوّق", "تسوق الآن", "تصفح", "الكتالوج", "عرض الكل", "تسوق الكل",
 }
 
 # --- Social platforms -----------------------------------------------
