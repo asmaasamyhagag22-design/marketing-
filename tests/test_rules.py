@@ -313,6 +313,32 @@ def test_name_missing_when_no_signals():
     assert n.source_type == SourceType.MISSING
 
 
+def test_name_strips_chrome_from_og_site_name():
+    """og:site_name = 'Qasr Elkbabgi Website' must yield the clean brand at the
+    SOURCE (measured: the only chrome-bearing name across 59 saved manifests)."""
+    m = _rich_manifest()
+    m.site_metadata.og_site_name = "Qasr Elkbabgi Website"
+    n = extract_name_from_metadata(m)
+    assert n.value == "Qasr Elkbabgi"
+    # The verbatim source is still the cited quote (provenance preserved).
+    assert n.evidence[0].quote == "Qasr Elkbabgi Website"
+    assert n.evidence[0].extractor == "rule:og:site_name"
+
+
+def test_strip_chrome_is_conservative():
+    """Whole-word, fixed-point, never empties; leaves legitimate brand words."""
+    from business_profile.rules.from_metadata import _strip_chrome
+    assert _strip_chrome("Acme - Official Website") == "Acme"
+    assert _strip_chrome("Welcome to Zooba") == "Zooba"
+    assert _strip_chrome("Nike Official") == "Nike"
+    # Not chrome — must be left intact (no false positives).
+    assert _strip_chrome("Home Depot") == "Home Depot"
+    assert _strip_chrome("AOL Online") == "AOL Online"
+    assert _strip_chrome("Microsoft") == "Microsoft"
+    # A name that is ONLY chrome is kept verbatim rather than emptied.
+    assert _strip_chrome("Website") == "Website"
+
+
 # ---------------------------------------------------------------------
 # Schema.org
 # ---------------------------------------------------------------------

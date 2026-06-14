@@ -482,15 +482,30 @@ New deps: imageio-ffmpeg (used), arabic-reshaper + python-bidi (only used by the
 orphaned `reel/subtitles.py` libass path — see backlog). Tests stay 518 passed; live
 Veo/OpenAI calls cost money and are not in CI.
 
+## Done — clean business NAME at the source (#6) (2026-06-14) ✅
+Rule-based name leaked chrome into every headline/outro — MEASURED: og:site_name =
+"Qasr Elkbabgi Website" (the title is identical). Fix is at the SOURCE, not the
+poster band-aid: `business_profile/rules/from_metadata.py` adds `_strip_chrome`
+(whole-word, fixed-point, never empties) applied to the og:site_name and title name
+paths -> "Qasr Elkbabgi Website" -> "Qasr Elkbabgi". So poster + reel + SWOT all
+inherit the clean name (the poster's `_clean_business_name` stays as defense-in-depth,
+now a no-op on fresh profiles — same pattern as the link-dedup matrix-reader net).
+Chose the deterministic RULE fix over the backlog's LLM-extraction idea: zero
+hallucination, no token cost, universal, and it fixes the source. Conservative token
+list (website/official/homepage + Arabic الموقع الرسمي; bare "home"/"online"
+EXCLUDED — legitimate brand words). The verbatim source stays the cited quote
+(provenance preserved). MEASURED across **59 saved manifests: exactly 1** name
+changed (elkbabgi) — no collateral; safety cases verified (Home Depot, AOL Online,
+Microsoft, bare "Website" all unchanged). Tests:
+`tests/test_rules.py::test_name_strips_chrome_from_og_site_name` +
+`::test_strip_chrome_is_conservative`. Suite 518 passed.
+
 ## Backlog (each its own measured fix)
 - **Reel #4 — condition generation on the brand's real logo/scraped images:** add a
   reference_image to ImageProvider.generate (Imagen conditioning) + VideoProvider.generate
   (Veo image-to-video); surface `manifest.images_of_interest` (HERO/OG) onto the profile;
   populate a `PosterBrief.reference_image_url` (else primary_logo), SSRF-guarded. The
   biggest remaining grounding gap — scraped images never reach the generators today.
-- **#6 — LLM-extract a clean business NAME:** add `name` to IdentityResponse +
-  build_identity_prompt (strip chrome like 'Website'/'Official'); consume in build.py.
-  Rule-based name leaks 'Qasr Elkbabgi Website' into every headline/outro.
 - **Delete dead `poster/art_director.build_art_direction`** (+ _category_key/_choose_layout/
   _layout_prompt) + orphaned poster/image_providers.py + render_pillow.py — hardcoded
   per-category templates, no live caller, but entangled with api/routes/poster.py's

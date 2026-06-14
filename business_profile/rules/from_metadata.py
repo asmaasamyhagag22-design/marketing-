@@ -31,7 +31,60 @@ _GENERIC_TITLE_SEGMENTS = {
     "main", "index", "الرئيسية", "الصفحة الرئيسية", "ترحيب",
 }
 
+# "Chrome" words a site appends to (or prepends to) its own name in og:site_name
+# or <title> — NOT part of the brand. e.g. og:site_name = "Qasr Elkbabgi Website".
+# These are stripped (case-insensitive, whole-word) ONLY when something brand-like
+# remains, so the SOURCE name is clean and every downstream consumer (poster, reel,
+# SWOT) inherits it — not just the poster's band-aid `_clean_business_name`.
+# Deliberately TIGHT: only high-confidence chrome (website/official/homepage). Bare
+# "home"/"online" are excluded — they can be legitimate brand words.
+_TRAILING_CHROME = (
+    "official website", "official site", "website", "homepage", "home page",
+    "official", "الموقع الرسمي", "الموقع الالكتروني", "الموقع الإلكتروني",
+)
+_LEADING_CHROME = (
+    "welcome to the", "welcome to", "official website of", "official site of",
+)
+
 _TITLE_SEPARATORS = re.compile(r"\s*[|–—·•]\s*|\s+[-]\s+", re.UNICODE)
+
+# Separators/punctuation a chrome word might be glued to the brand with.
+_CHROME_EDGE = " -–—:|·•"
+
+
+def _strip_chrome(name: Optional[str]) -> Optional[str]:
+    """Remove trailing/leading generic 'chrome' words from a brand name.
+
+    Conservative: a chrome word is removed only as a whole leading/trailing token
+    AND only when a non-empty brand remains (so a name that IS just chrome is kept
+    verbatim rather than emptied). Runs to a fixed point so "Brand Official Website"
+    collapses fully. Returns the input unchanged when nothing matches.
+    """
+    if not name:
+        return name
+    s = " ".join(name.split())
+    changed = True
+    while changed and s:
+        changed = False
+        low = s.lower()
+        for w in _LEADING_CHROME:
+            if low.startswith(w + " "):
+                cand = s[len(w):].strip(_CHROME_EDGE)
+                if cand:
+                    s, changed = cand, True
+                break
+        if changed:
+            continue
+        low = s.lower()
+        for w in _TRAILING_CHROME:
+            if low == w:
+                break  # the whole name is chrome — keep it, don't empty it
+            if low.endswith(" " + w):
+                cand = s[: len(s) - len(w)].strip(_CHROME_EDGE)
+                if cand:
+                    s, changed = cand, True
+                break
+    return s
 
 
 def _clean_title(title: str) -> Optional[str]:
@@ -57,8 +110,11 @@ def extract_name_from_metadata(manifest: ScrapeManifest) -> EvidencedField[str]:
 
     # 1. og:site_name (high confidence, structural)
     if md.og_site_name and md.og_site_name.strip():
+        # Strip trailing/leading chrome at the SOURCE ("Qasr Elkbabgi Website"
+        # -> "Qasr Elkbabgi"). The verbatim og:site_name is still the cited quote.
+        cleaned = _strip_chrome(md.og_site_name.strip())
         return EvidencedField(
-            value=md.og_site_name.strip(),
+            value=cleaned,
             evidence=[EvidenceItem(
                 block_id=None, page_url=home_url,
                 quote=md.og_site_name.strip(),
@@ -70,7 +126,7 @@ def extract_name_from_metadata(manifest: ScrapeManifest) -> EvidencedField[str]:
 
     # 2. <title> cleaned
     if md.title:
-        cleaned = _clean_title(md.title)
+        cleaned = _strip_chrome(_clean_title(md.title))
         if cleaned:
             return EvidencedField(
                 value=cleaned,
