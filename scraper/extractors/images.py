@@ -37,6 +37,14 @@ _NON_PHOTO_MARKERS = (
     "logo", "favicon", "icon", "sprite", "badge", "watermark", "placeholder",
     "loader", "spinner", "avatar-default", "blank.gif",
 )
+# Analytics/marketing TRACKING-PIXEL hosts — an <img> to these is a 1x1 beacon, not
+# a photo (e.g. facebook.com/tr, google-analytics). Excluded so they never reach
+# the content set (they also break downstream vision fetches).
+_TRACKER_HOSTS = (
+    "facebook.com/tr", "facebook.com/plugins", "google-analytics.com",
+    "googletagmanager.com", "doubleclick.net", "analytics.", "/pixel",
+    "/tr?", "px.ads.", "bat.bing.com", "hotjar.", "clarity.ms",
+)
 _PHOTO_EXTS = (".jpg", ".jpeg", ".png", ".webp")
 # Chrome containers whose images are navigation/branding, not content.
 _CHROME_ANCESTORS = ("header", "nav", "footer")
@@ -69,6 +77,8 @@ def _looks_like_photo(url: str) -> bool:
     carries no logo/icon marker. SVG/GIF are excluded (vector/animation = chrome)."""
     path = urlparse(url).path.lower()
     low = url.lower()
+    if any(t in low for t in _TRACKER_HOSTS):     # tracking pixel / beacon, not a photo
+        return False
     if any(m in low for m in _NON_PHOTO_MARKERS):
         return False
     if path.endswith((".svg", ".gif")):
