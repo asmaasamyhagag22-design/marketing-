@@ -36,22 +36,26 @@ _SPEECH_VOICE = "onyx"          # valid /audio/speech voice for the fallback pat
 _AR_RE = re.compile(r"[؀-ۿݐ-ݿﭐ-﷿ﹰ-﻿]")
 
 
-def _instructions_for(lines: list[str]) -> str:
+def _instructions_for(lines: list[str], delivery: str = "") -> str:
+    """Performance brief for one line. Pushes hard for EMOTION (the default read came
+    out flat) and optionally folds in a per-line delivery note from the director."""
     env = os.environ.get("REEL_TTS_INSTRUCTIONS")
-    if env:
-        return env
-    joined = " ".join(lines or [])
-    if _AR_RE.search(joined):
-        base = (
-            "You are a real human voice-over artist. Read the line in WARM, natural, "
-            "authentic EGYPTIAN ARABIC (Cairo dialect / اللهجة المصرية) — NOT Modern "
-            "Standard Arabic. Confident, charismatic, premium food-brand ad delivery; "
-            "smooth human intonation, natural breaths and rhythm, sound like a person, "
-            "not a machine."
+    base = env if env else (
+        _AR_RE.search(" ".join(lines or [])) and (
+            "You are a passionate, EXPRESSIVE human voice-over artist performing a premium "
+            "food-brand ad. Perform with REAL EMOTION and energy — sound genuinely excited, "
+            "proud and warm; let your pitch rise and fall, lean into the appetizing words, "
+            "add a smile you can hear and natural enthusiasm. Authentic EGYPTIAN ARABIC "
+            "(Cairo dialect / اللهجة المصرية) — NOT flat, NOT a news reader, NOT robotic. "
+            "Vary your pace and build energy."
+        ) or (
+            "You are a passionate, EXPRESSIVE human voice-over artist for a premium brand ad. "
+            "Perform with real emotion and energy — excited, warm, dynamic; vary pace and pitch, "
+            "lean into the key words. Sound human and alive, never flat or robotic."
         )
-    else:
-        base = ("You are a real human voice-over artist. Warm, confident, premium "
-                "brand-ad delivery — smooth and natural, sound like a person.")
+    )
+    if delivery:
+        base += f" For THIS line, the emotion/delivery is: {delivery}."
     return base + " Speak ONLY the line you are given, no extra words."
 
 
@@ -102,10 +106,13 @@ def synth_voiceover(
     *,
     model: Optional[str] = None,
     voice: Optional[str] = None,
+    deliveries: Optional[list[str]] = None,
     api_key: Optional[str] = None,
 ) -> Optional[Path]:
     """Build a single narration track aligned to `durations` (one entry per scene).
-    Returns the audio path, or None if TTS is unavailable / nothing synthesized."""
+    `deliveries` (optional, one per line) is a per-line emotion/performance note from
+    the director, folded into that line's instruction so each scene is performed with
+    its own feeling. Returns the audio path, or None if TTS is unavailable."""
     key = api_key or os.environ.get("OPENAI_API_KEY")
     if not key or not lines:
         return None
@@ -116,7 +123,7 @@ def synth_voiceover(
     client = OpenAI(api_key=key)
     model = model or os.environ.get("REEL_TTS_MODEL") or _DEFAULT_MODEL
     voice = voice or os.environ.get("REEL_TTS_VOICE") or _DEFAULT_VOICE
-    instructions = _instructions_for(lines)
+    deliveries = deliveries or []
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -127,6 +134,7 @@ def synth_voiceover(
         for i, (line, dur) in enumerate(zip(lines, durations)):
             scene_aud = tmpd / f"scene{i}.wav"
             raw = tmpd / f"raw{i}.mp3"
+            instructions = _instructions_for(lines, deliveries[i] if i < len(deliveries) else "")
             if _tts_segment(client, line, raw, model=model, voice=voice, instructions=instructions):
                 # Pad with trailing silence (or trim) so the line exactly fills the
                 # scene; a short lead-in delay keeps it off the hard cut.

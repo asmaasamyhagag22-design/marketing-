@@ -34,6 +34,7 @@ class CreativeScene(BaseModel):
     image_index: int                       # which real photo to bring to life
     veo_prompt: str                        # rich image-to-video prompt for Veo 3.1
     voiceover: str = ""                     # narration line (brand language)
+    voiceover_delivery: str = ""           # emotion/performance note for this line
     on_screen_text: str = ""               # short kinetic caption (may be empty)
     duration_s: float = 4.0
 
@@ -132,6 +133,9 @@ def _system_prompt(n_scenes: int, language: str) -> str:
         "flames, fabric and light shifting, a slow dolly or crane move, rack focus. NOT a flat "
         "zoom. Keep it TRUE to what is really in the photo; add no fake text, logos, or signage.\n"
         f"- voiceover: one short, punchy narration line in {language} that sells the moment.\n"
+        "- voiceover_delivery: the EMOTION/performance for that line in a few words "
+        "(e.g. 'intrigued, slow build', 'mouth-watering excitement', 'warm proud invitation', "
+        "'confident and bold') — vary it across scenes so the read has real feeling.\n"
         "- on_screen_text: a 2-5 word kinetic caption (or empty).\n"
         "- duration_s: 3-6.\n\n"
         "DISCIPLINE: be creative and persuasive, but invent NO facts — no fake awards, ratings, "
@@ -139,7 +143,8 @@ def _system_prompt(n_scenes: int, language: str) -> str:
         "The reel must feel premium, human, and authentic to THIS brand's vertical.\n\n"
         "Return ONLY a JSON object, no prose, no markdown fences:\n"
         '{"concept":"...","hook":"...","music_mood":"...","cta":"...","language":"' + language + '",'
-        '"scenes":[{"image_index":0,"veo_prompt":"...","voiceover":"...","on_screen_text":"...","duration_s":4}]}'
+        '"scenes":[{"image_index":0,"veo_prompt":"...","voiceover":"...","voiceover_delivery":"...",'
+        '"on_screen_text":"...","duration_s":4}]}'
     )
 
 
@@ -212,6 +217,7 @@ def design_creative_reel(
         scenes.append(CreativeScene(
             image_index=idx, veo_prompt=prompt,
             voiceover=str(s.get("voiceover", "")).strip(),
+            voiceover_delivery=str(s.get("voiceover_delivery", "")).strip(),
             on_screen_text=str(s.get("on_screen_text", "")).strip(),
             duration_s=float(s.get("duration_s", 4.0) or 4.0),
         ))

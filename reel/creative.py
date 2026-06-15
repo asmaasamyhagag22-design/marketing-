@@ -90,7 +90,9 @@ def render_creative_reel(
     if with_voiceover:
         vo_lines = [s.voiceover for s in creative.scenes]
         vo_durs = [s.duration_s for s in storyboard.scenes]
-        vo_path = synth_voiceover(vo_lines, vo_durs, Path(out_path).with_suffix(".vo.m4a"))
+        vo_deliveries = [s.voiceover_delivery for s in creative.scenes]
+        vo_path = synth_voiceover(vo_lines, vo_durs, Path(out_path).with_suffix(".vo.m4a"),
+                                  deliveries=vo_deliveries)
         if vo_path:
             logger.info("voice-over track ready: %s", vo_path)
 
