@@ -47,6 +47,28 @@ _DETAIL_QUERY_KEYS = {
     "event", "event_id", "story", "story_id", "p",
 }
 
+# Legal / policy tokens. These must win OVER the generic pattern scan, because a
+# URL like /policies/terms-of-service contains "service" and would otherwise match
+# SERVICES (HIGH) and steal a real-content crawl slot. MEASURED: 9/63 legal URLs
+# across 7 saved sites were mis-tiered as HIGH/MEDIUM content. Tokens are matched
+# whole (split on '-'), so "policymaker" / "services" do NOT match.
+_LEGAL_TOKENS = {
+    "terms", "tos", "privacy", "policy", "policies", "legal", "disclaimer",
+    "cookie", "cookies", "gdpr", "refund", "refunds", "eula", "copyright",
+}
+
+
+def _is_legal_page(url: str, anchor_text: str = "") -> bool:
+    """True for terms / privacy / policy / legal URLs — matched on whole tokens of
+    the path segments (and the anchor), so SERVICES etc. are not stolen by 'service'
+    inside 'terms-of-service'."""
+    _path, segments, _q = _normalized_path(url)
+    tokens: set[str] = set()
+    for seg in segments:
+        tokens.update(seg.split("-"))
+    tokens.update((anchor_text or "").lower().replace("_", "-").replace("&", " ").split())
+    return bool(tokens & _LEGAL_TOKENS)
+
 
 def _normalized_path(url: str) -> tuple[str, list[str], dict[str, list[str]]]:
     """Return normalized path, path segments, query params for a URL."""
@@ -128,6 +150,12 @@ def classify_url(url: str, anchor_text: str = "") -> tuple[PageType, PageTier]:
     """
     if _is_blog_or_news_detail(url, anchor_text):
         return PageType.BLOG, PageTier.SKIP
+
+    # Legal/policy pages have ~zero marketing value and must not consume the crawl
+    # budget — and crucially must win over the generic scan (terms-of-service -> SKIP,
+    # not SERVICES). Checked BEFORE the pattern scan.
+    if _is_legal_page(url, anchor_text):
+        return PageType.LEGAL, PageTier.SKIP
 
     try:
         path = urlparse(url).path.lower()

@@ -215,6 +215,34 @@ def test_classify_gallery_ar():
 
 
 # ---------------------------------------------------------------------
+# Legal/policy precedence (terms-of-service must not steal a SERVICES slot)
+# ---------------------------------------------------------------------
+
+def test_legal_pages_skip_and_dont_steal_services_slot():
+    """A legal/policy URL must classify LEGAL/SKIP even when it contains 'service'
+    (terms-of-service) or 'pricing' (pricing-policy) — MEASURED: 9/63 legal URLs
+    across 7 saved sites were wrongly tiered HIGH/MEDIUM and stole crawl slots."""
+    for url, anchor in [
+        ("https://eg.azzafahmy.com/policies/terms-of-service", "Terms & Conditions"),
+        ("https://www.brilliantearth.com/customer-service-policies/", "Policies"),
+        ("https://www.glamira.com/pricing-policy/", "Pricing Policy"),
+        ("https://x.com/privacy-policy", "Privacy"),
+        ("https://x.com/refund-policy", "Refunds"),
+        ("https://x.com/cookie-policy", "Cookies"),
+    ]:
+        pt, tier = classify_url(url, anchor)
+        assert pt == PageType.LEGAL and tier == PageTier.SKIP, f"{url} -> {pt}/{tier}"
+
+
+def test_legal_check_does_not_break_real_pages():
+    """Real content pages must be unchanged (no false legal match)."""
+    assert classify_url("https://x.com/services", "Services")[0] == PageType.SERVICES
+    assert classify_url("https://x.com/our-services", "")[0] == PageType.SERVICES
+    assert classify_url("https://x.com/pricing", "")[0] == PageType.PRICING
+    assert classify_url("https://x.com/collections/all", "Catalog")[0] == PageType.PRODUCTS
+
+
+# ---------------------------------------------------------------------
 # Regression: existing patterns must keep working after the rewrite
 # ---------------------------------------------------------------------
 
