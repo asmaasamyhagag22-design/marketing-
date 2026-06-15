@@ -22,9 +22,15 @@ logger = logging.getLogger(__name__)
 # underlying voices are English-leaning, so this approximates the dialect, it is not
 # a native ar-EG voice; for that, wire Azure ar-EG (Salma/Shakir) or ElevenLabs.
 # Override via REEL_TTS_MODEL / REEL_TTS_VOICE / REEL_TTS_INSTRUCTIONS.
-_DEFAULT_MODEL = "gpt-4o-mini-tts"
-_DEFAULT_VOICE = "onyx"
-_FALLBACK_MODEL = "tts-1"
+# Default to gpt-audio-1.5 — OpenAI's newest CONVERSATIONAL audio model. It sounds
+# noticeably more HUMAN than the gpt-4o-mini-tts speech endpoint and is steered with
+# a full system prompt (so we can push hard for a natural Egyptian read). It runs via
+# chat.completions (modalities=audio), not /audio/speech. 'marin' is the newest voice.
+# Honest ceiling: still not a NATIVE ar-EG human — for that wire ElevenLabs / Azure
+# (Salma/Shakir). Override via REEL_TTS_MODEL / REEL_TTS_VOICE / REEL_TTS_INSTRUCTIONS.
+_DEFAULT_MODEL = "gpt-audio-1.5"
+_DEFAULT_VOICE = "marin"
+_SPEECH_VOICE = "onyx"          # valid /audio/speech voice for the fallback path
 
 # Arabic-presentation detection -> Egyptian-accent instruction.
 _AR_RE = re.compile(r"[؀-ۿݐ-ݿﭐ-﷿ﹰ-﻿]")
@@ -36,28 +42,53 @@ def _instructions_for(lines: list[str]) -> str:
         return env
     joined = " ".join(lines or [])
     if _AR_RE.search(joined):
-        return (
-            "Speak in authentic, natural EGYPTIAN ARABIC (Cairo dialect / اللهجة المصرية), "
-            "NOT Modern Standard Arabic. Warm, confident, charismatic — like a premium "
-            "Egyptian food-brand ad voice-over artist. Energetic but smooth, with natural "
-            "Egyptian intonation and rhythm."
+        base = (
+            "You are a real human voice-over artist. Read the line in WARM, natural, "
+            "authentic EGYPTIAN ARABIC (Cairo dialect / اللهجة المصرية) — NOT Modern "
+            "Standard Arabic. Confident, charismatic, premium food-brand ad delivery; "
+            "smooth human intonation, natural breaths and rhythm, sound like a person, "
+            "not a machine."
         )
-    return ("Warm, confident, premium brand ad voice-over — energetic but smooth, natural.")
+    else:
+        base = ("You are a real human voice-over artist. Warm, confident, premium "
+                "brand-ad delivery — smooth and natural, sound like a person.")
+    return base + " Speak ONLY the line you are given, no extra words."
+
+
+def _synth_one(client, text: str, out: Path, *, model: str, voice: str,
+               instructions: str) -> bool:
+    """One line -> mp3. gpt-audio* models go through chat.completions (audio
+    modality, steered by a system prompt); tts/* models go through /audio/speech."""
+    if model.startswith("gpt-audio"):
+        import base64
+        r = client.chat.completions.create(
+            model=model, modalities=["text", "audio"],
+            audio={"voice": voice, "format": "mp3"},
+            messages=[{"role": "system", "content": instructions},
+                      {"role": "user", "content": text}],
+        )
+        data = base64.b64decode(r.choices[0].message.audio.data)
+        out.write_bytes(data)
+    else:
+        kw = {"instructions": instructions} if model == "gpt-4o-mini-tts" else {}
+        client.audio.speech.create(model=model, voice=voice, input=text, **kw).stream_to_file(str(out))
+    return out.is_file() and out.stat().st_size > 0
 
 
 def _tts_segment(client, text: str, out: Path, *, model: str, voice: str,
                  instructions: str) -> bool:
-    """Synthesize one line to mp3. Tries the steerable model with `instructions`,
-    then falls back to the basic model. Returns False on failure."""
-    import re as _re  # noqa: F401  (module-level re already imported)
+    """Synthesize one line, trying the chosen (human) model first, then degrading to
+    the steerable speech model, then plain tts-1. Returns False only if all fail."""
     text = (text or "").strip()
     if not text:
         return False
-    for mdl, kw in ((model, {"instructions": instructions}), (_FALLBACK_MODEL, {})):
+    chain = [(model, voice)]
+    if not model.startswith("gpt-4o-mini-tts"):
+        chain.append(("gpt-4o-mini-tts", _SPEECH_VOICE))
+    chain.append(("tts-1", _SPEECH_VOICE))
+    for mdl, vc in chain:
         try:
-            resp = client.audio.speech.create(model=mdl, voice=voice, input=text, **kw)
-            resp.stream_to_file(str(out))
-            if out.is_file() and out.stat().st_size > 0:
+            if _synth_one(client, text, out, model=mdl, voice=vc, instructions=instructions):
                 return True
         except Exception as e:  # noqa: BLE001
             logger.warning("tts segment failed (model=%s): %s", mdl, e)
