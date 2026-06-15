@@ -4,8 +4,14 @@ All tunable values live here. No magic numbers in the rest of the code.
 """
 
 # --- Scrape budget --------------------------------------------------
-TOTAL_BUDGET_SECONDS = 60
-MAX_INTERNAL_PAGES = 7  # in addition to homepage
+# MEASURED (2026-06-15, 32 saved sites): the 60s wall was the BINDING constraint on
+# 21/32 sites — they hit it after only 1-7 subpages (JS pages render ~15s each), so
+# the page cap of 7 was almost never reached and content-rich sites (median 17 HIGH
+# pages) were badly under-covered. The LLM evidence pack is char-capped, so more
+# pages cost crawl TIME only, not tokens. Raised for solid coverage; a slow site now
+# takes ~2.5 min instead of ~1 min. Tune down for speed-over-coverage.
+TOTAL_BUDGET_SECONDS = 150
+MAX_INTERNAL_PAGES = 12  # in addition to homepage
 PAGE_TIMEOUT_MS = 20_000
 NAV_TIMEOUT_MS = 25_000
 INTER_PAGE_DELAY_SECONDS = 1.0
