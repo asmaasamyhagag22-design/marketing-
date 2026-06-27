@@ -1960,6 +1960,129 @@ the old `raw or e164` behaviour. So the reel Step-1 sanity floor now holds at 0 
 baseline before Step 2 (the blocking gate). The CREATIVE Opus risk surface (Path B) is still
 unmeasured (owner's paid opt-in).
 
+## Done — reel: text-overlay redesign v2 (legibility scrim + accent spine + hero type) (2026-06-27) ✅
+Owner: the reel's on-video text was "وحش جدا" — plain white lists floating with WEAK CONTRAST
+(white text on a washed-out near-white frame was barely readable), no hierarchy ("data dump"),
+and on the live Orange reel the accent rendered BLUE, not the brand color. DIAGNOSED on the REAL
+output (rule 2): extracted frames from `outputs/reels/orange_reel_v2.mp4` via the bundled ffmpeg
+and VIEWED them (4s/8s = a near-blank washed frame; 13s = generic stock hands), then built an
+OFFLINE before/after harness rendering `reel/textlayer.py` over CLEAN text-free backgrounds (busy
+mid-tone / near-WHITE worst case / dark) so the design is judged with NO baked-text ghost and ZERO
+Veo spend. Redesigned `reel/textlayer._scene_html`:
+- A dedicated STRONGER + TALLER scrim (`.scrim` div, 64% height, dark to .96 at the base) replaces
+  the weak `.lower` bottom gradient → text reads on ANY footage, incl. the near-white frame the old
+  scrim failed on (MEASURED before/after: old = washed/illegible, new = crisp).
+- A brand-accent SPINE (`border-left` on `.cluster`, RTL→`border-right`) ties the whole cluster and
+  gives it a designed identity instead of a floating list.
+- Hero typography: bigger headline (0.112/0.088·W), one brand-accent word (`.hl`), cleaner item rows.
+- Kept: CTA chip, logo corner, RTL + `unicode-bidi:plaintext`, LTR phone/email/URL atoms, the
+  vivid-from-palette `_accent`. Existing `tests/test_voiceover.py::
+  test_textlayer_is_bottom_anchored_scrim_and_accent` still passes. Suite **759 passed**.
+HONEST SCOPE (not overselling): this is the TEXT layer only — a real but SMALLER lever. The bigger
+drivers of "وحش" are (a) the FRAMES — blank/generic/off-brand scraped photos animated by KenBurns
+(or weak Veo seeds); NEXT, kept UNIVERSAL per owner ("works for any business, reads its soul"):
+derive scene relevance from the scraped identity (category/offerings/persona), NO vertical
+hardcoding; and (b) the storyboard putting a LIST of items per scene instead of ONE message per
+scene. SEPARATE DATA bug: the live Orange accent was BLUE because the scrape missed `#FF7900`
+(palette-extraction gap) — `_accent` is correct given a correct palette. The redesign is UNCOMMITTED
+(working-tree change to `reel/textlayer.py`).
+
+## Done — reel: UNIVERSAL content-image quality gate (kills the "dumb/blurry frame") (2026-06-27) ✅
+Owner: the reel's frames were "غباء/وحش" and "ملهاش علاقة بالمجال" — and the fix must stay UNIVERSAL
+("works for any business, reads its soul"). DIAGNOSED on the REAL Orange reel (rule 2): the reel
+animates the brand's scraped `content_images`, but Orange's 12 "images" are tiny category THUMBNAILS
+(298x175 / 221x130 px) + wide text BANNERS + near-blank product-on-white graphics — NONE are usable
+photos. KenBurns / Veo-i2v upscaling a 298px thumbnail to 1080x1920 = a blurry "dumb frame". The
+vision curator judges CONTENT ("on-brand?" — an Orange banner IS on-brand) but NOT technical
+USABILITY, so garbage got animated. A UNIVERSAL pattern (many sites' "images" are banners/icons), not
+vertical. ROOT cause is the missing deterministic TECHNICAL filter.
+- New `reel/image_quality.py`: `assess_photo(w, h, mean_lum?, white_pct?)` (pure keep/reject) +
+  `filter_usable_photos(urls, fetch=)` (SSRF-guarded fetch+measure, injectable fetch, never raises).
+  Thresholds CALIBRATED across good- AND bad-photo brands BEFORE choosing them (rule 2): short-side
+  ≥ 500px (the dominant, well-separated signal), long/short ratio ≤ 2.6 (banner strips), ≤ 88%
+  near-white, mean-luminance 12–244. MEASURED: elkbabgi (real 960–2000px photos) KEEP 12/12;
+  digilians KEEP 4/5 (the 1 reject is a Facebook tracking pixel); Orange KEEP 0/12.
+- Wired into `reel/__main__`: the technical gate runs ALWAYS (before the optional vision curator),
+  and `selected` is ALWAYS the gated set (possibly []), so the raw garbage is NEVER used. VERIFIED
+  end-to-end OFFLINE (no Veo spend): Orange (0 usable) → 5 scenes ALL generated text-to-video (no
+  blurry seed); elkbabgi (10 usable) → 6 scenes ALL seeded from real photos (the faithful path is
+  intact). Tests: `tests/test_image_quality.py` (7, hermetic — injected fetch). Suite **766 passed**
+  (was 759). UNCOMMITTED (working-tree).
+NEXT (step 2, needs a Veo run to verify VISUALLY): when 0 usable photos the generated scene falls to
+the DETERMINISTIC `_DEFAULT_SCENE` ("professional workplace") for an unknown category with no caller
+— strengthen the UNIVERSAL identity-derived Veo scene prompt (category / offerings / persona) so a
+telecom brand gets a connectivity scene, a clinic gets a clinic scene, etc., derived from the scraped
+data with NO vertical hardcoding. Also: the poster shares the same weak-scraped-image risk — reuse
+this gate there. And the scraper could record content-image dimensions so the gate filters without a
+re-fetch.
+
+## Done — reel: UNIVERSAL identity-derived scene + stronger LLM scene prompt (frame step 2) (2026-06-27) ✅
+Step 2 of the frame fix (after the quality gate routes no-good-photo brands to GENERATED scenes).
+Goal: the generated Veo scene must be RELEVANT to the brand's field, UNIVERSALLY (owner: "reads its
+soul", NO vertical hardcoding).
+- `reel/art_director._identity_scene(brief, profile)`: a UNIVERSAL deterministic fallback subject
+  built from the scraped category + top offerings + audience — "real <audience> authentically
+  experiencing <category> — a real-life moment that shows <offering1> and <offering2>". Replaces the
+  generic `_DEFAULT_SCENE` ("professional workplace") for any category NOT in the (kept-as-enrichment)
+  `_VERTICAL_SCENE` map (telecom / fintech / logistics / SaaS / ...). `_humanize` strips slug/segment
+  jargon from the category/audience (`services_b2c`→`services`, `B2C`→dropped) so a Veo prompt never
+  reads as a code; OFFERINGS stay VERBATIM (real product names, zero-hallucination). Restaurants keep
+  their dedicated food scene.
+- `build_brand_scene` (the LLM art-director — the PRIMARY production path) system prompt strengthened:
+  "Show the brand's REAL activity IN ACTION — real people actively USING or experiencing its specific
+  offerings, so the scene instantly reads as THIS exact field (NOT a generic office, NOT an abstract
+  mood)."
+MEASURED offline (no LLM, deterministic path): Orange (category `services_b2c`) BEFORE = "a
+professional modern workplace..." → AFTER = "real people authentically experiencing services — a
+real-life moment that shows Orange PREMIER and GO packages..." (grounded, no jargon); Digilians
+(education) unchanged (keeps its template — no regression). Tests: `tests/test_reel_scene_identity.py`
+(4). Suite **770 passed** (was 766). UNCOMMITTED.
+HONEST CEILING: a DETERMINISTIC fallback can ground in the real category/offerings but CANNOT infer
+the visual activity from an opaque product name (it can't know "Orange PREMIER" → people using
+phones); that semantic leap is the LLM art-director's job (strengthened above), whose VISUAL result
+needs a live Veo run to verify (owner's spend). The deterministic path is the clean, grounded,
+no-jargon safety net.
+
+## Done — brand-anchored images STEP 1: capability probe + measurement + standalone edit provider (2026-06-27) ✅
+ROOT problem (owner, MEASURED on 3 delivered posters): pure **text-to-image** drifts OFF-brand
+(generic AI stock people, clichés, occasional baked text) because nothing anchors the SUBJECT/
+scene to the brand's real world — `BrandCreativeDNA` steers STYLE a bit but not the subject.
+The reliable fix (already flagged in the 2026-06-16 entries) = **image-conditioned generation**.
+Built it as a contained, verified-live first step (NOT yet wired into the pipeline):
+- **SDK reality (verified, GOOD):** the INSTALLED `google-genai` 2.8.0 ALREADY exposes
+  `edit_image` (STYLE / OUTPAINT / mask refs) + `recontext_image` — **no migration to
+  `google-cloud-aiplatform` (not even installed) and no new dependency**. `recontext_image` in
+  this SDK = **Virtual Try-On only** (fashion model+product) → NOT our tool. Our tool is
+  `edit_image` with `EDIT_MODE_STYLE` (Path 1) + `EDIT_MODE_OUTPAINT` (Path 2).
+- **LIVE capability probe** (the Veo-3.1 lesson — don't assume a model is provisioned):
+  **`imagen-3.0-capability-001` IS provisioned on project image-498715** and returns images for
+  BOTH STYLE and OUTPAINT; `imagen-3.0-capability-preview-0930` + `imagegeneration@006` → 404.
+- **Coverage measurement (free, no GCP)** via the REAL `reel.image_quality` gate over the
+  freshest scrape per brand (content_images extractor landed 2026-06-14, so older scrapes are
+  excluded as artifacts → **9 valid brands**): **6/9 (67%) have ≥1 technically-usable photo**,
+  4/9 (44%) have ≥3, **3/9 (33%) have ZERO** (vodafone all-thumbnails; te_eg 11/12 CDN-blocked
+  on fetch; azzafahmy 0 extracted) — and those 3 are the SAME brands that produced the worst
+  posters. HONEST caveats: small/directional corpus; "technically-usable" (size/ratio/blank) ≠
+  "scene-worthy"; if we can't fetch it (te_eg) Path 2 can't use it either. → confirms an
+  **ADAPTIVE** design (OUTPAINT when a good real photo exists; STYLE on the brand's real ads
+  otherwise; text-to-image as the last-resort fallback) — same philosophy as the reel.
+- **NEW `poster/imagen_edit_provider.py`** (`ImagenEditProvider`): `style(prompt, style_refs,…)`
+  (EDIT_MODE_STYLE — a FRESH scene in the brand's own visual language) + `outpaint(base,…)`
+  (EDIT_MODE_OUTPAINT — keep a REAL photo, extend it to the canvas via a built padded-canvas+mask).
+  SSRF-guarded reference fetch; NEVER bakes text (reuses the no-text composition contract);
+  RAISES on failure so the pipeline can fall back. Two bugs caught BY live validation + fixed:
+  (a) a temporary `genai.Client` got GC'd mid-request ("client has been closed") → cache+retain
+  the client; (b) non-square (3:4) signatures accept **max 2 reference images** → `max_refs=2`.
+- **VERIFIED LIVE through the module across 2 verticals:** OUTPAINT elkbabgi → the real stuffed-
+  pigeon platter PRESERVED and the feast naturally extended to **1024x1280** (max fidelity);
+  STYLE WE/Telecom (from its 7 real ads in `telecom_egypt_dna.references_seen`) → a purple
+  "digital-twilight" rim-lit composite scene at **896x1280** — on-brand, vs the old generic
+  drift (WE was the worst prior poster). Tests: `tests/test_imagen_edit_provider.py` (6, hermetic
+  — mask geometry, SSRF guard, no-ref/unfetchable-base raise; live edit calls out-of-CI). Suite
+  **776 passed** (was 770). NEXT (separate, measured): wire the ADAPTIVE selector into
+  `poster/pipeline.generate_poster` (pick OUTPAINT vs STYLE vs text-to-image by available real
+  assets), then carry the same engine to the reel.
+
 ## Backlog (each its own measured fix)
 - **Logo-vs-photo on multi-variant seals:** Azza Fahmy emits its seal in several
   color variants; only the selected one is excluded by filename, so a variant can leak
