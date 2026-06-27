@@ -114,38 +114,42 @@ def _highlight_last_word(headline: str) -> str:
 
 def _scene_html(scene: ReelScene, storyboard: Storyboard, width: int, height: int,
                 logo_uri: Optional[str]) -> str:
-    """Transparent text-layer HTML for one scene — a bottom-anchored, safe-zone caption
-    block (strong scrim, hero typography, one brand-accent word) instead of plain white
-    text floating over the subject."""
+    """Transparent text-layer HTML for one scene — a bottom-anchored caption with a strong
+    legibility scrim (reads on ANY footage, incl. washed-out frames), a brand-accent SPINE
+    that ties the whole cluster and gives it a designed identity, hero typography, and a
+    clean structured treatment for list scenes (offerings/contact) instead of a plain dump."""
     rtl = storyboard.primary_dir == "rtl"
     dir_attr = "rtl" if rtl else "ltr"
     accent = _accent(storyboard)                       # vivid, from the real palette
     accent_rgb = _hex_to_rgb(accent)
-    accent_on_dark = _legible_on_dark(accent_rgb)      # accent text/rule on the dark scrim
+    accent_on_dark = _legible_on_dark(accent_rgb)      # accent text/spine on the dark scrim
     chip_text = _readable_on(accent_rgb)               # text INSIDE the accent CTA chip
 
     short = len((scene.headline or "").split()) <= 3
-    head_px = round(width * (0.107 if short else 0.085))
-    sub_px = round(width * 0.0425)
-    cta_px = round(width * 0.046)
-    logo_h = round(width * 0.11)
+    head_px = round(width * (0.112 if short else 0.088))
+    item_px = round(width * 0.046)
+    cta_px = round(width * 0.048)
+    logo_h = round(width * 0.12)
     edge = "flex-end" if rtl else "flex-start"         # ragged edge falls toward center
-    shadow = "0 1px 2px rgba(0,0,0,.95), 0 2px 8px rgba(0,0,0,.7)"
+    align = "right" if rtl else "left"
+    spine = "border-right" if rtl else "border-left"   # accent spine on the leading edge
+    spine_pad = "padding-right" if rtl else "padding-left"
+    shadow = "0 2px 10px rgba(0,0,0,.9), 0 1px 3px rgba(0,0,0,.95)"
 
     show_logo = bool(logo_uri) and scene.kind in ("intro", "outro", "contact")
-    logo_pos = "right:56px" if rtl else "left:56px"
+    logo_pos = "right:64px" if rtl else "left:64px"
     logo_html = (f'<div class="logo" style="{logo_pos}"><img src="{logo_uri}"></div>'
                  if show_logo else "")
 
-    blocks: list[str] = []
+    inner: list[str] = []
     if scene.headline:
-        blocks.append('<div class="rule"></div>')
-        blocks.append(f'<div class="headline">{_highlight_last_word(scene.headline)}</div>')
+        inner.append(f'<div class="headline">{_highlight_last_word(scene.headline)}</div>')
     if scene.sublines:
-        items = "".join(f'<div class="sub-item">{_atom(s)}</div>' for s in scene.sublines)
-        blocks.append(f'<div class="sub">{items}</div>')
+        items = "".join(f'<div class="item">{_atom(s)}</div>' for s in scene.sublines)
+        inner.append(f'<div class="items">{items}</div>')
     if scene.cta_text:
-        blocks.append(f'<div class="cta-wrap"><span class="cta">{_esc(scene.cta_text)}</span></div>')
+        inner.append(f'<div class="cta-wrap"><span class="cta">{_esc(scene.cta_text)}</span></div>')
+    cluster = f'<div class="cluster">{"".join(inner)}</div>' if inner else ""
 
     return f"""<!doctype html><html dir="{dir_attr}" lang="ar"><head><meta charset="utf-8">
 {_FONTS_LINK}
@@ -154,29 +158,31 @@ def _scene_html(scene: ReelScene, storyboard: Storyboard, width: int, height: in
   .stage{{position:relative;width:{width}px;height:{height}px;
     font-family:'Space Grotesk','Cairo',system-ui,sans-serif;color:#fff;overflow:hidden;
     --accent:{accent_on_dark};}}
-  .lower{{position:absolute;left:0;right:0;bottom:0;padding:0 64px 300px;box-sizing:border-box;
-    display:flex;flex-direction:column;align-items:{edge};text-align:start;
+  .scrim{{position:absolute;left:0;right:0;bottom:0;height:64%;
     background:linear-gradient(to top,
-      rgba(8,12,18,.90) 0%, rgba(8,12,18,.68) 22%, rgba(8,12,18,.30) 45%, rgba(8,12,18,0) 64%);}}
-  .lower>*{{unicode-bidi:plaintext;}}
-  .rule{{height:6px;width:84px;background:var(--accent);border-radius:3px;margin-bottom:22px;}}
+      rgba(6,9,14,.96) 0%, rgba(6,9,14,.92) 20%, rgba(6,9,14,.74) 42%,
+      rgba(6,9,14,.34) 66%, rgba(6,9,14,0) 100%);}}
+  .lower{{position:absolute;left:0;right:0;bottom:0;padding:0 72px 300px;box-sizing:border-box;
+    display:flex;flex-direction:column;align-items:{edge};}}
+  .cluster{{{spine}:9px solid var(--accent);{spine_pad}:30px;text-align:{align};max-width:88%;}}
+  .cluster>*{{unicode-bidi:plaintext;}}
   .headline{{font-family:'Oswald','Cairo',system-ui,sans-serif;font-weight:700;
-    font-size:{head_px}px;line-height:1.04;letter-spacing:-0.5px;text-transform:uppercase;
-    max-width:80%;text-wrap:balance;text-shadow:{shadow};
-    -webkit-text-stroke:0.5px rgba(0,0,0,.35);}}
+    font-size:{head_px}px;line-height:1.0;letter-spacing:-0.5px;text-transform:uppercase;
+    text-wrap:balance;text-shadow:{shadow};-webkit-text-stroke:0.4px rgba(0,0,0,.3);}}
   .headline .hl{{color:var(--accent);}}
-  .sub{{font-family:'Inter','Cairo',system-ui,sans-serif;font-weight:600;
-    font-size:{sub_px}px;line-height:1.45;margin-top:20px;max-width:82%;text-shadow:{shadow};}}
-  .sub-item{{margin:0.16em 0;}}
-  .cta-wrap{{margin-top:30px;}}
-  .cta{{display:inline-block;font-weight:700;font-size:{cta_px}px;
-    background:{accent};color:{chip_text};padding:0.42em 0.95em;border-radius:14px;
-    letter-spacing:0.3px;box-shadow:0 6px 22px rgba(0,0,0,.42);}}
-  .logo{{position:absolute;top:60px;}}
+  .items{{margin-top:4px;}}
+  .item{{font-family:'Inter','Cairo',system-ui,sans-serif;font-weight:600;
+    font-size:{item_px}px;line-height:1.5;margin:0.06em 0;letter-spacing:0.2px;
+    text-shadow:{shadow};}}
+  .cta-wrap{{margin-top:32px;}}
+  .cta{{display:inline-block;font-family:'Space Grotesk','Cairo',sans-serif;font-weight:700;
+    font-size:{cta_px}px;background:{accent};color:{chip_text};padding:0.46em 1.05em;
+    border-radius:16px;letter-spacing:0.3px;box-shadow:0 8px 26px rgba(0,0,0,.5);}}
+  .logo{{position:absolute;top:64px;}}
   .logo img{{height:{logo_h}px;max-width:42%;object-fit:contain;
-    filter:drop-shadow(0 2px 12px rgba(0,0,0,.55));}}
+    filter:drop-shadow(0 2px 14px rgba(0,0,0,.6));}}
 </style></head>
-<body><div class="stage">{logo_html}<div class="lower">{''.join(blocks)}</div></div></body></html>"""
+<body><div class="stage">{logo_html}<div class="scrim"></div><div class="lower">{cluster}</div></div></body></html>"""
 
 
 def render_text_layers(

@@ -113,26 +113,33 @@ def main() -> int:
 
     brief = build_reel_brief(profile, headline_override=headline_override)
 
-    # VISION CURATION: show every scraped content image to a vision model with the
-    # brand identity and keep ONLY real, on-brand PHOTOS — so partner/sponsor logos,
-    # QR codes, icons, and stock graphics never become reel scenes. Off with
-    # --no-select; honest-degrades to all images when no OpenAI key.
-    selected = None
-    if not args.no_select:
-        from reel.image_select import select_brand_photos
-        raw_photos = (profile.get("visual") or {}).get("content_images") or []
-        if raw_photos:
+    # IMAGE PIPELINE — two UNIVERSAL filters before a scraped photo becomes a reel scene:
+    #   1) a TECHNICAL quality gate (deterministic, runs ALWAYS): reject tiny thumbnails /
+    #      banner strips / blank graphics that would upscale to a blurry "dumb frame".
+    #   2) the VISION curator (optional, needs a key): keep only on-brand PHOTOS.
+    # `selected` is ALWAYS the gated set (possibly []), so the raw garbage is NEVER used; an
+    # empty set routes the reel to generated b-roll instead of animating junk (e.g. a brand
+    # whose only "images" are 298px category thumbnails -> 0 usable -> text-to-video scene).
+    raw_photos = (profile.get("visual") or {}).get("content_images") or []
+    selected: list = []
+    if raw_photos:
+        from reel.image_quality import filter_usable_photos
+        usable = filter_usable_photos(raw_photos, max_keep=max(2, args.frames))
+        print(f"   [quality] {len(usable)}/{len(raw_photos)} content images pass the photo-quality gate",
+              file=sys.stderr)
+        selected = usable
+        if not args.no_select and usable:
+            from reel.image_select import select_brand_photos
             def _f(k):
                 fld = profile.get(k)
                 return fld.get("value") if isinstance(fld, dict) else fld
             selected = select_brand_photos(
-                raw_photos, business_name=brief.business_name,
+                usable, business_name=brief.business_name,
                 category=str(brief.category or _f("category") or ""),
                 description=str(_f("description") or ""),
                 max_keep=max(2, args.frames),
             )
-            print(f"   [curate] {len(selected)}/{len(raw_photos)} images are real on-brand photos",
-                  file=sys.stderr)
+            print(f"   [curate] {len(selected)}/{len(usable)} are on-brand photos", file=sys.stderr)
 
     out = Path(args.out) if args.out else Path("outputs/reels") / f"{profile_path.stem}.mp4"
 

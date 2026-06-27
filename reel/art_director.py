@@ -13,6 +13,7 @@ Discipline (same as the poster's art director):
 """
 from __future__ import annotations
 
+import re
 from typing import Any, Optional
 
 from pydantic import BaseModel
@@ -108,7 +109,46 @@ def _restaurant_scene(ground: str) -> str:
             "atmosphere, real guests enjoying a shared meal, culturally true to the brand")
 
 
-def _scene_base(brief: PosterBrief, ground: str) -> str:
+# Internal slug/segment labels that must NOT leak into a cinematic prompt (a Veo scene of
+# "B2C experiencing services_b2c" is nonsense). Stripped to a human, visual phrasing.
+_SEGMENT_CODE = re.compile(r"\b(b2[bcgx]|d2c|saas|paas|crm|erp|all|general|n/?a|unknown|other)\b", re.I)
+
+
+def _humanize(text: str) -> str:
+    """Turn a scraped slug/label into human words: `services_b2c` -> `services`,
+    `Home-DSL` -> `Home DSL`. Drops internal segment codes (B2C/B2B/SaaS/...)."""
+    s = re.sub(r"[_\-]+", " ", str(text or ""))
+    s = _SEGMENT_CODE.sub(" ", s)
+    return re.sub(r"\s+", " ", s).strip()
+
+
+def _identity_scene(brief: PosterBrief, profile: Optional[dict]) -> str:
+    """UNIVERSAL identity-derived b-roll subject — real people doing the brand's ACTUAL
+    activity, built from the scraped category + top offerings + audience. No hardcoded
+    vertical: a telecom / fintech / SaaS / logistics / ... brand (none in `_VERTICAL_SCENE`)
+    gets a FIELD-RELEVANT scene from its own data instead of a generic office. (Restaurants
+    keep their dedicated food scene; this is the no-template fallback.) Slug/segment labels are
+    humanized so the prompt never reads as jargon. HONEST CEILING: a deterministic fallback
+    can ground in the real category/offerings but can't INFER the visual activity from an opaque
+    product name — that semantic leap (e.g. 'Orange PREMIER' -> people using phones) is the
+    LLM art-director's job; this is the no-caller safety net."""
+    category = _humanize(brief.category or _field(profile, "category"))
+    audience_raw = (_field(profile, "audience_type") or "").strip()
+    who = _humanize(audience_raw) or "people"
+    # offerings are kept VERBATIM (real product names — humanizing could strip a real token
+    # from a name like "SaaS Platform"); only the slug-prone category/audience is humanized.
+    offerings = [str(o).strip() for o in (brief.offerings or [])[:2] if str(o).strip()]
+    if not category and not offerings:
+        return _DEFAULT_SCENE
+    lead = (f"real {who} authentically experiencing {category}" if category
+            else f"real {who} in a genuine moment with {brief.business_name}")
+    if offerings:
+        lead += " — a real-life moment that shows " + " and ".join(offerings)
+    return (lead + ", documentary-real human emotion in a modern, true-to-life environment "
+            "that genuinely fits this brand")
+
+
+def _scene_base(brief: PosterBrief, ground: str, profile: Optional[dict] = None) -> str:
     cat = (brief.category or "").lower()
     if "restaurant" in cat or "cafe" in cat:
         # Cafe only if explicitly a cafe AND no strong food/grill signal.
@@ -118,7 +158,8 @@ def _scene_base(brief: PosterBrief, ground: str) -> str:
     for key, scene in _VERTICAL_SCENE.items():
         if key in cat:
             return scene
-    return _DEFAULT_SCENE
+    # Unknown category -> UNIVERSAL identity scene (not a generic workplace).
+    return _identity_scene(brief, profile)
 
 
 class _BrandSceneResponse(BaseModel):
@@ -158,8 +199,10 @@ def build_brand_scene(
         "You are an award-winning art director for premium vertical (9:16) marketing REELS. "
         "Invent ONE photoreal, TEXT-FREE b-roll scene for THIS specific brand: the setting, the "
         "people, and the action/mood that authentically show what this business does and who it "
-        "serves. Derive EVERYTHING from the brand persona provided — never a generic category "
-        "template. " + culture +
+        "serves. Show the brand's REAL activity IN ACTION — real people actively USING or "
+        "experiencing its specific offerings, so the scene instantly reads as THIS exact field "
+        "(NOT a generic office, NOT an abstract mood). Derive EVERYTHING from the brand persona "
+        "provided — never a generic category template. " + culture +
         "ALSO define a 'character': ONE recurring protagonist (the brand's audience) who will "
         "appear in EVERY scene of the reel — describe them concretely and consistently (approx "
         "age, appearance, hair, attire), culturally authentic to the audience, so the same person "
@@ -198,7 +241,7 @@ def build_scene_prompt(
     recurring protagonist) is repeated in EVERY scene so a text-to-video reel keeps
     the SAME person + look across scenes (coherence) instead of inventing a new one."""
     ground = _ground_text(brief, profile)
-    base = base_scene or _scene_base(brief, ground)
+    base = base_scene or _scene_base(brief, ground, profile)
     beat = _BEAT.get(scene_kind, _BEAT["intro"])
     # Lead the color grade with the REAL primary brand color (not an unordered
     # swatch list), so the brand's signature hue actually drives the scene.
