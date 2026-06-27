@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import logging
+import os
 import sys
 from pathlib import Path
 
@@ -38,6 +39,19 @@ from .build import (
 )
 from .llm.caller import OpenAICaller
 
+
+def _make_caller(provider: str, model: str):
+    """Pick the extraction LLM. 'auto' (default) → Gemini on GCP credits when a project
+    is configured (gemini-2.5-flash — Gemini 2.0 is NOT provisioned on Vertex), else
+    OpenAI gpt-4o-mini. Override with --provider gemini|openai and --model."""
+    prov = (provider or "auto").lower()
+    if prov == "auto":
+        prov = "gemini" if os.getenv("GOOGLE_CLOUD_PROJECT") else "openai"
+    if prov == "gemini":
+        from .llm.caller import GeminiCaller
+        return GeminiCaller(model=model or "gemini-2.5-flash")
+    return OpenAICaller(model=model or "gpt-4o-mini")
+
 app = typer.Typer(add_completion=False,
                    help="Build a business_profile.json from a scrape manifest.")
 console = Console()
@@ -54,8 +68,12 @@ def main(
         False, "--no-llm",
         help="Skip the LLM step; use rules-only extractors.",
     ),
+    provider: str = typer.Option(
+        "auto", "--provider", help="LLM provider: auto | gemini | openai.",
+    ),
     model: str = typer.Option(
-        "gpt-4o-mini", "--model", help="OpenAI model name.",
+        "", "--model", help="Model id override (default per provider: "
+        "gemini-2.5-flash / gpt-4o-mini).",
     ),
     verbose: bool = typer.Option(False, "--verbose", "-v"),
 ):
@@ -80,8 +98,8 @@ def main(
         pack_summary = "n/a"
         diag_summary = "n/a"
     else:
-        console.print(f"[cyan]Building (rules + LLM)[/cyan] {manifest_path}")
-        caller = OpenAICaller(model=model)
+        caller = _make_caller(provider, model)
+        console.print(f"[cyan]Building (rules + {type(caller).__name__})[/cyan] {manifest_path}")
         result: BuildResult = build_profile(
             manifest_path, caller=caller, return_details=True,
         )
@@ -103,6 +121,18 @@ def main(
         )
 
     write_profile(profile, out_path)
+
+    # Rasterize an inline-<svg> brand logo (e.g. Vodafone's <use> sprite) from the
+    # scrape's saved homepage HTML into the profile, so the poster/reel render the REAL
+    # logo instead of a wordmark. Best-effort + gated (a logo that would render blank is
+    # rejected -> the wordmark stands); never blocks the build.
+    try:
+        from scraper.inline_svg_logo import enrich_profile_logo
+        raw_home = manifest_path.parent / "raw" / "00_homepage.html"
+        if enrich_profile_logo(out_path, raw_home):
+            console.print("[green]Rasterized inline-svg brand logo into the profile.[/green]")
+    except Exception as exc:  # never let logo enrichment break the build
+        logging.getLogger(__name__).debug("inline-svg logo enrichment skipped: %s", exc)
 
     # Summary table
     q = profile.quality

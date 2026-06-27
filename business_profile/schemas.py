@@ -479,6 +479,9 @@ class BusinessProfile(BaseModel):
     audience_type: EvidencedField[AudienceType] = Field(default_factory=EvidencedField.missing)
     audience_signals: list[EvidencedField[str]] = Field(default_factory=list)
     value_propositions: list[EvidencedField[str]] = Field(default_factory=list)
+    # Catch-all: unique competitive edges / operational details that don't fit the fields
+    # above (cited like everything else). Feeds SWOT strengths + poster/reel differentiation.
+    other_unique_insights: list[EvidencedField[str]] = Field(default_factory=list)
     tone_of_voice: EvidencedField[ToneOfVoice] = Field(default_factory=EvidencedField.missing)
 
     # --- Geography & operations ---

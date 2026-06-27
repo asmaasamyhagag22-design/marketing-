@@ -69,7 +69,14 @@ def main() -> int:
                          "prompts + voice-over) from the identity + real photos. Veo 3.1 "
                          "brings each real photo to life; OpenAI TTS narrates.")
     ap.add_argument("--no-voiceover", action="store_true",
-                    help="(creative mode) skip the AI voice-over narration")
+                    help="skip the AI voice-over narration (default: Gemini TTS narrates "
+                         "each scene's on-screen text; runs on GCP credits)")
+    ap.add_argument("--headline", default=None,
+                    help="override the reel headline (e.g. a planned content-calendar hook).")
+    ap.add_argument("--from-plan", default=None,
+                    help="a content_plan.json (from `python -m strategy`) to drive this reel.")
+    ap.add_argument("--item", type=int, default=0,
+                    help="with --from-plan: which calendar item index to render (default 0).")
     args = ap.parse_args()
 
     profile_path = Path(args.profile)
@@ -89,7 +96,22 @@ def main() -> int:
         except Exception:
             caller = None
 
-    brief = build_reel_brief(profile)
+    # Loop closure: a content-calendar item (from `python -m strategy`) can drive the
+    # reel — its hook (else topic) becomes the headline. --headline overrides directly.
+    headline_override = args.headline
+    if args.from_plan and not headline_override:
+        try:
+            plan = json.loads(Path(args.from_plan).read_text(encoding="utf-8"))
+            items = plan.get("items") or []
+            if items:
+                it = items[max(0, min(args.item, len(items) - 1))]
+                headline_override = (it.get("hook") or it.get("topic") or "").strip() or None
+                print(f"[plan] item {args.item}: {it.get('date')} {it.get('platform')} "
+                      f"{it.get('content_type')} -> headline={headline_override!r}", file=sys.stderr)
+        except Exception as exc:
+            print(f"   (could not read --from-plan: {type(exc).__name__})", file=sys.stderr)
+
+    brief = build_reel_brief(profile, headline_override=headline_override)
 
     # VISION CURATION: show every scraped content image to a vision model with the
     # brand identity and keep ONLY real, on-brand PHOTOS — so partner/sponsor logos,
@@ -169,9 +191,26 @@ def main() -> int:
     for w in storyboard.warnings:
         print(f"   warning: {w}", file=sys.stderr)
 
+    # Voice-over: narrate each scene's verbatim on-screen text (grounded). Defaults to
+    # Gemini TTS (same GCP credits as Imagen/Veo); --no-voiceover renders silent.
+    voiceover_path = None
+    if not args.no_voiceover:
+        from reel.voiceover import synth_voiceover, narration_lines
+        nlines = narration_lines(storyboard)
+        if any(nlines):
+            print(f"[voiceover] synthesizing narration "
+                  f"({sum(1 for l in nlines if l)} lines)...", file=sys.stderr)
+            voiceover_path = synth_voiceover(
+                nlines, [s.duration_s for s in storyboard.scenes],
+                Path(out).with_suffix(".vo.m4a"),
+            )
+            print(f"   voiceover -> {voiceover_path}" if voiceover_path
+                  else "   (voiceover unavailable; rendering silent)", file=sys.stderr)
+
     result = render_reel(
         storyboard, provider=provider, out_path=out,
-        scale=args.scale, music_path=args.music, include_logo=not args.no_logo,
+        scale=args.scale, music_path=args.music, voiceover_path=voiceover_path,
+        include_logo=not args.no_logo,
     )
 
     print(f"\n[ok] reel -> {Path(result.reel_path).resolve()}")

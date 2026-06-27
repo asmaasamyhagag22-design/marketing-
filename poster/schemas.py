@@ -27,10 +27,14 @@ class PosterBrief(BaseModel):
     primary_color: Optional[str] = None
     tone: Optional[str] = None
 
-    logo_url: Optional[str] = Field(default=None, max_length=1000)
+    # Generous cap: a logo may be an inlined SVG `data:` URI (resolved from an inline
+    # <svg>/<use> sprite), which is far larger than an http(s) URL.
+    logo_url: Optional[str] = Field(default=None, max_length=300_000)
     logo_text: Optional[str] = Field(default=None, max_length=120)
     logo_source_type: Optional[str] = Field(default=None, max_length=60)
     logo_confidence: Optional[float] = Field(default=None, ge=0.0, le=1.0)
+    # "light" (default white plate) or "dark" — a light/white logo needs a dark plate.
+    logo_chip: Optional[str] = Field(default="light", max_length=8)
 
     pricing_note: Optional[str] = None
     warnings: list[str] = Field(default_factory=list)
@@ -43,6 +47,51 @@ class PosterBrief(BaseModel):
     # falls back to a curated modern default. May be a private/generic name.
     heading_font: Optional[str] = Field(default=None, max_length=80)
     body_font: Optional[str] = Field(default=None, max_length=80)
+
+
+class PosterDesignSpec(BaseModel):
+    """The DESIGN decisions for one poster — a structured layout/composition spec.
+
+    This is the contract between the art director (the LLM, which fills it per brand
+    from the scraped data) and the renderer (which turns it into HTML/CSS safely).
+    It carries ZERO factual claims: it is pure design (where things sit, alignment,
+    emphasis, color roles). The factual text + the real logo are injected by the
+    renderer from the evidence-grounded PosterBrief — so creativity is unbounded
+    while the facts stay grounded.
+
+    `negative_space_zone` is shared with the background prompt so the image leaves
+    its calm area exactly where the text block lands (the "big-brand" look).
+    """
+    layout: Literal[
+        "bottom_band",        # text band across the bottom (logo opposite, top)
+        "side_panel_left",    # text in a left vertical panel; image breathes right
+        "side_panel_right",   # text in a right vertical panel; image breathes left
+        "top_anchor",         # logo + text anchored top; image breathes below
+        "center_editorial",   # centered headline mid-frame, radial scrim
+        "magazine_hero",      # big stacked-hero headline, editorial kicker
+    ] = "bottom_band"
+    logo_corner: Literal["top_left", "top_right", "bottom_left", "bottom_right"] = "top_left"
+    headline_treatment: Literal["stacked_hero", "block", "highlight"] = "stacked_hero"
+    accent_word: Literal["last", "first", "none"] = "last"
+    text_align: Literal["left", "center", "right"] = "left"
+    scrim_strength: float = Field(default=0.82, ge=0.0, le=1.0)
+    show: list[str] = Field(default_factory=lambda: ["logo", "headline", "cta"])
+    negative_space_zone: Literal["bottom", "top", "left", "right", "center"] = "bottom"
+    accent_hex: Optional[str] = None       # LLM may pick which brand color leads
+    rationale: Optional[str] = None        # why this design (transparency/debug)
+    # Per-RUN variation seed. The renderer mixes it into the font-pairing choice so the
+    # TYPOGRAPHY (not just the layout) differs between runs of the same brand. None ->
+    # the stable per-brand pairing (backward-compatible).
+    variation_seed: Optional[int] = None
+
+    # FREE-FORM layout (Phase 2): the LLM places the text cluster + logo at CONTINUOUS
+    # normalized coordinates instead of one of the 6 fixed `layout` archetypes — so the
+    # composition is unbounded (kills the "same template" feel), driven by the brand's
+    # learned design language. When None, the `layout` archetype path is used (backward
+    # compatible). All values are 0..1 fractions of the 1080x1350 canvas; the renderer
+    # CLAMPS them to safe margins.
+    text_box: Optional[list[float]] = None    # [x, y, w] — top-left + width of the text cluster
+    logo_xy: Optional[list[float]] = None     # [x, y] — top-left anchor of the brand mark
 
 
 class PosterArtDirection(BaseModel):

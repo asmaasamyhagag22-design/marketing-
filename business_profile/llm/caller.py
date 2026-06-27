@@ -49,6 +49,12 @@ _PRICING: dict[str, tuple[float, float]] = {
     "gpt-4o-mini": (0.150, 0.600),       # input, output
     "gpt-4o-mini-2024-07-18": (0.150, 0.600),
     "gpt-4o": (2.500, 10.000),
+    # Gemini (approx list price /1M tokens; on Vertex these draw from GCP credits).
+    "gemini-2.5-pro": (1.250, 10.000),
+    "gemini-2.5-flash": (0.300, 2.500),
+    "gemini-2.0-flash": (0.150, 0.600),
+    "gemini-1.5-pro": (1.250, 5.000),
+    "gemini-1.5-flash": (0.075, 0.300),
     # Mock model used in tests — explicitly zero so tests don't warn.
     "mock-model": (0.0, 0.0),
 }
@@ -101,6 +107,7 @@ class Caller(Protocol):
         user_prompt: str,
         response_model: type[R],
         group_name: str = "",
+        images: Optional[list] = None,
     ) -> tuple[R, Usage]:
         ...
 
@@ -148,7 +155,10 @@ class OpenAICaller:
         user_prompt: str,
         response_model: type[R],
         group_name: str = "",
+        images: Optional[list] = None,
     ) -> tuple[R, Usage]:
+        # `images` is accepted for Caller-protocol parity. OpenAI 4o is vision-capable
+        # too, but it's the fallback path here, so we don't wire vision through it yet.
         client = self._get_client()
         started = time.monotonic()
         last_err: Optional[Exception] = None
@@ -205,6 +215,165 @@ class OpenAICaller:
 
 
 # ---------------------------------------------------------------------
+# Gemini implementation (google-genai; Vertex mode by default)
+# ---------------------------------------------------------------------
+
+class GeminiCaller:
+    """Gemini caller via `google-genai`, same Caller protocol as OpenAICaller.
+
+    Uses VERTEX mode by default (no API key needed) — it authenticates with the
+    machine's GCP ADC + project, i.e. it draws on GCP credits, which is why it's the
+    cheap path when you have a large Vertex/GCP balance vs a tiny OpenAI balance.
+    Structured outputs via `response_schema` (a Pydantic model) -> `response.parsed`.
+    Lazily imports the SDK and builds the client so tests/mocks need neither.
+    """
+
+    def __init__(
+        self,
+        model: str = "gemini-2.5-pro",
+        *,
+        use_vertex: bool = True,
+        project: Optional[str] = None,
+        location: Optional[str] = None,
+        api_key: Optional[str] = None,
+        timeout_s: float = 60.0,
+        temperature: float = 0.0,
+        max_retries: int = 1,
+    ):
+        self.model = model
+        # An explicit API key (AI Studio) flips us out of Vertex mode.
+        self._api_key = api_key or os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+        self.use_vertex = use_vertex and not self._api_key
+        self.project = project or os.environ.get("GOOGLE_CLOUD_PROJECT")
+        self.location = location or os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1")
+        self.timeout_s = timeout_s
+        self.temperature = temperature
+        self.max_retries = max_retries
+        self._client = None
+
+    def _get_client(self):
+        if self._client is None:
+            try:
+                from google import genai
+            except ImportError as e:
+                raise RuntimeError(
+                    "The `google-genai` package is required for GeminiCaller. "
+                    "Install with: pip install google-genai"
+                ) from e
+            if self.use_vertex:
+                self._client = genai.Client(
+                    vertexai=True, project=self.project, location=self.location
+                )
+            else:
+                self._client = genai.Client(api_key=self._api_key)
+        return self._client
+
+    def __call__(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        response_model: type[R],
+        group_name: str = "",
+        images: Optional[list] = None,
+    ) -> tuple[R, Usage]:
+        from google.genai import types
+
+        client = self._get_client()
+        started = time.monotonic()
+        last_err: Optional[Exception] = None
+
+        # Multimodal: each image is (bytes, mime_type). Gemini 2.5 is natively vision-
+        # capable, so it can SEE the brand's real screenshots/photos and reason about
+        # the visual identity — far richer than text-only hex/font hints.
+        if images:
+            contents: list = [
+                types.Part.from_bytes(data=img, mime_type=mime)
+                for (img, mime) in images
+            ]
+            contents.append(user_prompt)
+        else:
+            contents = user_prompt
+
+        for attempt in range(self.max_retries + 1):
+            try:
+                resp = client.models.generate_content(
+                    model=self.model,
+                    contents=contents,
+                    config=types.GenerateContentConfig(
+                        system_instruction=system_prompt,
+                        temperature=self.temperature,
+                        response_mime_type="application/json",
+                        response_schema=response_model,
+                    ),
+                )
+                parsed = getattr(resp, "parsed", None)
+                if parsed is None:
+                    # Some SDK versions don't auto-parse; validate the JSON text.
+                    parsed = response_model.model_validate_json(resp.text or "")
+                elif not isinstance(parsed, response_model):
+                    # SDK returned a dict — coerce into the Pydantic model.
+                    parsed = response_model.model_validate(parsed)
+
+                um = getattr(resp, "usage_metadata", None)
+                in_tok = getattr(um, "prompt_token_count", 0) or 0
+                out_tok = getattr(um, "candidates_token_count", 0) or 0
+                usage = Usage(
+                    input_tokens=in_tok,
+                    output_tokens=out_tok,
+                    cost_usd=_cost_for(self.model, in_tok, out_tok),
+                    duration_ms=int((time.monotonic() - started) * 1000),
+                    model=self.model,
+                    finish_reason="stop",
+                )
+                logger.info(
+                    "Gemini call ok group=%s model=%s in=%d out=%d cost=$%.4f ms=%d",
+                    group_name, self.model, in_tok, out_tok, usage.cost_usd, usage.duration_ms,
+                )
+                return parsed, usage
+            except Exception as e:
+                last_err = e
+                logger.warning(
+                    "Gemini call failed (attempt %d/%d) group=%s err=%s",
+                    attempt + 1, self.max_retries + 1, group_name, e,
+                )
+                if attempt < self.max_retries:
+                    time.sleep(1.0 + attempt)
+
+        assert last_err is not None
+        raise last_err
+
+
+def default_caller(*, strong: bool = True) -> Optional["Caller"]:
+    """Return a GEMINI Caller — Gemini 2.5 is the ONLY LLM provider (owner directive:
+    no OpenAI; GCP credits dwarf the OpenAI balance).
+
+    `strong=True` -> Gemini 2.5 **Pro** (complex reasoning: design, research, copy);
+    `strong=False` -> Gemini 2.5 **Flash** (the cheap, token-heavy default, e.g. profile
+    extraction). Override the model with the GEMINI_MODEL env var. Uses Vertex
+    (GOOGLE_CLOUD_PROJECT + ADC) or a Gemini API key. Returns None when google-genai or a
+    Gemini credential is missing (callers then use their deterministic fallback). Never raises.
+    """
+    import importlib.util
+
+    try:
+        has_genai = bool(importlib.util.find_spec("google.genai"))
+        has_creds = bool(
+            os.environ.get("GOOGLE_CLOUD_PROJECT")
+            or os.environ.get("GEMINI_API_KEY")
+            or os.environ.get("GOOGLE_API_KEY")
+        )
+        if has_genai and has_creds:
+            model = os.environ.get("GEMINI_MODEL") or (
+                "gemini-2.5-pro" if strong else "gemini-2.5-flash"
+            )
+            return GeminiCaller(model=model)
+    except Exception:
+        pass
+
+    return None
+
+
+# ---------------------------------------------------------------------
 # Mock implementation for tests
 # ---------------------------------------------------------------------
 
@@ -248,6 +417,7 @@ class MockCaller:
         user_prompt: str,
         response_model: type[R],
         group_name: str = "",
+        images: Optional[list] = None,
     ) -> tuple[R, Usage]:
         if group_name in self.raise_on_group:
             raise RuntimeError(f"MockCaller: simulated failure for group '{group_name}'")

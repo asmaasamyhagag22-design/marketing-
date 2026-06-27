@@ -83,3 +83,16 @@ def test_scraped_behind_standalone_emits_no_phantom_threat():
     swot = synthesize_swot(ComparativeGapMatrix(columns=[subj], gaps=[]), themes=[])
     assert swot.mode == "standalone"
     assert swot.threats == []
+
+
+def test_unique_insights_become_grounded_strengths():
+    # profile.other_unique_insights -> cited strengths, appended AFTER the standalone
+    # degrade so they don't suppress the 0-peer fallback.
+    swot = synthesize_swot(
+        ComparativeGapMatrix(columns=[_subject()], gaps=[]), themes=[],
+        unique_insights=["The only ISO-certified lab in Cairo", "", "The only ISO-certified lab in Cairo"],
+    )
+    edges = [s for s in swot.strengths if s.text == "The only ISO-certified lab in Cairo"]
+    assert len(edges) == 1                       # added once (deduped), empty skipped
+    assert edges[0].citation == ["your profile"]
+    assert swot.mode == "standalone"             # 0-peer fallback still fired

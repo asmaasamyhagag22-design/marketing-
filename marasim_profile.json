@@ -1,0 +1,1921 @@
+{
+  "schema_version": "0.2.0",
+  "name": {
+    "value": "Marasim Digital Solution Agency",
+    "evidence": [
+      {
+        "block_id": null,
+        "page_url": "https://marasimltd.com/",
+        "quote": "Marasim Digital Solution Agency",
+        "extractor": "schema_org:Organization.name"
+      }
+    ],
+    "confidence": "high",
+    "source_type": "extracted"
+  },
+  "tagline": {
+    "value": "Stories told with purpose",
+    "evidence": [
+      {
+        "block_id": "home_p_0010",
+        "page_url": "https://marasimltd.com/",
+        "quote": "Marasim - Stories told with purpose",
+        "extractor": "llm"
+      },
+      {
+        "block_id": "home_div_0007",
+        "page_url": "https://marasimltd.com/",
+        "quote": "Marasim - Stories told with purpose",
+        "extractor": "llm"
+      },
+      {
+        "block_id": "home_div_0008",
+        "page_url": "https://marasimltd.com/",
+        "quote": "Marasim - Stories told with purpose",
+        "extractor": "llm"
+      },
+      {
+        "block_id": "home_p_0061",
+        "page_url": "https://marasimltd.com/",
+        "quote": "Stories told with purpose",
+        "extractor": "llm"
+      }
+    ],
+    "confidence": "high",
+    "source_type": "extracted"
+  },
+  "description": {
+    "value": "Marasim is a company founded in 2025 that specializes in integrated marketing, media production, web development, and graphic design services. They aim to help emerging businesses and forward-thinking enterprises scale efficiently and profitably by delivering innovative media solutions that combine creativity and strategy, primarily serving clients across the Middle East, with a vision to be Egypt's go-to growth infrastructure partner.",
+    "evidence": [
+      {
+        "block_id": "about_p_0013",
+        "page_url": "https://marasimltd.com/about",
+        "quote": "Built on the basis of telling stories with purposes, Marasim was born in 2025. In Marasim, we offer digital means to grow your reputation and spike your profits. Moreover, we specialize in media produ",
+        "extractor": "llm"
+      },
+      {
+        "block_id": "home_div_0020",
+        "page_url": "https://marasimltd.com/",
+        "quote": "'At Marasim, we believe media is more than just content — it's a message crafted with care. We deliver innovative media solutions that combine creativity and strategy, turning ideas into presence and ",
+        "extractor": "llm"
+      },
+      {
+        "block_id": "about_p_0017",
+        "page_url": "https://marasimltd.com/about",
+        "quote": "'To build and deploy integrated marketing, production, and digital systems that help emerging businesses scale efficiently and profitably.'",
+        "extractor": "llm"
+      },
+      {
+        "block_id": "about_p_0020",
+        "page_url": "https://marasimltd.com/about",
+        "quote": "'To become Egypt's go-to growth infrastructure partner for forward-thinking enterprises.'",
+        "extractor": "llm"
+      },
+      {
+        "block_id": "home_p_0089",
+        "page_url": "https://marasimltd.com/",
+        "quote": "Proud to have partnered with leading brands across the Middle East",
+        "extractor": "llm"
+      }
+    ],
+    "confidence": "high",
+    "source_type": "inferred"
+  },
+  "category": {
+    "value": "agency",
+    "evidence": [
+      {
+        "block_id": "about_p_0013",
+        "page_url": "https://marasimltd.com/about",
+        "quote": "we specialize in media production and marketing services, Web development, and graphic design services.",
+        "extractor": "llm"
+      },
+      {
+        "block_id": "home_div_0035",
+        "page_url": "https://marasimltd.com/",
+        "quote": "01 Digital Marketing & Social Media Operations EXPLORE → 02 Performance Marketing EXPLORE → 03 Web Development EXPLORE → 04 Creative Visuals EXPLORE → 05 Video Production EXPLORE →",
+        "extractor": "llm"
+      }
+    ],
+    "confidence": "high",
+    "source_type": "inferred"
+  },
+  "offerings": [
+    {
+      "name": "Video Production & Filming",
+      "short_description": "From concept to final cut, we produce high-quality videos that tell your brand story. Corporate films, ads, and social content crafted to captivate and convert.",
+      "price_text": null,
+      "page_url": "https://marasimltd.com/video-production",
+      "evidence": [
+        {
+          "block_id": "video-production_h2_0021",
+          "page_url": "https://marasimltd.com/video-production",
+          "quote": "Video Production & Filming",
+          "extractor": "llm"
+        },
+        {
+          "block_id": "video-production_p_0022",
+          "page_url": "https://marasimltd.com/video-production",
+          "quote": "From concept to final cut, we produce high-quality videos that tell your brand story. Corporate films, ads, and social content crafted to captivate and convert.",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "name": "Editing & Post-Production",
+      "short_description": "Our post-production team transforms raw footage into polished, scroll-stopping content. Motion graphics, color grading, and sound design — every detail refined to perfection.",
+      "price_text": null,
+      "page_url": "https://marasimltd.com/video-production",
+      "evidence": [
+        {
+          "block_id": "video-production_h2_0024",
+          "page_url": "https://marasimltd.com/video-production",
+          "quote": "Editing & Post-Production",
+          "extractor": "llm"
+        },
+        {
+          "block_id": "video-production_p_0025",
+          "page_url": "https://marasimltd.com/video-production",
+          "quote": "Our post-production team transforms raw footage into polished, scroll-stopping content. Motion graphics, color grading, and sound design — every detail refined to perfection.",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "name": "Brand Positioning & Strategy",
+      "short_description": "We build data-driven marketing strategies that position your brand ahead of competitors. From market analysis to content planning, every move is calculated for growth.",
+      "price_text": null,
+      "page_url": "https://marasimltd.com/digital-Marketing-And-Social-Media",
+      "evidence": [
+        {
+          "block_id": "digital-marketing-and-social-media_h2_0020",
+          "page_url": "https://marasimltd.com/digital-Marketing-And-Social-Media",
+          "quote": "Brand Positioning & Strategy",
+          "extractor": "llm"
+        },
+        {
+          "block_id": "digital-marketing-and-social-media_p_0021",
+          "page_url": "https://marasimltd.com/digital-Marketing-And-Social-Media",
+          "quote": "We build data-driven marketing strategies that position your brand ahead of competitors. From market analysis to content planning, every move is calculated for growth.",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "name": "Social Media Management & Copywriting",
+      "short_description": "We manage your social presence with purpose-driven content that converts followers into customers. Consistent messaging, sharp copy, real results.",
+      "price_text": null,
+      "page_url": "https://marasimltd.com/digital-Marketing-And-Social-Media",
+      "evidence": [
+        {
+          "block_id": "digital-marketing-and-social-media_h2_0023",
+          "page_url": "https://marasimltd.com/digital-Marketing-And-Social-Media",
+          "quote": "Social Media Management & Copywriting",
+          "extractor": "llm"
+        },
+        {
+          "block_id": "digital-marketing-and-social-media_p_0024",
+          "page_url": "https://marasimltd.com/digital-Marketing-And-Social-Media",
+          "quote": "We manage your social presence with purpose-driven content that converts followers into customers. Consistent messaging, sharp copy, real results.",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "name": "Meta, Google & TikTok Ads",
+      "short_description": "We run performance-driven ad campaigns across Meta, Google, and TikTok that maximize your ROI. Precision targeting, A/B testing, and real-time optimization, every dirham works harder.",
+      "price_text": null,
+      "page_url": "https://marasimltd.com/marketing-performance",
+      "evidence": [
+        {
+          "block_id": "marketing-performance_h2_0020",
+          "page_url": "https://marasimltd.com/marketing-performance",
+          "quote": "Meta, Google & TikTok Ads",
+          "extractor": "llm"
+        },
+        {
+          "block_id": "marketing-performance_p_0021",
+          "page_url": "https://marasimltd.com/marketing-performance",
+          "quote": "We run performance-driven ad campaigns across Meta, Google, and TikTok that maximize your ROI. Precision targeting, A/B testing, and real-time optimization, every dirham works harder.",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "name": "Lead Generation & Funnel Strategy",
+      "short_description": "From first click to final conversion, we design full-funnel campaigns that generate qualified leads and turn them into revenue. Data-backed, results-guaranteed.",
+      "price_text": null,
+      "page_url": "https://marasimltd.com/marketing-performance",
+      "evidence": [
+        {
+          "block_id": "marketing-performance_h2_0023",
+          "page_url": "https://marasimltd.com/marketing-performance",
+          "quote": "Lead Generation & Funnel Strategy",
+          "extractor": "llm"
+        },
+        {
+          "block_id": "marketing-performance_p_0024",
+          "page_url": "https://marasimltd.com/marketing-performance",
+          "quote": "From first click to final conversion, we design full-funnel campaigns that generate qualified leads and turn them into revenue. Data-backed, results-guaranteed.",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "name": "Branding & Identity Design",
+      "short_description": "Your brand is your first impression; we make it unforgettable. From logo design to full visual identity, we craft brands that speak before you say a word. We make stories with scratches.",
+      "price_text": null,
+      "page_url": "https://marasimltd.com/creative-visuals",
+      "evidence": [
+        {
+          "block_id": "creative-visuals_h2_0021",
+          "page_url": "https://marasimltd.com/creative-visuals",
+          "quote": "Branding & Identity Design",
+          "extractor": "llm"
+        },
+        {
+          "block_id": "creative-visuals_p_0022",
+          "page_url": "https://marasimltd.com/creative-visuals",
+          "quote": "Your brand is your first impression; we make it unforgettable. From logo design to full visual identity, we craft brands that speak before you say a word. We make stories with scratches.",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "name": "Social Media Designs",
+      "short_description": "Scroll-stopping visuals designed to perform, not just look good. Our creative team delivers designs built for engagement and brand recall.",
+      "price_text": null,
+      "page_url": "https://marasimltd.com/creative-visuals",
+      "evidence": [
+        {
+          "block_id": "creative-visuals_div_0023",
+          "page_url": "https://marasimltd.com/creative-visuals",
+          "quote": "Social Media Designs",
+          "extractor": "llm"
+        },
+        {
+          "block_id": "creative-visuals_p_0025",
+          "page_url": "https://marasimltd.com/creative-visuals",
+          "quote": "Scroll-stopping visuals designed to perform, not just look good. Our creative team delivers designs built for engagement and brand recall.",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "name": "Full-Stack Web Development",
+      "short_description": "We build fast, scalable, and conversion-optimized websites using React, Angular, and custom backends. From e-commerce stores to enterprise portals, engineered to perform.",
+      "price_text": null,
+      "page_url": "https://marasimltd.com/web-development",
+      "evidence": [
+        {
+          "block_id": "web-development_h2_0020",
+          "page_url": "https://marasimltd.com/web-development",
+          "quote": "Full-Stack Web Development",
+          "extractor": "llm"
+        },
+        {
+          "block_id": "web-development_p_0021",
+          "page_url": "https://marasimltd.com/web-development",
+          "quote": "We build fast, scalable, and conversion-optimized websites using React, Angular, and custom backends. From e-commerce stores to enterprise portals, engineered to perform.",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "name": "Hosting, SEO & Performance Optimization",
+      "short_description": "Your website won't grow your business if it's slow or invisible. We handle technical SEO, speed optimization, security, and hosting so your site ranks and converts.",
+      "price_text": null,
+      "page_url": "https://marasimltd.com/web-development",
+      "evidence": [
+        {
+          "block_id": "web-development_h2_0023",
+          "page_url": "https://marasimltd.com/web-development",
+          "quote": "Hosting, SEO & Performance Optimization",
+          "extractor": "llm"
+        },
+        {
+          "block_id": "web-development_p_0024",
+          "page_url": "https://marasimltd.com/web-development",
+          "quote": "Your website won't grow your business if it's slow or invisible. We handle technical SEO, speed optimization, security, and hosting so your site ranks and converts.",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high"
+    }
+  ],
+  "pricing_visible": {
+    "value": false,
+    "evidence": [
+      {
+        "block_id": null,
+        "page_url": "https://marasimltd.com/",
+        "quote": null,
+        "extractor": "rule:no_currency_in_171_blocks"
+      }
+    ],
+    "confidence": "high",
+    "source_type": "extracted"
+  },
+  "pricing_posture": {
+    "value": "mid",
+    "evidence": [
+      {
+        "block_id": "marketing-performance_p_0021",
+        "page_url": "https://marasimltd.com/marketing-performance",
+        "quote": "every dirham works harder.",
+        "extractor": "llm"
+      },
+      {
+        "block_id": "about_p_0017",
+        "page_url": "https://marasimltd.com/about",
+        "quote": "To build and deploy integrated marketing, production, and digital systems that help emerging businesses scale efficiently and profitably.",
+        "extractor": "llm"
+      },
+      {
+        "block_id": "about_p_0020",
+        "page_url": "https://marasimltd.com/about",
+        "quote": "'To become Egypt's go-to growth infrastructure partner for forward-thinking enterprises.'",
+        "extractor": "llm"
+      },
+      {
+        "block_id": "about_p_0028",
+        "page_url": "https://marasimltd.com/about",
+        "quote": "We believe it's our responsibility to grow you far and beyond the moment you join Marasim.",
+        "extractor": "llm"
+      }
+    ],
+    "confidence": "medium",
+    "source_type": "inferred"
+  },
+  "pricing_extraction_note": null,
+  "offerings_extraction_note": null,
+  "llm_silent_failure": false,
+  "audience_type": {
+    "value": "B2B",
+    "evidence": [
+      {
+        "block_id": "video-production_p_0022",
+        "page_url": "https://marasimltd.com/video-production",
+        "quote": "we produce high-quality videos that tell your brand story.",
+        "extractor": "llm"
+      },
+      {
+        "block_id": "about_p_0013",
+        "page_url": "https://marasimltd.com/about",
+        "quote": "In Marasim, we offer digital means to grow your reputation and spike your profits.",
+        "extractor": "llm"
+      },
+      {
+        "block_id": "home_p_0089",
+        "page_url": "https://marasimltd.com/",
+        "quote": "Proud to have partnered with leading brands across the Middle East",
+        "extractor": "llm"
+      },
+      {
+        "block_id": "about_p_0017",
+        "page_url": "https://marasimltd.com/about",
+        "quote": "To build and deploy integrated marketing, production, and digital systems that help emerging businesses scale efficiently and profitably.",
+        "extractor": "llm"
+      },
+      {
+        "block_id": "about_p_0020",
+        "page_url": "https://marasimltd.com/about",
+        "quote": "To become Egypt's go-to growth infrastructure partner for forward-thinking enterprises.",
+        "extractor": "llm"
+      }
+    ],
+    "confidence": "high",
+    "source_type": "inferred"
+  },
+  "audience_signals": [
+    {
+      "value": "emerging businesses",
+      "evidence": [
+        {
+          "block_id": "about_p_0017",
+          "page_url": "https://marasimltd.com/about",
+          "quote": "emerging businesses scale efficiently and profitably.",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high",
+      "source_type": "inferred"
+    },
+    {
+      "value": "forward-thinking enterprises",
+      "evidence": [
+        {
+          "block_id": "about_p_0020",
+          "page_url": "https://marasimltd.com/about",
+          "quote": "forward-thinking enterprises.",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high",
+      "source_type": "inferred"
+    },
+    {
+      "value": "leading brands across the Middle East",
+      "evidence": [
+        {
+          "block_id": "home_p_0089",
+          "page_url": "https://marasimltd.com/",
+          "quote": "leading brands across the Middle East",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high",
+      "source_type": "inferred"
+    },
+    {
+      "value": "business owners",
+      "evidence": [
+        {
+          "block_id": "blogs_p_0016",
+          "page_url": "https://marasimltd.com/blogs",
+          "quote": "empowering time period for business owners",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "medium",
+      "source_type": "inferred"
+    },
+    {
+      "value": "MENA startup sector",
+      "evidence": [
+        {
+          "block_id": "blogs_p_0021",
+          "page_url": "https://marasimltd.com/blogs",
+          "quote": "2026 and 2025 have witnessed a boom in the MENA startup sector",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "medium",
+      "source_type": "inferred"
+    }
+  ],
+  "value_propositions": [
+    {
+      "value": "Produce high-quality videos that tell your brand story",
+      "evidence": [
+        {
+          "block_id": "video-production_p_0022",
+          "page_url": "https://marasimltd.com/video-production",
+          "quote": "we produce high-quality videos that tell your brand story.",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high",
+      "source_type": "inferred"
+    },
+    {
+      "value": "Offer digital means to grow your reputation and spike your profits",
+      "evidence": [
+        {
+          "block_id": "about_p_0013",
+          "page_url": "https://marasimltd.com/about",
+          "quote": "In Marasim, we offer digital means to grow your reputation and spike your profits.",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high",
+      "source_type": "inferred"
+    },
+    {
+      "value": "Deliver innovative media solutions that combine creativity and strategy",
+      "evidence": [
+        {
+          "block_id": "home_div_0020",
+          "page_url": "https://marasimltd.com/",
+          "quote": "We deliver innovative media solutions that combine creativity and strategy, turning ideas into presence and messages into impact.",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high",
+      "source_type": "inferred"
+    },
+    {
+      "value": "Build and deploy integrated marketing, production, and digital systems",
+      "evidence": [
+        {
+          "block_id": "about_p_0017",
+          "page_url": "https://marasimltd.com/about",
+          "quote": "To build and deploy integrated marketing, production, and digital systems that help emerging businesses scale efficiently and profitably.",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high",
+      "source_type": "inferred"
+    },
+    {
+      "value": "Run performance-driven ad campaigns that maximize your ROI",
+      "evidence": [
+        {
+          "block_id": "marketing-performance_p_0021",
+          "page_url": "https://marasimltd.com/marketing-performance",
+          "quote": "We run performance-driven ad campaigns across Meta, Google, and TikTok that maximize your ROI.",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high",
+      "source_type": "inferred"
+    }
+  ],
+  "other_unique_insights": [
+    {
+      "value": "The company was 'born in 2025', implying a forward-looking or very recent establishment.",
+      "evidence": [
+        {
+          "block_id": "about_p_0013",
+          "page_url": "https://marasimltd.com/about",
+          "quote": "Marasim was born in 2025.",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high",
+      "source_type": "inferred"
+    },
+    {
+      "value": "Aims to become Egypt's go-to growth infrastructure partner.",
+      "evidence": [
+        {
+          "block_id": "about_p_0020",
+          "page_url": "https://marasimltd.com/about",
+          "quote": "To become Egypt's go-to growth infrastructure partner for forward-thinking enterprises.",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high",
+      "source_type": "inferred"
+    },
+    {
+      "value": "Emphasizes a scientific, knowledge-based methodology over intuition.",
+      "evidence": [
+        {
+          "block_id": "about_p_0034",
+          "page_url": "https://marasimltd.com/about",
+          "quote": "We believe in the crucial role of science and knowledge in our work. We don't go for guts, we go by the brains.",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high",
+      "source_type": "inferred"
+    }
+  ],
+  "tone_of_voice": {
+    "value": "professional",
+    "evidence": [
+      {
+        "block_id": "video-production_p_0022",
+        "page_url": "https://marasimltd.com/video-production",
+        "quote": "From concept to final cut, we produce high-quality videos that tell your brand story. Corporate films, ads, and social content crafted to captivate and convert.",
+        "extractor": "llm"
+      },
+      {
+        "block_id": "about_p_0017",
+        "page_url": "https://marasimltd.com/about",
+        "quote": "'To build and deploy integrated marketing, production, and digital systems that help emerging businesses scale efficiently and profitably.'",
+        "extractor": "llm"
+      },
+      {
+        "block_id": "marketing-performance_p_0021",
+        "page_url": "https://marasimltd.com/marketing-performance",
+        "quote": "We run performance-driven ad campaigns across Meta, Google, and TikTok that maximize your ROI. Precision targeting, A/B testing, and real-time optimization, every dirham works harder.",
+        "extractor": "llm"
+      }
+    ],
+    "confidence": "high",
+    "source_type": "inferred"
+  },
+  "locations": [
+    {
+      "label": null,
+      "address_text": "5 Demashk, Mit Akaba, Agouza, Giza, EG",
+      "city": "Giza",
+      "region": null,
+      "country": "EG",
+      "postal_code": null,
+      "latitude": null,
+      "longitude": null,
+      "evidence": [
+        {
+          "block_id": null,
+          "page_url": "https://marasimltd.com/",
+          "quote": "5 Demashk, Mit Akaba, Agouza, Giza, EG",
+          "extractor": "schema_org:PostalAddress"
+        }
+      ]
+    }
+  ],
+  "service_areas": [
+    {
+      "value": "Middle East",
+      "evidence": [
+        {
+          "block_id": "home_p_0089",
+          "page_url": "https://marasimltd.com/",
+          "quote": "Proud to have partnered with leading brands across the Middle East",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high",
+      "source_type": "inferred"
+    },
+    {
+      "value": "Egypt",
+      "evidence": [
+        {
+          "block_id": "about_p_0020",
+          "page_url": "https://marasimltd.com/about",
+          "quote": "'To become Egypt's go-to growth infrastructure partner for forward-thinking enterprises.'",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high",
+      "source_type": "inferred"
+    }
+  ],
+  "languages": [
+    "en"
+  ],
+  "hours": null,
+  "contact_channels": {
+    "phones": [
+      {
+        "e164": "+201203230384",
+        "raw": "STORIES TOLD WITH PURPOSE\n\nA digital solutions agency based in Giza, Egypt — helping brands grow through marketing, desi",
+        "is_short_code": false
+      }
+    ],
+    "emails": [
+      "info@marasim.com",
+      "info@marasimltd.com"
+    ],
+    "whatsapp_numbers": [],
+    "has_contact_form": true,
+    "physical_addresses": [
+      "5 Demashk, Mit Akaba, Agouza, Giza, EG"
+    ],
+    "map_embed_present": true,
+    "evidence": [
+      {
+        "block_id": "home_div_0097",
+        "page_url": "https://marasimltd.com/",
+        "quote": "STORIES TOLD WITH PURPOSE\n\nA digital solutions agency based in Giza, Egypt — helping brands grow through marketing, desi",
+        "extractor": "rule:phone"
+      },
+      {
+        "block_id": "home_div_0068",
+        "page_url": "https://marasimltd.com/",
+        "quote": "info@marasim.com",
+        "extractor": "rule:email"
+      },
+      {
+        "block_id": "home_div_0097",
+        "page_url": "https://marasimltd.com/",
+        "quote": "info@marasimltd.com",
+        "extractor": "rule:email"
+      },
+      {
+        "block_id": null,
+        "page_url": "https://marasimltd.com/",
+        "quote": "5 Demashk, Mit Akaba, Agouza, Giza, EG",
+        "extractor": "rule:schema_org_address"
+      },
+      {
+        "block_id": null,
+        "page_url": "https://marasimltd.com/contact",
+        "quote": "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3453.371435082491!2d31.19008847471444!3d30.054885874918245!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x1458410003edf401%3A0xbc6e1e5335bec6",
+        "extractor": "rule:map_iframe:google_maps"
+      },
+      {
+        "block_id": null,
+        "page_url": "https://marasimltd.com/",
+        "quote": "Contact form",
+        "extractor": "rule:form_present"
+      }
+    ]
+  },
+  "existing_ctas": [
+    {
+      "value": "Contact Us",
+      "evidence": [
+        {
+          "block_id": "home_li_0006",
+          "page_url": "https://marasimltd.com/",
+          "quote": "Contact Us",
+          "extractor": "rule:cta_anchor"
+        }
+      ],
+      "confidence": "high",
+      "source_type": "extracted"
+    }
+  ],
+  "social_presence": [
+    {
+      "platform": "facebook",
+      "url": "https://www.facebook.com/Marasimltd",
+      "evidence": [
+        {
+          "block_id": null,
+          "page_url": "https://marasimltd.com/",
+          "quote": "https://www.facebook.com/Marasimltd",
+          "extractor": "rule:social_link"
+        }
+      ]
+    },
+    {
+      "platform": "instagram",
+      "url": "https://www.instagram.com/Marasimltd",
+      "evidence": [
+        {
+          "block_id": null,
+          "page_url": "https://marasimltd.com/",
+          "quote": "https://www.instagram.com/Marasimltd",
+          "extractor": "rule:social_link"
+        }
+      ]
+    },
+    {
+      "platform": "linkedin",
+      "url": "https://www.linkedin.com/company/Marasimltd",
+      "evidence": [
+        {
+          "block_id": null,
+          "page_url": "https://marasimltd.com/",
+          "quote": "https://www.linkedin.com/company/Marasimltd",
+          "extractor": "rule:social_link"
+        }
+      ]
+    },
+    {
+      "platform": "youtube",
+      "url": "https://www.youtube.com/@Marasimltd",
+      "evidence": [
+        {
+          "block_id": null,
+          "page_url": "https://marasimltd.com/",
+          "quote": "https://www.youtube.com/@Marasimltd",
+          "extractor": "rule:social_link"
+        }
+      ]
+    },
+    {
+      "platform": "twitter",
+      "url": "https://www.twitter.com/Marasimltd",
+      "evidence": [
+        {
+          "block_id": null,
+          "page_url": "https://marasimltd.com/",
+          "quote": "https://www.twitter.com/Marasimltd",
+          "extractor": "rule:social_link"
+        }
+      ]
+    },
+    {
+      "platform": "tiktok",
+      "url": "https://www.tiktok.com/@Marasimltd",
+      "evidence": [
+        {
+          "block_id": null,
+          "page_url": "https://marasimltd.com/",
+          "quote": "https://www.tiktok.com/@Marasimltd",
+          "extractor": "rule:social_link"
+        }
+      ]
+    }
+  ],
+  "trust_signals": [
+    {
+      "value": "10+ SATISFIED CLIENTS",
+      "evidence": [
+        {
+          "block_id": "home_h2_0024",
+          "page_url": "https://marasimltd.com/",
+          "quote": "10+",
+          "extractor": "llm"
+        },
+        {
+          "block_id": "home_p_0025",
+          "page_url": "https://marasimltd.com/",
+          "quote": "SATISFIED CLIENTS",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high",
+      "source_type": "inferred"
+    },
+    {
+      "value": "30+ PROJECTS DONE",
+      "evidence": [
+        {
+          "block_id": "home_h2_0027",
+          "page_url": "https://marasimltd.com/",
+          "quote": "30+",
+          "extractor": "llm"
+        },
+        {
+          "block_id": "home_p_0028",
+          "page_url": "https://marasimltd.com/",
+          "quote": "PROJECTS DONE",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high",
+      "source_type": "inferred"
+    },
+    {
+      "value": "3+ YEARS EXPERIENCE",
+      "evidence": [
+        {
+          "block_id": "home_div_0029",
+          "page_url": "https://marasimltd.com/",
+          "quote": "3+  YEARS EXPERIENCE",
+          "extractor": "llm"
+        },
+        {
+          "block_id": "home_p_0031",
+          "page_url": "https://marasimltd.com/",
+          "quote": "YEARS EXPERIENCE",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high",
+      "source_type": "inferred"
+    },
+    {
+      "value": "10+ TEAM MEMBERS",
+      "evidence": [
+        {
+          "block_id": "home_div_0032",
+          "page_url": "https://marasimltd.com/",
+          "quote": "10+  TEAM MEMBERS",
+          "extractor": "llm"
+        },
+        {
+          "block_id": "home_p_0034",
+          "page_url": "https://marasimltd.com/",
+          "quote": "TEAM MEMBERS",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high",
+      "source_type": "inferred"
+    },
+    {
+      "value": "Proud to have partnered with leading brands across the Middle East",
+      "evidence": [
+        {
+          "block_id": "home_p_0089",
+          "page_url": "https://marasimltd.com/",
+          "quote": "Proud to have partnered with leading brands across the Middle East",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high",
+      "source_type": "inferred"
+    },
+    {
+      "value": "Founded in 2025",
+      "evidence": [
+        {
+          "block_id": "about_p_0013",
+          "page_url": "https://marasimltd.com/about",
+          "quote": "Marasim was born in 2025.",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high",
+      "source_type": "inferred"
+    }
+  ],
+  "visual": {
+    "palette_hex": [
+      "#0b0b0b",
+      "#624d43",
+      "#30555f",
+      "#629fb3",
+      "#275fa0",
+      "#f04b1e",
+      "#0f0e0e"
+    ],
+    "palette_dominance": [
+      0.3339,
+      0.1543,
+      0.0642,
+      0.0637,
+      0.0636,
+      0.0119,
+      0.3084
+    ],
+    "primary_color": "#0b0b0b",
+    "body_font": "MarasimFont",
+    "heading_font": "MarasimFont",
+    "logo_url": "https://marasimltd.com/static/media/%D9%85%D8%B1%D8%A7%D8%B3%D9%85-%D8%B9%D8%B1%D8%B6%D9%8A.44762a6ec7a63353685c.png",
+    "hero_image_url": "https://marasimltd.com/favicon.ico",
+    "content_images": [
+      "https://marasimltd.com/static/media/video-editing.139bc1f373e6769e25b7.png",
+      "https://marasimltd.com/static/media/video-production.be6fd3937996ea790092.png",
+      "https://marasimltd.com/static/media/image1about.4e2ac283fd90900f8180.png",
+      "https://marasimltd.com/static/media/image2about.a20d14641775e56c8611.png",
+      "https://marasimltd.com/static/media/image3about.5fcc96e44018ddfa74c7.png",
+      "http://api.marasimltd.com/files/images/ef8970e5-8473-4b8b-b3c8-a07bff0aafe4.png",
+      "https://marasimltd.com/static/media/analytics-magnifying-glass.4be5df15602217b7b312.png"
+    ],
+    "primary_logo": {
+      "src": "https://marasimltd.com/static/media/%D9%85%D8%B1%D8%A7%D8%B3%D9%85-%D8%B9%D8%B1%D8%B6%D9%8A.44762a6ec7a63353685c.png",
+      "alt": "Marasim Digital Solutions",
+      "text_wordmark": null,
+      "source_type": "img",
+      "classification": "primary_brand_logo",
+      "confidence": 1.0,
+      "score": 130.0,
+      "reasons": [
+        "appears_in_header",
+        "near_nav",
+        "links_to_homepage",
+        "logo_keyword",
+        "brand_name_match",
+        "img",
+        "suitable_logo_shape"
+      ],
+      "width": 120,
+      "height": 45,
+      "aspect_ratio": 2.667
+    },
+    "logo_candidates": [
+      {
+        "src": "https://marasimltd.com/static/media/%D9%85%D8%B1%D8%A7%D8%B3%D9%85-%D8%B9%D8%B1%D8%B6%D9%8A.44762a6ec7a63353685c.png",
+        "alt": "Marasim Digital Solutions",
+        "text_wordmark": null,
+        "source_type": "img",
+        "classification": "primary_brand_logo",
+        "confidence": 1.0,
+        "score": 130.0,
+        "reasons": [
+          "appears_in_header",
+          "near_nav",
+          "links_to_homepage",
+          "logo_keyword",
+          "brand_name_match",
+          "img",
+          "suitable_logo_shape"
+        ],
+        "width": 120,
+        "height": 45,
+        "aspect_ratio": 2.667
+      },
+      {
+        "src": "https://marasimltd.com/static/media/%D9%85%D8%B1%D8%A7%D8%B3%D9%85-%D8%B7%D9%88%D9%84%D9%8A.c5e99648ebf320474d34.png",
+        "alt": "Marasim Digital Solutions logo",
+        "text_wordmark": null,
+        "source_type": "img",
+        "classification": "primary_brand_logo",
+        "confidence": 0.74,
+        "score": 74.0,
+        "reasons": [
+          "links_to_homepage",
+          "logo_keyword",
+          "brand_name_match",
+          "img",
+          "suitable_logo_shape",
+          "footer_only"
+        ],
+        "width": 130,
+        "height": 190,
+        "aspect_ratio": 0.684
+      },
+      {
+        "src": "https://marasimltd.com/favicon.ico",
+        "alt": "Marasim",
+        "text_wordmark": null,
+        "source_type": "img",
+        "classification": "primary_brand_logo",
+        "confidence": 0.72,
+        "score": 72.0,
+        "reasons": [
+          "logo_keyword",
+          "brand_name_match",
+          "img",
+          "suitable_logo_shape",
+          "repeated_candidate"
+        ],
+        "width": 83,
+        "height": 83,
+        "aspect_ratio": 1.0
+      },
+      {
+        "src": "https://marasimltd.com/static/media/movie.3fbd5fc8f187e5b6e4a2.png",
+        "alt": "Client One logo",
+        "text_wordmark": null,
+        "source_type": "img",
+        "classification": "primary_brand_logo",
+        "confidence": 0.68,
+        "score": 68.0,
+        "reasons": [
+          "logo_keyword",
+          "brand_name_match",
+          "img",
+          "suitable_logo_shape",
+          "repeated_candidate"
+        ],
+        "width": 140,
+        "height": 70,
+        "aspect_ratio": 2.0
+      },
+      {
+        "src": "https://marasimltd.com/static/media/BrandIdentityandGraphicDesign.f8941855ae8ebfa4c711.png",
+        "alt": null,
+        "text_wordmark": null,
+        "source_type": "css_background",
+        "classification": "primary_brand_logo",
+        "confidence": 0.6,
+        "score": 60.0,
+        "reasons": [
+          "logo_keyword",
+          "brand_name_match",
+          "css_background",
+          "suitable_logo_shape"
+        ],
+        "width": 204,
+        "height": 340,
+        "aspect_ratio": 0.6
+      },
+      {
+        "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAQAElEQVR4AeydB5A0RRXH90AxYQ4gphJRDGghCpJEkUJEkuSkCIogBShI+ARKwEAQBEQkSSgFQYJgAZIRQREQEEvJIEGQpJKTIPj5+23d3rd7N7vTPTN7M7M3V+9/PTvzuvu9129muns6zNWaoX+zZ8+eD2wA9gNnghvBg+BJUAV6GCHuAdeAE8BuYHnw0iKLbEY5AMZ7G9gV/BUjPgB+AXYCq4H3gTeBV4Aq0GsR4q3gI2Aj8D1wMXgE+c8GG4KX8TsXzQgHwFCLg19hqbvAXuCDoK7kE+CzCH8iuA+99gJv5DgTjbQDYJgFwZlY5irwOTBq+r4GnXYFd6LnHkDn4Gc4jZpB2ppjiLnBLvy4Hvh4Jxhp8rW1Jxpeh96fIAymkXMADOB7/GwssDfI/Y4kjTrRQgh7MTbYF8zNcSqNlAOgtO/2P6P1SmCmkmU6C+VPxx6pN4DM8NafUHYZtLgULAAaarVWxwgXYBfrCRz2UufXSDgASn4IhX4NbDoRNDRugWUJz8M+1hE4nEq1dwCUWxC1LgADPZ3rM5U+huInYqfEsk48SYRaEEq9BEFPBfOBvPQwCVwJzgGmWSbss7gEOW4Ez4O85Otgt6REau0AKPQDsBjIShb4NkR+z9jY2OvBUmAVsF7JWIv8lwcfQDafbMsT/hj8C2Ql+wmmNBFr6wDc/Vb6ts5ojWuI9ykMbIEfSngbvytJyPYUuARsi4B2DW9JeD+IJZuFR2O3ns6iWjoASrwI7Q8HYyCGHoF5Y7AEBv0tYa0ImZ8DP0Fov1ucQBhL9hP47WMiXi0dAOk/D2zzEwTTTXB+BAOeCGZzXFtC/seANvgqSrwAYmgWN9AbOhFq5wAI76Psmx0FAsOb4VsOo91JODKEPkeizIYg2AngtUm4HWGbaucASL0qWBiEkrX71THWv7sj4EhjYC1wCrgbPAscD/A7wh3Aq7r5q3qMXrZWeh7rAbJujX7tXsI6OsCmAQp2WP7HwfoYqaeSh/Lv4vwfwWlgXfA2MA/wO8LHCW1d3A6f1/hZbUK/g5DwFBBKtixsGrZq5QAUyOvR0G/hBEHk+/6ibk7SsGll4S/efT7h2PfkyfB/LeFaFU99HaEeA6FkHaJeDoBmKwDvVIJUehaOb4EJojDn5YfjA3QkDlPJVsaBxPtUKmf5DP9FBEc5EQTRCuj1klo9AVDLDhGCIDqaR6MjgLqZt+eHXccEwWSl8yCMVVlbIZsO7ZMupm5kHWDJyirVp3iW7nM+6fSx3ScxknfzFt3nIo792LRUBP+0saJXp/AXzZDpsrVxABT1TnxPoJL3cvdfO4n3/fy2J40gE62YKdYQI2GT15H8hSBL4ROt9d7aOADSvgP0dGPyux/9PuGCNf2E08GnzD+YediM44XvY//DIXn14Vm4Tg4wfx8lkk77FS3pfJ5zNinzxC8sLoVvM+58EsxT+ERvzV8nB7AGr9AhuC+B6Z6EczGn8saPyasvL4XvY/83MHwU5KVXjaoDPJlgGZ8K9yacDz3luzaUdyh844WvHHk+gXfLNm+dHMBKYLfwg46n9I1TKfQD0FGDIg245kyiKwZcH/olCt/hbkUWvjLPXScHUOC8OIAEYj8I6Uzb4UCl1QGGVPiYolW7nsC20Fn/UYi+GuwDfygwDZ8aOxCvtLEDXYXvHMFAscPZZtoToEVhOlvIgZJXp5jJr4d+SDo4hW9ol4dd+Ao+4xxApXGC2wl1grUJ/ZxqDd++9H/y2z6EHQkXgs9rHE4/FVX4aZLPSAfQKBTubHA6cADo2wnnAfMBB44cQBjzZa1lgYHtwFngfvAMcIzBrYSnAtcieLl5pwFeK3wOdc/y2Pc15+intGza12esA7S1L+AfhTUPcO7+3STnd3kHrNhpZa+lXy7fzfl1gGsR6AybwT/G70Timp08Fn6Wdr6F7+dyWy2J6U8+2TjAZItE/Kaw3gm7zUPH3Id0VL0Ffj9SueKHDsLPOUR6uQufJ5evsDmJphw1DpBioH6XKawluea8giydMo7jO580HJ9HMi1fIZ3CTxuo0uaf9K9958cWvmk0DqAVIkHBWXl0uRaHkEXGnmBfjiPn7c1Leq/m2L79LIX/NHEd8xh15xOnTY0DtM0Q/o/CcuEJWwcOqAiPmMzp5E1HKNnDt0Qyy8Cz3vmf4c7P3E/ROMBA+865SMG/CDgZxYUn+lbi5sQIPnKU07Tf+R3pGgfoWGJASMG/ksveqU7E4LB08rG/6qA7P1TCxgFSLEXhW9N3FPHKKazTdbmwwlfgxgG0Qh9Q+PYW2sxzLl4frmk9XWjhK3njAFohARS+k0Kco5917QG7lx2anpB6plO5K3xJuTYOkGAVCt9JFidxaUpnDedCyHUJrdi5NmERTuCdn7mpN0jgxgG6rEPBd2r6P+R0VtucTlwXd3iQStp5HK8J8jiBhV9IhQ85plBWJackVPcTFL49cRZYnpr+fthhXQreQuOw5efnc1utlk+CR1vxfy4EsQLpZW7np2XZOAAWovCt6V/OoVPPCKLJdXy2oKBmgSkjhzinY3W6jkMT94PQ4sS1uzk0TjTfjHcACr9TMFlr+n42dl2hgeMNKchbgLOLfBq4kukzCaX1BOecsezyNSvBHz2IlfhRVCcHiHmPBlXeKHxr+nn69P+OtZeloLxbOUwneM8AfjJ29rFTzuxfcNbRIsR+A9fWAXkf+a6eRnKp9GydHMBmUKpG4wyOnR8/TA4ofFcZOZmrWfv0HVK2JIXlEDOSiSPiPQ2uA+eBi8AN4Lm4VPpy+3Gp78WuC0/UyQEe7xI87bDvDGAK/sXgGBLYB2Tt03cdv09SYDHTsclu2qiv/pMkeLxODjB5qvckXXp+Jg6louCt6Vsr/1IPd9wPh5b7mJ6o6cdFHy43Ovr0C50HeVdtHIC7zVG6ocO5l8AQFvaEtfldRE1/K+TYEUyp6U9kVP6BXxdDy/XmUMZUtTDwy8DS4MvAbUyOJHTok4swdXAI59YEMbN8uvMOfd86Fs/adjsu+eWt6fv6WY2CP6KdYLX/rRch3vW5HADDLgB2BPaZuwjjH8j8aOA2Ji7G4GZH1rQ7cFlWe8rcCcs7EtYoMp/QCNsilyuBmXeemr59+h+n8G3Lh+ZdCh/6OhjViS+h+V+SyQHIaClwBrk4EnZ/QtegDW16wN5yQYMLSSO0ttoa/4tpHjlWz5G4eWr6fyLfj1H4waNs4S+FxjPdmTCoCQzffeh1U5QDUGALA8eu2Wump2V9lJN/y6XadvAgAj5hHozgXx/erDV9HfwTGMnuWJKpNlEuroDiEzZUUFsyYXMDSdxNmHYn5b+AT4OiyMdzcFoUhl2ubpcWHCcjox+D1ia/pzLGn9ZolI9D0v16+eKIjI+XN/UJQOK+V1yK5NtEiHnMw55Koe3V7oQcV++kze5zRR07E3gbCn574HFR6Q4tHcrHMvw5GcSsnWwHlKOcBj8BSNxZLT7uP0kGwyBr61HpUjC2BM6KihTGbD+839wPDWMvn4vy6ayavkakNHaCtaPoPe2Dyf9I3I8jl3E+S22daEMlp2IV+RT4B9Ja03e3EA6rT5SPHT7Wx2xtxQh8C8wTy8omOgCJ25Nk4nkmPpDPcIingP3wxxWUutvM2adv/aagJIebDOXjtnjtTS8y5ORiFxOvtykOQOI2IxwCrRNkSH/aotjkse8hT4a+3pwNPPTPrnmENC7lYp+Gu4d7Y9onkeXJfBo3j3FNso0pDsDZA4HtdILqEoo4l/8rOSV05dGrMa5byK9C+EGQdRBoTlHmREeGucBrwSJgXXAIV13axg6tnlYY50PJldO2mszc4wBk5KLIU5gmRxrw246TPblue51guIQTOHjCzZTyZPReIrvevvsO2uHzAHYolZDHR7T7HFzHse9r2/d5Fqq0+bwR9pqy6dSEA6CxNfKsNWAfK0uTwUeBzUW9Ddmnhb5BLuZP0FAfC2xNuVyadG3CAbj4ReDdQBBMDofSs1YmAydQBEcsipF8XdrFBRiGOnauKHlLSGd3bORGU4lZtx2Au98u3VmJHP1P+pHE4VD2t/fnmoYrKGiPnTVj35HTkGMtsrCZvDO2+e4gadsOAIPj0uyb5zCIfD+tSOJ2ygRFGDYTsvjJ1uVRsmynNmzxpjt9B5xugk38UDcw744DbDKQq/einuXCSnYo9F4p+RcKPwvcCsWx/f8pWZyysrdc7NewezhVBpsbtvsdpZrKPM5wDEZ2seLxn9ULkM/t1BwWFjN+oHqKxElkXcjNrtwb0dZMUGyfAI5VDx0Z69Dsnn14gnIpgQkncHFom7XuFHprCSIMNcuuxH0i23H3YXTeCVgf6ro8+FAHcDDHYK45V92Fq6ojYedIOX6EMVwL0M/Hfit3YSa/bWiwcY5aBxa0n3QXRc81wA1ZtNEBNE5o3F+GMlaJD+O8AE4C7gm4ELK5rJuji+pWT3AwjN/9rbPNjz5W9IIf9+g9hXSA0J2mvHPeSJPRrsmBIJfKfkfAaHeAvYGvB7+oOY3biuN3kNtexZ8SughU2bDtbre83zz83Ot+SW9G7g3B8SBmogwqJZMO4ICP5Ku9Zx1apXHsmkyDo3B7Y1fwF0Z8BlwDTgB7gG3BZsBWTtnYEjlcqXx/wjPBbcCbsFBL6gAOJyo00Sax+lhABwhtAdRHq0bSYAvoAD7agyM0jKNlAR1gtDQacW2KVq9xgKItWrP0GgeoWYEVLW7jAEVbtGbpNQ5QswIrWtzGAYq2aM3Si3EAh1w59zwE8tbKFHRxvxRsDA4DJ4J9wDJ5lSCNRYHrJbhWQt71EfKKMyV+jAPcQ1fkqSEgF4eLEdSDKCC/B9yMtA6icFS0Xw5dROoyrp0BXC6ey+FEHNciclzCtcRyvQTXSnB0b571EUiqWIpxgGJzrkhqFJQfrpxs0W/YtdPg/aQcK7Eflpy2ldTR5ryLqPURYjMP5Z/xDoChvNPdp4/DvrQqjhI8bgJeCzht0opjMGPXR+grYNYLjQO0Wg6IDbFfKJ9pOUw96c73Wjei1kfojljUceMArdZbA43pqyKQtRU6by/L+gihMgTxNQ7QaoWuqhHKp+FDeZ2NJX9pmKu0nJuMK2GBxgEqUQzlCdE4QHm2r0TOjQNUohj6CzHsKzEO4EhgmrjphNClN2+QoWgaSf1jHKBogzbpVcACjQNUoBDKFKFxgDKtX4G8GweoQCGUKULjAGVavwJ5Nw5QgUIoU4TGAcq0/oC8p+uSDlDUVmXTJfMo5eOCG6XqowMUMs24VC3qm7krlJcqvQ7gil8hQjg12QUiQubNu/p2SJp14lGnEN3lCd1VLO9ax7ntpwPcHpiKI1xcWCF13jzplbJoJPkOk64YGxsL0d2l7LVriCy3hTANk0dBHQ0bmsdqoYwzmC/GRi7pVqqpdICYMfxb8imo9FEspVpsQObYxpFAjgQewNVzqfQnpQ7g8qq+33sk6/NjAc7n2XaV/9k4mQAAApRJREFU6CNNm6Hd20EIWU9woaoQ3qHxzMV7zXX3r4rIwRkzb47gnxGs3P3aZN8IZa/E9m6H2xNlun/4BDBP15szDMFrYDoFhYveQYxk60nYwteiaxSnzS/oVjDG5t3xCj3uOIArfrvwYGjiy8LoXLcZ7wQUvjZw5tDy2CSUbP+fHMo8TL62A/Aosi/AeWwxea0N8wUYIHSZOdhHi9Ddx757KmqLGOUOx+al9wEocNsBPAAuNBzbK7gc8W7EEJsDa8D8HH1SV2Bt3+VZfRrGKO2y9gfERBgm74QD4JHuket+P7H5+d47ikh/wyi7gEU4HklCtw8Bl5m188wnprrH6uoOHla8Y+MNhX/CAcZT/xGhGz8RRJPNn72J5UZHwY9EDGqFsjQgbyipk3sL2tMXM02sO31bW1n3ZepOp7DjHgfgKeCa8+647V5AeTLpSTclIUcQl4kU8SYux+g0Eanr4FGON8DG7uDFYTVoilII6OPtC4hXKUGRp86kLTfGtu79l6hHWSenOICCIOhZhFuC0B5CWBvqYwFtuDk2PafP9VJPJzqAEiHwsYSbAl8LBA1lsIAbQG6BLX+WIe60ROnrAOaO4McRrgXy1glIYsaR7/zVseHRVdZ8oAMoOAq4pepiHF8DGgqzgLX9xbBdJR/73SqkOoDMKHIHoZtLbUdoRwZBQwkWsDvdNYeWwWaVq/AlyNsKcgAjotDz4GCO3bokS68hUUeW7NvfD+0WxEbfB9b6+Vl9CnaAjioo9yBwt207frbmvANKrOlyOKNInS9HY9cVfAc2mQUq08OHXEEU7QCdVFH2EXAY8NUwH+ftQDqI8FzgUKeHCEdhyLk6qIs6qZsbObla6pvQ3Uf9EYSZP+xgo1Lp/wAAAP//lMPkGgAAAAZJREFUAwCa/FlVqDmjfAAAAABJRU5ErkJggg==",
+        "alt": "Client Five logo",
+        "text_wordmark": null,
+        "source_type": "img",
+        "classification": "unknown_candidate",
+        "confidence": 0.54,
+        "score": 54.0,
+        "reasons": [
+          "logo_keyword",
+          "img",
+          "suitable_logo_shape",
+          "repeated_candidate"
+        ],
+        "width": 140,
+        "height": 70,
+        "aspect_ratio": 2.0
+      },
+      {
+        "src": "inline-svg:15",
+        "alt": null,
+        "text_wordmark": null,
+        "source_type": "inline_svg",
+        "classification": "footer_logo",
+        "confidence": 0.52,
+        "score": 52.0,
+        "reasons": [
+          "near_nav",
+          "links_to_homepage",
+          "inline_svg",
+          "suitable_logo_shape",
+          "footer_only"
+        ],
+        "width": 14,
+        "height": 11,
+        "aspect_ratio": 1.273
+      },
+      {
+        "src": "data:image/png;base64,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",
+        "alt": "Client Two logo",
+        "text_wordmark": null,
+        "source_type": "img",
+        "classification": "unknown_candidate",
+        "confidence": 0.5,
+        "score": 50.0,
+        "reasons": [
+          "logo_keyword",
+          "img",
+          "suitable_logo_shape",
+          "repeated_candidate"
+        ],
+        "width": 140,
+        "height": 70,
+        "aspect_ratio": 2.0
+      },
+      {
+        "src": "data:image/png;base64,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",
+        "alt": "Client Three logo",
+        "text_wordmark": null,
+        "source_type": "img",
+        "classification": "unknown_candidate",
+        "confidence": 0.5,
+        "score": 50.0,
+        "reasons": [
+          "logo_keyword",
+          "img",
+          "suitable_logo_shape",
+          "repeated_candidate"
+        ],
+        "width": 140,
+        "height": 70,
+        "aspect_ratio": 2.0
+      },
+      {
+        "src": "data:image/png;base64,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",
+        "alt": "Client Four logo",
+        "text_wordmark": null,
+        "source_type": "img",
+        "classification": "unknown_candidate",
+        "confidence": 0.5,
+        "score": 50.0,
+        "reasons": [
+          "logo_keyword",
+          "img",
+          "suitable_logo_shape",
+          "repeated_candidate"
+        ],
+        "width": 140,
+        "height": 70,
+        "aspect_ratio": 2.0
+      },
+      {
+        "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAACXBIWXMAAA7DAAAOwwHHb6hkAAAAGXRFWHRTb2Z0d2FyZQB3d3cuaW5rc2NhcGUub3Jnm+48GgAADBNJREFUeJztnXuwVVUdx7+/AwikqCRSikqYmpma5iOFysdUPmZ8gNqDcTBNx1DTcspn05iOjo+SdLJ0yvEx6eCT0lTMFEMxc3yRoqW8NEKBFAUEQe799Mc6h654H+t39t5n33Pu+szcf2Dt3/qus3577b3X+q3fkhKFAQwFLgb+BawG3gBuBXYtW1uiYIBtgbl0zmpgfNkaEwUB9AOe76LzOzpBGglaEWBcD51f45aytVbKFtCiHJhzucJIDlAMn4ws94lCVUSQHKAYNo0sZ4WqiCA5QDFsXLaAWJIDFMMWZQuIpfQhqNUAPi7prdjyZlZqH6QRIH92KVuAh+QA+fP1sgV4SA6QP0eWLcBDcoAcAfaQtFPZOjwkB8iXs8oWkCgJYGdgbeQawDrK1p1GgBwAKpKuk9SvbC1ekgPkw7mSRpctIlECwJFAm3fo7y2PgEQGgEOBlfV2fnKAJgaYAKzJ0vm9wQH6ly2g2QAGS7pa0olla4kB+IykYySNlLRc0qOS7jOztjJ1NSXAWGBe1ru+ESMAsCtwJ9DeSbXPAKOKqrulAIzwrH88z44vygF66PiOzAWaJm6h4QBbA+cALxfR8Xk7gKPjO3JJigeoAmwuaW9JYyQdImm3RtSbNR6AEFr+U0nj5I/vmJOLAxBmwkZK2kbShtW/3shGCuFatb/NJI2StIOkLcsQVK8DZOz4Gu11fwUAe0o6XCG0eQ9Jg+q1lYgHGC5pkqRvK3tE13KXAwADJZ0g6TQ12bJng/lA0oC8jVY7f4ak7XIy+UjUWgDhTXiCpLmSfq3U+V2xUtJESX8syP5Vyq/z10q6pEcHAEZIeljSTSrpOdkkPCVpdzO7VlIRn3fDFCZ08qBN0vfM7OluHQA4QNJzkg7IqeJWZImkkyWNNrNXCqxnN+Wz3Dxd0j5mdr3UzVQwcJSkWyQNzKHSVmSVpN9IusjM3mlAfVlf+KZLusDMpnX8x04dADhc0uSu/r+Ps1ThPehqM1vcwHr/oTB0e0eBTju+xkc6GNhbqfPXB4W375slTTaz5Y0WYGaLgLsV/x7QbcfX+FAnA0Ml3SZpcF0qW4s1Cp3+kKTbzGxuyXok6QcKs5UjuykT1fE11r/LJ0n6VF3Smpt2SXMkzaz+PSNpupm9V6qq9TCzhcAYhUfQYfr/ewEKy7wXxXZ8jXUOAHxZ0oQ6tbUp3C2PSXpDUiOfjfWyQtJCBa2Lm2V93Mz+I+kIYGuFGVgkzTSz+ZkMA3+tYzFrJXBpdSElUQW4PfYHLFtr/6rgMZK+4rx2pqSxZjYvd1WJhlF7BHjDmx6RdISZrchZT6LBVAgxbkc5rnlV0tGp81uDikIAxBDHNceb2dKC9CQaTEXSfo7y95jZjKLEJBpPRZInW+VvixKSKIeKQjhUDCsVloUTLURF0vDIsq+a2aoixSQaT0UhUDKGhUUKSZRDRdIGkWXTZ18voBqedywwHVjhnLldDNwLHNjRYCy3l9jupoKCpoIJaegn+/q8S86W0pp/s/ETSd/MydYlwIyUIaRJIMzY/ihHkxVJZyYHaB72UvwLeyxfSg7QPMSmoPewSXKA5mF+ATZfSw7QPLwg6Z8527w3OUCTYGZIOl0h/C4Plki6IjlAE2FmDynsCn43o6nXJB1sZm/2VwgqjNl1kpylF2BmdwDTJH1L0hfk+zJYLOlJSXfV1nX6K6zyxSR0GObUmigIM/uvpF/lYasiKXZfW9oZ3IJUJC2ILLsdkJygxagofF7EYAopYRItREVh/38sZwK5pz5JlEdF0lRH+e0lnVKQlkQJVKq7Xmc5rrmMsJMo0QLUvu2vd1wzUNIfkhO0BjUHuEGSZyv0MEkPA2ekd4LmpiJJ1Rw3v3ReO7B6zSxgIiGbWKLJWDcFDAxR2PdX75n2KCRZWChpUXZphbNSIZfBm9W/VyTNMrM1WQ1X4yejUrnUkyqWkBvgBIVNPbVMJrea2dteW+sbHptTwGGzsgZ4AbgBGE/IzFnP71hYfoCqrs6OqVlOyNWQbcoeuDbrr9hCtBMOV/gxjllQiosK3h/4oAeT2RwBGAg8XNfP1dqsBR4knBLWU4LNohxgpkNvzRG6zd7ykYaY2WpJYyU97RHXB+incDL4FEkvAt+hgV9AwC7ybeTdSNLZkuZ25widerKZLVNID/ugV2gf4bMKn84vAYc1sM566NYRuhzKqhlADlPIBZTonO0k3QNMJZzOVSSrM17f0RHOA/pJPUT5mNkHkn6RseK+wEGSngNOA4o6hudJhRTvWdlI0sUK2d97DgUDNlA4JyBN9MQxVeH0lP1jCnvmAYBrlO9i3PioygkbCS/NseJEFacDDFLI43xETtXPiHWAoZJeV/5bk/o83pnA6iPmWEkXKnta35Ue77ta0vcji7dJ2j42iWT1u/olSbEvUnMl7eBN7wrUTg0bUv0bpvAjbq9wIMOe1f9vGBlODRsg6ThJ56t+R3jfU+G21cmQWK7yKAFOctgG+Ia7uT1rqACfJxwY+Ri+QxjrIgfNA4ATqe9I2ye8ld3pML4ciN7QCAwC3nTYf8r9azkBRgEXOHW5yFHrAMJNNM9R/fHeSkY723eW0/55Tvv7uxpQJ8Bgwide7o5QgNZYR5hCD1PaXVXwN0f7/o1juhQYShg5YrnP3YAMAJsCVwFtDo3dUqDWmiPMXq/KFcDFhM/7ugwf42zjsU77kxy224Gd62pIBoCvAYucv0OnNECrAXsARwMHkfXEcEKiormONj7rtD+Snpc8O3JjpgbVCbAV8JJDZ6eUoT0zhFhAD65zB4HfO2yvBrYqqq096NwceN75W3yIMnRnBhgCLHW0809O+7vi+wS7oqi2RmjdEljg0PohytKdGeByRzvbgR2d9h902H8X2KSotkZoHY1vjmQdZWnODDCCMPzGcp3T/ledv6XrkzNvCF8HbsrUnBl8z+qVOA+XAp512F9AvZ82OUB4LC5x6AXKd4CsWT8ud5QdLP9S5s8dZUdIGu+0nxvV00SvKav+0gCmORx+EWFJM9Z2f3xTmy9SXEBGjN5h+B6LTT8CSL6IoeEKS5lRmNla+XYsfU7SoY7yuVJN3eI6ubPpIaygvexw+lmeuxTYEHjLYf/RApsbo3eiQ2vzjwBm1i7fXbqTpEMc9t9TOCs3lv2AfRzl86bvHaqFfyn3L077w+l8O1RX3FFUWyO0boDjPaAsnbkD/MzRQQC7Oe17tqytBT5dVFsjtEY/EsvSmDuEu3SVo5Nudtr3RiSV9kkGzOhzDiBJwO8cHbQG5yIOcJfD/iqg3q3umQAeaBYHyDv96ySFPAExDJB0qtO+Z2JokKSJTvt5EXu0buZcBL0O4H7HXfo2IVLXY3+6w/4S4GNFtbUbjZdF6pvdaG3rU0QC6CsdZYdK8gUmSp6l32F12M+DByLL3V+oirLAFyQxm+pGxUjbhi8SZ47Hfl4QzufrjiW0aupdYIKjgwDGOe1/12n/6KLa2o3GIYTI286YDezeaE2dUcjCCWFZdp7iM4w/YWbReQeBgVX7W0ReMtXMomcf8wTYV2Gb/UhJb0t6XNKUPJJR9WqAc513qWv6FjjbYXstzliEREbwx/i7jqYFNgbecdh3PWb6CoUdA2NmSyXd6LhkHDDKYX+ZfCluv+go22co+hygKxV/ylU/SWc47d/kKLuN03YiD4C7HcP0MhwbSqv2l0Xadq1A9hUacRKYZ2JoiKSTnPZj8+a0O+0m8gL4u2MUWADEnGImYBuH3SlFt7MZadRZgJ64wREK6U9iONlhd46jbCJP8Ef3tgGn92BzDPC+w+ZxjWpvohOAHzo6q8ZkQorUjnYGAacA7zltlbKBtLfTsBh6wnkEr0tyveUrxBfMVzjLYKBCvtyhThtPm9lezmsSeQOcX8cokAcnlN323kpDd9EAgxXu5EZmHZ0vacdqFvTEejT0RPDqidWnKj5sLA/OSZ3fy6DOrdR1cFvZbU10AiGDlSfCtx6eJbx4JnojVSfwJJ708CJp/b/3Q4jvO4OwRyAvHsC5oJQoGWBvHLtpuuAdws7chr7YJnKCMBocCfwZXybOJcCFpCG/LkrLptEdhJMxD5a0r0Ia9+GSNlMILlmqMJfwvMLpHNOqR9sk6uB/yJxAoJbkffUAAAAASUVORK5CYII=",
+        "alt": "Client Seven logo",
+        "text_wordmark": null,
+        "source_type": "img",
+        "classification": "unknown_candidate",
+        "confidence": 0.5,
+        "score": 50.0,
+        "reasons": [
+          "logo_keyword",
+          "img",
+          "suitable_logo_shape",
+          "repeated_candidate"
+        ],
+        "width": 140,
+        "height": 70,
+        "aspect_ratio": 2.0
+      },
+      {
+        "src": "inline-svg:19",
+        "alt": null,
+        "text_wordmark": null,
+        "source_type": "inline_svg",
+        "classification": "footer_logo",
+        "confidence": 0.48,
+        "score": 48.0,
+        "reasons": [
+          "near_nav",
+          "brand_name_match",
+          "inline_svg",
+          "suitable_logo_shape",
+          "footer_only"
+        ],
+        "width": 14,
+        "height": 11,
+        "aspect_ratio": 1.273
+      },
+      {
+        "src": "inline-svg:20",
+        "alt": null,
+        "text_wordmark": null,
+        "source_type": "inline_svg",
+        "classification": "footer_logo",
+        "confidence": 0.48,
+        "score": 48.0,
+        "reasons": [
+          "near_nav",
+          "brand_name_match",
+          "inline_svg",
+          "suitable_logo_shape",
+          "footer_only"
+        ],
+        "width": 14,
+        "height": 11,
+        "aspect_ratio": 1.273
+      },
+      {
+        "src": "inline-svg:21",
+        "alt": null,
+        "text_wordmark": null,
+        "source_type": "inline_svg",
+        "classification": "footer_logo",
+        "confidence": 0.48,
+        "score": 48.0,
+        "reasons": [
+          "near_nav",
+          "brand_name_match",
+          "inline_svg",
+          "suitable_logo_shape",
+          "footer_only"
+        ],
+        "width": 14,
+        "height": 11,
+        "aspect_ratio": 1.273
+      },
+      {
+        "src": "inline-svg:22",
+        "alt": null,
+        "text_wordmark": null,
+        "source_type": "inline_svg",
+        "classification": "footer_logo",
+        "confidence": 0.48,
+        "score": 48.0,
+        "reasons": [
+          "near_nav",
+          "brand_name_match",
+          "inline_svg",
+          "suitable_logo_shape",
+          "footer_only"
+        ],
+        "width": 14,
+        "height": 11,
+        "aspect_ratio": 1.273
+      },
+      {
+        "src": "inline-svg:23",
+        "alt": null,
+        "text_wordmark": null,
+        "source_type": "inline_svg",
+        "classification": "footer_logo",
+        "confidence": 0.48,
+        "score": 48.0,
+        "reasons": [
+          "near_nav",
+          "brand_name_match",
+          "inline_svg",
+          "suitable_logo_shape",
+          "footer_only"
+        ],
+        "width": 14,
+        "height": 11,
+        "aspect_ratio": 1.273
+      },
+      {
+        "src": "data:image/png;base64,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",
+        "alt": "Client Eight logo",
+        "text_wordmark": null,
+        "source_type": "img",
+        "classification": "government_logo",
+        "confidence": 0.38,
+        "score": 38.0,
+        "reasons": [
+          "logo_keyword",
+          "img",
+          "suitable_logo_shape",
+          "repeated_candidate",
+          "classified_government_logo"
+        ],
+        "width": 140,
+        "height": 70,
+        "aspect_ratio": 2.0
+      },
+      {
+        "src": "inline-svg:16",
+        "alt": null,
+        "text_wordmark": null,
+        "source_type": "inline_svg",
+        "classification": "footer_logo",
+        "confidence": 0.3,
+        "score": 30.0,
+        "reasons": [
+          "near_nav",
+          "inline_svg",
+          "suitable_logo_shape",
+          "footer_only"
+        ],
+        "width": 14,
+        "height": 11,
+        "aspect_ratio": 1.273
+      },
+      {
+        "src": "inline-svg:17",
+        "alt": null,
+        "text_wordmark": null,
+        "source_type": "inline_svg",
+        "classification": "footer_logo",
+        "confidence": 0.3,
+        "score": 30.0,
+        "reasons": [
+          "near_nav",
+          "inline_svg",
+          "suitable_logo_shape",
+          "footer_only"
+        ],
+        "width": 14,
+        "height": 11,
+        "aspect_ratio": 1.273
+      },
+      {
+        "src": "inline-svg:18",
+        "alt": null,
+        "text_wordmark": null,
+        "source_type": "inline_svg",
+        "classification": "footer_logo",
+        "confidence": 0.3,
+        "score": 30.0,
+        "reasons": [
+          "near_nav",
+          "inline_svg",
+          "suitable_logo_shape",
+          "footer_only"
+        ],
+        "width": 14,
+        "height": 11,
+        "aspect_ratio": 1.273
+      },
+      {
+        "src": "https://marasimltd.com/static/media/imageabout.b402afd36eb51844cd36.png",
+        "alt": "Marasim creative team working on digital solutions in Giza, Egypt",
+        "text_wordmark": null,
+        "source_type": "img",
+        "classification": "unknown_candidate",
+        "confidence": 0.26,
+        "score": 26.0,
+        "reasons": [
+          "brand_name_match",
+          "img"
+        ],
+        "width": 546,
+        "height": 683,
+        "aspect_ratio": 0.799
+      },
+      {
+        "src": "https://marasimltd.com/favicon.ico",
+        "alt": "icon",
+        "text_wordmark": null,
+        "source_type": "favicon",
+        "classification": "favicon",
+        "confidence": 0.12,
+        "score": 12.0,
+        "reasons": [
+          "brand_name_match",
+          "suitable_logo_shape",
+          "repeated_candidate",
+          "fallback_icon_only"
+        ],
+        "width": null,
+        "height": null,
+        "aspect_ratio": null
+      },
+      {
+        "src": "https://marasimltd.com/favicon.ico",
+        "alt": "apple-touch-icon",
+        "text_wordmark": null,
+        "source_type": "apple_touch_icon",
+        "classification": "favicon",
+        "confidence": 0.12,
+        "score": 12.0,
+        "reasons": [
+          "brand_name_match",
+          "suitable_logo_shape",
+          "repeated_candidate",
+          "fallback_icon_only"
+        ],
+        "width": null,
+        "height": null,
+        "aspect_ratio": null
+      },
+      {
+        "src": "inline-svg:1",
+        "alt": null,
+        "text_wordmark": null,
+        "source_type": "inline_svg",
+        "classification": "unknown_candidate",
+        "confidence": 0.06,
+        "score": 6.0,
+        "reasons": [
+          "appears_in_header",
+          "near_nav",
+          "brand_name_match",
+          "inline_svg",
+          "suitable_logo_shape",
+          "penalty_social_icon"
+        ],
+        "width": null,
+        "height": null,
+        "aspect_ratio": null
+      },
+      {
+        "src": "inline-svg:2",
+        "alt": null,
+        "text_wordmark": null,
+        "source_type": "inline_svg",
+        "classification": "unknown_candidate",
+        "confidence": 0.06,
+        "score": 6.0,
+        "reasons": [
+          "appears_in_header",
+          "near_nav",
+          "brand_name_match",
+          "inline_svg",
+          "suitable_logo_shape",
+          "penalty_social_icon"
+        ],
+        "width": null,
+        "height": null,
+        "aspect_ratio": null
+      },
+      {
+        "src": "inline-svg:3",
+        "alt": null,
+        "text_wordmark": null,
+        "source_type": "inline_svg",
+        "classification": "unknown_candidate",
+        "confidence": 0.06,
+        "score": 6.0,
+        "reasons": [
+          "appears_in_header",
+          "near_nav",
+          "brand_name_match",
+          "inline_svg",
+          "suitable_logo_shape",
+          "penalty_social_icon"
+        ],
+        "width": null,
+        "height": null,
+        "aspect_ratio": null
+      },
+      {
+        "src": "inline-svg:4",
+        "alt": null,
+        "text_wordmark": null,
+        "source_type": "inline_svg",
+        "classification": "unknown_candidate",
+        "confidence": 0.06,
+        "score": 6.0,
+        "reasons": [
+          "appears_in_header",
+          "near_nav",
+          "brand_name_match",
+          "inline_svg",
+          "suitable_logo_shape",
+          "penalty_social_icon"
+        ],
+        "width": null,
+        "height": null,
+        "aspect_ratio": null
+      },
+      {
+        "src": "inline-svg:5",
+        "alt": null,
+        "text_wordmark": null,
+        "source_type": "inline_svg",
+        "classification": "unknown_candidate",
+        "confidence": 0.06,
+        "score": 6.0,
+        "reasons": [
+          "appears_in_header",
+          "near_nav",
+          "brand_name_match",
+          "inline_svg",
+          "suitable_logo_shape",
+          "penalty_social_icon"
+        ],
+        "width": 20,
+        "height": 16,
+        "aspect_ratio": 1.25
+      },
+      {
+        "src": "inline-svg:6",
+        "alt": null,
+        "text_wordmark": null,
+        "source_type": "inline_svg",
+        "classification": "unknown_candidate",
+        "confidence": 0.06,
+        "score": 6.0,
+        "reasons": [
+          "appears_in_header",
+          "near_nav",
+          "brand_name_match",
+          "inline_svg",
+          "suitable_logo_shape",
+          "penalty_social_icon"
+        ],
+        "width": 20,
+        "height": 16,
+        "aspect_ratio": 1.25
+      },
+      {
+        "src": "inline-svg:7",
+        "alt": null,
+        "text_wordmark": null,
+        "source_type": "inline_svg",
+        "classification": "unknown_candidate",
+        "confidence": 0.06,
+        "score": 6.0,
+        "reasons": [
+          "appears_in_header",
+          "near_nav",
+          "brand_name_match",
+          "inline_svg",
+          "suitable_logo_shape",
+          "penalty_social_icon"
+        ],
+        "width": 20,
+        "height": 16,
+        "aspect_ratio": 1.25
+      },
+      {
+        "src": "inline-svg:8",
+        "alt": null,
+        "text_wordmark": null,
+        "source_type": "inline_svg",
+        "classification": "unknown_candidate",
+        "confidence": 0.06,
+        "score": 6.0,
+        "reasons": [
+          "appears_in_header",
+          "near_nav",
+          "brand_name_match",
+          "inline_svg",
+          "suitable_logo_shape",
+          "penalty_social_icon"
+        ],
+        "width": 20,
+        "height": 16,
+        "aspect_ratio": 1.25
+      },
+      {
+        "src": "http://api.marasimltd.com/files/images/9abf1111-aa1c-48b7-b105-b453abc03e07.jpeg",
+        "alt": "Cover for Copywriter VS Marketing specialist VS Media buyer VS Content creator. What’s the difference? ",
+        "text_wordmark": null,
+        "source_type": "img",
+        "classification": "unknown_candidate",
+        "confidence": 0.0,
+        "score": -7.0,
+        "reasons": [
+          "brand_name_match",
+          "img",
+          "suitable_logo_shape",
+          "penalty_hero_or_gallery"
+        ],
+        "width": 546,
+        "height": 280,
+        "aspect_ratio": 1.95
+      },
+      {
+        "src": "http://api.marasimltd.com/files/images/6e0bf598-72ee-4658-9deb-48b4c04ecf2d.jpeg",
+        "alt": "Cover for How to build your business marketing strategy in 2026? ",
+        "text_wordmark": null,
+        "source_type": "img",
+        "classification": "unknown_candidate",
+        "confidence": 0.0,
+        "score": -7.0,
+        "reasons": [
+          "brand_name_match",
+          "img",
+          "suitable_logo_shape",
+          "penalty_hero_or_gallery"
+        ],
+        "width": 546,
+        "height": 280,
+        "aspect_ratio": 1.95
+      },
+      {
+        "src": "inline-svg:9",
+        "alt": null,
+        "text_wordmark": null,
+        "source_type": "inline_svg",
+        "classification": "footer_logo",
+        "confidence": 0.0,
+        "score": -32.0,
+        "reasons": [
+          "near_nav",
+          "brand_name_match",
+          "inline_svg",
+          "suitable_logo_shape",
+          "penalty_social_icon",
+          "footer_only"
+        ],
+        "width": 18,
+        "height": 14,
+        "aspect_ratio": 1.286
+      },
+      {
+        "src": "inline-svg:10",
+        "alt": null,
+        "text_wordmark": null,
+        "source_type": "inline_svg",
+        "classification": "footer_logo",
+        "confidence": 0.0,
+        "score": -32.0,
+        "reasons": [
+          "near_nav",
+          "brand_name_match",
+          "inline_svg",
+          "suitable_logo_shape",
+          "penalty_social_icon",
+          "footer_only"
+        ],
+        "width": 18,
+        "height": 14,
+        "aspect_ratio": 1.286
+      },
+      {
+        "src": "inline-svg:11",
+        "alt": null,
+        "text_wordmark": null,
+        "source_type": "inline_svg",
+        "classification": "footer_logo",
+        "confidence": 0.0,
+        "score": -32.0,
+        "reasons": [
+          "near_nav",
+          "brand_name_match",
+          "inline_svg",
+          "suitable_logo_shape",
+          "penalty_social_icon",
+          "footer_only"
+        ],
+        "width": 18,
+        "height": 14,
+        "aspect_ratio": 1.286
+      },
+      {
+        "src": "inline-svg:12",
+        "alt": null,
+        "text_wordmark": null,
+        "source_type": "inline_svg",
+        "classification": "footer_logo",
+        "confidence": 0.0,
+        "score": -32.0,
+        "reasons": [
+          "near_nav",
+          "brand_name_match",
+          "inline_svg",
+          "suitable_logo_shape",
+          "penalty_social_icon",
+          "footer_only"
+        ],
+        "width": 18,
+        "height": 14,
+        "aspect_ratio": 1.286
+      },
+      {
+        "src": "inline-svg:13",
+        "alt": null,
+        "text_wordmark": null,
+        "source_type": "inline_svg",
+        "classification": "footer_logo",
+        "confidence": 0.0,
+        "score": -32.0,
+        "reasons": [
+          "near_nav",
+          "brand_name_match",
+          "inline_svg",
+          "suitable_logo_shape",
+          "penalty_social_icon",
+          "footer_only"
+        ],
+        "width": 18,
+        "height": 14,
+        "aspect_ratio": 1.286
+      },
+      {
+        "src": "inline-svg:14",
+        "alt": null,
+        "text_wordmark": null,
+        "source_type": "inline_svg",
+        "classification": "footer_logo",
+        "confidence": 0.0,
+        "score": -32.0,
+        "reasons": [
+          "near_nav",
+          "brand_name_match",
+          "inline_svg",
+          "suitable_logo_shape",
+          "penalty_social_icon",
+          "footer_only"
+        ],
+        "width": 18,
+        "height": 14,
+        "aspect_ratio": 1.286
+      },
+      {
+        "src": "https://marasimltd.com/og-default.jpg",
+        "alt": "og:image",
+        "text_wordmark": null,
+        "source_type": "og_image",
+        "classification": "og_image",
+        "confidence": 0.0,
+        "score": -67.0,
+        "reasons": [
+          "brand_name_match",
+          "penalty_hero_or_gallery",
+          "og_image_not_primary_logo"
+        ],
+        "width": null,
+        "height": null,
+        "aspect_ratio": null
+      }
+    ],
+    "partner_logos": [],
+    "authority_logos": [
+      {
+        "src": "data:image/png;base64,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",
+        "alt": "Client Eight logo",
+        "text_wordmark": null,
+        "source_type": "img",
+        "classification": "government_logo",
+        "confidence": 0.38,
+        "score": 38.0,
+        "reasons": [
+          "logo_keyword",
+          "img",
+          "suitable_logo_shape",
+          "repeated_candidate",
+          "classified_government_logo"
+        ],
+        "width": 140,
+        "height": 70,
+        "aspect_ratio": 2.0
+      }
+    ],
+    "co_branding_detected": true,
+    "visual_extraction_note": null,
+    "raw_palette": [
+      "#0f0e0e",
+      "#93908e",
+      "#624d43",
+      "#30555f",
+      "#629fb3",
+      "#275fa0"
+    ],
+    "raw_palette_dominance": [
+      0.84,
+      0.1301190476190476,
+      0.02654761904761905,
+      0.002619047619047619,
+      0.0005952380952380953,
+      0.00011904761904761905
+    ],
+    "brand_palette": [
+      "#0b0b0b",
+      "#624d43",
+      "#30555f",
+      "#629fb3",
+      "#275fa0",
+      "#f04b1e",
+      "#0f0e0e"
+    ],
+    "brand_palette_confidence": [
+      0.3339,
+      0.1543,
+      0.0642,
+      0.0637,
+      0.0636,
+      0.0119,
+      0.3084
+    ],
+    "primary_brand_color": "#0b0b0b",
+    "accent_colors": [
+      "#624d43",
+      "#30555f",
+      "#629fb3",
+      "#275fa0"
+    ],
+    "neutral_colors": [
+      "#0f0e0e",
+      "#93908e",
+      "#ffffff",
+      "#000000",
+      "#0b0b0b",
+      "#212529"
+    ],
+    "background_colors": [
+      "#ffffff"
+    ],
+    "text_colors": [
+      "#212529",
+      "#000000",
+      "#f04b1e",
+      "#ffffff",
+      "#faf6ea",
+      "#0d6efd"
+    ],
+    "palette_extraction_note": null,
+    "visual_warnings": [
+      "co_branding_detected"
+    ]
+  },
+  "source_url": "https://marasimltd.com/",
+  "final_url": "https://marasimltd.com/",
+  "extraction_meta": {
+    "manifest_path": "scrapes\\marasimltd_com_20260625_220647\\manifest.json",
+    "manifest_hash": "e8d05db9dfb9f5742d9f88d7600bc9e6c384f91c24eda060da16ff14bc4426f8",
+    "extracted_at": "2026-06-25T22:09:58.678701Z",
+    "duration_ms": 0,
+    "rule_extractors_used": [
+      "name:schema_org:Organization.name",
+      "category:schema_org",
+      "pricing_visible:currency_regex",
+      "locations:schema_org(1)",
+      "contact:manifest_passthrough",
+      "ctas:manifest(1)",
+      "social:manifest(6)",
+      "visual:manifest_passthrough",
+      "merger:validator: rejections=0, fields_dropped=[], items_dropped={}"
+    ],
+    "llm_calls": 4,
+    "llm_tokens_input": 38185,
+    "llm_tokens_output": 5575,
+    "llm_model": "gemini-2.5-flash",
+    "llm_cost_usd": 0.025393,
+    "extractor_version": "0.1.0",
+    "validation_diagnostics": {
+      "total_rejections": 0,
+      "rejections_by_group": {
+        "identity": 0,
+        "offerings": 0,
+        "positioning": 0,
+        "trust": 0
+      },
+      "fields_dropped": [],
+      "items_dropped": {},
+      "candidates_seen": {
+        "offerings": 10,
+        "audience_signals": 5,
+        "value_propositions": 5,
+        "other_unique_insights": 3,
+        "trust_signals": 6,
+        "service_areas": 2
+      },
+      "rejected_quotes": {},
+      "blacklist_rejections": {}
+    }
+  },
+  "quality": {
+    "has_name": true,
+    "has_category": true,
+    "has_offerings": true,
+    "has_audience": true,
+    "has_value_propositions": true,
+    "has_tone": true,
+    "has_contact": true,
+    "has_visual": true,
+    "fields_extracted": 10,
+    "fields_inferred": 9,
+    "fields_missing": 1,
+    "major_missing": [],
+    "ready_for_strategy": true,
+    "ready_for_poster": true,
+    "poster_blockers": [],
+    "poster_warnings": [
+      "co_branding_detected"
+    ]
+  },
+  "readiness": {
+    "ready_for_swot": true,
+    "ready_for_strategy": false,
+    "ready_for_campaign": false,
+    "swot_blockers": [],
+    "strategy_blockers": [
+      "strategy_evidence_below_threshold"
+    ],
+    "campaign_blockers": [
+      "strategy_evidence_below_threshold"
+    ],
+    "swot_warnings": [],
+    "swot_richness_score": 94,
+    "swot_quality_signals": {
+      "tagline": true,
+      "description": true,
+      "audience_type_concrete": true,
+      "audience_signals_2plus": true,
+      "value_propositions_3plus": true,
+      "trust_signals_2plus": true,
+      "offerings_3plus": true,
+      "tone_known": true,
+      "languages_known": true,
+      "social_presence_2plus": true,
+      "locations_with_geo": true,
+      "hours_known": false,
+      "pricing_posture_known": true,
+      "visual_palette_known": true,
+      "logo_known": true,
+      "multi_page_evidence": true
+    },
+    "missing_critical": [],
+    "missing_recommended": [
+      "hours"
+    ],
+    "weak_evidence_fields": [
+      "category",
+      "description",
+      "audience_type",
+      "tone_of_voice",
+      "pricing_posture"
+    ],
+    "fields_extracted": 10,
+    "fields_inferred": 9,
+    "fields_missing": 1,
+    "distinct_evidence_pages": 9,
+    "pages_discovered": 20,
+    "pages_scraped": 10,
+    "scrape_completeness": "partial"
+  }
+}

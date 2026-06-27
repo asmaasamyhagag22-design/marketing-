@@ -61,16 +61,22 @@ logger = logging.getLogger(__name__)
 
 MAX_QUOTE_LEN = 200
 _WS_RE = re.compile(r"\s+")
+# Unify quote glyphs for matching. The evidence pack shows the LLM a TRANSFORMED block
+# (`as_llm_text` replaces `"`->`'` and newlines->spaces so its `"..."` wrapper stays
+# unambiguous), so a verbatim quote of a mid-text double-quote arrives as `'` and would
+# never match the original `"`. Folding all quote glyphs to one char (here + on the block)
+# closes that false-reject without loosening the substring check.
+_QUOTE_RE = re.compile("[\"“”«»‘’`´]")
 
 
 def _normalize(text: str) -> str:
-    """Whitespace-collapse + lowercase, for substring matching only.
+    """Whitespace-collapse + lowercase + quote-glyph fold, for substring matching only.
 
     Returns "" for None or empty input.
     """
     if not text:
         return ""
-    return _WS_RE.sub(" ", text).strip().lower()
+    return _QUOTE_RE.sub("'", _WS_RE.sub(" ", text).strip().lower())
 
 
 @dataclass
@@ -289,6 +295,7 @@ class ValidatedPositioning:
     audience_signals: list[ValidatedListItem]  # values are str
     value_propositions: list[ValidatedListItem]  # values are str
     tone_of_voice: ValidatedScalarField  # ToneOfVoice or None
+    other_unique_insights: list[ValidatedListItem] = field(default_factory=list)
 
 
 @dataclass
@@ -573,6 +580,9 @@ def _validate_positioning(
     value_propositions = _validate_string_list(
         resp.value_propositions, lookup, bucket, diag, "value_propositions",
     )
+    other_unique_insights = _validate_string_list(
+        resp.other_unique_insights, lookup, bucket, diag, "other_unique_insights",
+    )
 
     if audience_type.value is None:
         diag.fields_dropped.append("audience_type")
@@ -584,6 +594,7 @@ def _validate_positioning(
         audience_signals=audience_signals,
         value_propositions=value_propositions,
         tone_of_voice=tone_of_voice,
+        other_unique_insights=other_unique_insights,
     )
 
 

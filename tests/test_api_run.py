@@ -231,16 +231,17 @@ def test_run_endpoint_returns_job_id(monkeypatch):
     assert "job_id" in data and isinstance(data["job_id"], str)
 
 
-def test_run_endpoint_rejects_when_llm_required_but_no_key(monkeypatch):
-    """If skip_llm=false and OPENAI_API_KEY is missing, return 400."""
-    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+def test_run_endpoint_rejects_when_llm_required_but_no_provider(monkeypatch):
+    """If skip_llm=false and NO LLM provider (Gemini OR OpenAI) is configured, return 400."""
+    for k in ("OPENAI_API_KEY", "GOOGLE_CLOUD_PROJECT", "GEMINI_API_KEY", "GOOGLE_API_KEY"):
+        monkeypatch.delenv(k, raising=False)
     with TestClient(app) as client:
         r = client.post("/api/run", json={
             "url": "https://example.com/",
             "skip_llm": False,
         })
     assert r.status_code == 400
-    assert "OPENAI_API_KEY" in r.json()["detail"]
+    assert "LLM provider" in r.json()["detail"]
 
 
 def test_run_endpoint_rejects_invalid_url():

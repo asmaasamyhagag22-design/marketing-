@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Download, History, Loader2, Sparkles } from "lucide-react";
+import { Download, ExternalLink, History, Loader2, Sparkles } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -132,9 +132,11 @@ export function PosterStudioCard({ profile }: PosterStudioCardProps) {
       <CardHeader>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <CardTitle className="text-lg">Poster Studio</CardTitle>
+            <CardTitle className="text-lg">Poster Studio ✨</CardTitle>
             <p className="mt-1 text-sm text-muted-foreground">
-              Generate a real poster from the scraped profile using OpenAI background generation and deterministic text/logo overlay.
+              An on-brand poster from the scraped profile: an AI art-director designs the
+              layout per brand, Imagen paints a text-free background, and the real
+              logo + evidence-grounded copy are overlaid crisply. Each run varies the look.
             </p>
           </div>
 
@@ -243,9 +245,9 @@ export function PosterStudioCard({ profile }: PosterStudioCardProps) {
                 <button
                   key={version.id}
                   onClick={() => setSelectedId(version.id)}
-                  className={`rounded border px-3 py-1.5 text-xs ${
+                  className={`rounded-lg border px-3 py-1.5 text-xs transition-colors ${
                     selected?.id === version.id
-                      ? "bg-foreground text-background"
+                      ? "border-transparent bg-brand-gradient font-semibold text-white"
                       : "hover:bg-muted"
                   }`}
                 >
@@ -257,21 +259,35 @@ export function PosterStudioCard({ profile }: PosterStudioCardProps) {
         )}
 
         {imageSrc && selected && (
-          <div className="space-y-3">
-            <div className="overflow-hidden rounded border bg-muted/20 p-3">
+          <div className="space-y-3 animate-fade-up">
+            <div className="overflow-hidden rounded-xl border bg-muted/20 p-3">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={imageSrc}
                 alt="Generated marketing poster"
-                className="mx-auto max-h-[820px] w-auto rounded shadow"
+                className="mx-auto max-h-[820px] w-auto animate-pop rounded-lg shadow-lg shadow-primary/20"
               />
             </div>
 
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              {/* The poster PNG can't be clickable — surface the real, evidence-backed
+                  CTA as an actual button beside it (uses brief.cta_url). */}
+              {selected.brief.cta_url && (
+                <a
+                  href={selected.brief.cta_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center rounded-lg bg-brand-gradient px-5 py-2 text-sm font-semibold text-white shadow-md shadow-primary/25 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/40"
+                >
+                  {selected.brief.cta_text || "Visit site"}
+                  <ExternalLink className="ml-2 h-4 w-4" />
+                </a>
+              )}
+
               <a
                 href={imageSrc}
                 download={selected.render.filename}
-                className="inline-flex items-center rounded-md border px-4 py-2 text-sm font-medium hover:bg-muted"
+                className="inline-flex items-center rounded-lg border px-4 py-2 text-sm font-medium transition-colors hover:bg-muted"
               >
                 <Download className="mr-2 h-4 w-4" />
                 Download PNG

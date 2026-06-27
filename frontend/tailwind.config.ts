@@ -59,6 +59,30 @@ const config: Config = {
         ],
         mono: ["ui-monospace", "monospace"],
       },
+      keyframes: {
+        "fade-up": {
+          from: { opacity: "0", transform: "translateY(14px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+        "gradient-x": {
+          "0%, 100%": { backgroundPosition: "0% 50%" },
+          "50%": { backgroundPosition: "100% 50%" },
+        },
+        float: {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-6px)" },
+        },
+        pop: {
+          "0%": { transform: "scale(0.96)", opacity: "0" },
+          "100%": { transform: "scale(1)", opacity: "1" },
+        },
+      },
+      animation: {
+        "fade-up": "fade-up 0.5s ease both",
+        "gradient-x": "gradient-x 6s ease infinite",
+        float: "float 4s ease-in-out infinite",
+        pop: "pop 0.35s ease both",
+      },
     },
   },
   plugins: [],

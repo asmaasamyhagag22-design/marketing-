@@ -14,6 +14,7 @@ Design rules enforced here (per the redesign constraints):
 from __future__ import annotations
 
 import base64
+import hashlib
 import html as _html
 import re
 from pathlib import Path
@@ -28,7 +29,7 @@ _RTL_RE = re.compile(
 def _is_rtl(text) -> bool:
     return bool(_RTL_RE.search(str(text or "")))
 
-from poster.schemas import PosterBrief
+from poster.schemas import PosterBrief, PosterDesignSpec
 
 
 def _data_uri(image_path) -> str:
@@ -77,19 +78,125 @@ def _remote_image_data_uri(url: str, timeout: int = 8) -> Optional[str]:
         with _open_image_url(url, timeout) as r:
             ctype = (r.headers.get("Content-Type") or "").lower()
             data = r.read(4_000_000)
-        low = url.lower()
-        if not data or "svg" in ctype or low.endswith(".svg"):
+        low = url.lower().split("?")[0]
+        if not data:
             return None
-        mime = "image/png"
-        if "jpeg" in ctype or low.endswith((".jpg", ".jpeg")):
+        # Chromium renders SVG natively; an SVG loaded via <img src="data:image/svg+xml…">
+        # runs in the browser's secure static mode (no scripting, no external fetches),
+        # so inlining the brand's own SSRF-guarded SVG logo is safe — and recovers
+        # SVG-only brand logos the old Pillow-era pipeline had to drop.
+        if "svg" in ctype or low.endswith(".svg"):
+            mime = "image/svg+xml"
+        elif "jpeg" in ctype or low.endswith((".jpg", ".jpeg")):
             mime = "image/jpeg"
         elif "webp" in ctype or low.endswith(".webp"):
             mime = "image/webp"
         elif "gif" in ctype or low.endswith(".gif"):
             mime = "image/gif"
+        else:
+            mime = "image/png"
+        data, mime = _trim_logo_margins(data, mime)
         return f"data:{mime};base64," + base64.b64encode(data).decode("ascii")
     except Exception:
         return None
+
+
+def _trim_logo_margins(data: bytes, mime: str) -> tuple[bytes, str]:
+    """Crop a raster logo's fully-transparent border so the mark FILLS its chip instead of
+    floating small in a wide empty canvas (MEASURED: WE's we-logo has the mark on the right
+    third of a transparent 496x140 canvas). No-op for SVG / on any failure."""
+    if "svg" in mime:
+        return data, mime
+    try:
+        import io
+        from PIL import Image
+        im = Image.open(io.BytesIO(data)).convert("RGBA")
+        bbox = im.getbbox()                      # bounds of non-zero-alpha pixels
+        if bbox and bbox != (0, 0, im.width, im.height):
+            im = im.crop(bbox)
+            out = io.BytesIO()
+            im.save(out, format="PNG")
+            return out.getvalue(), "image/png"
+    except Exception:
+        pass
+    return data, mime
+
+
+# --- adaptive logo plate (no fixed white box; no blind removal) -----------------
+
+def _logo_luminance(logo_src: Optional[str]) -> Optional[float]:
+    """Mean WCAG luminance (0..1) of a raster logo's OPAQUE pixels. None for an SVG /
+    non-data logo or any failure (the caller then falls back to the chip flag)."""
+    try:
+        if not logo_src or not logo_src.startswith("data:image") or "svg" in logo_src[:32]:
+            return None
+        import io
+        from PIL import Image
+        b64 = logo_src.partition(",")[2]
+        im = Image.open(io.BytesIO(base64.b64decode(b64))).convert("RGBA")
+        im.thumbnail((48, 48))
+        px = [p for p in im.getdata() if p[3] > 40]      # opaque pixels only
+        if not px:
+            return None
+        return sum(_luminance(p[:3]) for p in px) / len(px)
+    except Exception:
+        return None
+
+
+def _logo_region_box(corner: Optional[str], logo_xy) -> tuple[float, float, float, float]:
+    """The background region (fractions) sampled behind the logo, by corner or free [x,y]."""
+    if logo_xy and len(logo_xy) >= 2:
+        x = max(0.0, min(0.6, float(logo_xy[0])))
+        y = max(0.0, min(0.8, float(logo_xy[1])))
+        return (x, y, min(1.0, x + 0.4), min(1.0, y + 0.18))
+    v, _, h = (corner or "top_left").partition("_")
+    x0, x1 = (0.0, 0.42) if h == "left" else (0.58, 1.0)
+    y0, y1 = (0.0, 0.20) if v == "top" else (0.80, 1.0)
+    return (x0, y0, x1, y1)
+
+
+def _bg_region_luminance(background_path: Optional[str], box) -> Optional[float]:
+    """Mean luminance (0..1) of the background image inside `box` (fractions). None on error."""
+    if not background_path:
+        return None
+    try:
+        import io  # noqa: F401
+        from PIL import Image
+        im = Image.open(background_path).convert("RGB")
+        W, H = im.size
+        x0, y0, x1, y1 = box
+        crop = im.crop((int(x0 * W), int(y0 * H),
+                        max(int(x1 * W), int(x0 * W) + 1), max(int(y1 * H), int(y0 * H) + 1)))
+        crop.thumbnail((40, 40))
+        px = list(crop.getdata())
+        return sum(_luminance(p) for p in px) / len(px) if px else None
+    except Exception:
+        return None
+
+
+def _adaptive_logo_style(logo_src, background_path, region_box) -> Optional[str]:
+    """Choose the logo plate from the LOGO's luminance vs the BACKGROUND behind it:
+      * high contrast (logo already reads) -> NO plate, just a soft shape-shadow;
+      * low contrast -> a plate that CONTRASTS the logo (dark plate for a light logo, light
+        plate for a dark logo) — never a fixed white box, never blind removal.
+    Returns the inline-style body, or None when luminance can't be judged (SVG / failure)."""
+    logo_lum = _logo_luminance(logo_src)
+    bg_lum = _bg_region_luminance(background_path, region_box)
+    if logo_lum is None or bg_lum is None:
+        return None
+    if abs(logo_lum - bg_lum) >= 0.28:
+        # the mark already reads on the background -> NO plate, just a soft shape-shadow.
+        return "background:transparent;box-shadow:none;filter:drop-shadow(0 2px 9px rgba(0,0,0,.6))"
+    # low contrast -> a soft FROSTED-GLASS "designed badge" that contrasts the LOGO: tight
+    # padding, real blur, a subtle border, and a MUTED tone (not stark white) so it reads as
+    # glass, not a screenshot box. A light logo gets a dark badge; a dark logo a soft light
+    # one (kept light enough that a dark wordmark stays legible).
+    badge = ("padding:9px 14px;border-radius:13px;"
+             "backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);"
+             "border:1px solid rgba(255,255,255,.16);box-shadow:0 7px 22px rgba(0,0,0,.34)")
+    if logo_lum >= 0.5:                       # light logo -> dark frosted badge
+        return f"background:rgba(12,15,22,.46);{badge}"
+    return f"background:rgba(236,238,243,.60);{badge}"   # dark logo -> soft light frosted badge
 
 
 def _esc(value) -> str:
@@ -140,6 +247,29 @@ def _legible_on_dark(rgb) -> str:
     return _to_hex(rgb) if _luminance(rgb) >= 0.40 else _to_hex(_mix(rgb, (255, 255, 255), 0.62))
 
 
+def _saturation(rgb) -> float:
+    mx, mn = max(rgb), min(rgb)
+    return 0.0 if mx == 0 else (mx - mn) / mx
+
+
+def _brand_accent(brief: PosterBrief, spec: Optional["PosterDesignSpec"] = None) -> str:
+    """Pick the accent from the brand's REAL palette — and a VIVID one that reads on the
+    dark scrim, not a muted tan that looks generic/off-scheme (owner: "the gold isn't from
+    the scheme"). Chooses the most saturated palette color with enough luminance; falls
+    back to the spec's choice, then the brand primary, then a neutral default."""
+    pal = [
+        str(c) for c in ([brief.primary_color] + list(brief.palette_hex or []))
+        if c and str(c).startswith("#")
+    ]
+    legible = [c for c in pal if _luminance(_hex_to_rgb(c)) >= 0.16]
+    cand = legible or pal
+    if cand:
+        return max(cand, key=lambda c: _saturation(_hex_to_rgb(c)))
+    if spec is not None and spec.accent_hex and str(spec.accent_hex).startswith("#"):
+        return str(spec.accent_hex)
+    return _accent(brief)
+
+
 # Fonts we never request from Google Fonts (system/generic/private). Any OTHER
 # named family is requested best-effort; if it isn't a real Google Font the link
 # simply no-ops and the curated default below applies.
@@ -164,50 +294,93 @@ def _gf_param(name: str) -> str:
     return str(name).strip().strip("'\"").replace(" ", "+")
 
 
-def _fonts_head_and_stacks(brief: PosterBrief, rtl: bool) -> tuple[str, str, str]:
+# Curated Google-Font pairings (heading, body, Arabic companion) — distinct
+# personalities so DIFFERENT brands get DIFFERENT typography instead of one fixed
+# look ("same text design every poster"). Every Arabic companion supports Arabic.
+_FONT_PAIRINGS = [
+    ("Space Grotesk", "Inter", "Readex Pro"),   # modern tech
+    ("Archivo", "Archivo", "Cairo"),            # bold grotesque
+    ("Sora", "Inter", "Cairo"),                 # geometric display
+    ("Manrope", "Manrope", "Readex Pro"),       # clean rounded-sans
+    ("Fraunces", "Inter", "Cairo"),             # editorial serif
+    ("Poppins", "Poppins", "Tajawal"),          # friendly
+    ("Outfit", "Inter", "Tajawal"),             # contemporary
+    ("Bricolage Grotesque", "Inter", "Cairo"),  # characterful display
+    ("Syne", "Inter", "Cairo"),                 # funky extended display
+    ("Unbounded", "Inter", "Cairo"),            # bold rounded display
+    ("Plus Jakarta Sans", "Plus Jakarta Sans", "Tajawal"),  # clean humanist
+    ("DM Serif Display", "Inter", "Cairo"),     # high-contrast serif
+    ("Familjen Grotesk", "Inter", "Readex Pro"), # neo-grotesque
+    ("Epilogue", "Inter", "Tajawal"),           # geometric sans
+]
+
+
+def _pairing_for(brief: PosterBrief, variation_seed: Optional[int] = None) -> tuple[str, str, str]:
+    """Pick a type personality by a stable hash of the brand name (// 7 so it doesn't
+    track the layout hash). `variation_seed` (per-run) is mixed in so the TYPOGRAPHY
+    differs between runs of the same brand (owner: "the fonts don't change per poster");
+    None keeps the stable per-brand pairing (backward-compatible)."""
+    base = brief.business_name or "brand"
+    if variation_seed is not None:
+        base = f"{base}#font{variation_seed}"
+    seed = int(hashlib.md5(base.encode("utf-8")).hexdigest(), 16)
+    return _FONT_PAIRINGS[(seed // 7) % len(_FONT_PAIRINGS)]
+
+
+def _fonts_head_and_stacks(
+    brief: PosterBrief, rtl: bool, variation_seed: Optional[int] = None,
+) -> tuple[str, str, str]:
     """(head_links, font_head_stack, font_body_stack).
 
-    Always loads a curated MODERN default pairing (Space Grotesk + Inter + Cairo)
-    so the poster never falls back to a boring system serif. ALSO best-effort loads
-    the brand's OWN fonts on a SEPARATE <link> — kept separate so an invalid brand
-    family (e.g. a private 'myfont2') can 400 without taking the defaults down.
-    The brand font leads each stack, so it's used when it actually loads.
+    Loads a per-brand curated PAIRING (so the poster never looks like every other one,
+    and never falls back to a boring system serif). ALSO best-effort loads the brand's
+    OWN fonts on a SEPARATE <link> — kept separate so an invalid brand family (e.g. a
+    private 'myfont2') can 400 without taking the pairing down. The brand font leads
+    each stack, so it's used when it actually loads.
     """
+    head_fam, body_fam, ar_fam = _pairing_for(brief, variation_seed)
+    fams = sorted({head_fam, body_fam, ar_fam})
+    q = "&".join(f"family={_gf_param(f)}:wght@400;500;700;800" for f in fams)
     head = (
         '<link rel="preconnect" href="https://fonts.googleapis.com">'
         '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
-        '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?'
-        'family=Space+Grotesk:wght@500;700&family=Inter:wght@400;600&'
-        'family=Cairo:wght@500;700;800&display=swap">'
+        f'<link rel="stylesheet" href="https://fonts.googleapis.com/css2?{q}&display=swap">'
     )
     bh = str(brief.heading_font or "").strip().strip("'\"")
     bb = str(brief.body_font or "").strip().strip("'\"")
-    fams = []
+    brand_fams = []
     if _is_loadable_font(bh):
-        fams.append(bh)
+        brand_fams.append(bh)
     if _is_loadable_font(bb) and bb.lower() != bh.lower():
-        fams.append(bb)
-    if fams:
-        q = "&".join(f"family={_gf_param(f)}:wght@400;700" for f in fams)
-        head += f'<link rel="stylesheet" href="https://fonts.googleapis.com/css2?{q}&display=swap">'
+        brand_fams.append(bb)
+    if brand_fams:
+        bq = "&".join(f"family={_gf_param(f)}:wght@400;700" for f in brand_fams)
+        head += f'<link rel="stylesheet" href="https://fonts.googleapis.com/css2?{bq}&display=swap">'
 
     head_brand = f"'{bh}', " if _is_loadable_font(bh) else ""
     body_brand = f"'{bb}', " if _is_loadable_font(bb) else ""
     if rtl:
-        font_head = f"{head_brand}'Cairo', 'Space Grotesk', Georgia, serif"
-        font_body = f"{body_brand}'Cairo', 'Inter', Arial, sans-serif"
+        font_head = f"{head_brand}'{ar_fam}', '{head_fam}', Georgia, serif"
+        font_body = f"{body_brand}'{ar_fam}', '{body_fam}', Arial, sans-serif"
     else:
-        font_head = f"{head_brand}'Space Grotesk', 'Cairo', Georgia, serif"
-        font_body = f"{body_brand}'Inter', 'Cairo', Arial, sans-serif"
+        font_head = f"{head_brand}'{head_fam}', '{ar_fam}', Georgia, serif"
+        font_body = f"{body_brand}'{body_fam}', '{ar_fam}', Arial, sans-serif"
     return head, font_head, font_body
 
 
-def _headline_block(brief: PosterBrief, rtl: bool) -> str:
+def _headline_block(
+    brief: PosterBrief,
+    rtl: bool,
+    treatment: str = "stacked_hero",
+    accent_word: str = "last",
+    column_px: int = 940,
+) -> str:
     """A DESIGNED headline, not a flat line.
 
-    Short headlines become a STACKED HERO — each word on its own line, auto-sized
-    so the longest word fills the text column, with the final word in the accent
-    color (the 'BUSINESS / IDEAS' treatment). Longer headlines stay a clean block.
+    treatment="stacked_hero": each word on its own line, auto-sized so the longest
+    word fills the text column, with one word in the accent color (the 'BUSINESS /
+    IDEAS' treatment). treatment="block" (or a headline too long/short for a hero):
+    a clean single-block <h1>.
 
     ZERO-HALLUCINATION: the words are the verbatim headline, only RE-STYLED — none
     added, removed, reordered, or reworded. (Uppercasing is applied to Latin text
@@ -216,17 +389,35 @@ def _headline_block(brief: PosterBrief, rtl: bool) -> str:
     text = (brief.headline or "").strip()
     words = text.split()
     longest = max((len(w) for w in words), default=0)
-    is_hero = 1 <= len(words) <= 4 and 0 < longest <= 18
-    if not is_hero:
+
+    # 'highlight' — one word sits inside a brand-colored block (kinetic editorial flair).
+    if treatment == "highlight" and 1 <= len(words) <= 9:
+        n = len(words)
+        idx = 0 if accent_word == "first" else n - 1
+        parts = [
+            (f'<span class="hl">{_esc(w)}</span>' if (i == idx and n > 1) else _esc(w))
+            for i, w in enumerate(words)
+        ]
+        return f'<h1 class="headline hl-head">{" ".join(parts)}</h1>'
+
+    can_hero = 1 <= len(words) <= 5 and 0 < longest <= 20
+    if treatment != "stacked_hero" or not can_hero:
         return f'<h1 class="headline">{_esc(text)}</h1>'
 
-    # Auto-fit: the longest word should span most of the ~920px text column, so the
-    # hero fills the width dramatically regardless of word length.
-    size = max(46, min(118, int(920 / (longest * 0.60))))
+    # Auto-fit: the longest word should fill the AVAILABLE text column (which is
+    # narrower in a side panel than a full-width band), so the hero is dramatic but
+    # NEVER overflows the edge. ~0.62em average glyph advance for the bold display face.
+    max_size = 136 if column_px >= 800 else 110
+    size = max(52, min(max_size, int(column_px / (longest * 0.6))))
     upper_cls = "" if rtl else " upper"        # Arabic/Hebrew have no letter case
+    n = len(words)
     spans = []
     for i, w in enumerate(words):
-        accent = " accent" if (i == len(words) - 1 and len(words) > 1) else ""
+        is_accent = n > 1 and (
+            (accent_word == "last" and i == n - 1)
+            or (accent_word == "first" and i == 0)
+        )
+        accent = " accent" if is_accent else ""
         spans.append(f'<span class="hw{accent}">{_esc(w)}</span>')
     return (
         f'<div class="hero-headline{upper_cls}" style="font-size:{size}px">'
@@ -234,12 +425,218 @@ def _headline_block(brief: PosterBrief, rtl: bool) -> str:
     )
 
 
+# --- Design-spec → layout. Each archetype places the brand mark + text block in a
+# DIFFERENT composition, so two brands no longer share one canvas. The chosen
+# layout also implies a `negative_space_zone` shared with the background prompt. ---
+
+_LAYOUTS = (
+    "bottom_band", "side_panel_left", "side_panel_right",
+    "top_anchor", "center_editorial", "magazine_hero",
+)
+_ZONE_BY_LAYOUT = {
+    "bottom_band": "bottom", "magazine_hero": "bottom",
+    "side_panel_left": "left", "side_panel_right": "right",
+    "top_anchor": "top", "center_editorial": "center",
+}
+_LOGO_CORNER_BY_LAYOUT = {
+    "bottom_band": "top_left", "magazine_hero": "top_left",
+    "side_panel_left": "top_left", "side_panel_right": "top_right",
+    "top_anchor": "top_left", "center_editorial": "top_left",
+}
+_HERO_LAYOUTS = {"magazine_hero", "bottom_band", "side_panel_left", "side_panel_right"}
+_FULL_SHOW = ["logo", "kicker", "headline", "sub", "offerings", "cta", "contact", "social"]
+_MINIMAL_SHOW = ["logo", "headline", "cta"]
+
+
+def default_design_spec(
+    brief: PosterBrief, density: str = "minimal", variation_seed: Optional[int] = None,
+) -> PosterDesignSpec:
+    """A deterministic-but-VARIED design when no LLM spec is supplied.
+
+    The layout is chosen by a stable hash of the brand name: DIFFERENT brands get
+    DIFFERENT compositions. `variation_seed` (per-run, optional) is mixed into the hash
+    so the SAME brand also varies between runs (owner: "every poster looks the same") —
+    when omitted, the layout stays stable per brand (backward-compatible). The LLM
+    art-director supplies a data-reasoned spec in the full pipeline.
+    """
+    base = brief.business_name or "brand"
+    if variation_seed is not None:
+        base = f"{base}#{variation_seed}"
+    seed = int(hashlib.md5(base.encode("utf-8")).hexdigest(), 16)
+    layout = _LAYOUTS[seed % len(_LAYOUTS)]
+    show = _MINIMAL_SHOW if density == "minimal" else _FULL_SHOW
+    # Vary the headline treatment too (decorrelated via // 13), so the TEXT design isn't
+    # identical across brands — not just the layout.
+    _treatments = ["stacked_hero", "highlight"] if layout in _HERO_LAYOUTS else ["block", "highlight"]
+    treatment = _treatments[(seed // 13) % len(_treatments)]
+    return PosterDesignSpec(
+        layout=layout,
+        logo_corner=_LOGO_CORNER_BY_LAYOUT[layout],
+        headline_treatment=treatment,
+        accent_word="last",
+        text_align="center" if layout == "center_editorial" else "left",
+        scrim_strength=0.82,
+        show=list(show),
+        negative_space_zone=_ZONE_BY_LAYOUT[layout],
+        variation_seed=variation_seed,
+    )
+
+
+def _mirror_corner(corner: str, rtl: bool) -> str:
+    if not rtl:
+        return corner
+    return corner.replace("left", "R").replace("right", "left").replace("R", "right")
+
+
+def _logo_corner_css(corner: str) -> str:
+    v, _, h = corner.partition("_")
+    vside = "top:54px;" if v == "top" else "bottom:54px;"
+    hside = "left:80px;" if h == "left" else "right:80px;"
+    return vside + hside
+
+
+def _lower_css(layout: str, scrim_strength: float, align: str, rtl: bool) -> str:
+    """The position + scrim CSS for the text block of one layout archetype."""
+    s_hi = round(max(0.0, min(1.0, scrim_strength)), 3)
+    s_mid = round(s_hi * 0.8, 3)
+    al = f"text-align:{align};"
+    if layout in ("bottom_band", "magazine_hero"):
+        pad = "300px 80px 70px" if layout == "magazine_hero" else "130px 80px 70px"
+        return (
+            f".lower{{position:absolute;left:0;right:0;bottom:0;padding:{pad};{al}"
+            f"background:linear-gradient(to top, rgba(8,12,18,{s_hi}) 0%, "
+            f"rgba(8,12,18,{s_mid}) 50%, rgba(8,12,18,0) 100%);}}"
+        )
+    if layout == "top_anchor":
+        return (
+            f".lower{{position:absolute;left:0;right:0;top:0;padding:200px 80px 96px;{al}"
+            f"background:linear-gradient(to bottom, rgba(8,12,18,{s_hi}) 0%, "
+            f"rgba(8,12,18,{s_mid}) 55%, rgba(8,12,18,0) 100%);}}"
+        )
+    if layout in ("side_panel_left", "side_panel_right"):
+        on_left = layout.endswith("left")
+        if rtl:
+            on_left = not on_left
+        if on_left:
+            box = "left:0;right:auto;"
+            grad = (f"linear-gradient(to right, rgba(8,12,18,{s_hi}) 0%, "
+                    f"rgba(8,12,18,{s_mid}) 62%, rgba(8,12,18,0) 100%)")
+        else:
+            box = "right:0;left:auto;"
+            grad = (f"linear-gradient(to left, rgba(8,12,18,{s_hi}) 0%, "
+                    f"rgba(8,12,18,{s_mid}) 62%, rgba(8,12,18,0) 100%)")
+        return (
+            f".lower{{position:absolute;top:0;bottom:0;width:60%;{box}{al}"
+            f"display:flex;flex-direction:column;justify-content:flex-end;"
+            f"padding:80px 64px 100px;background:{grad};}}"
+        )
+    if layout == "center_editorial":
+        # A soft radial faded out at the horizontal extremes, so a full-width headline's
+        # left/right ends sat over bright, busy photo areas and were unreadable (MEASURED
+        # on ITI). A FULL-WIDTH vertical band (dark across the central third, fading top +
+        # bottom) backs the whole text width — readable regardless of what's behind it,
+        # while leaving the upper subject area and bottom margin clearer.
+        return (
+            f".lower{{position:absolute;inset:0;display:flex;flex-direction:column;"
+            f"justify-content:center;align-items:center;padding:80px;text-align:center;"
+            f"background:linear-gradient(to bottom, rgba(8,12,18,0) 0%, "
+            f"rgba(8,12,18,{s_mid}) 24%, rgba(8,12,18,{s_hi}) 50%, "
+            f"rgba(8,12,18,{s_mid}) 76%, rgba(8,12,18,0) 100%);}}"
+        )
+    return (
+        f".lower{{position:absolute;left:0;right:0;bottom:0;padding:130px 80px 70px;{al}"
+        f"background:linear-gradient(to top, rgba(8,12,18,{s_hi}) 0%, rgba(8,12,18,0) 100%);}}"
+    )
+
+
+# --- FREE-FORM layout (Phase 2): the LLM places the text cluster + logo at continuous
+# normalized coords instead of one of the 6 archetypes. CLAMPED to safe margins so a bad
+# coordinate can never push content off-canvas; each text cluster gets its own soft scrim
+# panel so it stays legible ANYWHERE on the image. ---
+
+_CW, _CH = 1080, 1350
+
+
+def _clampf(v: float, lo: float, hi: float) -> float:
+    try:
+        v = float(v)
+    except Exception:
+        return lo
+    return max(lo, min(hi, v))
+
+
+_SAFE_MARGIN = 42        # px every element must stay inside the frame by
+
+
+def _freeform_lower_css(text_box, scrim_strength: float, align: str) -> str:
+    """Position the text cluster at a free [x,y,w] (normalized) with a soft, rounded scrim
+    panel sized to it — readable on any background, a different composition every time, and
+    NEVER clipped.
+
+    LAYOUT SAFETY (brief Step G): the cluster grows DOWNWARD from `top` when placed high,
+    but ANCHORS TO THE BOTTOM (a fixed safe margin) when placed in the lower half — so the
+    last element (the CTA) is always fully inside the frame, whatever the text height. It's a
+    flex column so the scrim panel hugs its content."""
+    box = list(text_box or [])
+    x = _clampf(box[0] if len(box) > 0 else 0.06, 0.035, 0.92)
+    w = _clampf(box[2] if len(box) > 2 else 0.6, 0.34, 0.93)
+    if x + w > 0.965:
+        x = max(0.035, 0.965 - w)
+    y = _clampf(box[1] if len(box) > 1 else 0.6, 0.04, 0.93)
+    left, width = round(x * _CW), round(w * _CW)
+    items = {"center": "center", "right": "flex-end"}.get(align, "flex-start")
+    s_hi = round(max(0.0, min(1.0, scrim_strength)), 3)
+    s_mid = round(s_hi * 0.72, 3)
+    # FEATHERED scrim (art-critic: the flat grey rectangle had a hard seam). A radial wash
+    # that's solid where the text sits and fades to transparent at the panel edges, plus a
+    # soft same-colour glow so the panel melts into the image instead of being a pasted slab.
+    scrim = (
+        f"background:radial-gradient(120% 130% at 30% 40%, rgba(8,12,18,{s_hi}) 0%, "
+        f"rgba(8,12,18,{s_mid}) 58%, rgba(8,12,18,{round(s_hi*0.35,3)}) 84%, "
+        f"rgba(8,12,18,0) 100%); backdrop-filter:blur(4px); "
+        f"box-shadow:0 0 70px 50px rgba(8,12,18,{round(s_hi*0.45,3)});"
+    )
+    common = (f"position:absolute; left:{left}px; width:{width}px; text-align:{align}; "
+              f"display:flex; flex-direction:column; align-items:{items}; "
+              f"padding:30px 34px; border-radius:22px; box-sizing:border-box; {scrim}")
+    if y >= 0.45:
+        # Lower placement -> pin the BOTTOM at a safe margin; content (and the CTA) grow UP,
+        # so the CTA can never fall off the bottom edge. The panel auto-sizes to its content.
+        return f".lower{{{common} bottom:{_SAFE_MARGIN}px;}}"
+    # Upper placement -> anchor the TOP (y is clamped high enough that short copy stays in frame).
+    return f".lower{{{common} top:{round(y * _CH)}px;}}"
+
+
+def _freeform_logo_css(logo_xy) -> str:
+    """Anchor the brand mark at a free [x,y] (normalized), clamped so a ~360x96 mark stays
+    fully on canvas."""
+    xy = list(logo_xy or [])
+    x = _clampf(xy[0] if len(xy) > 0 else 0.07, 0.03, 0.66)
+    y = _clampf(xy[1] if len(xy) > 1 else 0.04, 0.03, 0.90)
+    return f"top:{round(y * _CH)}px; left:{round(x * _CW)}px;"
+
+
+def _freeform_column_px(text_box) -> int:
+    """The usable text width inside the free box (box width minus padding)."""
+    box = list(text_box or [])
+    w = _clampf(box[2] if len(box) > 2 else 0.6, 0.34, 0.93)
+    return max(220, round(w * _CW) - 68)
+
+
 def render_poster_html(
     brief: PosterBrief,
     background_path: Optional[str] = None,
+    spec: Optional[PosterDesignSpec] = None,
     density: str = "minimal",
 ) -> str:
-    accent = _accent(brief)
+    # The DESIGN spec drives the composition. When none is supplied we synthesize a
+    # deterministic-but-varied one (per-brand hash) so output isn't one-size-fits-all;
+    # the LLM art-director supplies a data-driven spec in the full pipeline.
+    spec = spec or default_design_spec(brief, density)
+    show = spec.show or _MINIMAL_SHOW
+    # Accent = the brand's most VIVID real palette color (legible on the scrim) — never a
+    # muted/off-scheme tan, never a generic default.
+    accent = _brand_accent(brief, spec)
     accent_rgb = _hex_to_rgb(accent)
     kicker_color = _legible_on_dark(accent_rgb)   # readable on the dark scrim
     cta_bg = accent                               # keep the brand color on the button
@@ -267,12 +664,11 @@ def render_poster_html(
 
     cta_html = ""
     if brief.cta_text:
-        url = _esc(brief.cta_url)
-        # dir="ltr" so URLs/emails aren't reordered by an RTL (Arabic) container.
-        url_span = f'<span class="cta-url" dir="ltr">{url}</span>' if url else ""
-        cta_html = (
-            f'<div class="cta"><span class="cta-text">{_esc(brief.cta_text)}</span>{url_span}</div>'
-        )
+        # Big-brand creatives NEVER print a raw URL on the poster — the CTA is the
+        # verb ("Shop now" / "احجز الآن"); the link lives in the post caption / bio,
+        # not baked into the image. (brief.cta_url is still available to the caller
+        # for a clickable button beside the PNG.)
+        cta_html = f'<div class="cta"><span class="cta-text">{_esc(brief.cta_text)}</span></div>'
 
     contact_html = f'<p class="contact" dir="ltr">{_esc(brief.contact_line)}</p>' if brief.contact_line else ""
 
@@ -300,31 +696,84 @@ def render_poster_html(
     # RTL: detect from the actual copy (Arabic headline/brand) -> right-align the
     # overlay and move the logo to the top-right.
     rtl = _is_rtl(brief.headline) or _is_rtl(brief.business_name)
-    rtl_cls = " rtl" if rtl else ""
     dir_attr = "rtl" if rtl else "ltr"
+    # Horizontal alignment: centered layouts always center; otherwise RTL copy
+    # right-aligns, else the spec's choice.
+    if spec.layout == "center_editorial":
+        align = "center"
+    elif rtl:
+        align = "right"
+    else:
+        align = spec.text_align or "left"
+    align_cls = f" align-{align}" if align in ("center", "right") else ""
 
     # Typography: the website's own fonts when loadable, else a curated modern
-    # default — never the boring system serif.
-    font_links, font_head, font_body = _fonts_head_and_stacks(brief, rtl)
+    # default — never the boring system serif. The per-run variation seed (from the
+    # spec) varies the pairing so the FONTS change between runs of the same brand.
+    font_links, font_head, font_body = _fonts_head_and_stacks(brief, rtl, spec.variation_seed)
+
+    # Layout-driven CSS. FREE-FORM (spec.text_box set) places the cluster + logo at
+    # continuous coords (unbounded compositions); else one of the 6 fixed archetypes.
+    if spec.text_box:
+        lower_layout_css = _freeform_lower_css(spec.text_box, spec.scrim_strength, align)
+        logo_pos_css = _freeform_logo_css(spec.logo_xy)
+    else:
+        mark_corner = _mirror_corner(spec.logo_corner, rtl)
+        lower_layout_css = _lower_css(spec.layout, spec.scrim_strength, align, rtl)
+        logo_pos_css = _logo_corner_css(mark_corner)
 
     # A short accent rule above the headline — a small piece of brand-colored
     # flair so the lower block reads designed, not a flat slab of text.
     accent_rule_html = '<div class="accent-rule"></div>'
 
-    if logo_src:
-        brand_html = f'<img class="brand-logo{rtl_cls}" src="{logo_src}" alt="{_esc(brief.business_name)}">'
-    else:
-        brand_html = f'<div class="brand{rtl_cls}">{_esc(brief.business_name)}</div>'
+    brand_html = ""
+    if "logo" in show:
+        if logo_src:
+            # ADAPTIVE plate: contrast the logo against the real background behind it — no
+            # plate when the mark already reads (natural integration), else a plate that
+            # contrasts the LOGO. Falls back to the capture-time chip flag when luminance
+            # can't be judged (e.g. an SVG logo): light/white logo -> dark plate.
+            region = _logo_region_box(None if spec.text_box else mark_corner,
+                                      spec.logo_xy if spec.text_box else None)
+            adaptive = _adaptive_logo_style(logo_src, background_path, region)
+            if adaptive:
+                chip_style = f' style="{adaptive}"'
+            else:
+                chip_style = (' style="background:rgba(18,20,26,.92)"'
+                              if getattr(brief, "logo_chip", "light") == "dark" else "")
+            brand_html = f'<img class="brand-logo"{chip_style} src="{logo_src}" alt="{_esc(brief.business_name)}">'
+        else:
+            brand_html = f'<div class="brand">{_esc(brief.business_name)}</div>'
 
-    headline_html = f'<h1 class="headline">{_esc(brief.headline)}</h1>'
-    if density == "minimal":
-        # Ultra-minimal hero: accent rule + headline + one CTA (logo is the mark above).
-        lower_inner = f"{accent_rule_html}\n      {headline_html}\n      {cta_html}"
+    # The text column is narrower in a side panel (~520px) than a full-width band
+    # (~920px); the hero auto-fit must know this or a long word overflows the edge.
+    if spec.text_box:
+        column_px = _freeform_column_px(spec.text_box)
     else:
-        lower_inner = (
-            f"{kicker_html}\n      {accent_rule_html}\n      {headline_html}\n      {sub_html}\n      "
-            f"{offerings_html}\n      {cta_html}\n      {contact_html}\n      {social_html}"
-        )
+        column_px = 520 if spec.layout in ("side_panel_left", "side_panel_right") else 920
+    headline_html = _headline_block(
+        brief, rtl, spec.headline_treatment, spec.accent_word, column_px=column_px
+    )
+
+    # Assemble the visible blocks per the spec's `show` list (decoration always),
+    # filtering empties (a field with no evidence renders nothing — never fabricated).
+    ordered: list[str] = []
+    if "kicker" in show:
+        ordered.append(kicker_html)
+    # (accent rule removed — the art critic read the small floating bar as an orphan artifact)
+    if "headline" in show:
+        ordered.append(headline_html)
+    if "sub" in show:
+        ordered.append(sub_html)
+    if "offerings" in show:
+        ordered.append(offerings_html)
+    if "cta" in show:
+        ordered.append(cta_html)
+    if "contact" in show:
+        ordered.append(contact_html)
+    if "social" in show:
+        ordered.append(social_html)
+    lower_inner = "\n      ".join(b for b in ordered if b)
 
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8">{font_links}<style>
@@ -336,60 +785,80 @@ def render_poster_html(
     font-family:{font_body}; color:#f5f3ef;
   }}
   .brand {{
-    position:absolute; top:62px; left:80px; right:80px;
+    position:absolute; max-width:420px;
     font-family:{font_head}; font-size:32px; font-weight:700; letter-spacing:.01em; color:#ffffff;
     text-shadow:0 2px 10px rgba(0,0,0,.55);
   }}
   .brand-logo {{
-    position:absolute; top:54px; left:80px; max-height:88px; max-width:360px;
-    width:auto; object-fit:contain; background:rgba(255,255,255,.94);
-    padding:12px 18px; border-radius:14px; box-shadow:0 4px 18px rgba(0,0,0,.35);
-  }}
-  /* RTL (Arabic/Hebrew): right-align text, move the logo to the top-right. */
-  .brand.rtl {{ text-align:right; }}
-  .brand-logo.rtl {{ left:auto; right:80px; }}
-  .lower.rtl {{ direction:rtl; text-align:right; }}
-  .lower {{
-    position:absolute; left:0; right:0; bottom:0; padding:74px 80px 64px;
-    background:linear-gradient(to top,
-      rgba(8,12,18,.90) 0%, rgba(8,12,18,.76) 52%, rgba(8,12,18,0) 100%);
+    position:absolute; max-height:104px; max-width:420px;
+    width:auto; object-fit:contain; background:rgba(255,255,255,.96);
+    padding:14px 22px; border-radius:16px; box-shadow:0 6px 22px rgba(0,0,0,.38);
   }}
   /* brand-colored flair bar above the headline */
   .accent-rule {{
     width:68px; height:6px; border-radius:4px; margin:0 0 22px;
     background:{accent}; box-shadow:0 2px 12px {accent}66;
   }}
-  .lower.rtl .accent-rule {{ margin-left:auto; }}
+  .lower.align-right .accent-rule {{ margin-left:auto; }}
+  .lower.align-center .accent-rule {{ margin-left:auto; margin-right:auto; }}
   .kicker {{
     font-family:{font_body}; font-size:18px; font-weight:700;
     letter-spacing:.24em; text-transform:uppercase; color:{kicker_color}; margin-bottom:16px;
   }}
   .headline {{
-    font-family:{font_head}; font-size:67px; line-height:1.03; font-weight:700;
-    letter-spacing:-.012em; margin-bottom:24px;
+    font-family:{font_head}; font-size:67px; line-height:1.05; font-weight:800;
+    letter-spacing:-.012em; margin-bottom:24px; text-shadow:0 2px 18px rgba(0,0,0,.45);
+  }}
+  /* stacked-hero headline (the 'BUSINESS / IDEAS' treatment) — a strong DISPLAY LOCKUP:
+     heavy weight, tight leading, a crisp shadow for punch (art-critic: 'not a flat font'). */
+  .hero-headline {{
+    display:flex; flex-direction:column; gap:0; margin-bottom:24px;
+    font-family:{font_head}; font-weight:800; line-height:.96; letter-spacing:-.02em;
+    text-shadow:0 2px 18px rgba(0,0,0,.45);
+  }}
+  .hero-headline .hw {{ display:block; }}
+  .hero-headline.upper .hw {{ text-transform:uppercase; }}
+  .hero-headline .hw.accent {{ color:{accent}; }}
+  /* Arabic must NOT get negative tracking (it breaks the connected script) and needs more
+     leading; weight 800 keeps the lockup punch. */
+  [dir="rtl"] .headline {{ letter-spacing:normal; line-height:1.2; }}
+  [dir="rtl"] .hero-headline {{ letter-spacing:normal; line-height:1.12; gap:2px; }}
+  /* 'highlight' treatment — one word knocked out inside a clean brand-colored block.
+     No tilt: a rotated sticker read amateurish over a photo (MEASURED on ITI). */
+  .hl-head {{ line-height:1.32; }}
+  .hl-head .hl {{
+    display:inline-block; background:{accent}; color:{cta_text};
+    padding:.06em .26em; border-radius:6px; margin:0 .04em;
+    box-shadow:0 3px 14px rgba(0,0,0,.30);
   }}
   .sub {{
     font-family:{font_body}; font-size:24px; line-height:1.42;
     color:#e6ecf2; margin-bottom:30px; max-width:780px;
   }}
   .offerings {{ list-style:none; display:flex; flex-wrap:wrap; gap:12px; margin-bottom:34px; }}
+  .lower.align-center .offerings {{ justify-content:center; }}
   .offerings li {{
-    font-family:{font_body}; font-size:19px; padding:10px 18px;
-    border:1px solid rgba(255,255,255,.42); border-radius:999px; color:#eef3f8;
+    font-family:{font_body}; font-size:19px; font-weight:500; padding:10px 18px;
+    background:rgba(10,14,20,.58); border:1px solid rgba(255,255,255,.20);
+    border-radius:999px; color:#f3f7fb; backdrop-filter:blur(2px);
   }}
+  /* A confident, high-contrast CTA button (art-critic: the pill was a tiny footnote). */
   .cta {{
-    display:inline-flex; align-items:baseline; gap:16px;
-    background:{cta_bg}; color:{cta_text}; padding:18px 30px; border-radius:14px;
+    display:inline-flex; align-items:center; gap:12px;
+    background:{cta_bg}; color:{cta_text}; padding:20px 42px; border-radius:16px;
+    box-shadow:0 12px 32px -8px {accent}99;
   }}
-  .cta-text {{ font-family:{font_body}; font-weight:700; font-size:24px; }}
-  .cta-url {{ font-family:{font_body}; font-size:18px; opacity:.82; }}
+  .cta-text {{ font-family:{font_body}; font-weight:800; font-size:28px; text-transform:capitalize; letter-spacing:.01em; }}
   .contact {{ font-family:{font_body}; font-size:18px; color:#cdd6df; margin-top:22px; }}
   .socials {{ font-family:{font_body}; font-size:18px; color:#aeb8c4; margin-top:12px; letter-spacing:.02em; }}
+  /* layout-driven: text-block placement/scrim + brand-mark corner (per design spec) */
+  {lower_layout_css}
+  .brand, .brand-logo {{ {logo_pos_css} }}
 </style></head>
 <body>
   <div class="canvas">
     {brand_html}
-    <div class="lower{rtl_cls}" dir="{dir_attr}">
+    <div class="lower{align_cls}" dir="{dir_attr}">
       {lower_inner}
     </div>
   </div>

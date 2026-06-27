@@ -36,11 +36,15 @@ _GENERIC_TITLE_SEGMENTS = {
 # These are stripped (case-insensitive, whole-word) ONLY when something brand-like
 # remains, so the SOURCE name is clean and every downstream consumer (poster, reel,
 # SWOT) inherits it — not just the poster's band-aid `_clean_business_name`.
-# Deliberately TIGHT: only high-confidence chrome (website/official/homepage). Bare
-# "home"/"online" are excluded — they can be legitimate brand words.
+# Deliberately TIGHT: only high-confidence chrome (website/official/homepage) plus
+# e-commerce SECTION designators (e-shop / online store) that big brands append to a
+# sub-site's og:site_name (MEASURED: "Vodafone Egypt E-Shop" -> "Vodafone Egypt", the
+# ONLY change across 48 saved names). Bare "home"/"online"/"shop"/"store" stay
+# EXCLUDED — they can be legitimate brand words (verified safe: "EVA Shop" untouched).
 _TRAILING_CHROME = (
     "official website", "official site", "website", "homepage", "home page",
-    "official", "الموقع الرسمي", "الموقع الالكتروني", "الموقع الإلكتروني",
+    "official", "e-shop", "eshop", "e shop", "online shop", "online store", "webshop",
+    "الموقع الرسمي", "الموقع الالكتروني", "الموقع الإلكتروني",
 )
 _LEADING_CHROME = (
     "welcome to the", "welcome to", "official website of", "official site of",

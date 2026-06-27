@@ -99,6 +99,142 @@ def _tts_segment(client, text: str, out: Path, *, model: str, voice: str,
     return False
 
 
+# ---------------------------------------------------------------------
+# Gemini TTS (runs on the SAME GCP/Vertex credits as Imagen/Veo — no OpenAI key
+# needed). gemini-2.5-flash-preview-tts returns raw PCM (L16, mono); we wrap it in a
+# WAV so the shared ffmpeg pad/trim path below handles it identically to OpenAI mp3s.
+# ---------------------------------------------------------------------
+_GEMINI_TTS_MODEL = "gemini-2.5-flash-preview-tts"
+_GEMINI_VOICE = "Kore"          # a clear, warm prebuilt voice; multilingual (auto-detects Arabic)
+
+
+def _gemini_client():
+    """Vertex (GCP credits, ADC) or a Gemini API key. None if neither is available."""
+    try:
+        from google import genai
+    except Exception:
+        return None
+    api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+    if api_key:
+        return genai.Client(api_key=api_key)
+    project = os.environ.get("GOOGLE_CLOUD_PROJECT")
+    if project:
+        return genai.Client(vertexai=True, project=project,
+                            location=os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1"))
+    return None
+
+
+def _gemini_segment(client, text: str, out_wav: Path, *, voice: str, model: str,
+                    instructions: str) -> bool:
+    """One narration line -> WAV via Gemini TTS. The style brief is prepended to the
+    text (Gemini TTS is steered by a natural-language directive in the content)."""
+    text = (text or "").strip()
+    if not text:
+        return False
+    from google.genai import types
+    import re as _re
+    import wave
+    prompt = f"{instructions}\n\nLine to say: {text}" if instructions else text
+    try:
+        r = client.models.generate_content(
+            model=model, contents=prompt,
+            config=types.GenerateContentConfig(
+                response_modalities=["AUDIO"],
+                speech_config=types.SpeechConfig(voice_config=types.VoiceConfig(
+                    prebuilt_voice_config=types.PrebuiltVoiceConfig(voice_name=voice))),
+            ),
+        )
+        parts = r.candidates[0].content.parts
+        blob = next((p.inline_data for p in parts if getattr(p, "inline_data", None)), None)
+        if not blob or not blob.data:
+            return False
+        rate = 24000
+        m = _re.search(r"rate=(\d+)", getattr(blob, "mime_type", "") or "")
+        if m:
+            rate = int(m.group(1))
+        with wave.open(str(out_wav), "wb") as w:
+            w.setnchannels(1)
+            w.setsampwidth(2)
+            w.setframerate(rate)
+            w.writeframes(blob.data)
+        return out_wav.is_file() and out_wav.stat().st_size > 44
+    except Exception as e:  # noqa: BLE001
+        logger.warning("gemini tts segment failed: %s", e)
+        return False
+
+
+# ---------------------------------------------------------------------
+# edge-tts — FREE, keyless TTS (Microsoft Edge read-aloud). For Arabic it provides a
+# NATIVE Egyptian voice (ar-EG-SalmaNeural / -ShakirNeural), which is both cheaper
+# (zero cost) and more authentic for ar-EG reels than the English-leaning OpenAI
+# voices. Online (Microsoft endpoint), no API key, outputs mp3. Pace/pitch can be
+# steered (rate/pitch); there is no free-form 'instructions' prompt, so the emotional
+# brief is not applied here — the native dialect carries the read.
+# Override the voice via REEL_TTS_VOICE.
+# ---------------------------------------------------------------------
+_EDGE_VOICE_AR = "ar-EG-SalmaNeural"     # Egyptian Arabic, female (warm)
+_EDGE_VOICE_EN = "en-US-AriaNeural"      # default English voice
+_EDGE_RATE = os.environ.get("REEL_TTS_EDGE_RATE", "+0%")
+_EDGE_PITCH = os.environ.get("REEL_TTS_EDGE_PITCH", "+0Hz")
+
+
+def _edge_voice_for(text: str, override: Optional[str]) -> str:
+    """Pick a native Egyptian voice for Arabic copy, else an English voice."""
+    if override:
+        return override
+    return _EDGE_VOICE_AR if _AR_RE.search(text or "") else _EDGE_VOICE_EN
+
+
+def _edge_segment(text: str, out_mp3: Path, *, voice: str) -> bool:
+    """One narration line -> mp3 via edge-tts (free). The lib is async, so we drive it
+    with asyncio.run (the reel pipeline is synchronous). Never raises -> False on any
+    failure (offline / endpoint error) so the caller degrades to silent filler."""
+    text = (text or "").strip()
+    if not text:
+        return False
+    try:
+        import asyncio
+        import edge_tts
+
+        async def _run() -> None:
+            await edge_tts.Communicate(
+                text, voice, rate=_EDGE_RATE, pitch=_EDGE_PITCH
+            ).save(str(out_mp3))
+
+        asyncio.run(_run())
+        return out_mp3.is_file() and out_mp3.stat().st_size > 0
+    except Exception as e:  # noqa: BLE001
+        logger.warning("edge tts segment failed: %s", e)
+        return False
+
+
+def narration_lines(storyboard) -> list[str]:
+    """One grounded narration line PER scene — the verbatim text already shown on that
+    scene (headline -> first subline -> CTA). Empty for scenes with no text (silent)."""
+    out: list[str] = []
+    for s in storyboard.scenes:
+        txt = (s.headline or (s.sublines[0] if s.sublines else "") or s.cta_text or "")
+        out.append(str(txt).strip())
+    return out
+
+
+def _resolve_backend(backend: Optional[str]) -> str:
+    """gemini | openai | edge. Explicit > REEL_TTS_BACKEND > auto.
+
+    Auto prefers a configured PAID backend (Gemini on GCP credits, else OpenAI by key),
+    and falls back to FREE, keyless `edge` when no paid backend is configured — so a
+    reel always gets a voice instead of going silent. Set REEL_TTS_BACKEND=edge to force
+    the free native-Egyptian voice and skip the paid TTS spend entirely."""
+    b = (backend or os.environ.get("REEL_TTS_BACKEND") or "").lower()
+    if b in ("gemini", "openai", "edge"):
+        return b
+    if os.environ.get("GOOGLE_CLOUD_PROJECT") or os.environ.get("GEMINI_API_KEY"):
+        return "gemini"
+    if os.environ.get("OPENAI_API_KEY"):
+        return "openai"
+    return "edge"
+
+
 def synth_voiceover(
     lines: list[str],
     durations: list[float],
@@ -108,21 +244,42 @@ def synth_voiceover(
     voice: Optional[str] = None,
     deliveries: Optional[list[str]] = None,
     api_key: Optional[str] = None,
+    backend: Optional[str] = None,
 ) -> Optional[Path]:
     """Build a single narration track aligned to `durations` (one entry per scene).
     `deliveries` (optional, one per line) is a per-line emotion/performance note from
     the director, folded into that line's instruction so each scene is performed with
-    its own feeling. Returns the audio path, or None if TTS is unavailable."""
-    key = api_key or os.environ.get("OPENAI_API_KEY")
-    if not key or not lines:
+    its own feeling. `backend` selects the TTS engine (gemini | openai; default auto).
+    Returns the audio path, or None if TTS is unavailable."""
+    if not lines:
         return None
-    try:
-        from openai import OpenAI
-    except ImportError:
-        return None
-    client = OpenAI(api_key=key)
-    model = model or os.environ.get("REEL_TTS_MODEL") or _DEFAULT_MODEL
-    voice = voice or os.environ.get("REEL_TTS_VOICE") or _DEFAULT_VOICE
+    chosen = _resolve_backend(backend)
+
+    gem_client = _gemini_client() if chosen == "gemini" else None
+    if chosen == "gemini" and gem_client is None:        # Gemini unavailable -> OpenAI
+        chosen = "openai"
+
+    oa_client = None
+    if chosen == "openai":                               # OpenAI path needs a key
+        key = api_key or os.environ.get("OPENAI_API_KEY")
+        if not key:
+            return None
+        try:
+            from openai import OpenAI
+        except ImportError:
+            return None
+        oa_client = OpenAI(api_key=key)
+    # chosen == "edge" needs no client/key (free, keyless).
+
+    model = model or os.environ.get("REEL_TTS_MODEL") or (
+        _GEMINI_TTS_MODEL if chosen == "gemini" else _DEFAULT_MODEL)
+    if chosen == "edge":
+        default_voice = _edge_voice_for(" ".join(lines), None)
+    elif chosen == "gemini":
+        default_voice = _GEMINI_VOICE
+    else:
+        default_voice = _DEFAULT_VOICE
+    voice = voice or os.environ.get("REEL_TTS_VOICE") or default_voice
     deliveries = deliveries or []
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -133,9 +290,18 @@ def synth_voiceover(
         seg_paths: list[Path] = []
         for i, (line, dur) in enumerate(zip(lines, durations)):
             scene_aud = tmpd / f"scene{i}.wav"
-            raw = tmpd / f"raw{i}.mp3"
+            ext = "wav" if chosen == "gemini" else "mp3"
+            raw = tmpd / f"raw{i}.{ext}"
             instructions = _instructions_for(lines, deliveries[i] if i < len(deliveries) else "")
-            if _tts_segment(client, line, raw, model=model, voice=voice, instructions=instructions):
+            if chosen == "gemini":
+                ok = _gemini_segment(gem_client, line, raw, voice=voice, model=model,
+                                     instructions=instructions)
+            elif chosen == "edge":
+                ok = _edge_segment(line, raw, voice=voice)
+            else:
+                ok = _tts_segment(oa_client, line, raw, model=model, voice=voice,
+                                  instructions=instructions)
+            if ok:
                 # Pad with trailing silence (or trim) so the line exactly fills the
                 # scene; a short lead-in delay keeps it off the hard cut.
                 run_ffmpeg([

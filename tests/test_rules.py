@@ -331,10 +331,16 @@ def test_strip_chrome_is_conservative():
     assert _strip_chrome("Acme - Official Website") == "Acme"
     assert _strip_chrome("Welcome to Zooba") == "Zooba"
     assert _strip_chrome("Nike Official") == "Nike"
+    # E-commerce SECTION designators are chrome (MEASURED: Vodafone's e-shop sub-site).
+    assert _strip_chrome("Vodafone Egypt E-Shop") == "Vodafone Egypt"
+    assert _strip_chrome("Foo Online Store") == "Foo"
     # Not chrome — must be left intact (no false positives).
     assert _strip_chrome("Home Depot") == "Home Depot"
     assert _strip_chrome("AOL Online") == "AOL Online"
     assert _strip_chrome("Microsoft") == "Microsoft"
+    # Bare "shop"/"store" stay legitimate brand words (only e-shop/online-shop strip).
+    assert _strip_chrome("EVA Shop") == "EVA Shop"
+    assert _strip_chrome("The Body Shop") == "The Body Shop"
     # A name that is ONLY chrome is kept verbatim rather than emptied.
     assert _strip_chrome("Website") == "Website"
 

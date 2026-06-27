@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#16203a; --muted:#5b6678; --line:#e1e6f0;
+    --input:#6366f1; --io:#0ea5e9; --rules:#10b981; --llm:#8b5cf6;
+    --gen:#f97316; --guard:#f59e0b; --output:#2563eb; --intel:#e11d8f;
+    --shadow:0 1px 2px rgba(20,30,60,.05),0 12px 30px rgba(20,30,60,.09);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#fff;color:var(--ink);font-family:'Inter','Segoe UI',Arial,sans-serif}
+  .en{font-family:'JetBrains Mono',Consolas,monospace}
+  /* each .board renders as one exported PNG */
+  .board{width:1620px;background:#fff;padding:30px 34px 26px;margin:0 auto 40px;
+    border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow)}
+  .board h2{margin:0;font-size:30px;font-weight:900;letter-spacing:-.6px}
+  .board .sub{margin:6px 0 24px;color:var(--muted);font-size:17px;font-weight:500}
+  .flow{display:flex;align-items:stretch;justify-content:center}
+  .stage{flex:0 0 232px;background:#fff;border:1px solid var(--line);border-top:6px solid var(--c,#888);
+    border-radius:16px;padding:14px 14px 16px;box-shadow:0 6px 16px rgba(20,30,60,.06);
+    display:flex;flex-direction:column}
+  .stage .top{display:flex;align-items:center;gap:9px;margin-bottom:9px}
+  .stage .num{width:30px;height:30px;border-radius:50%;background:var(--c);color:#fff;
+    font-weight:900;font-size:14px;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+  .stage .type{font-size:10.5px;font-weight:800;letter-spacing:.4px;color:var(--c);
+    background:color-mix(in srgb,var(--c) 13%,#fff);border:1px solid color-mix(in srgb,var(--c) 32%,#fff);
+    padding:3px 8px;border-radius:999px;margin-left:auto}
+  .stage h4{margin:0 0 8px;font-size:16.5px;font-weight:800;line-height:1.25}
+  .stage .chip{background:#f2f5fa;border:1px solid #e4e9f2;border-radius:8px;padding:4px 9px;
+    font-size:12.5px;color:#36425c;margin:0 0 5px;font-weight:600;line-height:1.35}
+  .ar{flex:0 0 36px;display:flex;align-items:center;justify-content:center;color:#a7b1c6;font-size:26px;font-weight:900}
+  .t-input{--c:var(--input)} .t-io{--c:var(--io)} .t-rules{--c:var(--rules)}
+  .t-llm{--c:var(--llm)} .t-gen{--c:var(--gen)} .t-guard{--c:var(--guard)}
+  .t-output{--c:var(--output)} .t-intel{--c:var(--intel)}
+  .legend{display:flex;flex-wrap:wrap;gap:16px;justify-content:center;margin:14px 0 2px;padding-top:16px;border-top:1px dashed var(--line)}
+  .legend span{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:700;color:#33405e}
+  .legend i{width:13px;height:13px;border-radius:4px}
+  .down{text-align:center;color:#a7b1c6;font-size:26px;font-weight:900;margin:8px 0 4px}
+  .fanlabel{text-align:center;color:var(--muted);font-weight:800;font-size:15px;margin:2px 0 12px;letter-spacing:.3px}
+  .fan{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+  .callout{margin-top:20px;background:#fef2f8;border:1px solid #f7c6df;border-left:6px solid var(--intel);
+    border-radius:14px;padding:13px 18px;color:#7a1145;font-weight:800;font-size:16px}
+  .foot{margin-top:14px;color:var(--muted);font-size:12.5px;text-align:center}
+</style>
+</head>
+<body>
+
+<!-- ===================== 1. SCRAPER ===================== -->
+<div class="board" id="b-scraper">
+  <h2>Scraper Pipeline</h2>
+  <p class="sub">Any business URL → structured raw evidence. No LLM here — fully deterministic extraction.</p>
+  <div class="flow">
+    <div class="stage t-input"><div class="top"><span class="num">1</span><span class="type">INPUT</span></div>
+      <h4>Business URL</h4><div class="chip en">https://www.orange.eg/en/</div></div>
+    <div class="ar">→</div>
+    <div class="stage t-guard"><div class="top"><span class="num">2</span><span class="type">GUARD</span></div>
+      <h4>Safety guards</h4><div class="chip">robots.txt allowed?</div><div class="chip">SSRF — public URLs only</div></div>
+    <div class="ar">→</div>
+    <div class="stage t-io"><div class="top"><span class="num">3</span><span class="type">IO</span></div>
+      <h4>Render — Playwright</h4><div class="chip">Real User-Agent · retry</div><div class="chip">scroll-to-load · HTTP/1.1 fallback</div></div>
+    <div class="ar">→</div>
+    <div class="stage t-io"><div class="top"><span class="num">4</span><span class="type">IO</span></div>
+      <h4>Crawl pages</h4><div class="chip">eTLD+1 same-host · sitemap</div><div class="chip">budget ~12 pages / 150s</div></div>
+    <div class="ar">→</div>
+    <div class="stage t-rules"><div class="top"><span class="num">5</span><span class="type">RULES</span></div>
+      <h4>Extract (deterministic)</h4><div class="chip">text · links · palette · contact</div><div class="chip">images + logo (scored) · metadata</div></div>
+    <div class="ar">→</div>
+    <div class="stage t-output"><div class="top"><span class="num">6</span><span class="type">OUTPUT</span></div>
+      <h4>manifest.json + raw HTML</h4><div class="chip">Readiness check</div><div class="chip">Deep-search fallback if blocked</div></div>
+  </div>
+  <div class="legend">
+    <span><i style="background:var(--input)"></i>Input</span>
+    <span><i style="background:var(--io)"></i>IO</span>
+    <span><i style="background:var(--rules)"></i>Rules (no LLM)</span>
+    <span><i style="background:var(--llm)"></i>LLM</span>
+    <span><i style="background:var(--gen)"></i>Generation</span>
+    <span><i style="background:var(--guard)"></i>Guard / Decision</span>
+    <span><i style="background:var(--output)"></i>Output</span>
+    <span><i style="background:var(--intel)"></i>Marketing Intelligence</span>
+  </div>
+  <p class="foot">Measured live: Orange = 13 pages, 0 failures · Vodafone = 12 pages (after eTLD+1 fix) · digilians = 577 text blocks.</p>
+</div>
+
+<!-- ===================== 2. POSTER ===================== -->
+<div class="board" id="b-poster">
+  <h2>Poster Pipeline</h2>
+  <p class="sub">profile.json → a designed poster. Facts are grounded; design is creative (two-truth-domains).</p>
+  <div class="flow">
+    <div class="stage t-input"><div class="top"><span class="num">1</span><span class="type">INPUT</span></div>
+      <h4>profile.json</h4><div class="chip">EvidencedFields (value + source)</div></div>
+    <div class="ar">→</div>
+    <div class="stage t-rules"><div class="top"><span class="num">2</span><span class="type">RULES</span></div>
+      <h4>Build brief (verbatim)</h4><div class="chip">headline · offerings · CTA · palette</div><div class="chip">logo: real / inline-SVG / wordmark</div></div>
+    <div class="ar">→</div>
+    <div class="stage t-llm"><div class="top"><span class="num">3</span><span class="type">LLM</span></div>
+      <h4>Grounded copy</h4><div class="chip">research (Serper + Gemini)</div><div class="chip">trend ride · sourced angle only</div></div>
+    <div class="ar">→</div>
+    <div class="stage t-llm"><div class="top"><span class="num">4</span><span class="type">LLM</span></div>
+      <h4>Design spec + concept</h4><div class="chip">layout · accent (real palette)</div><div class="chip">text-free scene · region anchor</div></div>
+    <div class="ar">→</div>
+    <div class="stage t-gen"><div class="top"><span class="num">5</span><span class="type">GEN</span></div>
+      <h4>Background — Imagen 4 Ultra</h4><div class="chip">on-brand, text-free</div><div class="chip">fallback to 4.0 on 429</div></div>
+    <div class="ar">→</div>
+    <div class="stage t-output"><div class="top"><span class="num">6</span><span class="type">OUTPUT</span></div>
+      <h4>Overlay → poster.png</h4><div class="chip">Playwright · Arabic + RTL</div><div class="chip">logo + headline + accent + CTA</div></div>
+  </div>
+</div>
+
+<!-- ===================== 3. REEL ===================== -->
+<div class="board" id="b-reel">
+  <h2>Reel Pipeline</h2>
+  <p class="sub">profile.json → a vertical 1080×1920 reel. Every scene from the real place; never crashes.</p>
+  <div class="flow">
+    <div class="stage t-input"><div class="top"><span class="num">1</span><span class="type">INPUT</span></div>
+      <h4>profile.json</h4><div class="chip">reuses poster selectors</div></div>
+    <div class="ar">→</div>
+    <div class="stage t-rules"><div class="top"><span class="num">2</span><span class="type">RULES</span></div>
+      <h4>Storyboard</h4><div class="chip">timed scenes · RTL</div><div class="chip">intro/offering/contact/outro</div></div>
+    <div class="ar">→</div>
+    <div class="stage t-llm"><div class="top"><span class="num">3</span><span class="type">VISION</span></div>
+      <h4>Photo curation</h4><div class="chip">keep real on-brand photos</div><div class="chip">drop logos / QR / icons</div></div>
+    <div class="ar">→</div>
+    <div class="stage t-gen"><div class="top"><span class="num">4</span><span class="type">GEN</span></div>
+      <h4>Per-scene video</h4><div class="chip">Veo 3.1 / 3.0 · KenBurns</div><div class="chip">per-scene fallback → no crash</div></div>
+    <div class="ar">→</div>
+    <div class="stage t-io"><div class="top"><span class="num">5</span><span class="type">IO + TTS</span></div>
+      <h4>Text layer + voice-over</h4><div class="chip">bottom caption · scrim · accent</div><div class="chip">Gemini TTS narration</div></div>
+    <div class="ar">→</div>
+    <div class="stage t-output"><div class="top"><span class="num">6</span><span class="type">OUTPUT</span></div>
+      <h4>Compositor → reel.mp4</h4><div class="chip">ffmpeg overlay + concat</div><div class="chip">mux voice-over + music</div></div>
+  </div>
+</div>
+
+<!-- ===================== 4. WHOLE PROJECT ===================== -->
+<div class="board" id="b-whole">
+  <h2>End-to-End System</h2>
+  <p class="sub">One URL → a full marketing pack. Linear core, then fan-out to deliverables.</p>
+  <div class="flow">
+    <div class="stage t-input"><div class="top"><span class="num">1</span><span class="type">INPUT</span></div>
+      <h4>Business URL</h4></div>
+    <div class="ar">→</div>
+    <div class="stage t-io"><div class="top"><span class="num">2</span><span class="type">SCRAPER</span></div>
+      <h4>Scraper → manifest.json</h4><div class="chip">Playwright + extractors</div><div class="chip">deep-search fallback</div></div>
+    <div class="ar">→</div>
+    <div class="stage t-rules"><div class="top"><span class="num">3</span><span class="type">PROFILE</span></div>
+      <h4>Rules + LLM + Validator</h4><div class="chip">deterministic + gpt-4o-mini ×4</div><div class="chip">validator drops unsupported</div></div>
+    <div class="ar">→</div>
+    <div class="stage t-output"><div class="top"><span class="num">4</span><span class="type">OUTPUT</span></div>
+      <h4>BusinessProfile</h4><div class="chip">every field = EvidencedField</div></div>
+  </div>
+  <div class="down">↓</div>
+  <p class="fanlabel">FAN-OUT TO DELIVERABLES</p>
+  <div class="fan">
+    <div class="stage t-intel"><div class="top"><span class="num">A</span><span class="type">INTEL</span></div>
+      <h4>Competitor → SWOT</h4><div class="chip">discovery → matrix → cited SWOT</div></div>
+    <div class="stage t-gen"><div class="top"><span class="num">B</span><span class="type">GEN</span></div>
+      <h4>Poster</h4><div class="chip">Imagen Ultra + overlay</div></div>
+    <div class="stage t-gen"><div class="top"><span class="num">C</span><span class="type">GEN</span></div>
+      <h4>Reel</h4><div class="chip">Veo / KenBurns + Gemini VO</div></div>
+    <div class="stage t-intel"><div class="top"><span class="num">D</span><span class="type">INTEL</span></div>
+      <h4>Trends → Strategy → Campaign</h4><div class="chip">content calendar → fan-out creatives</div></div>
+  </div>
+  <div class="callout">🛡️ Zero-Hallucination — every field in every output traces to real sourced evidence. The LLM is a tool (extraction + design), never the source of truth.</div>
+  <p class="foot">620 tests passing · every LLM call tracked with Usage (tokens + cost + model).</p>
+</div>
+
+</body>
+</html>

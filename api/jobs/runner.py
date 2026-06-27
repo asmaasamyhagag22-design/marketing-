@@ -24,7 +24,7 @@ from pathlib import Path
 from typing import Any, Optional
 
 # Pipeline imports — identical to what the CLI uses.
-from business_profile.llm.caller import Caller, MockCaller, OpenAICaller
+from business_profile.llm.caller import Caller, MockCaller, default_caller
 from business_profile.llm.evidence_pack import build_evidence_pack
 from business_profile.llm.extractor import run_llm_extraction
 from business_profile.llm.validator import validate_llm_extraction
@@ -179,7 +179,11 @@ def run_pipeline_job(
         if caller_factory is not None:
             caller: Caller = caller_factory()
         else:
-            caller = OpenAICaller(model=model)
+            # Gemini ONLY (owner directive: no OpenAI). gpt-4o-mini UNDER-extracted
+            # offerings on big multi-service sites (MEASURED te.eg: 7 service pages
+            # scraped, all the offering text present, yet only 1 offering survived).
+            # Flash is the cheap token-heavy default; the complex creative steps use Pro.
+            caller = default_caller(strong=False)
         # v0.2-b1: surface the rules-derived category so the offerings
         # prompt can swap in per-category guidance.
         rules_category_value = (
@@ -306,5 +310,17 @@ def _infer_failed_stage(store: JobStore, job_id: str) -> Stage:
 
 
 def has_openai_key() -> bool:
-    """Used by the run route to fail fast if LLM is requested but key is missing."""
+    """True if an OpenAI key is configured."""
     return bool(os.environ.get("OPENAI_API_KEY"))
+
+
+def has_llm() -> bool:
+    """Used by the run route to fail fast if LLM extraction is requested but NO provider
+    is configured. True when Gemini (GCP project / Gemini key) OR OpenAI is available —
+    so a Gemini-only deployment (the default now) isn't wrongly blocked."""
+    return bool(
+        os.environ.get("OPENAI_API_KEY")
+        or os.environ.get("GOOGLE_CLOUD_PROJECT")
+        or os.environ.get("GEMINI_API_KEY")
+        or os.environ.get("GOOGLE_API_KEY")
+    )

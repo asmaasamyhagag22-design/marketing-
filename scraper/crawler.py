@@ -61,6 +61,7 @@ from .url_utils import (
     normalize_url,
     resolve,
     same_registrable_host,
+    site_root_if_deep,
 )
 
 logger = logging.getLogger(__name__)
@@ -472,6 +473,12 @@ def scrape(input_url: str, output_root: str = "scrapes") -> tuple[ScrapeManifest
     """
     started = time.monotonic()
     normalized = normalize_url(input_url)
+    # If the seed is a DEEP content page (e.g. ITI's /tracks/... page), anchor brand
+    # IDENTITY to the site ROOT (homepage) instead — the deep page becomes a high-priority
+    # subpage below, so its content (offerings/menu) is still captured. None for a root or
+    # locale homepage (those are left exactly as-is). See url_utils.site_root_if_deep.
+    deep_root = site_root_if_deep(normalized)
+    home_fetch_url = deep_root or normalized
     out_dir = _make_output_dir(normalized, output_root)
 
     manifest = ScrapeManifest(
@@ -538,8 +545,23 @@ def scrape(input_url: str, output_root: str = "scrapes") -> tuple[ScrapeManifest
             context = make_browser_context(browser)
             try:
                 # ---- Fetch homepage -------------------------------
-                home_result = fetch_page(context, normalized, keep_page=True)
+                # Seed was deep -> fetch the site ROOT for identity. If the root is
+                # unreachable, fall back to the original seed so we never lose a scrape
+                # that the deep page itself would have served.
+                home_result = fetch_page(context, home_fetch_url, keep_page=True)
                 manifest.scrape_meta.pages_attempted += 1
+                if deep_root and not home_result.ok and home_fetch_url != normalized:
+                    manifest.notes.append(
+                        f"root_anchor_unreachable_fell_back_to_seed:{home_result.error_code}")
+                    if home_result._page is not None:
+                        try:
+                            home_result._page.close()
+                        except Exception:
+                            pass
+                    deep_root = None
+                    home_fetch_url = normalized
+                    home_result = fetch_page(context, normalized, keep_page=True)
+                    manifest.scrape_meta.pages_attempted += 1
                 manifest.scrape_meta.bytes_downloaded += home_result.bytes_downloaded
 
                 if not home_result.ok:
@@ -612,6 +634,15 @@ def scrape(input_url: str, output_root: str = "scrapes") -> tuple[ScrapeManifest
                     home_links, normalized, home_result.final_url,
                     extra_urls=sitemap_result.urls,
                 )
+                # Re-anchored to the root -> ensure the ORIGINAL deep seed is fetched
+                # FIRST (its content — offerings / menu / track — is why the user gave
+                # that URL). Deduped against the selected subpages.
+                if deep_root and normalize_url(home_result.final_url) != normalize_url(normalized):
+                    seed_pt, seed_tier = classify_url(normalized)
+                    subpages = [(normalized, seed_pt, seed_tier, "")] + [
+                        s for s in subpages
+                        if normalize_url(s[0]) != normalize_url(normalized)
+                    ]
 
                 # ---- Fetch subpages within budget ----------------
                 for i, (sub_url, pt, tier, anchor) in enumerate(subpages, start=1):
@@ -636,42 +667,55 @@ def scrape(input_url: str, output_root: str = "scrapes") -> tuple[ScrapeManifest
                     time.sleep(delay)
 
                     manifest.scrape_meta.pages_attempted += 1
-                    sub_result = fetch_page(context, sub_url, keep_page=True)
-                    manifest.scrape_meta.bytes_downloaded += sub_result.bytes_downloaded
+                    # CRASH-SAFETY: a single heavy page can hard-fail (Playwright
+                    # context death, OOM, an extractor raising). Without this guard the
+                    # exception unwinds past the whole crawl and NO manifest is written
+                    # — every already-scraped page is lost. Catch it, record a failure,
+                    # and keep going so the scrape always yields what it got.
+                    try:
+                        sub_result = fetch_page(context, sub_url, keep_page=True)
+                        manifest.scrape_meta.bytes_downloaded += sub_result.bytes_downloaded
 
-                    if not sub_result.ok:
+                        if not sub_result.ok:
+                            manifest.failures.append(FailureRecord(
+                                code=sub_result.error_code or ErrorCode.UNKNOWN_ERROR,
+                                message=sub_result.error_message or "subpage fetch failed",
+                                page_url=sub_url,
+                            ))
+                            if sub_result._page is not None:
+                                try:
+                                    sub_result._page.close()
+                                except Exception:
+                                    pass
+                            continue
+
+                        manifest.scrape_meta.pages_succeeded += 1
+
+                        sub_record, sub_links, sub_meta, sub_images, sub_nd_phones = _process_fetched_page(
+                            sub_result, sub_result._page, pt, tier, out_dir, i
+                        )
+                        try:
+                            sub_result._page.close()
+                        except Exception:
+                            pass
+
+                        manifest.pages.append(sub_record)
+                        all_links.extend(sub_links)
+                        all_html_by_page[sub_result.final_url] = sub_result.html
+                        all_text_blocks_by_page[sub_result.final_url] = sub_record.text_blocks
+                        all_page_texts.append(sub_result.rendered_text)
+                        all_next_data_phones.extend(sub_nd_phones)
+                        if sub_meta.html_lang:
+                            html_lang_hints.append(sub_meta.html_lang)
+                        site_metadata = merge_metadata(site_metadata, sub_meta)
+                        manifest.images_of_interest.extend(sub_images)
+                    except Exception as exc:                          # noqa: BLE001
                         manifest.failures.append(FailureRecord(
-                            code=sub_result.error_code or ErrorCode.UNKNOWN_ERROR,
-                            message=sub_result.error_message or "subpage fetch failed",
+                            code=ErrorCode.UNKNOWN_ERROR,
+                            message=f"subpage crashed, skipped: {type(exc).__name__}: {exc}",
                             page_url=sub_url,
                         ))
-                        if sub_result._page is not None:
-                            try:
-                                sub_result._page.close()
-                            except Exception:
-                                pass
                         continue
-
-                    manifest.scrape_meta.pages_succeeded += 1
-
-                    sub_record, sub_links, sub_meta, sub_images, sub_nd_phones = _process_fetched_page(
-                        sub_result, sub_result._page, pt, tier, out_dir, i
-                    )
-                    try:
-                        sub_result._page.close()
-                    except Exception:
-                        pass
-
-                    manifest.pages.append(sub_record)
-                    all_links.extend(sub_links)
-                    all_html_by_page[sub_result.final_url] = sub_result.html
-                    all_text_blocks_by_page[sub_result.final_url] = sub_record.text_blocks
-                    all_page_texts.append(sub_result.rendered_text)
-                    all_next_data_phones.extend(sub_nd_phones)
-                    if sub_meta.html_lang:
-                        html_lang_hints.append(sub_meta.html_lang)
-                    site_metadata = merge_metadata(site_metadata, sub_meta)
-                    manifest.images_of_interest.extend(sub_images)
 
             finally:
                 try:

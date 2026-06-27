@@ -49,7 +49,7 @@ def _computed(candidates=None, colors=None, site_name="El Kbabgi Restaurant"):
 
 def _candidate(src, *, alt="Logo", source_type="img", in_header=True, near_nav=True,
                links_to_home=True, width=180, height=70, context="brand logo",
-               is_social=False, is_hero_gallery=False, in_footer=False):
+               is_social=False, is_hero_gallery=False, in_footer=False, href=None):
     return {
         "src": src,
         "alt": alt,
@@ -64,6 +64,7 @@ def _candidate(src, *, alt="Logo", source_type="img", in_header=True, near_nav=T
         "height": height,
         "is_social": is_social,
         "is_hero_gallery": is_hero_gallery,
+        "href": href,
     }
 
 
@@ -145,6 +146,24 @@ def test_social_icons_and_hero_banners_are_not_selected_as_primary_logo():
     assert v.logo is None
     assert v.visual_extraction_note == "no_confident_primary_logo"
     assert "no_confident_primary_logo" in v.visual_warnings
+
+
+def test_contact_link_icon_does_not_outrank_the_real_logo():
+    # MEASURED on Assih (Squarespace): a header EMAIL icon (a `mailto:` link) scored 0.86
+    # as primary_brand_logo and OUTRANKED the real raster logo (0.78), because the
+    # is_social regex matches only social-network names, not mailto:/tel:/WhatsApp. The
+    # contact-link penalty must demote it below the real logo. Neutral context here, so
+    # the demotion comes ONLY from the href (not a social keyword).
+    candidates = [
+        _candidate("https://x.example/logo_brand.png", alt="Brand",
+                   source_type="img", context="brand logo", href="/"),
+        _candidate("inline-svg:9", alt="Email", source_type="inline_svg",
+                   context="header icon", links_to_home=False, width=24, height=24,
+                   href="mailto:info@x.example"),
+    ]
+    v = build_visual_identity(_png(), _computed(candidates, site_name="Brand"), "https://x.example/")
+    assert v.primary_logo is not None
+    assert v.primary_logo.src == "https://x.example/logo_brand.png"   # real logo, not the email icon
 
 
 def test_background_dominant_palette_does_not_override_black_gold_restaurant_brand():

@@ -12,7 +12,7 @@ The reel-specific structure (timed scenes, RTL direction, length cap) is added b
 from __future__ import annotations
 
 import re
-from typing import Any
+from typing import Any, Optional
 
 from poster.from_profile import build_poster_brief
 from poster.schemas import PosterBrief
@@ -27,10 +27,14 @@ def is_rtl(text: str | None) -> bool:
     return bool(_RTL_RE.search(text or ""))
 
 
-def build_reel_brief(profile: dict[str, Any]) -> PosterBrief:
+def build_reel_brief(
+    profile: dict[str, Any], *, headline_override: Optional[str] = None
+) -> PosterBrief:
     """Build the reel's verbatim content brief from a (serialized) BusinessProfile.
 
     Returns a `PosterBrief` — the shared content contract. Reusing the poster
     builder keeps the zero-hallucination guarantee identical across both outputs.
+    `headline_override` (a content-calendar hook / trend angle) flows through to the
+    same place the poster uses it, so a scheduled item drives the reel headline too.
     """
-    return build_poster_brief(profile)
+    return build_poster_brief(profile, headline_override=headline_override)

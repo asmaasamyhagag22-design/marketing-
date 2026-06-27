@@ -61,9 +61,26 @@ _SCRAPED_CAPABILITY_KEYS = {
 }
 
 
+def unique_insight_texts(profile) -> List[str]:
+    """Pull each `other_unique_insights` value from a BusinessProfile — works on both an
+    object (full_run) and a serialized dict (API). Empty list when absent."""
+    items = getattr(profile, "other_unique_insights", None)
+    if items is None and isinstance(profile, dict):
+        items = profile.get("other_unique_insights")
+    out: List[str] = []
+    for it in (items or []):
+        v = getattr(it, "value", None)
+        if v is None and isinstance(it, dict):
+            v = it.get("value")
+        if isinstance(v, str) and v.strip():
+            out.append(v.strip())
+    return out
+
+
 def synthesize_swot(
     matrix: ComparativeGapMatrix,
     themes: Optional[List[ReviewTheme]] = None,
+    unique_insights: Optional[List[str]] = None,
 ) -> SWOT:
     themes = themes or []
     swot = SWOT()
@@ -128,6 +145,18 @@ def synthesize_swot(
             "Opportunities/Threats need market comparison; supply competitors "
             "(or a review-theme source) to populate them."
         )
+
+    # Unique competitive edges (profile.other_unique_insights) are STRENGTHS by nature —
+    # append them grounded to the subject's own profile. Done AFTER the standalone degrade
+    # so they don't suppress the 0-peer fallback (which keys on an otherwise-empty SWOT).
+    seen_strengths = {s.text.strip().lower() for s in swot.strengths}
+    for ins in (unique_insights or []):
+        text = (ins or "").strip()
+        if text and text.lower() not in seen_strengths:
+            seen_strengths.add(text.lower())
+            swot.strengths.append(SWOTItem(
+                text=text, citation=["your profile"],
+                evidence="unique competitive edge stated on the site"))
 
     if not any([swot.strengths, swot.weaknesses, swot.opportunities, swot.threats]):
         swot.notes.append("No subject dimensions were known either — the scrape "

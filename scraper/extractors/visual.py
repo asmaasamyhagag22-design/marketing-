@@ -594,7 +594,19 @@ def _score_logo_candidates(raw_candidates: list[dict], computed: dict, page_url:
             score += min(12, 4 * seen_counts[src]); reasons.append("repeated_candidate")
 
         # Penalties: preserve candidates but avoid automatic primary selection.
-        if raw.get("is_social") or any(k in blob for k in SOCIAL_KEYWORDS):
+        # A brand logo's anchor links HOME, never to a contact endpoint — an svg inside
+        # a mailto:/tel:/SMS/WhatsApp link is a CONTACT icon, not the logo. MEASURED on
+        # Assih (a Squarespace site): its header email icon scored 0.86 as
+        # "primary_brand_logo" and OUTSCORED the real raster logo (0.78), because the
+        # is_social regex only matches social-network names, not mailto:. Treat contact
+        # links as social so they get the same -80 (the is_social regex still covers the
+        # network icons; this closes the contact-link gap).
+        href = str(raw.get("href") or "").lower()
+        is_contact_icon = (
+            href.startswith(("mailto:", "tel:", "sms:"))
+            or "api.whatsapp.com" in href or "wa.me/" in href
+        )
+        if raw.get("is_social") or is_contact_icon or any(k in blob for k in SOCIAL_KEYWORDS):
             score -= 80; reasons.append("penalty_social_icon")
         if raw.get("is_hero_gallery") or any(k in blob for k in HERO_KEYWORDS):
             score -= 45; reasons.append("penalty_hero_or_gallery")

@@ -155,7 +155,7 @@ def _fit_durations(scenes: list[ReelScene], max_total_s: float) -> None:
 def build_storyboard(
     brief: PosterBrief, *, profile: Optional[dict] = None, caller: Optional[Any] = None,
     max_total_s: float = 28.0, target_scenes: int = 10,
-    selected_images: Optional[list[str]] = None,
+    selected_images: Optional[list[str]] = None, variation: Optional[dict] = None,
 ) -> Storyboard:
     """Compose the ordered, length-capped scene list. `profile` (the serialized
     BusinessProfile) grounds the footage; `caller` (an OpenAI caller) enables the
@@ -166,8 +166,15 @@ def build_storyboard(
     static slideshow. The contact scene uses the clean phone/email."""
     primary_dir = "rtl" if (is_rtl(brief.headline) or is_rtl(brief.business_name)) else "ltr"
     # One LLM art-director call per reel — only used for the no-seed (text-to-video)
-    # fallback prompt; seeded scenes use the faithful motion prompt instead.
-    base_scene = build_brand_scene(brief, profile, caller)
+    # fallback prompt; seeded scenes use the faithful motion prompt instead. Also returns
+    # a recurring CHARACTER anchor repeated in every scene so the generated reel keeps the
+    # SAME protagonist throughout (coherence).
+    base_scene, character_anchor = build_brand_scene(brief, profile, caller)
+    # Per-RUN look variation (mood/lighting/energy), so the same brand's reel differs
+    # each render — fresh when not supplied. Design-only (never touches the verbatim text).
+    if variation is None:
+        from poster.variation import build_variation
+        variation = build_variation()
     # `selected_images` (vision-curated real photos) overrides the raw content set
     # when provided — so logos/QR/partner badges never become scenes. None means
     # "not curated"; fall back to the profile's content_images.
@@ -211,7 +218,8 @@ def build_storyboard(
             prompt = _i2v_motion_prompt(brief)          # animate the REAL photo
         else:
             base_kind = spec["kind"] if spec["kind"] != "gallery" else "intro"
-            prompt = build_scene_prompt(base_kind, brief, profile=profile, base_scene=base_scene)
+            prompt = build_scene_prompt(base_kind, brief, profile=profile, base_scene=base_scene,
+                                        character_anchor=character_anchor, variation=variation)
         scenes.append(ReelScene(visual_prompt=prompt, seed_image_url=seed, **spec))
 
     _fit_durations(scenes, max_total_s)

@@ -15,7 +15,7 @@ from fastapi import APIRouter, HTTPException, Request
 
 from scraper.url_utils import is_safe_public_url
 
-from ..jobs.runner import has_openai_key, run_pipeline_job
+from ..jobs.runner import has_llm, run_pipeline_job
 from ..schemas import RunRequest, RunResponse
 
 router = APIRouter()
@@ -33,13 +33,13 @@ async def run(req: RunRequest, request: Request) -> RunResponse:
             detail="URL not allowed: must be a public http(s) address (no localhost/internal/metadata hosts).",
         )
 
-    # Fail fast if LLM requested but no key configured.
-    if not req.skip_llm and not has_openai_key():
+    # Fail fast if LLM requested but no provider configured (Gemini OR OpenAI).
+    if not req.skip_llm and not has_llm():
         raise HTTPException(
             status_code=400,
             detail=(
-                "OPENAI_API_KEY is not set on the server. "
-                "Set the env var or pass skip_llm=true to run rules-only."
+                "No LLM provider configured on the server. Set GOOGLE_CLOUD_PROJECT "
+                "(Gemini via Vertex/ADC) or OPENAI_API_KEY, or pass skip_llm=true for rules-only."
             ),
         )
 

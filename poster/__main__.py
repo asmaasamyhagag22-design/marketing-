@@ -27,6 +27,12 @@ def _load_env() -> None:
 
 
 def main() -> int:
+    # Windows consoles default to cp1252 and crash on Arabic in print(); force UTF-8.
+    for _stream in (sys.stdout, sys.stderr):
+        try:
+            _stream.reconfigure(encoding="utf-8", errors="replace")  # type: ignore[attr-defined]
+        except Exception:
+            pass
     _load_env()
 
     ap = argparse.ArgumentParser(
@@ -42,6 +48,40 @@ def main() -> int:
         "--static-concept", action="store_true",
         help="skip the LLM art-director; use the static creative concept prompt.",
     )
+    ap.add_argument(
+        "--research", action="store_true",
+        help="(now ON by default when keys exist) deep-search the brand for FRESH, sourced "
+             "ad copy instead of the verbatim profile headline.",
+    )
+    ap.add_argument(
+        "--no-research", action="store_true",
+        help="disable the deep-search brand research (use the verbatim profile headline).",
+    )
+    ap.add_argument(
+        "--trend", action="store_true",
+        help="ride a CURRENT trend relevant to the brand: the research copy may tie one "
+             "angle to a live trend (from the free trend sources).",
+    )
+    ap.add_argument(
+        "--variation", type=int, default=None,
+        help="with --research: pick angle N (deterministic). Omit for a fresh angle each run.",
+    )
+    ap.add_argument(
+        "--brandbook", action="store_true",
+        help="understand the brand once (multimodal): a vision model picks the brand's "
+             "OWN real photo as the background instead of an invented Imagen scene.",
+    )
+    ap.add_argument(
+        "--brand-dna", default=None,
+        help="path to a BrandCreativeDNA json (from `python -m brand.creative_dna`): the "
+             "image is rendered in the brand's OWN learned visual language.",
+    )
+    ap.add_argument("--headline", default=None,
+                    help="override the headline (e.g. a planned content-calendar hook).")
+    ap.add_argument("--from-plan", default=None,
+                    help="a content_plan.json (from `python -m strategy`) to drive this poster.")
+    ap.add_argument("--item", type=int, default=0,
+                    help="with --from-plan: which calendar item index to render (default 0).")
     args = ap.parse_args()
 
     profile_path = Path(args.profile)
@@ -55,38 +95,93 @@ def main() -> int:
     from poster.template import render_poster_html
     from poster.render_playwright import render_html_to_png
 
-    print("[1/3] building brief from profile...")
-    brief = build_poster_brief(profile)
+    # Loop closure: a content-calendar item (from `python -m strategy`) can drive the
+    # poster — its hook (else topic) becomes the headline. --headline overrides directly.
+    headline_override = args.headline
+    if args.from_plan and not headline_override:
+        try:
+            plan = json.loads(Path(args.from_plan).read_text(encoding="utf-8"))
+            items = plan.get("items") or []
+            if items:
+                it = items[max(0, min(args.item, len(items) - 1))]
+                headline_override = (it.get("hook") or it.get("topic") or "").strip() or None
+                print(f"[plan] item {args.item}: {it.get('date')} {it.get('platform')} "
+                      f"{it.get('content_type')} — headline={headline_override!r}")
+        except Exception as exc:
+            print(f"      (could not read --from-plan: {type(exc).__name__})", file=sys.stderr)
 
-    print("[2/3] generating background...")
-    # Swappable ImageProvider: stub (offline, no credits) vs real Vertex/Imagen.
-    if args.no_image:
-        from poster.imagen_provider import StubImageProvider
-
-        provider = StubImageProvider()
-        bg_path = str(provider.generate(""))           # prompt ignored by the stub
-    else:
-        from poster.art_director import build_llm_concept_prompt
-        from poster.imagen_provider import VertexImagenProvider
-
-        # LLM art-director invents a unique, text-free concept (falls back to the
-        # static creative prompt if no OpenAI key / --static-concept).
+    # ONE Gemini caller powers the whole pipeline (concept + design + image + vision QA).
+    caller = None
+    try:
+        from business_profile.llm import default_caller
+        caller = default_caller(strong=True)        # Gemini 2.5 Pro
+    except Exception:
         caller = None
-        if not args.static_concept:
-            try:
-                from business_profile.llm import OpenAICaller
-                caller = OpenAICaller()
-            except Exception:
-                caller = None
-        prompt = build_llm_concept_prompt(brief, caller, profile=profile)
-        provider = VertexImagenProvider()
-        bg_path = str(provider.generate(prompt))
-    print(f"      provider={provider.name} -> {bg_path}")
 
-    print("[3/3] rendering poster (Playwright -> PNG)...")
-    html = render_poster_html(brief, bg_path)
-    out = render_html_to_png(html, args.out)
-    print("DONE ->", out)
+    # Optional EXPLICIT copy override: --research deep-searches for a fresh sourced headline
+    # (else the Creative Concept layer writes the copy). An explicit --headline / --from-plan
+    # hook always wins.
+    if caller is not None and args.research and not headline_override:
+        from poster.brand_research import research_brand, pick_angle
+        from poster.art_director import _persona_lines
+        trend_context = ""
+        if args.trend:
+            try:
+                from trends import top_trends, keywords_from_profile
+                hot = top_trends(keywords_from_profile(profile), top_k=5, require_match=True)
+                trend_context = "\n".join(f"- {t.title}" for t in hot)
+            except Exception:
+                trend_context = ""
+        print("[research] deep search for fresh, sourced brand facts...")
+        research = research_brand(
+            (profile.get("name") or {}).get("value") if isinstance(profile.get("name"), dict)
+            else profile.get("name") or "",
+            homepage_url=str(profile.get("url") or profile.get("website") or ""),
+            persona=_persona_lines(profile), trend_context=trend_context, caller=caller,
+        )
+        # Evidence-Ledger gate: verify each angle against the brand's real evidence + the
+        # research facts (a claim backed only by a junk snippet is dropped).
+        ledger = None
+        try:
+            from grounding import EvidenceLedger
+            ledger = EvidenceLedger.from_profile(profile, research=research.model_dump())
+        except Exception:
+            ledger = None
+        angle, _sub, prov = pick_angle(research, "", variation=args.variation, ledger=ledger)
+        if angle:
+            headline_override = angle
+            print(f"      angle: {angle!r}  (grounded_in: {prov})")
+
+    from poster.variation import build_variation
+    variation = build_variation(args.variation)
+    print(f"      variation: {variation['mood']} / {variation['lighting']} / {variation['energy']}"
+          + (f" (seed={args.variation})" if args.variation is not None else " (fresh)"))
+
+    # Explicit --brand-dna path overrides the pipeline's build-or-load.
+    brand_dna = None
+    if args.brand_dna:
+        try:
+            from brand.creative_dna import load_creative_dna
+            brand_dna = load_creative_dna(args.brand_dna)
+            print(f"      brand DNA loaded: used_vision={brand_dna.used_vision}")
+        except Exception as exc:
+            print(f"      (could not load --brand-dna: {type(exc).__name__})", file=sys.stderr)
+
+    # The ONE pipeline shared with the web app.
+    from poster.pipeline import generate_poster
+    res = generate_poster(
+        profile, caller=caller, variation=variation, brand_dna=brand_dna,
+        no_image=args.no_image, headline_override=headline_override,
+        out_dir=str(Path(args.out).parent or "."),
+    )
+
+    # Place the result at the requested --out path.
+    out_path = Path(args.out)
+    if str(Path(res.poster_path)) != str(out_path):
+        import shutil
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(res.poster_path, out_path)
+    print(f"DONE -> {out_path}  | QA pass={res.qa.overall_pass} ({res.qa.reason})")
     return 0
 
 

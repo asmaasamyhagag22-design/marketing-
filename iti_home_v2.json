@@ -1,0 +1,1990 @@
+{
+  "schema_version": "0.2.0",
+  "name": {
+    "value": "Information Technology Institute",
+    "evidence": [
+      {
+        "block_id": null,
+        "page_url": "https://iti.gov.eg/",
+        "quote": "Information Technology Institute",
+        "extractor": "rule:title"
+      }
+    ],
+    "confidence": "medium",
+    "source_type": "extracted"
+  },
+  "tagline": {
+    "value": "Shaping Future Innovators",
+    "evidence": [
+      {
+        "block_id": "home_div_0026",
+        "page_url": "https://iti.gov.eg/",
+        "quote": "Shaping Future Innovators",
+        "extractor": "llm"
+      }
+    ],
+    "confidence": "high",
+    "source_type": "extracted"
+  },
+  "description": {
+    "value": "The Information Technology Institute (ITI) is dedicated to empowering Egyptian youth by developing their skills in various technological specializations and preparing them for highly in-demand jobs. They offer intensive training programs, including an award-winning e-learning platform, and collaborate with industry partners to ensure high employment rates for their graduates, contributing to Egypt's development as a digital hub.",
+    "evidence": [
+      {
+        "block_id": "about-us_div_0020",
+        "page_url": "https://iti.gov.eg/about-us",
+        "quote": "Supporting Egyptian youth to improve their career opportunities by developing their skills and preparing them for highly in-demand jobs, and related vast technologies to fulfill today’s needs, and tom",
+        "extractor": "llm"
+      },
+      {
+        "block_id": "home_div_0031",
+        "page_url": "https://iti.gov.eg/",
+        "quote": "A new training cohort of the Intensive Training Program is launched across all ITI branches through cutting-edge technological tracks",
+        "extractor": "llm"
+      },
+      {
+        "block_id": "home_div_0035",
+        "page_url": "https://iti.gov.eg/",
+        "quote": "Mahara-Tech Platform has been awarded the UNESCO King Hamad Bin Isa Al-Khalifa Prize for the Use of ICT in Education 2025, recognizing its outstanding contribution to leveraging technology to enhance ",
+        "extractor": "llm"
+      },
+      {
+        "block_id": "home_div_0039",
+        "page_url": "https://iti.gov.eg/",
+        "quote": "The Information Technology Institute (ITI) has successfully graduated the first cohort of Armed Forces conscripts across nine technological specializations, with several graduates receiving immediate ",
+        "extractor": "llm"
+      },
+      {
+        "block_id": "home_div_0041",
+        "page_url": "https://iti.gov.eg/",
+        "quote": "85% Annual Employment Rate 500+ Industrial Partners",
+        "extractor": "llm"
+      },
+      {
+        "block_id": "about-us_div_0042",
+        "page_url": "https://iti.gov.eg/about-us",
+        "quote": "Information Technology Institute works to empower Egypt’s youth with the tools and skills needed to develop and live in a knowledge-based society, while using the ICT tools to boost the country’s comp",
+        "extractor": "llm"
+      }
+    ],
+    "confidence": "high",
+    "source_type": "inferred"
+  },
+  "category": {
+    "value": "education",
+    "evidence": [
+      {
+        "block_id": "home_div_0035",
+        "page_url": "https://iti.gov.eg/",
+        "quote": "leveraging technology to enhance learning and education.",
+        "extractor": "llm"
+      },
+      {
+        "block_id": "about-us_div_0020",
+        "page_url": "https://iti.gov.eg/about-us",
+        "quote": "Supporting Egyptian youth to improve their career opportunities by developing their skills and preparing them for highly in-demand jobs",
+        "extractor": "llm"
+      },
+      {
+        "block_id": "about-us_div_0023",
+        "page_url": "https://iti.gov.eg/about-us",
+        "quote": "A Reference Hub in Developing ICT Professional Talents.",
+        "extractor": "llm"
+      },
+      {
+        "block_id": "home_div_0029",
+        "page_url": "https://iti.gov.eg/",
+        "quote": "Intensive Training Program Commencement A new training cohort of the Intensive Training Program is launched across all ITI branches through cutting-edge technological tracks Read More",
+        "extractor": "llm"
+      }
+    ],
+    "confidence": "high",
+    "source_type": "inferred"
+  },
+  "offerings": [
+    {
+      "name": "Intensive Training Program",
+      "short_description": "A new training cohort of the Intensive Training Program is launched across all ITI branches through cutting-edge technological tracks",
+      "price_text": null,
+      "page_url": "https://iti.gov.eg/",
+      "evidence": [
+        {
+          "block_id": "home_div_0029",
+          "page_url": "https://iti.gov.eg/",
+          "quote": "Intensive Training Program Commencement A new training cohort of the Intensive Training Program is launched across all ITI branches through cutting-edge technological tracks Read More",
+          "extractor": "llm"
+        },
+        {
+          "block_id": "home_div_0030",
+          "page_url": "https://iti.gov.eg/",
+          "quote": "Intensive Training Program Commencement",
+          "extractor": "llm"
+        },
+        {
+          "block_id": "home_div_0031",
+          "page_url": "https://iti.gov.eg/",
+          "quote": "A new training cohort of the Intensive Training Program is launched across all ITI branches through cutting-edge technological tracks",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "name": "Mahara-Tech ( ITI E-Learning Platform )",
+      "short_description": "Mahara-Tech Platform has been awarded the UNESCO King Hamad Bin Isa Al-Khalifa Prize for the Use of ICT in Education 2025, recognizing its outstanding contribution to leveraging technology to enhance learning and education.",
+      "price_text": null,
+      "page_url": "https://iti.gov.eg/",
+      "evidence": [
+        {
+          "block_id": "home_div_0033",
+          "page_url": "https://iti.gov.eg/",
+          "quote": "Mahara-Tech ( ITI E-Learning Platform ) Mahara-Tech Platform has been awarded the UNESCO King Hamad Bin Isa Al-Khalifa Prize for the Use of ICT in Education 2025, recognizing its outstanding contribut",
+          "extractor": "llm"
+        },
+        {
+          "block_id": "home_div_0034",
+          "page_url": "https://iti.gov.eg/",
+          "quote": "Mahara-Tech ( ITI E-Learning Platform )",
+          "extractor": "llm"
+        },
+        {
+          "block_id": "home_div_0035",
+          "page_url": "https://iti.gov.eg/",
+          "quote": "Mahara-Tech Platform has been awarded the UNESCO King Hamad Bin Isa Al-Khalifa Prize for the Use of ICT in Education 2025, recognizing its outstanding contribution to leveraging technology to enhance ",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "name": "DATA SCIENCE",
+      "short_description": "This track focuses on teaching the fundamental concepts of data science. It covers topics such as data exploration, data preprocessing, statistical analysis, machine learning, and data visualization.",
+      "price_text": null,
+      "page_url": "https://iti.gov.eg/diplomaStructure/139758dc-e1ee-4d2c-ba87-08dbe615d378/tracks/ce47193b-e8a0-4452-627f-08dbe68d3d73/134636fe-7a41-49b0-fe32-08dbe75ac461",
+      "evidence": [
+        {
+          "block_id": "diplomastructure_139758dc-e1ee-4d2c-ba87_div_0011",
+          "page_url": "https://iti.gov.eg/diplomaStructure/139758dc-e1ee-4d2c-ba87-08dbe615d378/tracks/ce47193b-e8a0-4452-627f-08dbe68d3d73/134636fe-7a41-49b0-fe32-08dbe75ac461",
+          "quote": "DATA SCIENCE",
+          "extractor": "llm"
+        },
+        {
+          "block_id": "diplomastructure_139758dc-e1ee-4d2c-ba87_div_0016",
+          "page_url": "https://iti.gov.eg/diplomaStructure/139758dc-e1ee-4d2c-ba87-08dbe615d378/tracks/ce47193b-e8a0-4452-627f-08dbe68d3d73/134636fe-7a41-49b0-fe32-08dbe75ac461",
+          "quote": "Track Description A Brief Description About Track This track focuses on teaching the fundamental concepts of data science. It covers topics such as data exploration, data preprocessing, statistical an",
+          "extractor": "llm"
+        },
+        {
+          "block_id": "diplomastructure_139758dc-e1ee-4d2c-ba87_div_0020",
+          "page_url": "https://iti.gov.eg/diplomaStructure/139758dc-e1ee-4d2c-ba87-08dbe615d378/tracks/ce47193b-e8a0-4452-627f-08dbe68d3d73/134636fe-7a41-49b0-fe32-08dbe75ac461",
+          "quote": "This track focuses on teaching the fundamental concepts of data science. It covers topics such as data exploration, data preprocessing, statistical analysis, machine learning, and data visualization. ",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "name": "cybersecurity training via ITI’s Universities Initiative",
+      "short_description": "Participants received cybersecurity training via ITI’s Universities Initiative.",
+      "price_text": null,
+      "page_url": "https://iti.gov.eg/",
+      "evidence": [
+        {
+          "block_id": "home_div_0019",
+          "page_url": "https://iti.gov.eg/",
+          "quote": "Participants received cybersecurity training via ITI’s Universities Initiative.",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high"
+    },
+    {
+      "name": "Game Jam 2026",
+      "short_description": "This one-week event brings together developers, designers, and storytellers to collaborate, create original games, and innovate under time constraints.",
+      "price_text": null,
+      "page_url": "https://iti.gov.eg/",
+      "evidence": [
+        {
+          "block_id": "home_div_0021",
+          "page_url": "https://iti.gov.eg/",
+          "quote": "ITI Game Jam 2026 – where Creativity Meets Innovation The ITI Game Development Academy proudly launches Game Jam 2026, hosted at Smart Village from February 7–14, 2026. This one-week event brings toge",
+          "extractor": "llm"
+        },
+        {
+          "block_id": "home_div_0023",
+          "page_url": "https://iti.gov.eg/",
+          "quote": "The ITI Game Development Academy proudly launches Game Jam 2026, hosted at Smart Village from February 7–14, 2026. This one-week event brings together developers, designers, and storytellers to collab",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high"
+    }
+  ],
+  "pricing_visible": {
+    "value": true,
+    "evidence": [
+      {
+        "block_id": "home_div_0017",
+        "page_url": "https://iti.gov.eg/",
+        "quote": "ITI Hosts Egyptian Qualifiers for Global Cyber Championship\nITI hosted the Egyptian qualifiers for the Global Cyber Championship at Knowledge City, New Administrative Capital, with 70+ teams from 60+ ",
+        "extractor": "rule:currency_pattern"
+      },
+      {
+        "block_id": "home_div_0019",
+        "page_url": "https://iti.gov.eg/",
+        "quote": "ITI hosted the Egyptian qualifiers for the Global Cyber Championship at Knowledge City, New Administrative Capital, with 70+ teams from 60+ universities and nearly 400 students competing. Participants",
+        "extractor": "rule:currency_pattern"
+      }
+    ],
+    "confidence": "high",
+    "source_type": "extracted"
+  },
+  "pricing_posture": {
+    "value": null,
+    "evidence": [],
+    "confidence": "none",
+    "source_type": "missing"
+  },
+  "pricing_extraction_note": null,
+  "offerings_extraction_note": null,
+  "llm_silent_failure": false,
+  "audience_type": {
+    "value": "mixed",
+    "evidence": [
+      {
+        "block_id": "about-us_div_0020",
+        "page_url": "https://iti.gov.eg/about-us",
+        "quote": "Supporting Egyptian youth to improve their career opportunities",
+        "extractor": "llm"
+      },
+      {
+        "block_id": "home_div_0039",
+        "page_url": "https://iti.gov.eg/",
+        "quote": "graduated the first cohort of Armed Forces conscripts",
+        "extractor": "llm"
+      },
+      {
+        "block_id": "home_div_0019",
+        "page_url": "https://iti.gov.eg/",
+        "quote": "70+ teams from 60+ universities and nearly 400 students competing",
+        "extractor": "llm"
+      },
+      {
+        "block_id": "home_div_0059",
+        "page_url": "https://iti.gov.eg/",
+        "quote": "Our Partners Strategic Partnerships That Align Talent With Business Need",
+        "extractor": "llm"
+      },
+      {
+        "block_id": "about-us_div_0042",
+        "page_url": "https://iti.gov.eg/about-us",
+        "quote": "The MCIT strategy is to develop the ICT infrastructure and industry",
+        "extractor": "llm"
+      }
+    ],
+    "confidence": "high",
+    "source_type": "inferred"
+  },
+  "audience_signals": [
+    {
+      "value": "Egyptian youth",
+      "evidence": [
+        {
+          "block_id": "about-us_div_0020",
+          "page_url": "https://iti.gov.eg/about-us",
+          "quote": "Supporting Egyptian youth to improve their career opportunities",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high",
+      "source_type": "inferred"
+    },
+    {
+      "value": "Armed Forces conscripts",
+      "evidence": [
+        {
+          "block_id": "home_div_0039",
+          "page_url": "https://iti.gov.eg/",
+          "quote": "graduated the first cohort of Armed Forces conscripts",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high",
+      "source_type": "inferred"
+    },
+    {
+      "value": "students from universities",
+      "evidence": [
+        {
+          "block_id": "home_div_0019",
+          "page_url": "https://iti.gov.eg/",
+          "quote": "nearly 400 students competing. Participants received cybersecurity training via ITI’s Universities Initiative.",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high",
+      "source_type": "inferred"
+    },
+    {
+      "value": "Software programming and Artificial intelligence Digitopia 2025 winners across all school stages",
+      "evidence": [
+        {
+          "block_id": "home_div_0027",
+          "page_url": "https://iti.gov.eg/",
+          "quote": "ITI continues empowering Software programming and Artificial intelligence Digitopia 2025 winners across all school stages – primary, preparatory and secondary",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high",
+      "source_type": "inferred"
+    },
+    {
+      "value": "Industrial Partners",
+      "evidence": [
+        {
+          "block_id": "home_div_0059",
+          "page_url": "https://iti.gov.eg/",
+          "quote": "Our Partners Strategic Partnerships That Align Talent With Business Need",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high",
+      "source_type": "inferred"
+    }
+  ],
+  "value_propositions": [
+    {
+      "value": "Improving career opportunities for youth in highly in-demand jobs",
+      "evidence": [
+        {
+          "block_id": "about-us_div_0020",
+          "page_url": "https://iti.gov.eg/about-us",
+          "quote": "Supporting Egyptian youth to improve their career opportunities by developing their skills and preparing them for highly in-demand jobs",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high",
+      "source_type": "inferred"
+    },
+    {
+      "value": "High annual employment rate for graduates",
+      "evidence": [
+        {
+          "block_id": "home_div_0041",
+          "page_url": "https://iti.gov.eg/",
+          "quote": "85% Annual Employment Rate",
+          "extractor": "llm"
+        },
+        {
+          "block_id": "home_div_0099",
+          "page_url": "https://iti.gov.eg/",
+          "quote": "sustaining its graduates’ employment percentage to 85 prior their graduation.",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high",
+      "source_type": "inferred"
+    },
+    {
+      "value": "Immediate employment offers through industry partners",
+      "evidence": [
+        {
+          "block_id": "home_div_0039",
+          "page_url": "https://iti.gov.eg/",
+          "quote": "several graduates receiving immediate employment offers through ITI’s industry partners upon completing their military service.",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high",
+      "source_type": "inferred"
+    },
+    {
+      "value": "Award-winning e-learning platform (Mahara-Tech)",
+      "evidence": [
+        {
+          "block_id": "home_div_0035",
+          "page_url": "https://iti.gov.eg/",
+          "quote": "Mahara-Tech Platform has been awarded the UNESCO King Hamad Bin Isa Al-Khalifa Prize for the Use of ICT in Education 2025",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high",
+      "source_type": "inferred"
+    },
+    {
+      "value": "Continuously updated training portfolio based on global tech trends",
+      "evidence": [
+        {
+          "block_id": "home_div_0099",
+          "page_url": "https://iti.gov.eg/",
+          "quote": "Over 30 years, ITI has kept updating its training portfolio through continuous monitoring for the future global tech trends",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high",
+      "source_type": "inferred"
+    }
+  ],
+  "other_unique_insights": [
+    {
+      "value": "700k+ Beneficiaries",
+      "evidence": [
+        {
+          "block_id": "home_div_0041",
+          "page_url": "https://iti.gov.eg/",
+          "quote": "700k+ Beneficiaries",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high",
+      "source_type": "inferred"
+    },
+    {
+      "value": "500+ Industrial Partners",
+      "evidence": [
+        {
+          "block_id": "home_div_0041",
+          "page_url": "https://iti.gov.eg/",
+          "quote": "500+ Industrial Partners",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high",
+      "source_type": "inferred"
+    },
+    {
+      "value": "Mahara-Tech Platform awarded the UNESCO King Hamad Bin Isa Al-Khalifa Prize for the Use of ICT in Education 2025",
+      "evidence": [
+        {
+          "block_id": "home_div_0035",
+          "page_url": "https://iti.gov.eg/",
+          "quote": "Mahara-Tech Platform has been awarded the UNESCO King Hamad Bin Isa Al-Khalifa Prize for the Use of ICT in Education 2025",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high",
+      "source_type": "inferred"
+    }
+  ],
+  "tone_of_voice": {
+    "value": "professional",
+    "evidence": [
+      {
+        "block_id": "about-us_div_0020",
+        "page_url": "https://iti.gov.eg/about-us",
+        "quote": "Supporting Egyptian youth to improve their career opportunities by developing their skills and preparing them for highly in-demand jobs, and related vast technologies to fulfill today’s needs, and tom",
+        "extractor": "llm"
+      },
+      {
+        "block_id": "home_div_0062",
+        "page_url": "https://iti.gov.eg/",
+        "quote": "Strategic Partnerships That Align Talent With Business Need , Co-Create Solutions, And Fuel Sustainable Innovation & Growth.",
+        "extractor": "llm"
+      },
+      {
+        "block_id": "home_div_0031",
+        "page_url": "https://iti.gov.eg/",
+        "quote": "A new training cohort of the Intensive Training Program is launched across all ITI branches through cutting-edge technological tracks",
+        "extractor": "llm"
+      }
+    ],
+    "confidence": "high",
+    "source_type": "inferred"
+  },
+  "locations": [],
+  "service_areas": [
+    {
+      "value": "Smart Village",
+      "evidence": [
+        {
+          "block_id": "branches_brancheslisting_div_0016",
+          "page_url": "https://iti.gov.eg/branches/branchesListing",
+          "quote": "Smart Village New Capital Cairo University Alexandria Assiut Aswan Beni Suef Fayoum Ismailia Mansoura Menofia Minya Qena Sohag Tanta Zagazig New Valley Damanhour Al Arish Banha Port Said Damietta",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high",
+      "source_type": "inferred"
+    },
+    {
+      "value": "New Capital",
+      "evidence": [
+        {
+          "block_id": "branches_brancheslisting_div_0016",
+          "page_url": "https://iti.gov.eg/branches/branchesListing",
+          "quote": "Smart Village New Capital Cairo University Alexandria Assiut Aswan Beni Suef Fayoum Ismailia Mansoura Menofia Minya Qena Sohag Tanta Zagazig New Valley Damanhour Al Arish Banha Port Said Damietta",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high",
+      "source_type": "inferred"
+    },
+    {
+      "value": "Cairo University",
+      "evidence": [
+        {
+          "block_id": "branches_brancheslisting_div_0016",
+          "page_url": "https://iti.gov.eg/branches/branchesListing",
+          "quote": "Smart Village New Capital Cairo University Alexandria Assiut Aswan Beni Suef Fayoum Ismailia Mansoura Menofia Minya Qena Sohag Tanta Zagazig New Valley Damanhour Al Arish Banha Port Said Damietta",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high",
+      "source_type": "inferred"
+    },
+    {
+      "value": "Alexandria",
+      "evidence": [
+        {
+          "block_id": "branches_brancheslisting_div_0016",
+          "page_url": "https://iti.gov.eg/branches/branchesListing",
+          "quote": "Smart Village New Capital Cairo University Alexandria Assiut Aswan Beni Suef Fayoum Ismailia Mansoura Menofia Minya Qena Sohag Tanta Zagazig New Valley Damanhour Al Arish Banha Port Said Damietta",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high",
+      "source_type": "inferred"
+    },
+    {
+      "value": "Assiut",
+      "evidence": [
+        {
+          "block_id": "branches_brancheslisting_div_0016",
+          "page_url": "https://iti.gov.eg/branches/branchesListing",
+          "quote": "Smart Village New Capital Cairo University Alexandria Assiut Aswan Beni Suef Fayoum Ismailia Mansoura Menofia Minya Qena Sohag Tanta Zagazig New Valley Damanhour Al Arish Banha Port Said Damietta",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high",
+      "source_type": "inferred"
+    },
+    {
+      "value": "Aswan",
+      "evidence": [
+        {
+          "block_id": "branches_brancheslisting_div_0016",
+          "page_url": "https://iti.gov.eg/branches/branchesListing",
+          "quote": "Smart Village New Capital Cairo University Alexandria Assiut Aswan Beni Suef Fayoum Ismailia Mansoura Menofia Minya Qena Sohag Tanta Zagazig New Valley Damanhour Al Arish Banha Port Said Damietta",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high",
+      "source_type": "inferred"
+    },
+    {
+      "value": "Beni Suef",
+      "evidence": [
+        {
+          "block_id": "branches_brancheslisting_div_0016",
+          "page_url": "https://iti.gov.eg/branches/branchesListing",
+          "quote": "Smart Village New Capital Cairo University Alexandria Assiut Aswan Beni Suef Fayoum Ismailia Mansoura Menofia Minya Qena Sohag Tanta Zagazig New Valley Damanhour Al Arish Banha Port Said Damietta",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high",
+      "source_type": "inferred"
+    },
+    {
+      "value": "Fayoum",
+      "evidence": [
+        {
+          "block_id": "branches_brancheslisting_div_0016",
+          "page_url": "https://iti.gov.eg/branches/branchesListing",
+          "quote": "Smart Village New Capital Cairo University Alexandria Assiut Aswan Beni Suef Fayoum Ismailia Mansoura Menofia Minya Qena Sohag Tanta Zagazig New Valley Damanhour Al Arish Banha Port Said Damietta",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high",
+      "source_type": "inferred"
+    },
+    {
+      "value": "Ismailia",
+      "evidence": [
+        {
+          "block_id": "branches_brancheslisting_div_0016",
+          "page_url": "https://iti.gov.eg/branches/branchesListing",
+          "quote": "Smart Village New Capital Cairo University Alexandria Assiut Aswan Beni Suef Fayoum Ismailia Mansoura Menofia Minya Qena Sohag Tanta Zagazig New Valley Damanhour Al Arish Banha Port Said Damietta",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high",
+      "source_type": "inferred"
+    },
+    {
+      "value": "Mansoura",
+      "evidence": [
+        {
+          "block_id": "branches_brancheslisting_div_0016",
+          "page_url": "https://iti.gov.eg/branches/branchesListing",
+          "quote": "Smart Village New Capital Cairo University Alexandria Assiut Aswan Beni Suef Fayoum Ismailia Mansoura Menofia Minya Qena Sohag Tanta Zagazig New Valley Damanhour Al Arish Banha Port Said Damietta",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high",
+      "source_type": "inferred"
+    }
+  ],
+  "languages": [
+    "en"
+  ],
+  "hours": null,
+  "contact_channels": {
+    "phones": [
+      {
+        "e164": "+20235355524",
+        "raw": "17002\nITIinfo@iti.gov.eg\nHOME\nABOUT ITI\nSERVICES\nBRANCHES\nNEWS\nCONTACT US\nHome > Contact Us\nContact Form\nPlease Fill In ",
+        "is_short_code": false
+      },
+      {
+        "e164": "+20235355656",
+        "raw": "BRANCHES\nHome > Branches\nSmart Village\nNew Capital\nCairo University\nAlexandria\nAssiut\nAswan\nBeni Suef\nFayoum\nIsmailia\nMa",
+        "is_short_code": false
+      },
+      {
+        "e164": "+20235355580",
+        "raw": "Meet The Leaders\nAmr El Shafey\nChairman Assistant for Training and Projects\namshafey@iti.gov.eg\n+202-35355580\nMohamed Ha",
+        "is_short_code": false
+      },
+      {
+        "e164": "+20235355507",
+        "raw": "Meet The Leaders\nAmr El Shafey\nChairman Assistant for Training and Projects\namshafey@iti.gov.eg\n+202-35355580\nMohamed Ha",
+        "is_short_code": false
+      },
+      {
+        "e164": "+20235355583",
+        "raw": "Meet The Leaders\nAmr El Shafey\nChairman Assistant for Training and Projects\namshafey@iti.gov.eg\n+202-35355580\nMohamed Ha",
+        "is_short_code": false
+      },
+      {
+        "e164": null,
+        "raw": "17002",
+        "is_short_code": true
+      }
+    ],
+    "emails": [
+      "ITIinfo@iti.gov.eg",
+      "amshafey@iti.gov.eg",
+      "mohanafy@iti.gov.eg",
+      "ahloutfy@iti.gov.eg",
+      "shsharaf@iti.gov.eg"
+    ],
+    "whatsapp_numbers": [
+      "+20235355524"
+    ],
+    "has_contact_form": true,
+    "physical_addresses": [],
+    "map_embed_present": true,
+    "evidence": [
+      {
+        "block_id": "contact-us_div_0000",
+        "page_url": "https://iti.gov.eg/contact-us",
+        "quote": "17002\nITIinfo@iti.gov.eg\nHOME\nABOUT ITI\nSERVICES\nBRANCHES\nNEWS\nCONTACT US\nHome > Contact Us\nContact Form\nPlease Fill In ",
+        "extractor": "rule:phone"
+      },
+      {
+        "block_id": "branches_brancheslisting_div_0009",
+        "page_url": "https://iti.gov.eg/branches/branchesListing",
+        "quote": "BRANCHES\nHome > Branches\nSmart Village\nNew Capital\nCairo University\nAlexandria\nAssiut\nAswan\nBeni Suef\nFayoum\nIsmailia\nMa",
+        "extractor": "rule:phone"
+      },
+      {
+        "block_id": "about-us_div_0048",
+        "page_url": "https://iti.gov.eg/about-us",
+        "quote": "Meet The Leaders\nAmr El Shafey\nChairman Assistant for Training and Projects\namshafey@iti.gov.eg\n+202-35355580\nMohamed Ha",
+        "extractor": "rule:phone"
+      },
+      {
+        "block_id": "about-us_div_0048",
+        "page_url": "https://iti.gov.eg/about-us",
+        "quote": "Meet The Leaders\nAmr El Shafey\nChairman Assistant for Training and Projects\namshafey@iti.gov.eg\n+202-35355580\nMohamed Ha",
+        "extractor": "rule:phone"
+      },
+      {
+        "block_id": "about-us_div_0048",
+        "page_url": "https://iti.gov.eg/about-us",
+        "quote": "Meet The Leaders\nAmr El Shafey\nChairman Assistant for Training and Projects\namshafey@iti.gov.eg\n+202-35355580\nMohamed Ha",
+        "extractor": "rule:phone"
+      },
+      {
+        "block_id": null,
+        "page_url": "https://iti.gov.eg/",
+        "quote": "17002",
+        "extractor": "rule:phone_hotline"
+      },
+      {
+        "block_id": "home_div_0000",
+        "page_url": "https://iti.gov.eg/",
+        "quote": "ITIinfo@iti.gov.eg",
+        "extractor": "rule:email"
+      },
+      {
+        "block_id": "about-us_div_0048",
+        "page_url": "https://iti.gov.eg/about-us",
+        "quote": "amshafey@iti.gov.eg",
+        "extractor": "rule:email"
+      },
+      {
+        "block_id": "about-us_div_0048",
+        "page_url": "https://iti.gov.eg/about-us",
+        "quote": "mohanafy@iti.gov.eg",
+        "extractor": "rule:email"
+      },
+      {
+        "block_id": "about-us_div_0048",
+        "page_url": "https://iti.gov.eg/about-us",
+        "quote": "ahloutfy@iti.gov.eg",
+        "extractor": "rule:email"
+      },
+      {
+        "block_id": "about-us_div_0048",
+        "page_url": "https://iti.gov.eg/about-us",
+        "quote": "shsharaf@iti.gov.eg",
+        "extractor": "rule:email"
+      },
+      {
+        "block_id": null,
+        "page_url": "https://iti.gov.eg/contact-us",
+        "quote": "https://wa.me/+20235355524",
+        "extractor": "rule:wa_link"
+      },
+      {
+        "block_id": null,
+        "page_url": "https://iti.gov.eg/branches/branchesListing",
+        "quote": "https://maps.google.com/maps?q=30.07116,31.02102&hl=en&t=&z=15&ie=UTF8&iwloc=&output=embed",
+        "extractor": "rule:map_iframe:google_maps"
+      },
+      {
+        "block_id": null,
+        "page_url": "https://iti.gov.eg/contact-us",
+        "quote": "<form>",
+        "extractor": "rule:form_present"
+      }
+    ]
+  },
+  "existing_ctas": [
+    {
+      "value": "Contact us",
+      "evidence": [
+        {
+          "block_id": "home_a_0106",
+          "page_url": "https://iti.gov.eg/",
+          "quote": "Contact us",
+          "extractor": "rule:cta_anchor"
+        }
+      ],
+      "confidence": "high",
+      "source_type": "extracted"
+    },
+    {
+      "value": "download Track info",
+      "evidence": [
+        {
+          "block_id": "diplomastructure_139758dc-e1ee-4d2c-ba87_div_0029",
+          "page_url": "https://iti.gov.eg/diplomaStructure/139758dc-e1ee-4d2c-ba87-08dbe615d378/tracks/ce47193b-e8a0-4452-627f-08dbe68d3d73/134636fe-7a41-49b0-fe32-08dbe75ac461",
+          "quote": "download Track info",
+          "extractor": "rule:cta_anchor"
+        }
+      ],
+      "confidence": "high",
+      "source_type": "extracted"
+    }
+  ],
+  "social_presence": [
+    {
+      "platform": "facebook",
+      "url": "https://www.facebook.com/ITI.eg",
+      "evidence": [
+        {
+          "block_id": null,
+          "page_url": "https://iti.gov.eg/",
+          "quote": "https://www.facebook.com/ITI.eg",
+          "extractor": "rule:social_link"
+        }
+      ]
+    },
+    {
+      "platform": "linkedin",
+      "url": "https://eg.linkedin.com/school/information-technology-institute-iti-/",
+      "evidence": [
+        {
+          "block_id": null,
+          "page_url": "https://iti.gov.eg/",
+          "quote": "https://eg.linkedin.com/school/information-technology-institute-iti-/",
+          "extractor": "rule:social_link"
+        }
+      ]
+    },
+    {
+      "platform": "youtube",
+      "url": "https://www.youtube.com/user/itichannel",
+      "evidence": [
+        {
+          "block_id": null,
+          "page_url": "https://iti.gov.eg/",
+          "quote": "https://www.youtube.com/user/itichannel",
+          "extractor": "rule:social_link"
+        }
+      ]
+    },
+    {
+      "platform": "twitter",
+      "url": "https://x.com/iti_channel",
+      "evidence": [
+        {
+          "block_id": null,
+          "page_url": "https://iti.gov.eg/",
+          "quote": "https://x.com/iti_channel",
+          "extractor": "rule:social_link"
+        }
+      ]
+    },
+    {
+      "platform": "whatsapp",
+      "url": "https://wa.me/+20235355524",
+      "evidence": [
+        {
+          "block_id": "contact-us_div_0016",
+          "page_url": "https://iti.gov.eg/contact-us",
+          "quote": "+20235355524",
+          "extractor": "rule:social_link"
+        }
+      ]
+    }
+  ],
+  "trust_signals": [
+    {
+      "value": "Awarded the UNESCO King Hamad Bin Isa Al-Khalifa Prize for the Use of ICT in Education 2025",
+      "evidence": [
+        {
+          "block_id": "home_div_0035",
+          "page_url": "https://iti.gov.eg/",
+          "quote": "Mahara-Tech Platform has been awarded the UNESCO King Hamad Bin Isa Al-Khalifa Prize for the Use of ICT in Education 2025",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high",
+      "source_type": "inferred"
+    },
+    {
+      "value": "85% Annual Employment Rate",
+      "evidence": [
+        {
+          "block_id": "home_div_0041",
+          "page_url": "https://iti.gov.eg/",
+          "quote": "85% Annual Employment Rate",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high",
+      "source_type": "inferred"
+    },
+    {
+      "value": "500+ Industrial Partners",
+      "evidence": [
+        {
+          "block_id": "home_div_0041",
+          "page_url": "https://iti.gov.eg/",
+          "quote": "500+ Industrial Partners",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high",
+      "source_type": "inferred"
+    },
+    {
+      "value": "Over 30 years",
+      "evidence": [
+        {
+          "block_id": "home_div_0099",
+          "page_url": "https://iti.gov.eg/",
+          "quote": "Over 30 years, ITI has kept updating its training portfolio",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high",
+      "source_type": "inferred"
+    },
+    {
+      "value": "700k+ Beneficiaries",
+      "evidence": [
+        {
+          "block_id": "home_div_0041",
+          "page_url": "https://iti.gov.eg/",
+          "quote": "700k+ Beneficiaries",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high",
+      "source_type": "inferred"
+    },
+    {
+      "value": "Testimonial from Mr. Nils Vogel DOP At Vector International",
+      "evidence": [
+        {
+          "block_id": "home_div_0077",
+          "page_url": "https://iti.gov.eg/",
+          "quote": "I am deeply pleased with the fruitful collaboration with the Ministry of Communications and Informat...",
+          "extractor": "llm"
+        },
+        {
+          "block_id": "home_div_0073",
+          "page_url": "https://iti.gov.eg/",
+          "quote": "Mr. Nils Vogel DOP At Vector International",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high",
+      "source_type": "inferred"
+    },
+    {
+      "value": "Testimonial from Mr. Luz Mauch DXC Luxoft Vice President",
+      "evidence": [
+        {
+          "block_id": "home_div_0083",
+          "page_url": "https://iti.gov.eg/",
+          "quote": "The Information Technology Institute is graduating highly skilled Androide Automotive developers.",
+          "extractor": "llm"
+        },
+        {
+          "block_id": "home_div_0079",
+          "page_url": "https://iti.gov.eg/",
+          "quote": "Mr. Luz Mauch DXC Luxoft Vice President",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high",
+      "source_type": "inferred"
+    },
+    {
+      "value": "Testimonial from Dr. John Kelly Vice President Research, IBM",
+      "evidence": [
+        {
+          "block_id": "home_div_0089",
+          "page_url": "https://iti.gov.eg/",
+          "quote": "I had the opportunity to talk to the ITI students; I can assure you that you have the most talented ...",
+          "extractor": "llm"
+        },
+        {
+          "block_id": "home_div_0085",
+          "page_url": "https://iti.gov.eg/",
+          "quote": "Dr. John Kelly Vice President Research, IBM",
+          "extractor": "llm"
+        }
+      ],
+      "confidence": "high",
+      "source_type": "inferred"
+    }
+  ],
+  "visual": {
+    "palette_hex": [
+      "#d39244",
+      "#26404b",
+      "#87a0b5",
+      "#c5928b",
+      "#ac5660"
+    ],
+    "palette_dominance": [
+      0.3355,
+      0.1968,
+      0.1586,
+      0.1577,
+      0.1513
+    ],
+    "primary_color": "#d39244",
+    "body_font": "Poppins",
+    "heading_font": null,
+    "logo_url": "https://iti.gov.eg/assets/images/ColoredLogo.svg",
+    "hero_image_url": null,
+    "content_images": [
+      "https://iti.gov.eg/assets/images/others/branches/HeadOffice.png",
+      "https://iti.gov.eg/assets/images/others/branches/Creativa-word.png",
+      "https://rgateway.iti.gov.eg/Resources/Resources/GetResourceFile?PublicId=8f6e27f7-ba96-47f8-b7d0-f3aed4bd8ef7&size=1000",
+      "https://iti.gov.eg/assets/images/staff/Minister.png",
+      "https://iti.gov.eg/assets/images/staff/HebaSaleh.png",
+      "https://iti.gov.eg/assets/images/staff/AmrElShafee.png",
+      "https://iti.gov.eg/assets/images/staff/MohamedHanafi.png",
+      "https://iti.gov.eg/assets/images/staff/AhmedLotfy.png",
+      "https://iti.gov.eg/assets/images/staff/SheriefSharaf.png",
+      "https://iti.gov.eg/assets/images/staff/HishamElSherief.png",
+      "https://iti.gov.eg/assets/images/staff/NabilSaed.png",
+      "https://iti.gov.eg/assets/images/staff/NabilElNady.png"
+    ],
+    "primary_logo": {
+      "src": "https://iti.gov.eg/assets/images/ColoredLogo.svg",
+      "alt": null,
+      "text_wordmark": null,
+      "source_type": "svg_file",
+      "classification": "primary_brand_logo",
+      "confidence": 0.6,
+      "score": 60.0,
+      "reasons": [
+        "logo_keyword",
+        "brand_name_match",
+        "svg_file",
+        "suitable_logo_shape"
+      ],
+      "width": 187,
+      "height": 93,
+      "aspect_ratio": 2.011
+    },
+    "logo_candidates": [
+      {
+        "src": "https://iti.gov.eg/assets/images/ColoredLogo.svg",
+        "alt": null,
+        "text_wordmark": null,
+        "source_type": "svg_file",
+        "classification": "primary_brand_logo",
+        "confidence": 0.6,
+        "score": 60.0,
+        "reasons": [
+          "logo_keyword",
+          "brand_name_match",
+          "svg_file",
+          "suitable_logo_shape"
+        ],
+        "width": 187,
+        "height": 93,
+        "aspect_ratio": 2.011
+      },
+      {
+        "src": "https://iti.gov.eg/assets/images/WhiteLogo.svg",
+        "alt": null,
+        "text_wordmark": null,
+        "source_type": "svg_file",
+        "classification": "primary_brand_logo",
+        "confidence": 0.6,
+        "score": 60.0,
+        "reasons": [
+          "logo_keyword",
+          "brand_name_match",
+          "svg_file",
+          "suitable_logo_shape"
+        ],
+        "width": 115,
+        "height": 68,
+        "aspect_ratio": 1.691
+      },
+      {
+        "src": "https://iti.gov.eg/assets/images/parteners/Epita.png",
+        "alt": "Epita",
+        "text_wordmark": null,
+        "source_type": "img",
+        "classification": "partner_logo",
+        "confidence": 0.26,
+        "score": 26.0,
+        "reasons": [
+          "brand_name_match",
+          "img",
+          "suitable_logo_shape",
+          "classified_partner_logo"
+        ],
+        "width": 157,
+        "height": 90,
+        "aspect_ratio": 1.744
+      },
+      {
+        "src": "https://iti.gov.eg/assets/images/parteners/Paderborn.png",
+        "alt": "Paderborn",
+        "text_wordmark": null,
+        "source_type": "img",
+        "classification": "partner_logo",
+        "confidence": 0.26,
+        "score": 26.0,
+        "reasons": [
+          "brand_name_match",
+          "img",
+          "suitable_logo_shape",
+          "classified_partner_logo"
+        ],
+        "width": 223,
+        "height": 76,
+        "aspect_ratio": 2.934
+      },
+      {
+        "src": "https://iti.gov.eg/assets/images/parteners/ArabAcademic.png",
+        "alt": "Arab Academy",
+        "text_wordmark": null,
+        "source_type": "img",
+        "classification": "partner_logo",
+        "confidence": 0.26,
+        "score": 26.0,
+        "reasons": [
+          "brand_name_match",
+          "img",
+          "suitable_logo_shape",
+          "classified_partner_logo"
+        ],
+        "width": 82,
+        "height": 81,
+        "aspect_ratio": 1.012
+      },
+      {
+        "src": "https://iti.gov.eg/assets/images/parteners/AssuitUniv.png",
+        "alt": "Assuit University",
+        "text_wordmark": null,
+        "source_type": "img",
+        "classification": "partner_logo",
+        "confidence": 0.26,
+        "score": 26.0,
+        "reasons": [
+          "brand_name_match",
+          "img",
+          "suitable_logo_shape",
+          "classified_partner_logo"
+        ],
+        "width": 115,
+        "height": 81,
+        "aspect_ratio": 1.42
+      },
+      {
+        "src": "https://iti.gov.eg/assets/images/parteners/AswanUniv.png",
+        "alt": "Aswan University",
+        "text_wordmark": null,
+        "source_type": "img",
+        "classification": "partner_logo",
+        "confidence": 0.26,
+        "score": 26.0,
+        "reasons": [
+          "brand_name_match",
+          "img",
+          "suitable_logo_shape",
+          "classified_partner_logo"
+        ],
+        "width": 80,
+        "height": 81,
+        "aspect_ratio": 0.988
+      },
+      {
+        "src": "https://iti.gov.eg/assets/images/parteners/link.png",
+        "alt": "Link dev",
+        "text_wordmark": null,
+        "source_type": "img",
+        "classification": "partner_logo",
+        "confidence": 0.26,
+        "score": 26.0,
+        "reasons": [
+          "brand_name_match",
+          "img",
+          "suitable_logo_shape",
+          "classified_partner_logo"
+        ],
+        "width": 75,
+        "height": 46,
+        "aspect_ratio": 1.63
+      },
+      {
+        "src": "https://iti.gov.eg/assets/images/ColoredLogoEmpty.ico",
+        "alt": "icon",
+        "text_wordmark": null,
+        "source_type": "favicon",
+        "classification": "favicon",
+        "confidence": 0.22,
+        "score": 22.0,
+        "reasons": [
+          "logo_keyword",
+          "brand_name_match",
+          "suitable_logo_shape",
+          "fallback_icon_only"
+        ],
+        "width": null,
+        "height": null,
+        "aspect_ratio": null
+      },
+      {
+        "src": "https://iti.gov.eg/assets/images/parteners/AlexUniv.png",
+        "alt": "Alexandria University",
+        "text_wordmark": null,
+        "source_type": "img",
+        "classification": "partner_logo",
+        "confidence": 0.14,
+        "score": 14.0,
+        "reasons": [
+          "brand_name_match",
+          "img",
+          "classified_partner_logo"
+        ],
+        "width": null,
+        "height": null,
+        "aspect_ratio": null
+      },
+      {
+        "src": "https://iti.gov.eg/assets/images/parteners/AlaminUniv.png",
+        "alt": "Alamin University",
+        "text_wordmark": null,
+        "source_type": "img",
+        "classification": "partner_logo",
+        "confidence": 0.14,
+        "score": 14.0,
+        "reasons": [
+          "brand_name_match",
+          "img",
+          "classified_partner_logo"
+        ],
+        "width": null,
+        "height": null,
+        "aspect_ratio": null
+      },
+      {
+        "src": "https://iti.gov.eg/assets/images/parteners/AzharUniv.png",
+        "alt": "Al-Azhar University",
+        "text_wordmark": null,
+        "source_type": "img",
+        "classification": "partner_logo",
+        "confidence": 0.14,
+        "score": 14.0,
+        "reasons": [
+          "brand_name_match",
+          "img",
+          "classified_partner_logo"
+        ],
+        "width": null,
+        "height": null,
+        "aspect_ratio": null
+      },
+      {
+        "src": "https://iti.gov.eg/assets/images/parteners/VOIS.png",
+        "alt": "Vodafone _VOIS",
+        "text_wordmark": null,
+        "source_type": "img",
+        "classification": "partner_logo",
+        "confidence": 0.14,
+        "score": 14.0,
+        "reasons": [
+          "brand_name_match",
+          "img",
+          "classified_partner_logo"
+        ],
+        "width": null,
+        "height": null,
+        "aspect_ratio": null
+      },
+      {
+        "src": "https://iti.gov.eg/assets/images/parteners/etisalat.png",
+        "alt": "Etisalat Misr",
+        "text_wordmark": null,
+        "source_type": "img",
+        "classification": "partner_logo",
+        "confidence": 0.14,
+        "score": 14.0,
+        "reasons": [
+          "brand_name_match",
+          "img",
+          "classified_partner_logo"
+        ],
+        "width": null,
+        "height": null,
+        "aspect_ratio": null
+      },
+      {
+        "src": "https://iti.gov.eg/assets/images/parteners/fawry.png",
+        "alt": "Fawry",
+        "text_wordmark": null,
+        "source_type": "img",
+        "classification": "partner_logo",
+        "confidence": 0.14,
+        "score": 14.0,
+        "reasons": [
+          "brand_name_match",
+          "img",
+          "classified_partner_logo"
+        ],
+        "width": null,
+        "height": null,
+        "aspect_ratio": null
+      },
+      {
+        "src": "https://iti.gov.eg/assets/images/parteners/TechLabs.png",
+        "alt": "TechLabs London",
+        "text_wordmark": null,
+        "source_type": "img",
+        "classification": "partner_logo",
+        "confidence": 0.14,
+        "score": 14.0,
+        "reasons": [
+          "brand_name_match",
+          "img",
+          "classified_partner_logo"
+        ],
+        "width": null,
+        "height": null,
+        "aspect_ratio": null
+      },
+      {
+        "src": "https://iti.gov.eg/assets/images/parteners/DataCamp.png",
+        "alt": "Data camp",
+        "text_wordmark": null,
+        "source_type": "img",
+        "classification": "partner_logo",
+        "confidence": 0.14,
+        "score": 14.0,
+        "reasons": [
+          "brand_name_match",
+          "img",
+          "classified_partner_logo"
+        ],
+        "width": null,
+        "height": null,
+        "aspect_ratio": null
+      },
+      {
+        "src": "https://iti.gov.eg/assets/images/parteners/Orange.png",
+        "alt": "Orange",
+        "text_wordmark": null,
+        "source_type": "img",
+        "classification": "partner_logo",
+        "confidence": 0.14,
+        "score": 14.0,
+        "reasons": [
+          "brand_name_match",
+          "img",
+          "classified_partner_logo"
+        ],
+        "width": null,
+        "height": null,
+        "aspect_ratio": null
+      },
+      {
+        "src": "https://iti.gov.eg/assets/images/parteners/vodafone.png",
+        "alt": "Vodafone",
+        "text_wordmark": null,
+        "source_type": "img",
+        "classification": "partner_logo",
+        "confidence": 0.14,
+        "score": 14.0,
+        "reasons": [
+          "brand_name_match",
+          "img",
+          "classified_partner_logo"
+        ],
+        "width": null,
+        "height": null,
+        "aspect_ratio": null
+      },
+      {
+        "src": "https://iti.gov.eg/assets/images/parteners/Ejada.png",
+        "alt": "Ejada Ltd.",
+        "text_wordmark": null,
+        "source_type": "img",
+        "classification": "partner_logo",
+        "confidence": 0.14,
+        "score": 14.0,
+        "reasons": [
+          "brand_name_match",
+          "img",
+          "classified_partner_logo"
+        ],
+        "width": null,
+        "height": null,
+        "aspect_ratio": null
+      },
+      {
+        "src": "https://iti.gov.eg/assets/images/parteners/NationalBankEgypt.png",
+        "alt": "NATIONAL BANK OF EGYPT (NBE)",
+        "text_wordmark": null,
+        "source_type": "img",
+        "classification": "partner_logo",
+        "confidence": 0.14,
+        "score": 14.0,
+        "reasons": [
+          "brand_name_match",
+          "img",
+          "classified_partner_logo"
+        ],
+        "width": null,
+        "height": null,
+        "aspect_ratio": null
+      },
+      {
+        "src": "https://iti.gov.eg/assets/images/parteners/BankEgypt.png",
+        "alt": "Bank misr",
+        "text_wordmark": null,
+        "source_type": "img",
+        "classification": "partner_logo",
+        "confidence": 0.14,
+        "score": 14.0,
+        "reasons": [
+          "brand_name_match",
+          "img",
+          "classified_partner_logo"
+        ],
+        "width": null,
+        "height": null,
+        "aspect_ratio": null
+      },
+      {
+        "src": "https://iti.gov.eg/assets/images/parteners/PWC.jpg",
+        "alt": "PriceWaterhouseCooper (PwC)",
+        "text_wordmark": null,
+        "source_type": "img",
+        "classification": "partner_logo",
+        "confidence": 0.14,
+        "score": 14.0,
+        "reasons": [
+          "brand_name_match",
+          "img",
+          "classified_partner_logo"
+        ],
+        "width": null,
+        "height": null,
+        "aspect_ratio": null
+      },
+      {
+        "src": "https://iti.gov.eg/assets/images/parteners/Deloitte.png",
+        "alt": "Deloitte",
+        "text_wordmark": null,
+        "source_type": "img",
+        "classification": "partner_logo",
+        "confidence": 0.14,
+        "score": 14.0,
+        "reasons": [
+          "brand_name_match",
+          "img",
+          "classified_partner_logo"
+        ],
+        "width": null,
+        "height": null,
+        "aspect_ratio": null
+      }
+    ],
+    "partner_logos": [
+      {
+        "src": "https://iti.gov.eg/assets/images/parteners/Epita.png",
+        "alt": "Epita",
+        "text_wordmark": null,
+        "source_type": "img",
+        "classification": "partner_logo",
+        "confidence": 0.26,
+        "score": 26.0,
+        "reasons": [
+          "brand_name_match",
+          "img",
+          "suitable_logo_shape",
+          "classified_partner_logo"
+        ],
+        "width": 157,
+        "height": 90,
+        "aspect_ratio": 1.744
+      },
+      {
+        "src": "https://iti.gov.eg/assets/images/parteners/Paderborn.png",
+        "alt": "Paderborn",
+        "text_wordmark": null,
+        "source_type": "img",
+        "classification": "partner_logo",
+        "confidence": 0.26,
+        "score": 26.0,
+        "reasons": [
+          "brand_name_match",
+          "img",
+          "suitable_logo_shape",
+          "classified_partner_logo"
+        ],
+        "width": 223,
+        "height": 76,
+        "aspect_ratio": 2.934
+      },
+      {
+        "src": "https://iti.gov.eg/assets/images/parteners/ArabAcademic.png",
+        "alt": "Arab Academy",
+        "text_wordmark": null,
+        "source_type": "img",
+        "classification": "partner_logo",
+        "confidence": 0.26,
+        "score": 26.0,
+        "reasons": [
+          "brand_name_match",
+          "img",
+          "suitable_logo_shape",
+          "classified_partner_logo"
+        ],
+        "width": 82,
+        "height": 81,
+        "aspect_ratio": 1.012
+      },
+      {
+        "src": "https://iti.gov.eg/assets/images/parteners/AssuitUniv.png",
+        "alt": "Assuit University",
+        "text_wordmark": null,
+        "source_type": "img",
+        "classification": "partner_logo",
+        "confidence": 0.26,
+        "score": 26.0,
+        "reasons": [
+          "brand_name_match",
+          "img",
+          "suitable_logo_shape",
+          "classified_partner_logo"
+        ],
+        "width": 115,
+        "height": 81,
+        "aspect_ratio": 1.42
+      },
+      {
+        "src": "https://iti.gov.eg/assets/images/parteners/AswanUniv.png",
+        "alt": "Aswan University",
+        "text_wordmark": null,
+        "source_type": "img",
+        "classification": "partner_logo",
+        "confidence": 0.26,
+        "score": 26.0,
+        "reasons": [
+          "brand_name_match",
+          "img",
+          "suitable_logo_shape",
+          "classified_partner_logo"
+        ],
+        "width": 80,
+        "height": 81,
+        "aspect_ratio": 0.988
+      },
+      {
+        "src": "https://iti.gov.eg/assets/images/parteners/link.png",
+        "alt": "Link dev",
+        "text_wordmark": null,
+        "source_type": "img",
+        "classification": "partner_logo",
+        "confidence": 0.26,
+        "score": 26.0,
+        "reasons": [
+          "brand_name_match",
+          "img",
+          "suitable_logo_shape",
+          "classified_partner_logo"
+        ],
+        "width": 75,
+        "height": 46,
+        "aspect_ratio": 1.63
+      },
+      {
+        "src": "https://iti.gov.eg/assets/images/parteners/AlexUniv.png",
+        "alt": "Alexandria University",
+        "text_wordmark": null,
+        "source_type": "img",
+        "classification": "partner_logo",
+        "confidence": 0.14,
+        "score": 14.0,
+        "reasons": [
+          "brand_name_match",
+          "img",
+          "classified_partner_logo"
+        ],
+        "width": null,
+        "height": null,
+        "aspect_ratio": null
+      },
+      {
+        "src": "https://iti.gov.eg/assets/images/parteners/AlaminUniv.png",
+        "alt": "Alamin University",
+        "text_wordmark": null,
+        "source_type": "img",
+        "classification": "partner_logo",
+        "confidence": 0.14,
+        "score": 14.0,
+        "reasons": [
+          "brand_name_match",
+          "img",
+          "classified_partner_logo"
+        ],
+        "width": null,
+        "height": null,
+        "aspect_ratio": null
+      },
+      {
+        "src": "https://iti.gov.eg/assets/images/parteners/AzharUniv.png",
+        "alt": "Al-Azhar University",
+        "text_wordmark": null,
+        "source_type": "img",
+        "classification": "partner_logo",
+        "confidence": 0.14,
+        "score": 14.0,
+        "reasons": [
+          "brand_name_match",
+          "img",
+          "classified_partner_logo"
+        ],
+        "width": null,
+        "height": null,
+        "aspect_ratio": null
+      },
+      {
+        "src": "https://iti.gov.eg/assets/images/parteners/VOIS.png",
+        "alt": "Vodafone _VOIS",
+        "text_wordmark": null,
+        "source_type": "img",
+        "classification": "partner_logo",
+        "confidence": 0.14,
+        "score": 14.0,
+        "reasons": [
+          "brand_name_match",
+          "img",
+          "classified_partner_logo"
+        ],
+        "width": null,
+        "height": null,
+        "aspect_ratio": null
+      },
+      {
+        "src": "https://iti.gov.eg/assets/images/parteners/etisalat.png",
+        "alt": "Etisalat Misr",
+        "text_wordmark": null,
+        "source_type": "img",
+        "classification": "partner_logo",
+        "confidence": 0.14,
+        "score": 14.0,
+        "reasons": [
+          "brand_name_match",
+          "img",
+          "classified_partner_logo"
+        ],
+        "width": null,
+        "height": null,
+        "aspect_ratio": null
+      },
+      {
+        "src": "https://iti.gov.eg/assets/images/parteners/fawry.png",
+        "alt": "Fawry",
+        "text_wordmark": null,
+        "source_type": "img",
+        "classification": "partner_logo",
+        "confidence": 0.14,
+        "score": 14.0,
+        "reasons": [
+          "brand_name_match",
+          "img",
+          "classified_partner_logo"
+        ],
+        "width": null,
+        "height": null,
+        "aspect_ratio": null
+      },
+      {
+        "src": "https://iti.gov.eg/assets/images/parteners/TechLabs.png",
+        "alt": "TechLabs London",
+        "text_wordmark": null,
+        "source_type": "img",
+        "classification": "partner_logo",
+        "confidence": 0.14,
+        "score": 14.0,
+        "reasons": [
+          "brand_name_match",
+          "img",
+          "classified_partner_logo"
+        ],
+        "width": null,
+        "height": null,
+        "aspect_ratio": null
+      },
+      {
+        "src": "https://iti.gov.eg/assets/images/parteners/DataCamp.png",
+        "alt": "Data camp",
+        "text_wordmark": null,
+        "source_type": "img",
+        "classification": "partner_logo",
+        "confidence": 0.14,
+        "score": 14.0,
+        "reasons": [
+          "brand_name_match",
+          "img",
+          "classified_partner_logo"
+        ],
+        "width": null,
+        "height": null,
+        "aspect_ratio": null
+      },
+      {
+        "src": "https://iti.gov.eg/assets/images/parteners/Orange.png",
+        "alt": "Orange",
+        "text_wordmark": null,
+        "source_type": "img",
+        "classification": "partner_logo",
+        "confidence": 0.14,
+        "score": 14.0,
+        "reasons": [
+          "brand_name_match",
+          "img",
+          "classified_partner_logo"
+        ],
+        "width": null,
+        "height": null,
+        "aspect_ratio": null
+      },
+      {
+        "src": "https://iti.gov.eg/assets/images/parteners/vodafone.png",
+        "alt": "Vodafone",
+        "text_wordmark": null,
+        "source_type": "img",
+        "classification": "partner_logo",
+        "confidence": 0.14,
+        "score": 14.0,
+        "reasons": [
+          "brand_name_match",
+          "img",
+          "classified_partner_logo"
+        ],
+        "width": null,
+        "height": null,
+        "aspect_ratio": null
+      },
+      {
+        "src": "https://iti.gov.eg/assets/images/parteners/Ejada.png",
+        "alt": "Ejada Ltd.",
+        "text_wordmark": null,
+        "source_type": "img",
+        "classification": "partner_logo",
+        "confidence": 0.14,
+        "score": 14.0,
+        "reasons": [
+          "brand_name_match",
+          "img",
+          "classified_partner_logo"
+        ],
+        "width": null,
+        "height": null,
+        "aspect_ratio": null
+      },
+      {
+        "src": "https://iti.gov.eg/assets/images/parteners/NationalBankEgypt.png",
+        "alt": "NATIONAL BANK OF EGYPT (NBE)",
+        "text_wordmark": null,
+        "source_type": "img",
+        "classification": "partner_logo",
+        "confidence": 0.14,
+        "score": 14.0,
+        "reasons": [
+          "brand_name_match",
+          "img",
+          "classified_partner_logo"
+        ],
+        "width": null,
+        "height": null,
+        "aspect_ratio": null
+      },
+      {
+        "src": "https://iti.gov.eg/assets/images/parteners/BankEgypt.png",
+        "alt": "Bank misr",
+        "text_wordmark": null,
+        "source_type": "img",
+        "classification": "partner_logo",
+        "confidence": 0.14,
+        "score": 14.0,
+        "reasons": [
+          "brand_name_match",
+          "img",
+          "classified_partner_logo"
+        ],
+        "width": null,
+        "height": null,
+        "aspect_ratio": null
+      },
+      {
+        "src": "https://iti.gov.eg/assets/images/parteners/PWC.jpg",
+        "alt": "PriceWaterhouseCooper (PwC)",
+        "text_wordmark": null,
+        "source_type": "img",
+        "classification": "partner_logo",
+        "confidence": 0.14,
+        "score": 14.0,
+        "reasons": [
+          "brand_name_match",
+          "img",
+          "classified_partner_logo"
+        ],
+        "width": null,
+        "height": null,
+        "aspect_ratio": null
+      },
+      {
+        "src": "https://iti.gov.eg/assets/images/parteners/Deloitte.png",
+        "alt": "Deloitte",
+        "text_wordmark": null,
+        "source_type": "img",
+        "classification": "partner_logo",
+        "confidence": 0.14,
+        "score": 14.0,
+        "reasons": [
+          "brand_name_match",
+          "img",
+          "classified_partner_logo"
+        ],
+        "width": null,
+        "height": null,
+        "aspect_ratio": null
+      }
+    ],
+    "authority_logos": [],
+    "co_branding_detected": true,
+    "visual_extraction_note": null,
+    "raw_palette": [
+      "#eaeaea",
+      "#26404b",
+      "#87a0b5",
+      "#c5928b",
+      "#ac5660",
+      "#d39244"
+    ],
+    "raw_palette_dominance": [
+      0.8688157894736842,
+      0.09157894736842105,
+      0.018355263157894736,
+      0.016644736842105264,
+      0.0044078947368421054,
+      0.00019736842105263157
+    ],
+    "brand_palette": [
+      "#d39244",
+      "#26404b",
+      "#87a0b5",
+      "#c5928b",
+      "#ac5660"
+    ],
+    "brand_palette_confidence": [
+      0.3355,
+      0.1968,
+      0.1586,
+      0.1577,
+      0.1513
+    ],
+    "primary_brand_color": "#d39244",
+    "accent_colors": [
+      "#d39244",
+      "#26404b",
+      "#ac5660"
+    ],
+    "neutral_colors": [
+      "#ffffff",
+      "#eaeaea",
+      "#000000"
+    ],
+    "background_colors": [
+      "#eaeaea"
+    ],
+    "text_colors": [
+      "#000000",
+      "#ffffff"
+    ],
+    "palette_extraction_note": "weak_brand_palette_confidence",
+    "visual_warnings": [
+      "co_branding_detected",
+      "weak_brand_palette_confidence",
+      "palette_dominated_by_background"
+    ]
+  },
+  "source_url": "https://iti.gov.eg/diplomaStructure/139758dc-e1ee-4d2c-ba87-08dbe615d378/tracks/ce47193b-e8a0-4452-627f-08dbe68d3d73/134636fe-7a41-49b0-fe32-08dbe75ac461",
+  "final_url": "https://iti.gov.eg/",
+  "extraction_meta": {
+    "manifest_path": "scrapes\\iti_gov_eg_20260623_060029\\manifest.json",
+    "manifest_hash": "62a5445c89130ab31154747890849d86d01035e4a2fb48a698799d8708aea374",
+    "extracted_at": "2026-06-23T06:04:01.108783Z",
+    "duration_ms": 0,
+    "rule_extractors_used": [
+      "name:rule:title",
+      "pricing_visible:currency_regex",
+      "contact:manifest_passthrough",
+      "ctas:manifest(2)",
+      "social:manifest(5)",
+      "visual:manifest_passthrough",
+      "merger:validator: rejections=0, fields_dropped=['pricing_posture'], items_dropped={}"
+    ],
+    "llm_calls": 4,
+    "llm_tokens_input": 39577,
+    "llm_tokens_output": 6226,
+    "llm_model": "gemini-2.5-flash",
+    "llm_cost_usd": 0.027438100000000003,
+    "extractor_version": "0.1.0",
+    "validation_diagnostics": {
+      "total_rejections": 0,
+      "rejections_by_group": {
+        "identity": 0,
+        "offerings": 0,
+        "positioning": 0,
+        "trust": 0
+      },
+      "fields_dropped": [
+        "pricing_posture"
+      ],
+      "items_dropped": {},
+      "candidates_seen": {
+        "offerings": 5,
+        "audience_signals": 5,
+        "value_propositions": 5,
+        "other_unique_insights": 3,
+        "trust_signals": 8,
+        "service_areas": 10
+      },
+      "rejected_quotes": {},
+      "blacklist_rejections": {}
+    }
+  },
+  "quality": {
+    "has_name": true,
+    "has_category": true,
+    "has_offerings": true,
+    "has_audience": true,
+    "has_value_propositions": true,
+    "has_tone": true,
+    "has_contact": true,
+    "has_visual": true,
+    "fields_extracted": 9,
+    "fields_inferred": 8,
+    "fields_missing": 3,
+    "major_missing": [],
+    "ready_for_strategy": true,
+    "ready_for_poster": true,
+    "poster_blockers": [],
+    "poster_warnings": [
+      "co_branding_detected",
+      "weak_brand_palette_confidence",
+      "palette_dominated_by_background"
+    ]
+  },
+  "readiness": {
+    "ready_for_swot": false,
+    "ready_for_strategy": false,
+    "ready_for_campaign": false,
+    "swot_blockers": [
+      "low_evidence_coverage"
+    ],
+    "strategy_blockers": [
+      "low_evidence_coverage"
+    ],
+    "campaign_blockers": [
+      "low_evidence_coverage"
+    ],
+    "swot_warnings": [],
+    "swot_richness_score": 81,
+    "swot_quality_signals": {
+      "tagline": true,
+      "description": true,
+      "audience_type_concrete": true,
+      "audience_signals_2plus": true,
+      "value_propositions_3plus": true,
+      "trust_signals_2plus": true,
+      "offerings_3plus": true,
+      "tone_known": true,
+      "languages_known": true,
+      "social_presence_2plus": true,
+      "locations_with_geo": false,
+      "hours_known": false,
+      "pricing_posture_known": false,
+      "visual_palette_known": true,
+      "logo_known": true,
+      "multi_page_evidence": true
+    },
+    "missing_critical": [],
+    "missing_recommended": [
+      "hours"
+    ],
+    "weak_evidence_fields": [
+      "category",
+      "description",
+      "audience_type",
+      "tone_of_voice"
+    ],
+    "fields_extracted": 9,
+    "fields_inferred": 8,
+    "fields_missing": 3,
+    "distinct_evidence_pages": 5,
+    "pages_discovered": 5,
+    "pages_scraped": 5,
+    "scrape_completeness": "partial"
+  }
+}

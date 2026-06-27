@@ -1,5 +1,7 @@
 "use client";
 
+import { Activity, FileText, ImageIcon, Quote, Target } from "lucide-react";
+
 import {
   Tabs,
   TabsContent,
@@ -27,16 +29,24 @@ interface TabsShellProps {
 export function TabsShell({ profile, events, enablePosterTab }: TabsShellProps) {
   return (
     <Tabs defaultValue="profile" className="w-full">
-      <TabsList className="h-auto flex-wrap">
-        <TabsTrigger value="profile">Profile</TabsTrigger>
-        <TabsTrigger value="evidence">Evidence</TabsTrigger>
-        <TabsTrigger value="swot">SWOT</TabsTrigger>
-        <TabsTrigger value="diagnostics">Diagnostics</TabsTrigger>
+      <TabsList className="h-auto flex-wrap gap-1">
+        <TabsTrigger value="profile" className="gap-1.5">
+          <FileText className="h-4 w-4" /> Profile
+        </TabsTrigger>
+        <TabsTrigger value="evidence" className="gap-1.5">
+          <Quote className="h-4 w-4" /> Evidence
+        </TabsTrigger>
+        <TabsTrigger value="swot" className="gap-1.5">
+          <Target className="h-4 w-4" /> SWOT
+        </TabsTrigger>
+        <TabsTrigger value="diagnostics" className="gap-1.5">
+          <Activity className="h-4 w-4" /> Diagnostics
+        </TabsTrigger>
 
         {enablePosterTab && (
-          <TabsTrigger value="poster">
-            Poster Studio
-            <Badge variant="outline" className="ml-2 text-[10px]">
+          <TabsTrigger value="poster" className="gap-1.5">
+            <ImageIcon className="h-4 w-4" /> Poster Studio
+            <Badge className="ml-1 border-transparent bg-brand-gradient px-1.5 text-[10px] text-white">
               new
             </Badge>
           </TabsTrigger>

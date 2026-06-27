@@ -8,7 +8,7 @@ Pipeline order:
 - extractor: orchestrates the 4 grouped calls and aggregates usage
 - validator: enforces "no evidence = no fact" — drops hallucinations
 """
-from .caller import Caller, MockCaller, OpenAICaller, Usage
+from .caller import Caller, GeminiCaller, MockCaller, OpenAICaller, Usage, default_caller
 from .evidence_pack import EvidenceBlock, EvidencePack, build_evidence_pack
 from .extractor import GroupResult, LLMExtractionResult, run_llm_extraction
 from .responses import (
@@ -36,7 +36,7 @@ from .validator import (
 
 __all__ = [
     "EvidenceBlock", "EvidencePack", "build_evidence_pack",
-    "Caller", "MockCaller", "OpenAICaller", "Usage",
+    "Caller", "MockCaller", "OpenAICaller", "GeminiCaller", "Usage", "default_caller",
     "GroupResult", "LLMExtractionResult", "run_llm_extraction",
     "IdentityResponse", "OfferingsResponse", "PositioningResponse", "TrustResponse",
     "OfferingItem", "StringListItem",

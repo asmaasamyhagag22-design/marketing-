@@ -17,6 +17,11 @@ from pathlib import Path
 from typing import Optional
 
 from .schemas import ReelScene, Storyboard
+# Reuse the poster's PURE color helpers so the reel's accent matches the poster's
+# (vivid, from the real palette). No coupling to PosterBrief — these take rgb/hex.
+from poster.template import (
+    _hex_to_rgb, _luminance, _saturation, _legible_on_dark, _readable_on,
+)
 
 # Google Fonts: Cairo covers Arabic (so RTL text shapes), Space Grotesk + Inter
 # give a modern Latin display/body. Arabic chars fall through to Cairo automatically.
@@ -39,8 +44,6 @@ def _logo_data_uri(url: Optional[str]) -> Optional[str]:
     if url.startswith("data:"):
         return url
     low = url.lower().split("?")[0]
-    if low.endswith(".svg"):
-        return None
     try:
         from scraper.url_utils import is_safe_public_url
         if not is_safe_public_url(url):
@@ -49,28 +52,34 @@ def _logo_data_uri(url: Optional[str]) -> Optional[str]:
         data = _open_image_url(url, timeout=12).read()
         if not data:
             return None
+        # SVG is allowed: Chromium renders it, and an <img>-referenced SVG runs in
+        # secure static mode (no scripting). Recovers SVG-only brand logos.
         mime = "image/png"
-        for ext, m in ((".jpg", "image/jpeg"), (".jpeg", "image/jpeg"),
-                       (".webp", "image/webp"), (".png", "image/png")):
-            if ext in low:
-                mime = m
-                break
+        if low.endswith(".svg"):
+            mime = "image/svg+xml"
+        else:
+            for ext, m in ((".jpg", "image/jpeg"), (".jpeg", "image/jpeg"),
+                           (".webp", "image/webp"), (".png", "image/png")):
+                if ext in low:
+                    mime = m
+                    break
         return f"data:{mime};base64,{base64.b64encode(data).decode('ascii')}"
     except Exception:
         return None
 
 
 def _accent(storyboard: Storyboard) -> str:
-    """A legible (non-dark) accent for the CTA; white if none qualifies."""
-    for hexc in (storyboard.palette_hex or []):
-        c = (hexc or "").lstrip("#")
-        if len(c) == 6:
-            try:
-                r, g, b = int(c[0:2], 16), int(c[2:4], 16), int(c[4:6], 16)
-            except ValueError:
-                continue
-            if r + g + b > 300:
-                return f"#{c.upper()}"
+    """The brand accent: the MOST SATURATED palette color with enough luminance to read
+    on the dark lower scrim (vivid, not a muted tan) — mirrors the poster's `_brand_accent`
+    over `[primary_color] + palette_hex`. White only if the palette is empty."""
+    pal = [
+        str(c) for c in ([storyboard.primary_color] + list(storyboard.palette_hex or []))
+        if c and str(c).startswith("#")
+    ]
+    legible = [c for c in pal if _luminance(_hex_to_rgb(c)) >= 0.16]
+    cand = legible or pal
+    if cand:
+        return max(cand, key=lambda c: _saturation(_hex_to_rgb(c)))
     return "#FFFFFF"
 
 
@@ -94,56 +103,80 @@ def _atom(text: str) -> str:
     return esc
 
 
+def _highlight_last_word(headline: str) -> str:
+    """Escape the headline and wrap its LAST token in the accent span (one accent word —
+    the editorial 'pop'). Verbatim text, CSS-only emphasis (zero-hallucination)."""
+    words = _esc(headline).split(" ")
+    if len(words) > 1:
+        return " ".join(words[:-1]) + f' <span class="hl">{words[-1]}</span>'
+    return f'<span class="hl">{words[0]}</span>' if words and words[0] else ""
+
+
 def _scene_html(scene: ReelScene, storyboard: Storyboard, width: int, height: int,
                 logo_uri: Optional[str]) -> str:
-    """Transparent text-layer HTML for one scene."""
-    dir_attr = storyboard.primary_dir  # 'rtl' | 'ltr'
-    accent = _accent(storyboard)
-    head_px = round(width * 0.086)
-    sub_px = round(width * 0.047)
-    cta_px = round(width * 0.055)
-    logo_h = round(width * 0.12)
-    shadow = "0 4px 26px rgba(0,0,0,.62), 0 1px 3px rgba(0,0,0,.9)"
+    """Transparent text-layer HTML for one scene — a bottom-anchored, safe-zone caption
+    block (strong scrim, hero typography, one brand-accent word) instead of plain white
+    text floating over the subject."""
+    rtl = storyboard.primary_dir == "rtl"
+    dir_attr = "rtl" if rtl else "ltr"
+    accent = _accent(storyboard)                       # vivid, from the real palette
+    accent_rgb = _hex_to_rgb(accent)
+    accent_on_dark = _legible_on_dark(accent_rgb)      # accent text/rule on the dark scrim
+    chip_text = _readable_on(accent_rgb)               # text INSIDE the accent CTA chip
+
+    short = len((scene.headline or "").split()) <= 3
+    head_px = round(width * (0.107 if short else 0.085))
+    sub_px = round(width * 0.0425)
+    cta_px = round(width * 0.046)
+    logo_h = round(width * 0.11)
+    edge = "flex-end" if rtl else "flex-start"         # ragged edge falls toward center
+    shadow = "0 1px 2px rgba(0,0,0,.95), 0 2px 8px rgba(0,0,0,.7)"
 
     show_logo = bool(logo_uri) and scene.kind in ("intro", "outro", "contact")
-    logo_html = (
-        f'<div class="logo"><img src="{logo_uri}"></div>' if show_logo else ""
-    )
+    logo_pos = "right:56px" if rtl else "left:56px"
+    logo_html = (f'<div class="logo" style="{logo_pos}"><img src="{logo_uri}"></div>'
+                 if show_logo else "")
 
     blocks: list[str] = []
     if scene.headline:
-        top = "41%" if scene.kind == "intro" else "45%"
-        blocks.append(
-            f'<div class="row headline" style="top:{top}">{_esc(scene.headline)}</div>'
-        )
+        blocks.append('<div class="rule"></div>')
+        blocks.append(f'<div class="headline">{_highlight_last_word(scene.headline)}</div>')
     if scene.sublines:
         items = "".join(f'<div class="sub-item">{_atom(s)}</div>' for s in scene.sublines)
-        blocks.append(f'<div class="row sub" style="top:47%">{items}</div>')
+        blocks.append(f'<div class="sub">{items}</div>')
     if scene.cta_text:
-        blocks.append(f'<div class="row cta" style="top:63%">{_esc(scene.cta_text)}</div>')
+        blocks.append(f'<div class="cta-wrap"><span class="cta">{_esc(scene.cta_text)}</span></div>')
 
     return f"""<!doctype html><html dir="{dir_attr}" lang="ar"><head><meta charset="utf-8">
 {_FONTS_LINK}
 <style>
   html,body{{margin:0;padding:0;width:{width}px;height:{height}px;background:transparent;}}
   .stage{{position:relative;width:{width}px;height:{height}px;
-    font-family:'Space Grotesk','Cairo',system-ui,sans-serif;color:#fff;overflow:hidden;}}
-  .scrim{{position:absolute;inset:0;
-    background:radial-gradient(64% 44% at 50% 49%, rgba(0,0,0,.42), rgba(0,0,0,0) 72%);}}
-  .row{{position:absolute;left:0;right:0;text-align:center;
-    padding:0 7%;box-sizing:border-box;transform:translateY(-50%);}}
+    font-family:'Space Grotesk','Cairo',system-ui,sans-serif;color:#fff;overflow:hidden;
+    --accent:{accent_on_dark};}}
+  .lower{{position:absolute;left:0;right:0;bottom:0;padding:0 64px 300px;box-sizing:border-box;
+    display:flex;flex-direction:column;align-items:{edge};text-align:start;
+    background:linear-gradient(to top,
+      rgba(8,12,18,.90) 0%, rgba(8,12,18,.68) 22%, rgba(8,12,18,.30) 45%, rgba(8,12,18,0) 64%);}}
+  .lower>*{{unicode-bidi:plaintext;}}
+  .rule{{height:6px;width:84px;background:var(--accent);border-radius:3px;margin-bottom:22px;}}
   .headline{{font-family:'Oswald','Cairo',system-ui,sans-serif;font-weight:700;
-    font-size:{head_px}px;line-height:1.1;letter-spacing:0.5px;text-transform:uppercase;
-    text-shadow:{shadow};}}
+    font-size:{head_px}px;line-height:1.04;letter-spacing:-0.5px;text-transform:uppercase;
+    max-width:80%;text-wrap:balance;text-shadow:{shadow};
+    -webkit-text-stroke:0.5px rgba(0,0,0,.35);}}
+  .headline .hl{{color:var(--accent);}}
   .sub{{font-family:'Inter','Cairo',system-ui,sans-serif;font-weight:600;
-    font-size:{sub_px}px;line-height:1.5;text-shadow:{shadow};}}
-  .sub-item{{margin:0.34em 0;}}
-  .cta{{font-weight:700;font-size:{cta_px}px;color:{accent};text-shadow:{shadow};letter-spacing:0.3px;}}
-  .logo{{position:absolute;top:6.5%;left:0;right:0;text-align:center;}}
-  .logo img{{height:{logo_h}px;max-width:60%;object-fit:contain;
-    filter:drop-shadow(0 2px 12px rgba(0,0,0,.6));}}
+    font-size:{sub_px}px;line-height:1.45;margin-top:20px;max-width:82%;text-shadow:{shadow};}}
+  .sub-item{{margin:0.16em 0;}}
+  .cta-wrap{{margin-top:30px;}}
+  .cta{{display:inline-block;font-weight:700;font-size:{cta_px}px;
+    background:{accent};color:{chip_text};padding:0.42em 0.95em;border-radius:14px;
+    letter-spacing:0.3px;box-shadow:0 6px 22px rgba(0,0,0,.42);}}
+  .logo{{position:absolute;top:60px;}}
+  .logo img{{height:{logo_h}px;max-width:42%;object-fit:contain;
+    filter:drop-shadow(0 2px 12px rgba(0,0,0,.55));}}
 </style></head>
-<body><div class="stage"><div class="scrim"></div>{logo_html}{''.join(blocks)}</div></body></html>"""
+<body><div class="stage">{logo_html}<div class="lower">{''.join(blocks)}</div></div></body></html>"""
 
 
 def render_text_layers(

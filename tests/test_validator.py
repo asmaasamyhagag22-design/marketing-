@@ -154,6 +154,28 @@ def test_normalize_collapses_whitespace_and_lowercases():
     assert _normalize(None) == ""
 
 
+def test_normalize_folds_quote_glyphs():
+    # The pack shows the LLM `"`->`'`; the validator must fold quotes so a quote of a
+    # double-quote (or a smart quote) still matches the original block.
+    assert _normalize('We are the "best" clinic') == "we are the 'best' clinic"
+    assert _normalize("“smart” ‘quotes’") == "'smart' 'quotes'"
+
+
+def test_other_unique_insights_validated_and_grounded():
+    # The catch-all field is grounded like everything else: a cited+verbatim insight is
+    # kept; a hallucinated block_id is dropped.
+    pack = _pack_with_blocks()
+    pos = PositioningResponse(other_unique_insights=[
+        StringListItem(value="Founded in 2010", evidence=[
+            LLMEvidenceRef(block_id="about_p_0001", quote="Founded in 2010")]),
+        StringListItem(value="totally invented edge", evidence=[
+            LLMEvidenceRef(block_id="nope_9999", quote="invented")]),   # hallucinated
+    ])
+    payload = validate_llm_extraction(_wrap_in_result(positioning=pos), pack)
+    kept = [i.value for i in payload.positioning.other_unique_insights]
+    assert kept == ["Founded in 2010"]
+
+
 # ---------------------------------------------------------------------
 # Per-item validation: rejection codes
 # ---------------------------------------------------------------------

@@ -1,0 +1,354 @@
+"""Creative Concept layer — ONE coherent campaign idea drives every element.
+
+Root-cause fix (per the build brief): the poster used to generate the headline, the chips,
+and the image INDEPENDENTLY → three unrelated things, no single message, often English on an
+Arabic brand. Now a single LLM call produces a structured `CreativeConcept` (audience,
+single_message, core_benefit, tone, visual_idea, proof_points) AND the customer-facing COPY
+(headline / subheadline / cta / chips) built FROM that one message, in the BRAND'S language.
+
+Hard rules enforced here:
+  * LANGUAGE LOCK — for an Arabic brand, every visible copy field must be Arabic with ZERO
+    Latin characters. A regex validator rejects any `[A-Za-z]`; we regenerate (stricter
+    prompt) up to N times before giving up to a grounded Arabic fallback. (Brief Step B.)
+  * AD COPY, not a mission statement — headline is 2–6 words selling a benefit. (Step D.)
+  * Chips come ONLY from the concept's proof_points, in consumer language. (Step E.)
+  * GROUNDED — the concept is conditioned on the scraped profile (facts) + the BrandCreativeDNA
+    (tone/style). It never invents prices/claims; copy is brand-voice paraphrase (design domain).
+
+Side-effect free (caller injected). Degrades: no caller → a grounded fallback concept from the
+profile. Never raises for ordinary failures.
+"""
+from __future__ import annotations
+
+import re
+from typing import Any, Optional
+
+from pydantic import BaseModel, Field
+
+_LATIN_RE = re.compile(r"[A-Za-z]")
+# Arabic / Arabic-presentation ranges — to detect an Arabic brand.
+_AR_RE = re.compile(r"[؀-ۿݐ-ݿࢠ-ࣿﭐ-﷿ﹰ-﻿]")
+
+
+class CreativeConcept(BaseModel):
+    """One campaign idea + the copy derived from it (all customer-facing fields in the
+    brand's language)."""
+    audience: str = ""
+    single_message: str = ""
+    core_benefit: str = ""
+    emotional_tone: str = ""
+    visual_idea: str = ""               # text-free scene for the image (brand design language)
+    proof_points: list[str] = Field(default_factory=list)   # 2-3 -> become the chips
+    headline: str = ""                  # 2-6 words, ad copy (NOT a mission statement)
+    subheadline: str = ""               # optional single supporting line
+    cta: str = ""                       # short verb
+    language: str = "ar"                # 'ar' | 'en'
+    note: Optional[str] = None
+    # What the grounding gate CAUGHT and how it was handled — the transparency the audit
+    # trail needs (so the proof shows the system worked, not just that the result is clean).
+    # Each entry: {field, original_text, unsourced_claims:[kind], action: softened|dropped|
+    # softened_to_fallback}. Empty when grounding is off or nothing was caught.
+    remediation: list[dict] = Field(default_factory=list)
+
+
+class _ConceptResponse(BaseModel):
+    audience: str
+    single_message: str
+    core_benefit: str
+    emotional_tone: str
+    visual_idea: str
+    proof_points: list[str]
+    headline: str
+    subheadline: str
+    cta: str
+
+
+# ---------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------
+
+def _fv(profile: dict, key: str) -> str:
+    v = (profile or {}).get(key)
+    if isinstance(v, dict):
+        v = v.get("value")
+    return "" if v is None else str(v)
+
+
+def brand_is_arabic(profile: dict) -> bool:
+    """True when the brand should speak Arabic: an 'ar' site language, or Arabic script in
+    its name / tagline / description."""
+    langs = [str(x).lower() for x in ((profile or {}).get("languages") or [])]
+    if any(l.startswith("ar") for l in langs):
+        return True
+    blob = " ".join(_fv(profile, k) for k in ("name", "tagline", "description"))
+    return bool(_AR_RE.search(blob))
+
+
+def has_latin(text: str) -> bool:
+    return bool(_LATIN_RE.search(text or ""))
+
+
+def _offering_names(profile: dict, limit: int = 8) -> list[str]:
+    out = []
+    for o in ((profile or {}).get("offerings") or []):
+        n = o.get("name") if isinstance(o, dict) else o
+        if n:
+            out.append(str(n))
+    return out[:limit]
+
+
+def _dna_tone_lines(brand_dna: Any) -> str:
+    if brand_dna is None:
+        return ""
+    parts = []
+    for label, attr in (("Mood", "mood"), ("Signature", "signature_moves"),
+                        ("Typography", "typographic_character")):
+        v = (getattr(brand_dna, attr, "") or "").strip()
+        if v:
+            parts.append(f"{label}: {v}")
+    return "; ".join(parts)
+
+
+def _concept_clean(c: CreativeConcept, *, arabic: bool, ledger: Any = None) -> CreativeConcept:
+    """Drop any chip that violates the language lock (Latin in an Arabic brand) OR — when a
+    grounding ledger is supplied — carries an UNSOURCED falsifiable claim (a final
+    deterministic safety so a fabricated chip never ships even if the regenerate loop
+    didn't clear it)."""
+    if arabic:
+        c.proof_points = [p for p in c.proof_points if p and not has_latin(p)][:3]
+    else:
+        c.proof_points = [p for p in c.proof_points if p][:3]
+    if ledger is not None:
+        c.proof_points = [
+            p for p in c.proof_points
+            if not any(not v.sourced for v in ledger.audit_text(p))
+        ]
+    return c
+
+
+def _grounding_problems(c: CreativeConcept, ledger: Any) -> list[str]:
+    """Targeted regenerate feedback for every UNSOURCED falsifiable claim in the copy.
+
+    Two truth domains: subjective puffery ('crafted with care', 'تجربة راقية') asserts
+    nothing checkable and passes untouched; a falsifiable claim — a number/year, a
+    certification/award, or a ranking/comparison (best / leading / first / only / الأقوى /
+    الأكبر / الأول / الوحيد) — must resolve to real evidence or be SOFTENED. The feedback
+    tells the model to remove the ranking/number/credential and keep the message (rewrite,
+    not blind reject), and never to invent a replacement claim."""
+    problems: list[str] = []
+    # The SPINE (headline/sub/cta) drives regeneration — softening preserves the message.
+    # A fabricated CHIP is surgically dropped in _concept_clean instead (keeps the spine).
+    checks = [("headline", c.headline), ("subheadline", c.subheadline), ("cta", c.cta)]
+    for label, text in checks:
+        unsourced = [v for v in ledger.audit_text(text or "") if not v.sourced]
+        if unsourced:
+            toks = ", ".join(sorted({str(v.claim.token) for v in unsourced}))
+            problems.append(
+                f"the {label} \"{text}\" makes an UNVERIFIABLE claim ({toks}) that is NOT "
+                f"supported by the brand's real facts below — SOFTEN it: remove the "
+                f"ranking/number/credential and keep the core message; do NOT invent any "
+                f"replacement number, certification, or superlative"
+            )
+    return problems
+
+
+# ---------------------------------------------------------------------
+# Build
+# ---------------------------------------------------------------------
+
+def _fallback_concept(profile: dict, arabic: bool) -> CreativeConcept:
+    """A grounded concept when there's no caller / all retries fail — copy comes from the
+    profile so it is real, and (for an Arabic brand) Arabic-only fields are preferred."""
+    offers = _offering_names(profile, 3)
+    tagline = _fv(profile, "tagline")
+    if arabic:
+        # Never ship Latin on an Arabic brand: prefer an Arabic tagline, else a safe generic
+        # Arabic hook — and keep the headline DISTINCT from the proof line (the offering),
+        # so a fallback never renders headline == subheadline (MEASURED weak run on WE).
+        offers = [o for o in offers if not has_latin(o)]
+        headline = tagline if (tagline and not has_latin(tagline)) else "خدمات تقربك أكتر"
+        sub = offers[0] if offers else ""
+        if headline == sub:
+            headline = "خدمات تقربك أكتر"
+    else:
+        headline = tagline or _fv(profile, "name") or ""
+        sub = offers[0] if offers else ""
+    return CreativeConcept(
+        audience=_fv(profile, "audience_type"),
+        single_message=headline,
+        core_benefit="",
+        visual_idea="",
+        proof_points=offers,
+        headline=headline,
+        subheadline=sub,                       # the proof line — kept DISTINCT from headline
+        cta=("تسوق الآن" if arabic else "Learn more"),
+        language=("ar" if arabic else "en"),
+        note="fallback concept (no caller or language-lock retries exhausted)",
+    )
+
+
+def build_creative_concept(
+    profile: dict[str, Any],
+    *,
+    caller: Any = None,
+    brand_dna: Any = None,
+    variation: Optional[dict] = None,
+    max_retries: int = 2,
+    enforce_grounding: bool = False,
+) -> CreativeConcept:
+    """One coherent campaign concept + brand-language copy. Arabic brands -> Arabic copy with
+    ZERO Latin (validated + regenerated). Never raises.
+
+    `enforce_grounding` (opt-in; ON in the live pipeline): every falsifiable claim in the
+    generated copy must trace to the profile's real evidence via the Evidence Ledger, else
+    the line is regenerated (softened) — capped by `max_retries`, then a grounded fallback.
+    Off by default so the language-lock layer's unit contract is unchanged."""
+    arabic = brand_is_arabic(profile)
+    ledger = None
+    if enforce_grounding:
+        try:
+            from grounding import EvidenceLedger
+            ledger = EvidenceLedger.from_profile(profile)
+        except Exception:  # noqa: BLE001 — grounding must never break copy generation
+            ledger = None
+    if caller is None:
+        return _fallback_concept(profile, arabic)
+
+    name = _fv(profile, "name") or "the brand"
+    desc = _fv(profile, "description")
+    tagline = _fv(profile, "tagline")
+    offers = _offering_names(profile, 8)
+    tone_block = _dna_tone_lines(brand_dna)
+    lang_name = "Egyptian Arabic (فصحى-قريبة / عامية مصرية راقية)" if arabic else "English"
+    vary = ""
+    if variation:
+        vary = (f"\nThis run's creative angle: {variation.get('mood','')}, "
+                f"{variation.get('energy','')}. Pick a DIFFERENT single_message angle than an "
+                f"obvious one so repeated runs differ.")
+
+    lang_rule = (
+        "EVERY customer-facing field (headline, subheadline, cta, proof_points) MUST be in "
+        f"{lang_name}, in the brand's voice. ABSOLUTELY NO Latin letters/words in those fields "
+        "(no English, no transliteration). Do NOT translate literally — write native, punchy ad copy."
+        if arabic else
+        f"Write all copy in {lang_name}, in the brand's voice."
+    )
+
+    system = (
+        "You are a senior advertising CREATIVE DIRECTOR. From the brand's real facts, craft ONE "
+        "coherent campaign concept for a single poster, then derive the copy FROM it so the "
+        "headline, the chips and the visual all express the SAME idea.\n"
+        f"{lang_rule}\n"
+        "Fields:\n"
+        "- audience: who this poster talks to.\n"
+        "- single_message: ONE message only (the spine of the whole poster).\n"
+        "- core_benefit: the benefit to the customer.\n"
+        "- emotional_tone: the feeling.\n"
+        "- visual_idea: a TEXT-FREE scene that expresses the message in the brand's visual "
+        "style (no words in the image). Write visual_idea in ENGLISH — it is a production "
+        "brief for the image tool, not customer-facing copy.\n"
+        "- proof_points: 2-3 SHORT consumer-language points that support single_message (these "
+        "become on-poster chips). Each must serve the message — drop anything unrelated. NOT a "
+        "dump of internal/B2B product names.\n"
+        "- headline: AD COPY — 2 to 6 words, an ENTICING hook that sells the core_benefit and "
+        "stops a scroll. NOT a company mission statement, NOT generic corporate values. It must "
+        "NOT be a category platitude a competitor could run unchanged (e.g. 'control in your "
+        "hand' is too generic).\n"
+        "- subheadline: THE دليل (PROOF) — a SHORT concrete reason-to-believe that backs the "
+        "headline, sitting right under it. It MUST carry at least one of: a real named feature, "
+        "a capability the customer can do, 'مجاناً/ببلاش', 'أول/لأول مرة', or a concrete number "
+        "— derived from the brand's real facts below. Never empty, never vague.\n"
+        "- cta: an ACTION the reader can take — a verb + destination (e.g. 'نزّل تطبيق ...', "
+        "'فعّل دلوقتي', 'جرّب مجاناً'). It must NOT just restate the headline as a synonym.\n"
+        "Ground everything in the facts below; never invent prices, numbers, or guarantees that "
+        "are not supported by the facts (the proof must be REAL, not fabricated)."
+    )
+    user = (
+        f"Brand: {name}\n"
+        + (f"Tagline: {tagline}\n" if tagline else "")
+        + (f"What they do: {desc[:400]}\n" if desc else "")
+        + (f"Real offerings (raw, may be internal jargon): {', '.join(offers)}\n" if offers else "")
+        + (f"Brand tone/style (from its real creatives): {tone_block}\n" if tone_block else "")
+        + vary
+        + "\nReturn the structured concept."
+    )
+
+    remediation: list[dict] = []
+    caught_spine: dict[str, dict] = {}   # field -> {original_text, unsourced_claims} (first seen)
+
+    def _to_fallback() -> list[dict]:
+        """Flush every caught spine claim as 'softened_to_fallback' (shipped grounded copy)."""
+        return remediation + [
+            {**rec, "action": "softened_to_fallback",
+             "note": "claim could not be sourced; shipped grounded fallback copy"}
+            for rec in caught_spine.values()
+        ]
+
+    strict_suffix = ""
+    for attempt in range(max_retries + 1):
+        try:
+            resp, _u = caller(system + strict_suffix, user, _ConceptResponse,
+                              group_name="poster_concept_brief")
+        except Exception as exc:  # noqa: BLE001
+            return _fallback_concept(profile, arabic).model_copy(
+                update={"note": f"concept call failed ({type(exc).__name__})",
+                        "remediation": _to_fallback()})
+
+        c = CreativeConcept(
+            audience=resp.audience.strip(), single_message=resp.single_message.strip(),
+            core_benefit=resp.core_benefit.strip(), emotional_tone=resp.emotional_tone.strip(),
+            visual_idea=resp.visual_idea.strip(),
+            proof_points=[p.strip() for p in (resp.proof_points or []) if p.strip()],
+            headline=resp.headline.strip(), subheadline=resp.subheadline.strip(),
+            cta=resp.cta.strip(), language=("ar" if arabic else "en"),
+        )
+        # COPY CRITIC gates (review BEFORE it's rendered): language lock + the دليل/proof
+        # gate + an actionable CTA. Any failure -> regenerate with targeted feedback.
+        problems: list[str] = []
+        if arabic and (has_latin(c.headline) or has_latin(c.cta) or has_latin(c.subheadline)):
+            problems.append("there were Latin characters — write headline, subheadline, cta and "
+                            "proof_points 100% in Arabic, not one Latin letter")
+        if not c.subheadline.strip():
+            problems.append("subheadline (the دليل/PROOF line) was empty — add a SHORT concrete "
+                            "proof/offer/feature that backs the headline")
+        if c.cta.strip() and c.cta.strip() == c.headline.strip():
+            problems.append("the cta just repeated the headline — make it an action + "
+                            "destination (e.g. download the app / activate now)")
+        # GROUNDING gate (opt-in): a falsifiable claim with no real source is softened. Record
+        # what is caught (first fabricated form per field) for the audit trail's remediation log.
+        if ledger is not None:
+            for label, text in (("headline", c.headline), ("subheadline", c.subheadline),
+                                ("cta", c.cta)):
+                uns = [v for v in ledger.audit_text(text or "") if not v.sourced]
+                if uns:
+                    caught_spine.setdefault(label, {
+                        "field": label, "original_text": text,
+                        "unsourced_claims": sorted({v.claim.kind for v in uns})})
+            problems.extend(_grounding_problems(c, ledger))
+        if not problems:
+            pre_chips = list(c.proof_points)
+            c = _concept_clean(c, arabic=arabic, ledger=ledger)
+            # The spine survived clean -> the claims caught earlier were softened away.
+            for rec in caught_spine.values():
+                remediation.append({**rec, "action": "softened",
+                                    "note": "rewritten to remove the unverifiable claim"})
+            if ledger is not None:   # record GROUNDING chip drops (a fabricated proof removed)
+                for chip in pre_chips:
+                    if chip not in c.proof_points:
+                        uns = sorted({v.claim.kind for v in ledger.audit_text(chip)
+                                      if not v.sourced})
+                        if uns:
+                            remediation.append({"field": "chip", "original_text": chip,
+                                                "unsourced_claims": uns, "action": "dropped",
+                                                "note": "fabricated proof chip removed"})
+            c.remediation = remediation
+            return c
+        strict_suffix = "\n\nREGENERATE and fix ALL of these: " + "; ".join(problems) + "."
+
+    # Retries exhausted -> grounded fallback (never ship Latin; keep a proof from the offerings).
+    fb = _fallback_concept(profile, arabic)
+    if not fb.subheadline:
+        chips = [p for p in fb.proof_points if p]
+        fb.subheadline = chips[0] if chips else fb.subheadline
+    return fb.model_copy(update={"note": "copy-critic retries exhausted; grounded fallback",
+                                 "remediation": _to_fallback()})

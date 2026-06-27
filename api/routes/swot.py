@@ -54,6 +54,7 @@ def swot_from_profile(req: SwotFromProfileRequest) -> SwotResponse:
         from competitor import (
             PlacesClient, route_discovery, build_matrix, synthesize_swot,
         )
+        from competitor.swot import unique_insight_texts
         from competitor.web_discovery import default_web_engine
 
         profile = req.profile
@@ -70,7 +71,8 @@ def swot_from_profile(req: SwotFromProfileRequest) -> SwotResponse:
         result = route_discovery(profile, places_client=client,
                                  web_engine=default_web_engine())
         matrix = build_matrix(profile, result.competitors, subject_name="You")
-        swot = synthesize_swot(matrix, themes=[])
+        swot = synthesize_swot(matrix, themes=[],
+                               unique_insights=unique_insight_texts(profile))
 
         return SwotResponse(
             mode=swot.mode,

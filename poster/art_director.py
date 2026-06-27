@@ -1,11 +1,105 @@
 from __future__ import annotations
 
 import random
-from typing import Any, Optional
+from typing import Any, Literal, Optional
+from urllib.parse import urlparse
 
 from pydantic import BaseModel
 
-from poster.schemas import PosterArtDirection, PosterBrief
+from poster.schemas import PosterArtDirection, PosterBrief, PosterDesignSpec
+
+
+# Which on-poster elements the LLM may choose to show (validated against this set).
+_SHOW_ALLOWED = {"logo", "kicker", "headline", "sub", "offerings", "cta", "contact", "social"}
+
+# Where each layout reserves its calm area — shared with the background prompt so the
+# generated image leaves empty space exactly where the text block lands.
+_ZONE_PHRASE = {
+    "bottom": "lower third", "top": "upper third",
+    "left": "left half", "right": "right half", "center": "central area",
+}
+
+
+def _zone_phrase(zone: Optional[str]) -> str:
+    return _ZONE_PHRASE.get(zone or "bottom", "lower third")
+
+
+def _calm_zone_instruction(zone: Optional[str]) -> str:
+    """Reserve the text area as a NATURAL calm part of the SAME photo — never a flat color
+    block. Imagen otherwise satisfies 'GENEROUS empty negative space' by painting a hard
+    color-blocked panel that splits the frame (MEASURED: a cream diagonal eating ~40% of the
+    Digilians background). So we ask for an IN-SCENE calm zone, sized to the text, and forbid
+    the flat block explicitly."""
+    return (
+        f"Keep the {_zone_phrase(zone)} a naturally calm, uncluttered part of the SAME single "
+        "photo — a softly-lit wall, a shallow-focus background, or gentle atmospheric depth — "
+        "sized just enough for the overlaid text plus clean margins. It MUST be a real part of "
+        "the scene, NEVER a flat color block, a solid color field, a hard-edged or color-blocked "
+        "panel, or a diagonal band dividing the frame."
+    )
+
+
+def _hex_to_color_name(hx: Any) -> Optional[str]:
+    """Coarse natural-language name for a hex color (e.g. '#133B66' -> 'deep navy blue').
+
+    Image models BAKE raw hex strings into the picture as visible text (MEASURED:
+    '#133B66 #B19257' rendered in a Digilians background) despite 'no text' rules.
+    So the brand palette is described to the image model by NAME, never as hex.
+    """
+    import colorsys
+    h = str(hx or "").strip().lstrip("#")
+    if len(h) == 3:
+        h = "".join(c * 2 for c in h)
+    if len(h) != 6:
+        return None
+    try:
+        r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
+    except ValueError:
+        return None
+    hue, light, sat = colorsys.rgb_to_hls(r / 255, g / 255, b / 255)
+    H = hue * 360
+    if sat < 0.12:
+        if light > 0.85:
+            return "white"
+        if light < 0.15:
+            return "near-black"
+        if light < 0.35:
+            return "charcoal grey"
+        return "soft grey"
+    qual = "deep " if light < 0.32 else ("bright " if light > 0.62 else "")
+    if H < 15 or H >= 345:
+        name = "red"
+    elif H < 40:
+        name = "orange"
+    elif H < 65:
+        name = "gold" if light < 0.6 else "yellow"
+    elif H < 95:
+        name = "lime green"
+    elif H < 150:
+        name = "green"
+    elif H < 195:
+        name = "teal"
+    elif H < 235:
+        name = "navy blue" if light < 0.42 else "blue"
+    elif H < 280:
+        name = "indigo"
+    elif H < 320:
+        name = "purple"
+    else:
+        name = "magenta"
+    if name in ("orange", "gold") and light < 0.30:
+        name = "brown"
+    return (qual + name).strip()
+
+
+def _palette_names(palette_hex: Optional[list]) -> str:
+    """Natural-language palette for the IMAGE prompt (never raw hex — see above)."""
+    names: list[str] = []
+    for hx in (palette_hex or [])[:4]:
+        n = _hex_to_color_name(hx)
+        if n and n not in names:
+            names.append(n)
+    return ", ".join(names)
 
 
 def _clean(value: Any) -> str:
@@ -354,7 +448,8 @@ Do not generate typography.
     )
 
 
-def build_creative_prompt(brief: PosterBrief, bake_text: bool = False) -> str:
+def build_creative_prompt(brief: PosterBrief, bake_text: bool = False, zone: str = "bottom",
+                          variation: dict | None = None) -> str:
     """Ultra-minimal, concept-driven advertising-poster prompt.
 
     Default (bake_text=False, RECOMMENDED): a TEXT-FREE creative concept with clean
@@ -366,16 +461,21 @@ def build_creative_prompt(brief: PosterBrief, bake_text: bool = False) -> str:
     """
     category = (brief.category or "brand").replace("_", " ")
     hero = brief.offerings[0] if brief.offerings else category
-    palette = ", ".join(brief.palette_hex[:4]) or "a refined, premium brand palette"
+    palette = _palette_names(brief.palette_hex) or "a refined, premium brand palette"
 
     concept = f"""
 A bold, ultra-minimal advertising poster for a {category} brand — ONE striking
 creative concept, not a busy scene. Surreal forced-perspective with a single
 dramatic hero subject inspired by "{hero}" as the focal point. Premium editorial /
-high-fashion campaign aesthetic, vibrant yet clean, generous negative space,
+high-fashion campaign aesthetic, vibrant yet clean,
 cinematic studio lighting, soft shadows, photorealistic, magazine-quality, 8K.
 
 Brand color palette: {palette}.""".strip()
+
+    from poster.variation import concept_variation_cue
+    var_cue = concept_variation_cue(variation)
+    if var_cue:
+        concept += f"\n\n{var_cue}"
 
     if bake_text:
         headline = _clean(brief.headline)
@@ -390,8 +490,7 @@ Brand color palette: {palette}.""".strip()
     else:
         text_block = (
             "ABSOLUTELY NO text, words, letters, numbers, logos, captions, or signage "
-            "anywhere in the image. Reserve a calm, empty band across the lower third "
-            "(and a clean top corner) for a logo and a few words to be overlaid later."
+            f"anywhere in the image. {_calm_zone_instruction(zone)} Keep a clean corner for a logo."
         )
 
     return f"{concept}\n\n{text_block}\n\nVertical 4:5 poster, centered composition, advertising-campaign style."
@@ -438,12 +537,174 @@ def _persona_lines(profile: dict[str, Any] | None) -> str:
     return "\n".join(lines)
 
 
+def _brandbook_style_lines(brand_book: Any) -> str:
+    """The brand's OWN visual world, learned by the BrandBook from its real photos —
+    fed to image generation so the scene is a fresh, on-brand photo (understand → create),
+    NOT a reused website image and NOT a generic metaphor. Duck-typed (no hard import)."""
+    if brand_book is None:
+        return ""
+    vi = getattr(brand_book, "visual_identity", None)
+    if vi is None:
+        return ""
+    parts: list[str] = []
+    for label, attr in (
+        ("Photography style", "photography_style"),
+        ("Aesthetic", "aesthetic"),
+        ("Mood", "mood"),
+        ("Color story", "color_story"),
+    ):
+        v = (getattr(vi, attr, "") or "").strip()
+        if v:
+            parts.append(f"- {label}: {v}")
+    aud = (getattr(brand_book, "audience", "") or "").strip()
+    if aud:
+        parts.append(f"- Audience: {aud[:180]}")
+    return "\n".join(parts)
+
+
+# ccTLD -> country, so we depict the brand's ACTUAL nationality (owner: "this hijab is
+# Gulf/Arab, not Egyptian"). Generic "Arab" is not specific enough — a .eg brand is Egyptian.
+_CCTLD_COUNTRY = {
+    "eg": "Egypt", "sa": "Saudi Arabia", "ae": "the UAE", "ma": "Morocco",
+    "jo": "Jordan", "kw": "Kuwait", "qa": "Qatar", "lb": "Lebanon", "dz": "Algeria",
+    "tn": "Tunisia", "iq": "Iraq", "om": "Oman", "bh": "Bahrain", "ly": "Libya",
+    "sy": "Syria", "ye": "Yemen", "sd": "Sudan", "ps": "Palestine",
+}
+
+
+def _country(profile: dict[str, Any] | None) -> str:
+    """The brand's country from its source URL ccTLD (most reliable signal)."""
+    url = str((profile or {}).get("source_url") or "")
+    host = ""
+    try:
+        host = urlparse(url if "://" in url else "https://" + url).netloc.lower()
+    except Exception:
+        host = ""
+    for tld, country in _CCTLD_COUNTRY.items():
+        if host.endswith("." + tld):
+            return country
+    return ""
+
+
+def _region_line(brief: PosterBrief, profile: dict[str, Any] | None) -> str:
+    """A culture/region anchor so generation depicts the brand's ACTUAL nationality and
+    doesn't drift to generic Western (MEASURED: a European street) or generic Gulf/Arab
+    (owner: an Egyptian brand got a Khaleeji hijab) imagery."""
+    country = _country(profile)
+    if country:
+        return (
+            f"set in {country}, featuring authentic local people from {country} in their "
+            f"own everyday style and dress (NOT Gulf/Khaleeji and NOT a generic 'Arab' "
+            f"look); a real {country} environment — NOT Western or European architecture, "
+            f"streets, signage, or people"
+        )
+    langs = [str(x).lower() for x in ((profile or {}).get("languages") or [])]
+    is_ar = any(l.startswith("ar") for l in langs)
+    if not is_ar:
+        try:
+            from poster.template import _is_rtl
+            is_ar = _is_rtl(brief.headline) or _is_rtl(brief.business_name)
+        except Exception:
+            pass
+    if is_ar:
+        return ("set in an authentic Middle Eastern environment with real local people; "
+                "NOT Western or European architecture, streets, signage, or people")
+    return ""
+
+
+# A concrete, MODERN environment per category — so the scene is the brand's real
+# workplace, not a generic warm "bohemian/editorial" interior (owner: "the bohemian
+# background has nothing to do with the brand"). Matched by substring; universal
+# (derived from the scraped category, not a per-brand hack).
+_ENV_BY_CATEGORY = {
+    "education": ("a modern, bright technology training space — laptops and large "
+                  "screens, a contemporary classroom or innovation lab, clean and professional"),
+    "training": ("a modern training/innovation lab — laptops, large screens, clean "
+                 "contemporary setting"),
+    "technology": ("a modern tech workspace — screens, devices, networking gear, clean "
+                   "contemporary lines"),
+    "software": "a modern software studio — monitors with code, clean contemporary workspace",
+    "cafe": "a warm, modern specialty cafe",
+    "restaurant": "an inviting, well-styled dining space true to the cuisine",
+    "medical": "a clean, modern, reassuring clinic interior with soft daylight",
+    "clinic": "a clean, modern, reassuring clinic interior with soft daylight",
+    "skincare": "a clean, premium skincare/beauty setting with soft light",
+    "beauty": "an elegant, modern beauty studio",
+    "retail": "a stylish, modern, well-lit retail space",
+    "ecommerce": "a clean, modern lifestyle product setting",
+    "fitness": "an energetic, modern gym with dynamic light",
+    "real estate": "bright, beautifully staged modern interiors",
+}
+
+
+def _env_for_category(category: Optional[str]) -> str:
+    c = (category or "").lower()
+    for key, env in _ENV_BY_CATEGORY.items():
+        if key in c:
+            return env
+    return ""
+
+
+def _subject_line(brief: PosterBrief) -> str:
+    """The concrete on-brand subject the scene must depict (its real activity + its real
+    modern environment), so the image is about THIS business — not a random studio
+    portrait, a warm bohemian interior, or an unrelated scene.
+
+    NOTE: we deliberately do NOT inject the offering's marketing NAME (e.g. "Train To
+    Hire (4 Month)") — image models BAKE such branded phrases into the scene as visible
+    text (MEASURED on NTI). The category + concrete environment ground the scene without
+    any bakeable copy; the real offering text lives in the overlay."""
+    cat = (brief.category or "").replace("_", " ").strip() or "the brand's activity"
+    base = f"real people authentically engaged in {cat}"
+    env = _env_for_category(brief.category)
+    if env:
+        base += f", in {env}"
+    return base
+
+
+def _brand_dna_lines(brand_dna: Any) -> str:
+    """The brand's LEARNED visual design language (from BrandCreativeDNA — reverse-engineered
+    from its REAL creatives). When present, this is the dominant style instruction: it tells
+    the image model to render in the brand's OWN language (e.g. WE: composite + purple light
+    + dramatic rim-lit subject), which deliberately OVERRIDES the generic natural-light
+    defaults — the brand's measured reality wins. Empty unless a vision DNA exists."""
+    if brand_dna is None or not getattr(brand_dna, "used_vision", False):
+        return ""
+    parts: list[str] = []
+    for label, attr in (
+        ("Imagery style", "imagery_style"),
+        ("Colour usage", "color_usage"),
+        ("Composition", "composition_patterns"),
+        ("Signature moves", "signature_moves"),
+        ("Mood", "mood"),
+    ):
+        v = (getattr(brand_dna, attr, "") or "").strip()
+        if v:
+            parts.append(f"- {label}: {v}")
+    block = "\n".join(parts)
+    do = [s for s in (getattr(brand_dna, "do_list", None) or []) if s][:6]
+    dont = [s for s in (getattr(brand_dna, "dont_list", None) or []) if s][:6]
+    if do:
+        block += "\nDO: " + "; ".join(do)
+    if dont:
+        block += "\nDO NOT: " + "; ".join(dont)
+    return block
+
+
 def build_llm_concept_prompt(
     brief: PosterBrief,
     caller: Optional[Any] = None,
     profile: dict[str, Any] | None = None,
+    spec: Optional[PosterDesignSpec] = None,
+    brand_book: Any = None,
+    variation: dict | None = None,
+    brand_dna: Any = None,
+    scene_idea: str | None = None,
 ) -> str:
     """LLM art-director: invent a UNIQUE, text-free visual concept per business.
+
+    `scene_idea` (the Creative Concept's visual_idea) — when given, it is the scene the
+    image must depict, so the picture expresses the SAME single message as the copy.
 
     Falls back to the static build_creative_prompt() when no caller is supplied or
     the call fails. ZERO HALLUCINATION: the concept is purely VISUAL (a metaphor
@@ -451,39 +712,68 @@ def build_llm_concept_prompt(
     in the overlay. The image is always text-free (text is overlaid later).
 
     When `profile` is given, the concept is grounded in the brand's scraped
-    PERSONA (verbatim tagline / description / value props / audience / languages)
-    and its VISUAL IDENTITY: the brand palette must drive the scene's color story,
-    so the poster reads as THIS brand, not a generic category visual.
+    PERSONA and its VISUAL IDENTITY; with `brand_dna` it renders in the brand's
+    learned design language.
     """
+    # The text block lands in this zone -> the image must keep it calm there.
+    zone = spec.negative_space_zone if spec else "bottom"
     if caller is None:
-        return build_creative_prompt(brief)
+        return build_creative_prompt(brief, zone=zone, variation=variation)
 
     offerings = "; ".join([o for o in (brief.offerings or [])[:5] if o]) or (brief.category or "its offerings")
-    palette = ", ".join(brief.palette_hex[:4]) or "a premium brand palette"
+    palette = _palette_names(brief.palette_hex) or "a premium brand palette"
     persona = _persona_lines(profile)
-    system = (
-        "You are an award-winning advertising art director. Invent ONE striking, "
-        "surreal or metaphorical VISUAL concept for a premium vertical ad poster for "
-        "the given business, written as a detailed image-generation prompt.\n"
-        "STRICT RULES:\n"
-        "- ONE bold hero concept — a visual metaphor for what the business does; not a busy scene.\n"
-        "- EMBODY the brand persona below: the concept's subject, mood, and cultural "
-        "context must feel like THIS specific brand, not its generic category.\n"
-        "- The brand palette is the scene's DOMINANT color story (lighting, surfaces, "
-        "atmosphere) — accent tones may vary, but the brand colors must lead.\n"
-        "- Respect the audience's cultural context (e.g. Arabic-language brands: "
-        "regionally authentic settings, props, and people — never clichés).\n"
-        "- Photorealistic, editorial, high-end campaign aesthetic; cinematic lighting.\n"
-        "- Leave GENEROUS empty negative space (lower third + margins) for text added later.\n"
-        "- ABSOLUTELY NO text, words, letters, numbers, logos, or signage in the image.\n"
-        "- Vertical 4:5. Purely visual: no factual claims, prices, or guarantees."
-    )
+    style = _brandbook_style_lines(brand_book)
+
+    if style:
+        # UNDERSTAND → CREATE: the BrandBook learned the brand's real visual world from its
+        # own photos; generate a FRESH photo in that exact world (not a reused site image,
+        # not an abstract metaphor) — this is the value over copy-pasting the website image.
+        system = (
+            "You are an award-winning advertising art director. Using the brand's OWN visual "
+            "world below (learned from its real photos), write a detailed image-generation "
+            "prompt for a FRESH, photorealistic, on-brand scene — a NEW photo the brand "
+            "itself could have shot. NOT a reused stock image, NOT an abstract metaphor.\n"
+            "STRICT RULES:\n"
+            "- Show the brand's people ACTIVELY DOING what the brand actually does (its "
+            "category + real offerings, e.g. learners using laptops in a tech lab, diners at "
+            "the table) — a real moment, NOT a static studio portrait of one person.\n"
+            "- Depict the brand's REAL world: its real kind of people, place, and activity, "
+            "in its actual photography style (below). Authentic and specific to THIS brand.\n"
+            "- Match the brand's mood + color story; the brand palette leads the lighting.\n"
+            "- Respect the audience's cultural context (Arabic brands: regionally authentic "
+            "people and settings, never clichés).\n"
+            "- Photorealistic premium campaign photography; cinematic lighting.\n"
+            f"- {_calm_zone_instruction(zone)}\n"
+            "- ABSOLUTELY NO text, words, letters, numbers, logos, or signage in the image.\n"
+            "- Vertical 4:5. Purely visual: no factual claims, prices, or guarantees."
+        )
+    else:
+        system = (
+            "You are an award-winning advertising art director. Invent ONE striking, "
+            "surreal or metaphorical VISUAL concept for a premium vertical ad poster for "
+            "the given business, written as a detailed image-generation prompt.\n"
+            "STRICT RULES:\n"
+            "- ONE bold hero concept — a visual metaphor for what the business does; not a busy scene.\n"
+            "- EMBODY the brand persona below: the concept's subject, mood, and cultural "
+            "context must feel like THIS specific brand, not its generic category.\n"
+            "- The brand palette is the scene's DOMINANT color story (lighting, surfaces, "
+            "atmosphere) — accent tones may vary, but the brand colors must lead.\n"
+            "- Respect the audience's cultural context (e.g. Arabic-language brands: "
+            "regionally authentic settings, props, and people — never clichés).\n"
+            "- Photorealistic, editorial, high-end campaign aesthetic; cinematic lighting.\n"
+            f"- {_calm_zone_instruction(zone)}\n"
+            "- ABSOLUTELY NO text, words, letters, numbers, logos, or signage in the image.\n"
+            "- Vertical 4:5. Purely visual: no factual claims, prices, or guarantees."
+        )
+
     user = (
         f"Business: {brief.business_name}\n"
         f"Category: {brief.category}\n"
         f"Real offerings: {offerings}\n"
         f"Tone: {brief.tone or 'premium'}\n"
         f"Brand palette: {palette}\n"
+        + (f"\nThe brand's OWN visual world (from its real photos):\n{style}\n" if style else "")
         + (f"\nBrand persona (all verbatim from the real website):\n{persona}\n" if persona else "")
         + "\nReturn concept_title and a vivid, text-free image_prompt."
     )
@@ -492,15 +782,252 @@ def build_llm_concept_prompt(
         concept, _usage = caller(system, user, _CreativeConceptResponse, group_name="poster_concept")
         prompt = (getattr(concept, "image_prompt", "") or "").strip()
     except Exception:
-        return build_creative_prompt(brief)
+        return build_creative_prompt(brief, zone=zone, variation=variation)
 
     if not prompt:
-        return build_creative_prompt(brief)
+        return build_creative_prompt(brief, zone=zone, variation=variation)
 
     # Reinforce the hard constraints regardless of what the LLM returned.
-    return (
-        f"{prompt}\n\nBrand color palette: {palette}.\n"
-        "ABSOLUTELY NO text, words, letters, numbers, logos, or signage anywhere; "
-        "reserve clean empty space (lower third + a top corner) for a logo and a few "
-        "words overlaid later. Vertical 4:5 poster, advertising-campaign style."
+    # LEAD WITH GROUNDING. Imagen weights the START of the prompt most, and a long free
+    # LLM scene + a generic "stock photo" style description made it WANDER (MEASURED: a
+    # Western man / a European street for an Egyptian tech brand). So the concrete subject
+    # + region + brand palette go FIRST as the dominant instruction; the LLM's prose is
+    # demoted to a short, secondary creative cue; generic "stock/AI" style noise is dropped.
+    region = _region_line(brief, profile)
+    # The Creative Concept's visual_idea (when supplied) IS the scene — so the picture
+    # expresses the same single message as the copy; else the generic on-brand subject.
+    subject = (scene_idea or "").strip() or _subject_line(brief)
+    style_low = style.lower()
+    style_clean = "" if ("stock" in style_low or "ai-generated" in style_low or "ai generated" in style_low) else style
+    # Per-RUN variation drives the lighting + overall feel (so the same brand differs each
+    # run) — but only with NATURAL lighting options, so the de-RGB guard below still holds.
+    lighting_phrase = (variation["lighting"] if variation else "soft, even, natural daylight")
+    feel_phrase = (
+        f"Overall feel: {variation['mood']}, {variation['energy']}; {variation['composition']}. "
+        if variation else ""
+    )
+    dna_block = _brand_dna_lines(brand_dna)
+    if dna_block:
+        # DNA-LED: render in the brand's OWN learned visual language (reverse-engineered
+        # from its real creatives). This DELIBERATELY overrides the generic natural-light /
+        # no-gel defaults — for a brand whose real ads ARE composite + colored light (e.g.
+        # WE's purple), matching them is correct, not a 'gamer RGB' bug. Facts stay grounded;
+        # subject + region + no-text guards remain.
+        lead = (
+            f"A single premium advertising visual for the brand '{brief.business_name}', "
+            f"designed in the BRAND'S OWN visual language below. Show {subject}. "
+            + (f"{region}. " if region else "")
+            + f"Lead the palette with {palette}.\n\nBRAND DESIGN LANGUAGE (follow it faithfully):\n"
+            + dna_block
+            + f"\n\nComposition: ONE clear focal subject with a clean eye-path — do NOT crowd the "
+            "frame with competing busy elements (multiple UI panels, charts, maps, HUDs). "
+            + f"{_calm_zone_instruction(zone)} ABSOLUTELY "
+            "NO text, letters, numbers, logos, or signage anywhere in the image. Vertical 4:5 poster."
+        )
+    else:
+        lead = (
+            f"A single photorealistic advertising photograph. Show {subject}. "
+            + (f"{region}. " if region else "")
+            # Brand colors belong in the SCENE (surfaces/props/wardrobe) under NATURAL light —
+            # NOT in the lighting. "Dominant colors ... in the lighting" produced a clichéd
+            # red-and-blue split-lit 'gamer RGB' scene (MEASURED on ITI: palette red+blue).
+            + f"The brand palette ({palette}) appears naturally in the environment, surfaces, "
+            f"props and wardrobe — NOT as colored lighting. {lighting_phrase.capitalize()}; "
+            "ABSOLUTELY NO colored gel lighting, NO duotone, NO harsh red-and-blue or "
+            "warm-vs-cool split lighting. Clean, modern, professional commercial campaign "
+            "photography (NOT artsy/bohemian, NOT rustic; NO arches, pottery, sculpture, or "
+            "handicraft props unless that is literally the business), shallow "
+            f"depth of field, authentic candid moment. {feel_phrase}"
+            + (f"Visual style: {style_clean}. " if style_clean else "")
+            + "Composition: ONE clear focal subject — do NOT crowd the frame with competing "
+            "busy elements. "
+            + f"{_calm_zone_instruction(zone)} No text, letters, numbers, logos, "
+            "or signage anywhere. Vertical 4:5 advertising poster."
+        )
+    # NO free-metaphor secondary cue. The LLM's surreal scene was the main WANDER source
+    # — it leaked off-brand objects (a clay sculpture on NTI) and pulled toward a generic
+    # "bohemian/editorial" look. The grounded lead (real people + the brand's real modern
+    # environment + region + palette) plus the per-run VARIATION (lighting/mood/composition/
+    # layout/fonts) gives controlled, ON-BRAND variety instead. A short, on-brand atmosphere
+    # hint from the LLM is appended only if it stays a detail (not a separate scene/object).
+    creative = prompt.strip().replace("\n", " ")
+    bad = ("sculpt", "statue", "pottery", "clay", "arch", "handicraft", "surreal",
+           "floating", "void", "staircase", "abstract")
+    if creative and not any(b in creative.lower() for b in bad):
+        return f"{lead} Subtle on-brand atmospheric detail (keep it minor, do not add a separate object or scene): {creative[:160]}"
+    return lead
+
+
+class _DesignSpecResponse(BaseModel):
+    """Structured output: the LLM art-director's COMPOSITION decisions for one poster.
+
+    Pure design — carries no factual claims. (No numeric range constraints here:
+    OpenAI strict structured outputs reject min/max; we clamp `scrim_strength` after.)
+    """
+    layout: Literal[
+        "bottom_band", "side_panel_left", "side_panel_right",
+        "top_anchor", "center_editorial", "magazine_hero",
+    ]
+    headline_treatment: Literal["stacked_hero", "block", "highlight"]
+    accent_word: Literal["last", "first", "none"]
+    text_align: Literal["left", "center", "right"]
+    scrim_strength: float
+    show: list[str]
+    accent_hex: str
+    rationale: str
+    # FREE-FORM placement (continuous, 0..1 of the canvas) — the real template-breaker.
+    text_box: list[float]    # [x, y, w]: top-left + width of the text cluster
+    logo_xy: list[float]     # [x, y]: top-left of the brand mark
+
+
+def _valid_coords(v: Any, n: int) -> Optional[list]:
+    """Accept a list of exactly n floats in [0,1]; else None (renderer uses an archetype)."""
+    try:
+        vals = [float(x) for x in (v or [])]
+    except Exception:
+        return None
+    if len(vals) != n or not all(0.0 <= x <= 1.0 for x in vals):
+        return None
+    return vals
+
+
+def _zone_from_box(box: Optional[list]) -> str:
+    """Map a free text_box to the image's calm zone (so Imagen leaves space where text lands)."""
+    if not box:
+        return "bottom"
+    x, y, w = box
+    cx, cy = x + w / 2.0, y + 0.12
+    if cy < 0.40:
+        return "top"
+    if cy > 0.62:
+        return "bottom"
+    if cx < 0.40:
+        return "left"
+    if cx > 0.60:
+        return "right"
+    return "center"
+
+
+def build_design_spec(
+    brief: PosterBrief,
+    caller: Optional[Any] = None,
+    profile: dict[str, Any] | None = None,
+    variation: dict | None = None,
+    brand_dna: Any = None,
+) -> PosterDesignSpec:
+    """LLM art-director: decide the COMPOSITION for THIS brand from its scraped data.
+
+    Returns a PosterDesignSpec. Falls back to the deterministic per-brand
+    `default_design_spec` when no caller is supplied or the call fails. The spec is
+    pure DESIGN (no factual claims); the renderer injects the evidence-grounded text
+    and the real logo, so creativity is unbounded while facts stay grounded.
+
+    GROUNDED COLOR: `accent_hex` is accepted ONLY if it exactly matches a scraped
+    brand color, so even the lead color traces to evidence.
+    """
+    # Imported here (not at module top) to avoid any import-order coupling; template
+    # imports only schemas, so there is no cycle.
+    from poster.template import (
+        default_design_spec, _is_rtl, _LOGO_CORNER_BY_LAYOUT, _ZONE_BY_LAYOUT,
+    )
+    from poster.variation import design_variation_cue, variation_seed_int
+
+    if caller is None:
+        # No LLM: vary the deterministic fallback per run via the variation seed.
+        return default_design_spec(
+            brief, density="full", variation_seed=variation_seed_int(variation)
+        )
+
+    persona = _persona_lines(profile)
+    offerings = "; ".join([o for o in (brief.offerings or [])[:5] if o]) or (brief.category or "")
+    palette = ", ".join(brief.palette_hex[:5]) or "(none)"
+    is_rtl = _is_rtl(brief.headline) or _is_rtl(brief.business_name)
+
+    system = (
+        "You are an award-winning poster ART DIRECTOR. Decide the COMPOSITION for ONE "
+        "premium vertical ad poster for THIS specific brand. You choose DESIGN ONLY "
+        "(layout, emphasis, color role) — you never invent facts.\n"
+        "Pick values that fit THIS brand's character so different brands look different:\n"
+        "- layout: bottom_band | side_panel_left | side_panel_right | top_anchor | "
+        "center_editorial | magazine_hero\n"
+        "- headline_treatment: stacked_hero (a short punchy headline as a bold word-stack), "
+        "block (a clean single line), or highlight (one key word sits in a brand-colored "
+        "block — punchy/editorial)\n"
+        "- accent_word: which headline word takes the brand color (last/first/none)\n"
+        "- text_align: left/center/right (Arabic/RTL reads right)\n"
+        "- scrim_strength: 0..1 darkness behind the text for legibility (lower when the "
+        "headline sits over a calm image area)\n"
+        "- show: a CLEAN subset of [logo,kicker,headline,sub,offerings,cta,contact,social] "
+        "— great posters show FEW elements; never list contact/social unless they truly help\n"
+        "- accent_hex: the ONE brand color to lead, copied EXACTLY from the brand palette "
+        "below (or empty string if unsure)\n"
+        "- text_box: [x, y, w] as FRACTIONS of the canvas (0..1) — the TOP-LEFT (x,y) and "
+        "WIDTH of the text cluster. This is the real composition control: place it where the "
+        "image is calmest and VARY it (corner, side, lower band, off-center) — do NOT default "
+        "to the same spot. Keep margins (x>=0.04; x+w<=0.95; y<=0.74; 0.40<=w<=0.9).\n"
+        "- logo_xy: [x, y] (0..1) top-left of the logo — a clean, uncluttered spot AWAY from "
+        "the text_box.\n"
+        "- rationale: one short line on why this composition fits the brand."
+    )
+    # When we know the brand's REAL design language, steer the composition to echo it.
+    dna_lines = _brand_dna_lines(brand_dna)
+    user = (
+        f"Brand: {brief.business_name}\n"
+        f"Category: {brief.category}\n"
+        f"Headline (verbatim — do not change the words): {brief.headline}\n"
+        f"Offerings: {offerings}\n"
+        f"Brand palette (choose accent_hex from these EXACTLY): {palette}\n"
+        f"Has a real logo image: {bool(brief.logo_url)}\n"
+        f"RTL / Arabic copy: {is_rtl}\n"
+        + (f"\nBrand persona (verbatim from the real site):\n{persona}\n" if persona else "")
+        + (f"\nThe brand's REAL design language (echo where THEY place logo/headline, their "
+           f"composition habits):\n{dna_lines}\n" if dna_lines else "")
+        + (f"\n{design_variation_cue(variation)}\n" if variation else "")
+    )
+
+    try:
+        resp, _usage = caller(system, user, _DesignSpecResponse, group_name="poster_design")
+    except Exception:
+        return default_design_spec(
+            brief, density="full", variation_seed=variation_seed_int(variation)
+        )
+
+    layout = resp.layout
+    show = [s for s in (resp.show or []) if s in _SHOW_ALLOWED]
+    if "headline" not in show:
+        show.insert(0, "headline")
+    if brief.logo_url and "logo" not in show:
+        show.insert(0, "logo")
+    if not show:
+        show = ["logo", "headline", "cta"]
+
+    # GROUND the lead color: accept accent_hex only if it's a real scraped brand color.
+    palette_set = {
+        str(h).lower()
+        for h in (list(brief.palette_hex or []) + ([brief.primary_color] if brief.primary_color else []))
+        if h
+    }
+    accent = (resp.accent_hex or "").strip()
+    accent = accent if (accent.startswith("#") and accent.lower() in palette_set) else None
+
+    # FREE-FORM placement: use the LLM's continuous coords when valid (unbounded layouts);
+    # else fall back to the archetype. The image's calm zone follows where the text lands.
+    text_box = _valid_coords(getattr(resp, "text_box", None), 3)
+    logo_xy = _valid_coords(getattr(resp, "logo_xy", None), 2)
+    zone = _zone_from_box(text_box) if text_box else _ZONE_BY_LAYOUT.get(layout, "bottom")
+
+    return PosterDesignSpec(
+        layout=layout,
+        logo_corner=_LOGO_CORNER_BY_LAYOUT.get(layout, "top_left"),
+        headline_treatment=resp.headline_treatment,
+        accent_word=resp.accent_word,
+        text_align=resp.text_align,
+        scrim_strength=min(1.0, max(0.0, float(resp.scrim_strength or 0.82))),
+        show=show,
+        negative_space_zone=zone,
+        accent_hex=accent,
+        rationale=(resp.rationale or "")[:300],
+        variation_seed=variation_seed_int(variation),
+        text_box=text_box,
+        logo_xy=logo_xy,
     )

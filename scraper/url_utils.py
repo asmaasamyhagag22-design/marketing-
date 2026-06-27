@@ -9,9 +9,19 @@ from __future__ import annotations
 import ipaddress
 import re
 import socket
+from typing import Optional
 from urllib.parse import urlparse, urlunparse, parse_qsl, urlencode, urljoin
 
 from .config import TRACKING_PARAMS
+
+# Public-suffix-aware registrable-domain resolution. `tld` ships an offline
+# bundled PSL (no network). If it's somehow unavailable, same_registrable_host
+# degrades to the legacy www-stripped hostname comparison (see below).
+try:
+    from tld import get_fld
+    _TLD_OK = True
+except Exception:  # pragma: no cover - dependency fallback for light envs
+    _TLD_OK = False
 
 
 _ABSOLUTE_URL_RE = re.compile(r"https?://", re.IGNORECASE)
@@ -129,13 +139,40 @@ def normalize_url(url: str) -> str:
     return urlunparse((scheme, netloc, path, parts.params, query, ""))
 
 
-def same_registrable_host(a: str, b: str) -> bool:
-    """Return True if two URLs point to the same site.
+def _registrable_domain(url: str) -> Optional[str]:
+    """The eTLD+1 (registrable domain) for a URL via the public-suffix list:
+    'web.vodafone.com.eg' -> 'vodafone.com.eg'. Returns None when the host has no
+    public-suffix match (IP literal, localhost, intranet / unknown TLD)."""
+    if not _TLD_OK:
+        return None
+    try:
+        return get_fld(ensure_scheme(url), fix_protocol=True, fail_silently=True)
+    except Exception:
+        return None
 
-    Treats `example.com` and `www.example.com` as the same host.
-    This is good enough for our purposes; a full PSL-based check
-    is overkill for v0.1.
+
+def same_registrable_host(a: str, b: str) -> bool:
+    """Return True if two URLs belong to the same site (same registrable domain).
+
+    Uses the public-suffix list (tld) so that subdomains of one site compare
+    equal — `www.`, `web.`, `eshop.`, `my.` of vodafone.com.eg all share the
+    registrable domain `vodafone.com.eg`. This matters for real enterprise sites
+    that redirect the apex/www to a subdomain (e.g. www.vodafone.com.eg ->
+    web.vodafone.com.eg) and serve their navigation across subdomains: the old
+    www-only-stripping equality classified every such internal link as EXTERNAL
+    and collapsed the crawl to a single page (MEASURED: Vodafone EG, internal=0).
+
+    Multi-label suffixes (.com.eg, .co.uk) are handled correctly, and sites that
+    merely SHARE a public suffix are NOT merged (a.blogspot.com != b.blogspot.com,
+    vodafone.com.eg != vodafone.co.uk). Falls back to the legacy www-stripped
+    hostname equality when a host has no public-suffix match (IP literal /
+    localhost / intranet / unknown TLD) so those hosts keep prior behavior.
     """
+    fa = _registrable_domain(a)
+    fb = _registrable_domain(b)
+    if fa and fb:
+        return fa == fb
+    # Fallback: hosts the PSL can't classify (IP / localhost / intranet).
     ha = urlparse(ensure_scheme(a)).netloc.lower().removeprefix("www.")
     hb = urlparse(ensure_scheme(b)).netloc.lower().removeprefix("www.")
     return ha == hb and ha != ""
@@ -143,6 +180,48 @@ def same_registrable_host(a: str, b: str) -> bool:
 
 def get_host(url: str) -> str:
     return urlparse(ensure_scheme(url)).netloc.lower()
+
+
+# A leading path segment that is a LOCALE (en, ar, us, en-eg, ar_eg, ...) — a locale
+# homepage like /en or /en-eg is the brand homepage, NOT a deep content page.
+_LOCALE_SEGMENT_RE = re.compile(r"^[a-z]{2}([-_][a-z]{2})?$", re.IGNORECASE)
+_HOME_SEGMENTS = {"home", "index", "default", "main"}
+_HOME_FILE_RE = re.compile(r"^(index|default|home)\.[a-z0-9]+$", re.IGNORECASE)
+
+
+def site_root_if_deep(url: str) -> Optional[str]:
+    """If `url` is a DEEP CONTENT page, return its site root (``scheme://host/``); else
+    None.
+
+    Used so the crawler can anchor brand IDENTITY (name / tagline / description / logo)
+    to the real homepage when the seed URL was a deep page — MEASURED disaster: ITI was
+    scraped at ``/diplomaStructure/.../tracks/...`` so its tagline became the track name
+    ("DATA SCIENCE") and the offerings were all one track.
+
+    Returns None (do NOT re-anchor) when the URL is already a homepage:
+      * the bare root ``/``
+      * a LOCALE homepage — ``/en``, ``/us``, ``/en-eg``, ``/en/home`` (these ARE the
+        homepage; re-anchoring them to the bare root can regress a locale-gated site).
+    A path with any real content segment left after stripping a locale prefix and a
+    trailing home/index marker is treated as deep. (MEASURED across 83 saved scrapes:
+    cleanly separates the locale homes orange/en, adidas/us, defacto/en-eg,
+    vodafone/en/home from the deep pages iti/tracks, sofitel/restaurant, elkbabgi/menu,
+    elmenus/<city>, buffalo/branches/all/home.)
+    """
+    try:
+        p = urlparse(ensure_scheme(url))
+    except Exception:
+        return None
+    if not p.netloc:
+        return None
+    segs = [s for s in (p.path or "").split("/") if s]
+    if segs and _LOCALE_SEGMENT_RE.match(segs[0]):
+        segs = segs[1:]                                  # strip a leading locale prefix
+    while segs and (segs[-1].lower() in _HOME_SEGMENTS or _HOME_FILE_RE.match(segs[-1])):
+        segs = segs[:-1]                                 # strip trailing home/index
+    if not segs:
+        return None                                      # already a homepage
+    return f"{p.scheme}://{p.netloc}/"
 
 
 def get_domain_slug(url: str) -> str:

@@ -69,6 +69,7 @@ from competitor import (
     synthesize_swot,
     format_swot,
 )
+from competitor.swot import unique_insight_texts
 
 
 def scrape_fn(url):
@@ -177,7 +178,8 @@ def main():
         except TypeError:
             pass
 
-    swot = synthesize_swot(matrix, themes=themes)
+    swot = synthesize_swot(matrix, themes=themes,
+                           unique_insights=unique_insight_texts(profile))
 
     # --- consolidated result -> output file ------------------------------------
     # Everything the run produced, grounded: the subject profile, the discovered

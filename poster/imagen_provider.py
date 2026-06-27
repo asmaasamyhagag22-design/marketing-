@@ -34,8 +34,11 @@ _COMPOSITION_CONTRACT = (
     "Composition requirements: render ONE single, continuous photographic scene. "
     "Do NOT produce a collage, split-screen, diptych, grid, or multi-panel image; "
     "no internal seams, dividing lines, borders, frames, or picture-in-picture. "
-    "Deliberately leave a large, calm area of empty negative space in the lower "
-    "half of the frame, plus clean margins, reserved for text added later. "
+    "CRITICAL — this OVERRIDES any request for calm or empty space: do NOT fill any part "
+    "of the frame with a flat solid color field, a large flat color block, a hard-edged or "
+    "color-blocked panel, or a diagonal band/wedge that divides the image. The reserved calm "
+    "area must be a NATURAL part of the single photo (a softly-lit wall, a shallow-focus "
+    "background, or atmospheric depth), only as large as the text needs, plus clean margins. "
     "Absolutely no text, words, letters, numbers, logos, or signage anywhere."
 )
 

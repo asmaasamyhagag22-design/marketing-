@@ -291,7 +291,13 @@ def build_positioning_prompt(pack: EvidencePack) -> str:
         + "   - 'unknown' = no clear signal\n"
         + "2. audience_signals: short phrases (3-8 words) that describe the audience the copy is speaking to. Examples: 'young professionals in Cairo', 'pregnant mothers', 'enterprise IT teams'. Cap at 5 items, most specific first. Each item must cite the blocks it came from.\n"
         + "3. value_propositions: the distinctive promises the business makes — what differentiates them. Each is a short phrase (5-15 words). Skip generic claims like 'high quality' unless paired with specifics. Cap at 5 items. Each must cite evidence.\n"
-        + f"4. tone_of_voice: one of {', '.join(TONE_VALUES)}. Based on word choice across multiple blocks (formality, jargon, warmth, imagery). Cite 2-3 representative blocks."
+        + f"4. tone_of_voice: one of {', '.join(TONE_VALUES)}. Based on word choice across multiple blocks (formality, jargon, warmth, imagery). Cite 2-3 representative blocks.\n"
+        + "5. other_unique_insights: a CATCH-ALL for a genuinely UNIQUE competitive edge or "
+        "operational detail that does NOT fit the fields above — e.g. a stated differentiator "
+        "('the only X in the city'), an unusual guarantee/policy, a notable scale fact, a "
+        "distinctive process. STRICT: each must be a CONCRETE FACT stated on the page (cite "
+        "block_id + verbatim quote), NOT your opinion or a generic strength. If nothing "
+        "genuinely unique stands out, return an EMPTY list. Cap at 3 items."
     )
 
 

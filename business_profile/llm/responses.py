@@ -77,6 +77,10 @@ class PositioningResponse(BaseModel):
 
     audience_signals: list[StringListItem] = Field(default_factory=list)
     value_propositions: list[StringListItem] = Field(default_factory=list)
+    # Catch-all: a UNIQUE, concrete competitive edge / operational detail that doesn't
+    # fit audience/value_props/tone (e.g. "24/7 same-day delivery", "only ISO-certified
+    # lab in the city"). Same grounding rules — each must cite a block_id + verbatim quote.
+    other_unique_insights: list[StringListItem] = Field(default_factory=list)
 
     tone_of_voice_value: Optional[str] = None  # validated against ToneOfVoice
     tone_of_voice_evidence: list[LLMEvidenceRef] = Field(default_factory=list)

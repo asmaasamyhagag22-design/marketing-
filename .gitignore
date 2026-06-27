@@ -59,3 +59,16 @@ phone_diagnostic.txt
 .vscode/
 .idea/
 *.swp
+
+# Stray generated artifacts at the repo root (the real outputs live in outputs/;
+# these are stray root copies, audit sidecars, and scratch data dumps). Committed
+# measurement-corpus profiles (te_eg_gemini.json, iti_home*.json, *_real.json,
+# marasim_profile.json) are added explicitly and are NOT covered by these.
+/poster_*.png
+/*_poster.png
+/*.audit.json
+/project_structure.txt
+/profile.json
+/profile_buf.json
+/elkbabgi_profile_fresh.json
+/_prompt_diag.py

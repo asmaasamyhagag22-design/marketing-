@@ -481,7 +481,7 @@ def _absolute_url(base: Optional[str], maybe_url: Optional[str]) -> Optional[str
         return None
 
     if url.startswith("data:"):
-        return None
+        return url  # a self-contained data URI (e.g. an inlined SVG logo) IS absolute
 
     parsed = urlparse(url)
     if parsed.scheme in {"http", "https"}:
@@ -512,13 +512,17 @@ def _candidate_is_reasonable_logo(candidate: dict[str, Any]) -> bool:
     if "og_image" in source_type or "hero" in classification:
         return False
 
-    if src.endswith(".svg"):
-        # Pillow usually cannot render SVG directly.
-        # Keep text fallback unless a raster logo also exists.
-        return False
+    # NOTE: .svg is intentionally ALLOWED. The renderer is Playwright/Chromium,
+    # which renders SVG natively (the old "Pillow can't render SVG" reject dropped
+    # SVG-only brand logos). The template/reel inline an SVG logo as a data URI.
 
-    bad_markers = ["banner", "hero", "background", "cover"]
-    if any(marker in src for marker in bad_markers):
+    # Reject hero/banner/cover images by a WHOLE-WORD match, not substring: a
+    # substring check rejected legitimate logos whose filename contains the word as
+    # part of another token (MEASURED: a "...Transparent_Background_..." brand logo
+    # was dropped, forcing a weaker candidate; "discover"/"recover" contain "cover").
+    # Underscore is a word char, so "transparent_background" has no \bbackground\b
+    # boundary and survives, while a real "site-background.jpg" hero still matches.
+    if re.search(r"\b(banner|hero|background|cover)\b", src):
         return False
 
     return True
@@ -530,6 +534,69 @@ _NON_BRAND_LOGO_CLASSES = {
     "partner_logo", "sponsor_logo", "initiative_logo", "government_logo",
     "favicon", "og_image",
 }
+
+# A candidate the scraper could NOT positively identify as a brand mark
+# (classification "unknown_candidate") AND that scored low confidence is almost
+# always a CONTENT image — a wide product banner / hero promo — not the logo.
+# MEASURED across 37 saved sites: every TRUE logo scored >=0.54 (including a real
+# logo the scraper left as unknown_candidate — Qasr Elkbabgi's crest at 0.54); the
+# ONLY banner-as-logo disaster (Vodafone's wide "Rateplans.jpg" promo) scored 0.38.
+# So below this floor, reject an unknown_candidate and fall back to a clean text
+# wordmark instead of rendering a product banner as the brand logo. Defense-in-depth:
+# the deeper fix is the scraper classifier + inline-SVG capture (see CLAUDE.md).
+_UNKNOWN_LOGO_MIN_CONF = 0.5
+
+
+def _is_probably_not_a_logo(classification: str, conf: float) -> bool:
+    return classification == "unknown_candidate" and conf < _UNKNOWN_LOGO_MIN_CONF
+
+
+_LOWRES_LOGO_MARKERS = ("imagepreview", "thumbnail-")
+
+
+def _logo_res_rank(url: str) -> int:
+    """Resolution hint from a CDN URL: 2 = explicit hi-res (preview-1000…), 0 = low-res
+    (imagePreview / thumbnail-NxN), 1 = plain/unknown."""
+    lu = (url or "").lower()
+    if "preview-1000" in lu or "/preview-" in lu:
+        return 2
+    if any(m in lu for m in _LOWRES_LOGO_MARKERS):
+        return 0
+    return 1
+
+
+def _logo_stem(url: str) -> str:
+    """Core logo name from a URL's last path segment (drop query, extension, a -ar locale
+    suffix) — so 'we-logo-ar?imagePreview=1' and 'preview-1000x0/we-logo.png' share 'we-logo'."""
+    import re
+    seg = (url or "").lower().split("?")[0].rstrip("/").rsplit("/", 1)[-1]
+    seg = re.sub(r"\.\w{2,4}$", "", seg)          # strip extension
+    seg = re.sub(r"[-_](ar|en|eg|ar-eg|en-eg)$", "", seg)  # strip locale suffix
+    return seg
+
+
+def _upgrade_to_hires_logo(src, candidates, base, real_raster_src) -> str:
+    """When `src` is a low-res logo, return a HIGHER-RES candidate of the SAME logo (matched
+    by stem) if one exists; else `src` unchanged. Never raises."""
+    try:
+        if _logo_res_rank(src) >= 2:
+            return src
+        stem = _logo_stem(src)
+        best_src, best_rank = src, _logo_res_rank(src)
+        for c in candidates:
+            if not isinstance(c, dict):
+                continue
+            if str(c.get("classification") or "") in _NON_BRAND_LOGO_CLASSES:
+                continue
+            cs = real_raster_src(c)
+            if not cs or not cs.startswith(("http://", "https://")):
+                continue
+            # Same logo (stem match) and crisper than what we have.
+            if _logo_stem(cs) == stem and _logo_res_rank(cs) > best_rank:
+                best_src, best_rank = cs, _logo_res_rank(cs)
+        return best_src
+    except Exception:
+        return src
 
 
 def _extract_logo(profile: dict[str, Any], business_name: str) -> tuple[Optional[str], str, str, Optional[float]]:
@@ -550,7 +617,13 @@ def _extract_logo(profile: dict[str, Any], business_name: str) -> tuple[Optional
         if not _candidate_is_reasonable_logo(c):
             return None
         src = _absolute_url(base, c.get("src"))
-        if not src or src.startswith("text-wordmark:"):
+        # Must resolve to a FETCHABLE image URL. Reject the pseudo-srcs the scraper
+        # emits for non-file logos: `text-wordmark:<text>` (a nav label) and
+        # `inline-svg:<n>` (an inline <svg> with no fetchable URL). The latter was
+        # silently WINNING over real raster candidates in the list AND suppressing
+        # the wordmark-fallback warning, so brands with an inline-svg logo rendered
+        # no logo at all. (Inline-SVG support is a separate scraper-side follow-up.)
+        if not src or not src.startswith(("http://", "https://", "data:")):
             return None
         return src
 
@@ -558,9 +631,16 @@ def _extract_logo(profile: dict[str, Any], business_name: str) -> tuple[Optional
     primary_logo = visual.get("primary_logo")
     if isinstance(primary_logo, dict):
         src = _real_raster_src(primary_logo)
-        if src:
+        conf = _candidate_confidence(primary_logo)
+        if src and not _is_probably_not_a_logo(
+            str(primary_logo.get("classification") or ""), conf
+        ):
+            # If the chosen logo is a LOW-RES preview/thumbnail (MEASURED: te.eg's
+            # we-logo-ar?imagePreview is 251x71 → its fine Arabic sub-text renders as mush),
+            # upgrade to a HIGHER-RES variant of the SAME logo when one exists.
+            src = _upgrade_to_hires_logo(src, visual.get("logo_candidates") or [], base, _real_raster_src)
             return src, business_name, str(primary_logo.get("source_type") or "primary_logo"), \
-                _candidate_confidence(primary_logo) or None
+                conf or None
 
     # 2) Best raster candidate, excluding partner/authority/sponsor logos.
     best: Optional[tuple[float, str, dict[str, Any]]] = None
@@ -575,15 +655,20 @@ def _extract_logo(profile: dict[str, Any], business_name: str) -> tuple[Optional
         conf = _candidate_confidence(c)
         if conf <= 0:
             continue
+        # Skip a low-confidence unknown_candidate: it's a content banner, not a logo.
+        if _is_probably_not_a_logo(str(c.get("classification") or ""), conf):
+            continue
         if best is None or conf > best[0]:
             best = (conf, src, c)
     if best:
         conf, src, c = best
         return src, business_name, str(c.get("source_type") or "logo_candidate"), conf or None
 
-    # 3) Legacy single field, only if it is a real URL.
+    # 3) Legacy single field, only if it is a FETCHABLE image URL (http/data). The
+    # scraper's pseudo-srcs (`text-wordmark:`, `inline-svg:`) must NOT leak here — they
+    # render as a broken <img>. (Same contract as `_real_raster_src` for steps 1-2.)
     legacy = _absolute_url(base, visual.get("logo_url"))
-    if legacy and not legacy.startswith("text-wordmark:"):
+    if legacy and legacy.startswith(("http://", "https://", "data:")):
         return legacy, business_name, "legacy_logo_url", None
 
     # 4) No usable raster -> wordmark using the brand name.
@@ -644,6 +729,15 @@ def _select_headline(
         if text:
             candidates.append((_headline_fitness(text), text))
 
+    # A UNIQUE competitive edge (catch-all field) makes a strong, differentiated headline —
+    # give it a small bonus so a genuine edge can beat a generic value prop (still below
+    # the brand's own tagline on ties).
+    for ins in profile.get("other_unique_insights") or []:
+        value = ins.get("value") if isinstance(ins, dict) else ins
+        text = _clean_text(value) if value else ""
+        if text:
+            candidates.append((_headline_fitness(text) + 0.15, text))
+
     if desc_sentence:
         candidates.append((_headline_fitness(desc_sentence), desc_sentence))
 
@@ -658,7 +752,9 @@ def _select_headline(
     return candidates[0][1]
 
 
-def build_poster_brief(profile: dict[str, Any]) -> PosterBrief:
+def build_poster_brief(
+    profile: dict[str, Any], *, headline_override: Optional[str] = None
+) -> PosterBrief:
     business_name = _clean_business_name(_field_value(profile, "name"))
     # GROUNDING: trust the scraped/extracted category (the EvidencedField on the
     # profile) when present; only fall back to keyword inference when it is absent.
@@ -678,6 +774,15 @@ def build_poster_brief(profile: dict[str, Any]) -> PosterBrief:
 
     logo_url, logo_text, logo_source_type, logo_confidence = _extract_logo(profile, business_name)
 
+    # A rasterized inline-svg logo carries a chip preference: a light/white mark needs a
+    # DARK plate to stay visible, otherwise the default light plate. Only trust it when
+    # the chosen logo IS that rasterized primary (source_type set by the enricher).
+    logo_chip = "light"
+    if logo_source_type == "inline_svg_rasterized":
+        _chip = ((profile.get("visual") or {}).get("primary_logo") or {}).get("logo_chip")
+        if _chip in ("light", "dark"):
+            logo_chip = _chip
+
     # Brand typography from the scraped visual identity (may be a private/generic
     # family name like "myfont2"/"system-ui"; the template decides loadability).
     _visual = profile.get("visual") or {}
@@ -690,7 +795,13 @@ def build_poster_brief(profile: dict[str, Any]) -> PosterBrief:
     # business name (a factual identity, never a fabricated claim).
     desc_sentence = _first_sentence(description)
 
-    headline = _select_headline(profile, business_name, desc_sentence) or business_name
+    # A planned headline (e.g. a content-calendar item's hook, or a trend angle) wins
+    # when provided; otherwise SELECT the strongest verbatim line from evidence.
+    headline = (
+        headline_override.strip()
+        if (headline_override and headline_override.strip())
+        else (_select_headline(profile, business_name, desc_sentence) or business_name)
+    )
     # Subheadline = the description sentence, unless it's already the headline
     # (don't echo the same line twice).
     subheadline = desc_sentence if (desc_sentence and desc_sentence != headline) else None
@@ -714,6 +825,7 @@ def build_poster_brief(profile: dict[str, Any]) -> PosterBrief:
         logo_text=logo_text,
         logo_source_type=logo_source_type,
         logo_confidence=logo_confidence,
+        logo_chip=logo_chip,
         pricing_note=pricing_note,
         warnings=warnings,
         social=_extract_social(profile),

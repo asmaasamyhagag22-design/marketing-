@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pipelines — Universal AI Marketing Strategist</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#eef1f7; --card:#fff; --ink:#16203a; --muted:#5b6678; --line:#e1e6f0;
+    --input:#6366f1; --io:#0ea5e9; --rules:#10b981; --llm:#8b5cf6;
+    --gen:#f97316; --guard:#f59e0b; --output:#2563eb; --intel:#e11d8f;
+    --shadow:0 1px 2px rgba(20,30,60,.05),0 10px 26px rgba(20,30,60,.07);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:'Cairo','Segoe UI',Tahoma,Arial,sans-serif;line-height:1.55}
+  .en{font-family:'JetBrains Mono',Consolas,monospace;direction:ltr;unicode-bidi:isolate}
+  header{background:linear-gradient(135deg,#4f46e5,#0ea5e9);color:#fff;padding:40px 24px;text-align:center}
+  header h1{margin:0;font-size:30px;font-weight:900;letter-spacing:-.5px}
+  header p{margin:8px 0 0;opacity:.95;font-size:16px}
+  .wrap{max-width:1180px;margin:0 auto;padding:26px 22px 80px}
+  .legend{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;background:#fff;
+    border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:var(--shadow);margin-bottom:30px}
+  .legend span{display:inline-flex;align-items:center;gap:7px;font-size:13.5px;font-weight:600;color:#33405e}
+  .legend i{width:14px;height:14px;border-radius:4px;display:inline-block}
+  .board{background:#fff;border:1px solid var(--line);border-radius:20px;padding:26px 26px 30px;
+    box-shadow:var(--shadow);margin:26px 0}
+  .board > h2{margin:0 0 4px;font-size:24px;font-weight:900}
+  .board > .sub{margin:0 0 20px;color:var(--muted);font-size:15px}
+  .flow{max-width:920px;margin:0 auto}
+  .stage{position:relative;background:#fff;border:1px solid var(--line);border-top:5px solid var(--c,#888);
+    border-radius:14px;padding:13px 18px 14px 120px;box-shadow:var(--shadow)}
+  .stage .num{position:absolute;inset-inline-start:14px;top:13px;width:30px;height:30px;border-radius:50%;
+    background:var(--c);color:#fff;font-weight:900;font-size:15px;display:flex;align-items:center;justify-content:center}
+  .stage h4{margin:0 0 0 0;padding-inline-start:42px;font-size:18px;font-weight:800}
+  .stage .type{position:absolute;inset-inline-end:14px;top:14px;font-size:11px;font-weight:800;
+    color:var(--c);background:color-mix(in srgb,var(--c) 12%,#fff);border:1px solid color-mix(in srgb,var(--c) 30%,#fff);
+    padding:3px 9px;border-radius:999px;letter-spacing:.3px}
+  .chips{display:flex;flex-wrap:wrap;gap:7px;margin:9px 0 0;padding-inline-start:42px}
+  .chip{background:#f2f5fa;border:1px solid #e4e9f2;border-radius:9px;padding:3px 11px;font-size:13px;color:#36425c}
+  .arrow{height:24px;display:flex;align-items:center;justify-content:center;color:#9aa6bd;font-size:18px;font-weight:900}
+  .t-input{--c:var(--input)} .t-io{--c:var(--io)} .t-rules{--c:var(--rules)}
+  .t-llm{--c:var(--llm)} .t-gen{--c:var(--gen)} .t-guard{--c:var(--guard)}
+  .t-output{--c:var(--output)} .t-intel{--c:var(--intel)}
+  .branch{display:flex;gap:14px;align-items:stretch;margin:0 auto;max-width:920px}
+  .branch .stage{flex:1}
+  .branch .side{flex:0 0 300px;border:1px dashed var(--guard);border-top:5px solid var(--guard);
+    background:#fffaf0}
+  .fanlabel{text-align:center;color:var(--muted);font-weight:700;font-size:14px;margin:6px 0}
+  .fan{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;max-width:920px;margin:0 auto}
+  @media(min-width:860px){.fan{grid-template-columns:repeat(4,1fr)}}
+  .fan .stage{padding:13px 14px}
+  .fan h4{padding-inline-start:0;font-size:15px;margin-top:30px}
+  .fan .num{width:26px;height:26px;font-size:13px}
+  .fan .chips{padding-inline-start:0;margin-top:7px}
+  .callout{max-width:920px;margin:20px auto 0;background:#fef2f8;border:1px solid #f7c6df;
+    border-inline-start:5px solid var(--intel);border-radius:12px;padding:12px 16px;color:#7a1145;font-weight:700;font-size:15px}
+  .note{max-width:920px;margin:14px auto 0;font-size:13px;color:var(--muted);text-align:center}
+  @media print{body{background:#fff}.board{break-inside:avoid;box-shadow:none}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Pipelines — تدفّق العمل بالتفصيل</h1>
+  <p>Universal AI Marketing Campaign Strategist · كل خطوة ملوّنة بنوعها · مبدأ Zero-Hallucination</p>
+</header>
+
+<div class="wrap">
+
+  <div class="legend">
+    <span><i style="background:var(--input)"></i>مُدخل Input</span>
+    <span><i style="background:var(--io)"></i>تحميل/إخراج IO</span>
+    <span><i style="background:var(--rules)"></i>قواعد Rules (بدون LLM)</span>
+    <span><i style="background:var(--llm)"></i>ذكاء LLM</span>
+    <span><i style="background:var(--gen)"></i>توليد صور/فيديو</span>
+    <span><i style="background:var(--guard)"></i>حارس/تحقّق</span>
+    <span><i style="background:var(--output)"></i>مُخرج Output</span>
+    <span><i style="background:var(--intel)"></i>ذكاء تسويقي</span>
+  </div>
+
+  <!-- ============ 1. SCRAPER ============ -->
+  <div class="board">
+    <h2>1 · بايب لاين السكرابر (Scraper)</h2>
+    <p class="sub">رابط → أدلّة خام مهيكلة. بدون LLM في هذه المرحلة — استخراج deterministic بالكامل.</p>
+    <div class="flow">
+      <div class="stage t-input"><span class="num">1</span><span class="type">INPUT</span><h4>المُدخل: رابط البيزنس</h4>
+        <div class="chips"><span class="chip en">https://www.orange.eg/en/</span></div></div>
+      <div class="arrow">▼</div>
+      <div class="stage t-guard"><span class="num">2</span><span class="type">GUARD</span><h4>حُرّاس الأمان والصلاحية</h4>
+        <div class="chips"><span class="chip">robots.txt مسموح؟</span><span class="chip">SSRF: روابط عامة فقط (لا loopback/private)</span></div></div>
+      <div class="arrow">▼</div>
+      <div class="stage t-io"><span class="num">3</span><span class="type">IO</span><h4>تحميل الصفحة — Playwright</h4>
+        <div class="chips"><span class="chip">User-Agent حقيقي</span><span class="chip">retry على الأعطال المؤقتة</span><span class="chip">scroll-to-load</span><span class="chip">HTTP/1.1 fallback</span></div></div>
+      <div class="arrow">▼</div>
+      <div class="stage t-io"><span class="num">4</span><span class="type">IO</span><h4>اكتشاف الصفحات الداخلية</h4>
+        <div class="chips"><span class="chip">eTLD+1 same-host</span><span class="chip">sitemap</span><span class="chip">budget ~12 صفحة / 150ث</span></div></div>
+      <div class="arrow">▼</div>
+      <div class="stage t-rules"><span class="num">5</span><span class="type">RULES</span><h4>الاستخراج (deterministic لكل صفحة)</h4>
+        <div class="chips"><span class="chip">trafilatura نصوص</span><span class="chip">روابط (deduped)</span><span class="chip">صور + لوجو (scored/classified)</span><span class="chip">بالتة ألوان</span><span class="chip">تواصل (هاتف/إيميل)</span><span class="chip en">og / title / schema.org</span></div></div>
+      <div class="arrow">▼</div>
+      <div class="branch">
+        <div class="stage t-guard"><span class="num">6</span><span class="type">DECISION</span><h4>قرار الجاهزية — ready_for_extraction؟</h4>
+          <div class="chips"><span class="chip">محتوى كافي → كمّل</span><span class="chip">مبلوك/فاضي → fallback ⟵</span></div></div>
+        <div class="stage side"><span class="num" style="--c:var(--guard)">⤳</span><span class="type" style="color:var(--guard)">FALLBACK</span><h4>Deep-Search</h4>
+          <div class="chips"><span class="chip en">Serper site:+brand</span><span class="chip">اسم/وصف/سوشيال</span></div></div>
+      </div>
+      <div class="arrow">▼</div>
+      <div class="stage t-output"><span class="num">7</span><span class="type">OUTPUT</span><h4>المُخرج: manifest.json + raw/*.html</h4>
+        <div class="chips"><span class="chip">كل عنصر متعلّم بمصدره (الصفحة/البلوك)</span></div></div>
+    </div>
+    <p class="note">مقاس حياً: Orange = 13 صفحة، 0 فشل · Vodafone = 12 صفحة بعد إصلاح eTLD+1 · digilians = 577 بلوك بعد Tier-0.</p>
+  </div>
+
+  <!-- ============ 2. POSTER ============ -->
+  <div class="board">
+    <h2>2 · بايب لاين البوستر (Poster)</h2>
+    <p class="sub">profile.json → بوستر مصمّم. الحقائق مؤصّلة، التصميم إبداعي (معمارية الحقيقتين).</p>
+    <div class="flow">
+      <div class="stage t-input"><span class="num">1</span><span class="type">INPUT</span><h4>profile.json</h4>
+        <div class="chips"><span class="chip">EvidencedFields (قيمة + دليل + ثقة)</span></div></div>
+      <div class="arrow">▼</div>
+      <div class="stage t-rules"><span class="num">2</span><span class="type">RULES</span><h4>build_poster_brief — اختيار حرفي</h4>
+        <div class="chips"><span class="chip">headline/offerings/CTA/contact</span><span class="chip">palette</span><span class="chip">logo: حقيقي / inline-svg rasterized / wordmark (gated)</span></div></div>
+      <div class="arrow">▼</div>
+      <div class="stage t-llm"><span class="num">3</span><span class="type">LLM</span><h4>الكوبي — مؤصّل</h4>
+        <div class="chips"><span class="chip en">research: Serper + Gemini → sourced angle</span><span class="chip">--trend (ركوب ترند)</span><span class="chip">pick_angle (يرفض المصدر المفبرك)</span></div></div>
+      <div class="arrow">▼</div>
+      <div class="stage t-llm"><span class="num">4</span><span class="type">LLM</span><h4>build_design_spec — Gemini</h4>
+        <div class="chips"><span class="chip">layout</span><span class="chip">accent (من البالتة الحقيقية)</span><span class="chip">headline treatment</span></div></div>
+      <div class="arrow">▼</div>
+      <div class="stage t-llm"><span class="num">5</span><span class="type">LLM</span><h4>concept prompt — Gemini</h4>
+        <div class="chips"><span class="chip">مشهد text-free مؤصّل بالـpersona</span><span class="chip">region anchor (ccTLD → الدولة)</span><span class="chip">palette + negative-space</span></div></div>
+      <div class="arrow">▼</div>
+      <div class="stage t-gen"><span class="num">6</span><span class="type">GEN</span><h4>الخلفية — Imagen 4 Ultra</h4>
+        <div class="chips"><span class="chip">صورة text-free على-البراند</span><span class="chip">fallback لـ4.0 على 429</span></div></div>
+      <div class="arrow">▼</div>
+      <div class="stage t-io"><span class="num">7</span><span class="type">IO</span><h4>الـoverlay — Playwright / Chromium</h4>
+        <div class="chips"><span class="chip">logo + headline + accent + offerings + CTA</span><span class="chip">تشكيل عربي + RTL</span><span class="chip">حسب الـdesign-spec</span></div></div>
+      <div class="arrow">▼</div>
+      <div class="stage t-output"><span class="num">8</span><span class="type">OUTPUT</span><h4>poster.png</h4>
+        <div class="chips"><span class="chip">مثال: لوجو فودافون الحقيقي + "Connecting Egypt Since 1998"</span></div></div>
+    </div>
+  </div>
+
+  <!-- ============ 3. REEL ============ -->
+  <div class="board">
+    <h2>3 · بايب لاين الريل (Reel)</h2>
+    <p class="sub">profile.json → ريل عمودي 1080×1920. كل مشهد من المكان الحقيقي، مايكراش أبداً.</p>
+    <div class="flow">
+      <div class="stage t-input"><span class="num">1</span><span class="type">INPUT</span><h4>profile.json</h4></div>
+      <div class="arrow">▼</div>
+      <div class="stage t-rules"><span class="num">2</span><span class="type">RULES</span><h4>build_reel_brief</h4>
+        <div class="chips"><span class="chip">يعيد استخدام محدّدات البوستر</span><span class="chip">headline_override (من التقويم)</span></div></div>
+      <div class="arrow">▼</div>
+      <div class="stage t-rules"><span class="num">3</span><span class="type">RULES</span><h4>build_storyboard — مشاهد مؤقّتة</h4>
+        <div class="chips"><span class="chip">intro / offering / contact / outro</span><span class="chip">RTL</span><span class="chip">length-capped</span><span class="chip">grounded</span></div></div>
+      <div class="arrow">▼</div>
+      <div class="stage t-llm"><span class="num">4</span><span class="type">LLM (Vision)</span><h4>تنسيق الصور — Vision curation</h4>
+        <div class="chips"><span class="chip">يبقّي الصور الحقيقية على-البراند</span><span class="chip">يشيل اللوجوهات/QR/أيقونات</span></div></div>
+      <div class="arrow">▼</div>
+      <div class="stage t-gen"><span class="num">5</span><span class="type">GEN</span><h4>فيديو لكل مشهد — Provider + fallback</h4>
+        <div class="chips"><span class="chip en">AIML Veo 3.1</span><span class="chip en">Vertex Veo 3.0</span><span class="chip">KenBurns على الصور الحقيقية</span><span class="chip">per-scene fallback → مايكراش</span></div></div>
+      <div class="arrow">▼</div>
+      <div class="stage t-io"><span class="num">6</span><span class="type">IO</span><h4>طبقة النص — Playwright (التصميم الجديد)</h4>
+        <div class="chips"><span class="chip">caption في الثلث السفلي</span><span class="chip">scrim متدرّج قوي</span><span class="chip">accent + CTA chip</span><span class="chip">logo في الكورنر</span></div></div>
+      <div class="arrow">▼</div>
+      <div class="stage t-llm"><span class="num">7</span><span class="type">LLM (TTS)</span><h4>voiceover — Gemini TTS</h4>
+        <div class="chips"><span class="chip">narration من نص المشهد (مؤصّل)</span><span class="chip">على كريديت GCP</span></div></div>
+      <div class="arrow">▼</div>
+      <div class="stage t-io"><span class="num">8</span><span class="type">IO</span><h4>التجميع — ffmpeg compositor</h4>
+        <div class="chips"><span class="chip">overlay (ease-out)</span><span class="chip">concat</span><span class="chip">mux voiceover + music</span></div></div>
+      <div class="arrow">▼</div>
+      <div class="stage t-output"><span class="num">9</span><span class="type">OUTPUT</span><h4>reel.mp4 (1080×1920, بصوت)</h4></div>
+    </div>
+  </div>
+
+  <!-- ============ 4. WHOLE PROJECT ============ -->
+  <div class="board">
+    <h2>4 · المشروع كله (End-to-End)</h2>
+    <p class="sub">من رابط واحد → باكدج تسويق كامل. المسار الأساسي ثم تفرّع للمخرجات.</p>
+    <div class="flow">
+      <div class="stage t-input"><span class="num">1</span><span class="type">INPUT</span><h4>URL — رابط البيزنس</h4></div>
+      <div class="arrow">▼</div>
+      <div class="stage t-io"><span class="num">2</span><span class="type">SCRAPER</span><h4>Scraper → manifest.json</h4>
+        <div class="chips"><span class="chip">Playwright + trafilatura + extractors</span><span class="chip">deep-search fallback لو مبلوك</span></div></div>
+      <div class="arrow">▼</div>
+      <div class="stage t-rules"><span class="num">3</span><span class="type">RULES + LLM + VALIDATE</span><h4>Business Profile — معمارية الحقيقتين</h4>
+        <div class="chips"><span class="chip">Rules (deterministic)</span><span class="chip en">LLM gpt-4o-mini ×4</span><span class="chip">Validator: يشيل غير المدعوم</span><span class="chip">+ inline-svg logo enrich</span></div></div>
+      <div class="arrow">▼</div>
+      <div class="stage t-output"><span class="num">4</span><span class="type">OUTPUT</span><h4>BusinessProfile (كل حقل = EvidencedField)</h4></div>
+    </div>
+    <div class="arrow">▼</div>
+    <p class="fanlabel">يتفرّع إلى المخرجات ⟱</p>
+    <div class="fan">
+      <div class="stage t-intel"><span class="num">A</span><span class="type">INTEL</span><h4>Competitor → SWOT</h4>
+        <div class="chips"><span class="chip">discovery → matrix → SWOT مؤصّل</span></div></div>
+      <div class="stage t-gen"><span class="num">B</span><span class="type">GEN</span><h4>Poster</h4>
+        <div class="chips"><span class="chip">Imagen Ultra + overlay</span></div></div>
+      <div class="stage t-gen"><span class="num">C</span><span class="type">GEN</span><h4>Reel</h4>
+        <div class="chips"><span class="chip">Veo/KenBurns + Gemini VO</span></div></div>
+      <div class="stage t-intel"><span class="num">D</span><span class="type">INTEL</span><h4>Trends → Strategy → Campaign</h4>
+        <div class="chips"><span class="chip">تقويم محتوى → fan-out كرييتيفات</span></div></div>
+    </div>
+    <div class="callout">🛡️ Zero-Hallucination — كل حقل في أي مُخرج بيرجع لدليل مصدري حقيقي. الـLLM أداة (استخراج + تصميم)، مش مصدر الحقيقة.</div>
+    <p class="note">620 اختبار أخضر · كل نداء LLM متتبَّع بـ Usage (توكن + تكلفة + موديل).</p>
+  </div>
+
+</div>
+</body>
+</html>

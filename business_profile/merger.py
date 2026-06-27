@@ -227,6 +227,10 @@ def merge_profile(
             _list_item_to_evidenced_field(it, inferred=True)
             for it in payload.positioning.value_propositions
         ]
+        p.other_unique_insights = [
+            _list_item_to_evidenced_field(it, inferred=True)
+            for it in payload.positioning.other_unique_insights
+        ]
 
     # ---- Trust ----
     if payload.trust is not None:

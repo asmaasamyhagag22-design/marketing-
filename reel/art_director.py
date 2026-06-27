@@ -123,22 +123,27 @@ def _scene_base(brief: PosterBrief, ground: str) -> str:
 
 class _BrandSceneResponse(BaseModel):
     scene: str
+    # A CHARACTER ANCHOR: one recurring protagonist who appears in EVERY scene, so the
+    # text-to-video reel stays coherent (the same human throughout) instead of Veo
+    # inventing a different person each scene. Pure visual design (a b-roll cast choice),
+    # NOT a factual claim about a real individual. Empty when the model omits it.
+    character: str = ""
 
 
 def build_brand_scene(
     brief: PosterBrief, profile: Optional[dict], caller: Optional[Any]
-) -> Optional[str]:
-    """LLM art-director for the reel: invent ONE text-free, on-brand b-roll SCENE
-    derived from the brand's VERBATIM persona — so two brands in the same category
-    get DIFFERENT, identity-true footage instead of a fixed category template.
+) -> tuple[Optional[str], Optional[str]]:
+    """LLM art-director for the reel: invent ONE text-free, on-brand b-roll SCENE plus a
+    recurring CHARACTER anchor, derived from the brand's VERBATIM persona — so two brands
+    in the same category get DIFFERENT, identity-true footage AND a consistent protagonist
+    across scenes (coherence; idea adopted from TrendPulse's character anchor).
 
-    Returns None when no caller is given or the call fails (the caller then falls
-    back to the deterministic _scene_base). The scene is purely VISUAL (no factual
-    claims) and TEXT-FREE (all words are overlaid later). Mirrors the poster's
-    build_llm_concept_prompt discipline; reuses its _persona_lines block.
+    Returns (scene, character); (None, None) when no caller is given or the call fails (the
+    caller then falls back to the deterministic _scene_base with no anchor). Both are purely
+    VISUAL (no factual claims) and TEXT-FREE. Reuses the poster's _persona_lines block.
     """
     if caller is None:
-        return None
+        return None, None
     try:
         from poster.art_director import _persona_lines
         persona = _persona_lines(profile)
@@ -155,9 +160,14 @@ def build_brand_scene(
         "people, and the action/mood that authentically show what this business does and who it "
         "serves. Derive EVERYTHING from the brand persona provided — never a generic category "
         "template. " + culture +
-        "Describe ONLY the visual scene (people, place, action, light, mood). ABSOLUTELY NO text, "
-        "words, letters, numbers, logos, or signage. Cinematic, natural light, shallow depth of "
-        "field, gentle motion, with calm negative space for text overlaid later. 1-2 sentences."
+        "ALSO define a 'character': ONE recurring protagonist (the brand's audience) who will "
+        "appear in EVERY scene of the reel — describe them concretely and consistently (approx "
+        "age, appearance, hair, attire), culturally authentic to the audience, so the same person "
+        "carries the whole reel. "
+        "Describe ONLY visuals (people, place, action, light, mood). ABSOLUTELY NO text, words, "
+        "letters, numbers, logos, or signage. Cinematic, natural light, shallow depth of field, "
+        "gentle motion, with calm negative space for text overlaid later. Scene 1-2 sentences; "
+        "character one concrete phrase."
     )
     user = (
         f"Business: {brief.business_name}\n"
@@ -165,24 +175,28 @@ def build_brand_scene(
         f"Real offerings: {'; '.join([o for o in (brief.offerings or [])[:5] if o]) or (brief.category or '')}\n"
         f"Tone: {brief.tone or 'premium'}\n"
         + (f"\nBrand persona (verbatim from the real website):\n{persona}\n" if persona else "")
-        + "\nReturn a single vivid, text-free 'scene' description for this brand."
+        + "\nReturn a vivid text-free 'scene' AND a recurring 'character' for this brand."
     )
     try:
         resp, _usage = caller(system, user, _BrandSceneResponse, group_name="reel_scene")
         scene = (getattr(resp, "scene", "") or "").strip()
-        return scene or None
+        character = (getattr(resp, "character", "") or "").strip()
+        return (scene or None), (character or None)
     except Exception:
-        return None
+        return None, None
 
 
 def build_scene_prompt(
     scene_kind: str, brief: PosterBrief, *, profile: Optional[dict] = None,
-    base_scene: Optional[str] = None,
+    base_scene: Optional[str] = None, character_anchor: Optional[str] = None,
+    variation: Optional[dict] = None,
 ) -> str:
     """A complete, text-free Veo prompt: on-identity people + place, brand color
     grade, culturally accurate, with room for the overlay. When `base_scene` is
     supplied (from the LLM art-director) it drives the scene; otherwise a
-    deterministic per-category template is the fallback."""
+    deterministic per-category template is the fallback. `character_anchor` (the
+    recurring protagonist) is repeated in EVERY scene so a text-to-video reel keeps
+    the SAME person + look across scenes (coherence) instead of inventing a new one."""
     ground = _ground_text(brief, profile)
     base = base_scene or _scene_base(brief, ground)
     beat = _BEAT.get(scene_kind, _BEAT["intro"])
@@ -204,7 +218,28 @@ def build_scene_prompt(
     culture = ("Authentic Egyptian / Middle Eastern people and setting, culturally accurate. "
                if is_mena else "Culturally authentic to the brand. ")
 
+    # CONTINUITY: repeat the recurring protagonist + lock the look in EVERY scene, so a
+    # text-to-video reel reads as one coherent story (same person, same grade) rather than
+    # a different stranger each cut. Adopted from TrendPulse's character/style anchor.
+    anchor = (character_anchor or "").strip()
+    continuity = (
+        f"CONTINUITY — the SAME single person appears in every scene of this reel: {anchor}. "
+        "Keep their face, hair, build, and outfit IDENTICAL across all scenes, with consistent "
+        "lighting and color grade. "
+    ) if anchor else ""
+
+    # Per-RUN variation (mood / lighting / energy) so the SAME brand's reel looks
+    # different each render — mirrors the poster's variation engine (design-only).
+    var_cue = ""
+    if variation:
+        try:
+            from poster.variation import concept_variation_cue
+            var_cue = concept_variation_cue(variation)
+        except Exception:
+            var_cue = ""
+    var_phrase = f"{var_cue} " if var_cue else ""
+
     return (
-        f"{beat} Scene: {base}. {culture}{tone_phrase}{color_cue}"
+        f"{continuity}{beat} Scene: {base}. {culture}{tone_phrase}{color_cue}{var_phrase}"
         f"Premium, modern, documentary-real for the brand '{brief.business_name}'. {_TEXT_FREE}"
     )

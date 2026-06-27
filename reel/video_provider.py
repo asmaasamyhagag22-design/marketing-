@@ -14,8 +14,9 @@ Two ways to authenticate VeoProvider (it auto-detects):
             GOOGLE_API_KEY). No gcloud needed.
   * Vertex - GOOGLE_CLOUD_PROJECT + ADC (`gcloud auth application-default login`).
 
-Model defaults to Veo 3.1; override with REEL_VIDEO_MODEL (e.g. the cheaper/faster
-`veo-3.1-fast-generate-preview` or `veo-3.1-lite-generate-preview`).
+Model defaults to Veo 3 GA (`veo-3.0-generate-001`) — the model actually provisioned
+on this project (MEASURED: `veo-3.1-*-preview`/`veo-3.1-generate-001` 404 NOT_FOUND on
+project image-498715). Override with REEL_VIDEO_MODEL once a 3.1 model is provisioned.
 """
 from __future__ import annotations
 
@@ -29,9 +30,10 @@ from typing import Optional, Protocol, runtime_checkable
 from .ffmpeg_tools import hex_to_ffmpeg, run_ffmpeg
 
 DEFAULT_ASPECT = "9:16"
-# Veo 3.1 (best quality). Cheaper variants: veo-3.1-fast-generate-preview,
-# veo-3.1-lite-generate-preview. Veo 3: veo-3.0-generate-001.
-DEFAULT_VEO_MODEL = "veo-3.1-generate-preview"
+# Veo 3 GA — the model provisioned on this project. MEASURED: veo-3.1-generate-preview
+# and veo-3.1-generate-001 both 404 NOT_FOUND here (3.1 not provisioned). Switch the
+# default to a 3.1 model only after confirming it resolves (override via REEL_VIDEO_MODEL).
+DEFAULT_VEO_MODEL = "veo-3.0-generate-001"
 # Veo accepts only these clip lengths (seconds).
 _VEO_DURATIONS = (4, 6, 8)
 
@@ -453,15 +455,137 @@ class KenBurnsProvider:
         return out_path
 
 
+class AimlVeoProvider:
+    """Real provider via the AIML API gateway (https://aimlapi.com).
+
+    Gives access to **Veo 3.1 image-to-video** (`google/veo-3.1-i2v`) WITHOUT Vertex
+    provisioning (our project only has Veo 3.0 on Vertex), and Veo 3.1 renders NATIVE
+    audio/voiceover straight from the prompt — so a voiceover line in the prompt is
+    spoken in the clip (no separate TTS). Needs `AIML_API_KEY`. LIVE-ONLY (paid).
+
+    Same `VideoProvider` contract as `VeoProvider`: one text-free scene clip per call.
+    On ANY failure it RAISES, so the compositor's fallback (KenBurns over real photos ->
+    gradient) takes over — a scene never silently degrades into a blank.
+    """
+    name = "aiml-veo"
+    BASE_URL = "https://api.aimlapi.com/v2"
+    DEFAULT_MODEL = "google/veo-3.1-i2v"
+
+    def __init__(self, *, api_key: Optional[str] = None, model: Optional[str] = None,
+                 aspect_ratio: str = "9:16", poll_interval: int = 20,
+                 max_polls: int = 60, timeout: int = 60):
+        self.api_key = api_key or os.getenv("AIML_API_KEY")
+        self.model = model or os.getenv("REEL_AIML_MODEL") or self.DEFAULT_MODEL
+        self.aspect_ratio = aspect_ratio
+        self.poll_interval = poll_interval
+        self.max_polls = max_polls
+        self.timeout = timeout
+
+    def _headers(self) -> dict:
+        return {"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}
+
+    def _post_json(self, path: str, payload: dict) -> dict:
+        import json
+        import urllib.request
+        req = urllib.request.Request(
+            f"{self.BASE_URL}{path}", data=json.dumps(payload).encode("utf-8"),
+            headers=self._headers(), method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=self.timeout) as r:
+            return json.loads(r.read().decode("utf-8"))
+
+    def _get_json(self, path: str, params: dict) -> dict:
+        import json
+        import urllib.parse
+        import urllib.request
+        req = urllib.request.Request(
+            f"{self.BASE_URL}{path}?{urllib.parse.urlencode(params)}", headers=self._headers(),
+        )
+        with urllib.request.urlopen(req, timeout=self.timeout) as r:
+            return json.loads(r.read().decode("utf-8"))
+
+    def _submit(self, prompt: str, image_url: Optional[str]) -> str:
+        payload = {"model": self.model, "prompt": prompt, "aspect_ratio": self.aspect_ratio}
+        if image_url:
+            payload["image_url"] = image_url           # image-to-video seed
+        data = self._post_json("/video/generations", payload)
+        gen_id = data.get("id") or data.get("generation_id")
+        if not gen_id:
+            raise RuntimeError(f"AIML submit returned no id: {str(data)[:160]}")
+        return gen_id
+
+    def _poll(self, gen_id: str) -> str:
+        for _ in range(self.max_polls):
+            time.sleep(self.poll_interval)
+            data = self._get_json("/video/generations", {"generation_id": gen_id})
+            status = str(data.get("status") or "")
+            if status == "completed":
+                # `video` may be a dict ({"url": ...}) OR a bare URL string, depending on
+                # the gateway — handle both so a valid completed render isn't lost to an
+                # AttributeError (which would silently degrade to the fallback).
+                v = data.get("video")
+                url = (v.get("url") if isinstance(v, dict) else v) or data.get("video_url")
+                if not url:
+                    raise RuntimeError("AIML completed but returned no video url")
+                return url
+            if status in ("failed", "error"):
+                raise RuntimeError(f"AIML generation failed: {data.get('error')}")
+        raise RuntimeError(
+            f"AIML generation timed out after {self.max_polls * self.poll_interval}s"
+        )
+
+    def generate(
+        self,
+        prompt: str,
+        *,
+        out_path: Path,
+        duration_s: float,
+        width: int,
+        height: int,
+        palette: Optional[list[str]] = None,
+        reference_image: Optional[str] = None,
+    ) -> Path:
+        if not self.api_key:
+            raise RuntimeError("No AIML_API_KEY set for AimlVeoProvider.")
+        import urllib.request
+        # i2v needs a PUBLIC image URL; pass the seed only when it's http(s) (a scraped
+        # photo). A local-file seed is skipped here -> text-to-video.
+        ref = str(reference_image or "")
+        image_url = ref if ref.startswith(("http://", "https://")) else None
+        gen_id = self._submit(prompt, image_url)
+        video_url = self._poll(gen_id)
+        # The download URL comes from the third-party gateway response — guard it like
+        # every other outbound fetch in this module: http(s) only (no file://), SSRF
+        # gate, and a bounded read (a reel clip is a few MB; cap well above that).
+        if not str(video_url).lower().startswith(("http://", "https://")):
+            raise RuntimeError(f"AIML returned a non-http video url: {str(video_url)[:80]}")
+        try:
+            from scraper.url_utils import is_safe_public_url
+            if not is_safe_public_url(video_url):
+                raise RuntimeError("AIML video url failed the SSRF guard (private/loopback host)")
+        except ImportError:
+            pass
+        out_path = Path(out_path)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        with urllib.request.urlopen(video_url, timeout=300) as r:
+            out_path.write_bytes(r.read(200_000_000))   # ~200MB cap
+        return out_path
+
+
 def default_video_provider() -> VideoProvider:
-    """VeoProvider when credentials are configured (API key OR Vertex), else the
-    offline stub. Set REEL_FORCE_STUB=1 to always stub."""
+    """Pick a video provider from the environment:
+      REEL_FORCE_STUB=1            -> offline stub (no creds, no cost)
+      REEL_VIDEO_BACKEND=aiml      -> AIML gateway (Veo 3.1 i2v + native voiceover)
+      AIML_API_KEY present         -> AIML (unless REEL_VIDEO_BACKEND says otherwise)
+      Gemini key / Vertex project  -> VeoProvider (Veo 3.0 on our Vertex)
+      else                         -> offline stub
+    """
     if os.getenv("REEL_FORCE_STUB") == "1":
         return StubVideoProvider()
-    if os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY"):
-        return VeoProvider()
-    # Vertex AI via ADC (`gcloud auth application-default login`) — ADC does NOT
-    # set GOOGLE_APPLICATION_CREDENTIALS, so a configured project alone is enough.
-    if os.getenv("GOOGLE_CLOUD_PROJECT"):
+    backend = (os.getenv("REEL_VIDEO_BACKEND") or "").lower()
+    if backend == "aiml" or (backend == "" and os.getenv("AIML_API_KEY")):
+        return AimlVeoProvider()
+    if backend == "vertex" or os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY") \
+            or os.getenv("GOOGLE_CLOUD_PROJECT"):
         return VeoProvider()
     return StubVideoProvider()

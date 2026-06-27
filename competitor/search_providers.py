@@ -22,12 +22,12 @@ caller (the router treats an empty peer set as an honest standalone case).
 """
 from __future__ import annotations
 
-import json
 import os
 from dataclasses import dataclass, field
 from typing import List, Optional, Protocol, runtime_checkable
 from urllib.parse import urlencode
-from urllib.request import Request, urlopen
+
+from scraper.net import get_json as _net_get_json, post_json as _net_post_json
 
 
 @dataclass
@@ -48,19 +48,18 @@ class SearchProvider(Protocol):
     ) -> List[SearchHit]: ...
 
 
-# Tracks the last transport error per provider instance for diagnostics, without
-# ever raising into the discovery flow.
+# Both delegate to the shared resilient fetcher (bounded retry on a transient blip +
+# per-host circuit breaker), so a single dropped request no longer silently collapses
+# competitor discovery to a standalone SWOT. They return {} (never None / raise) so the
+# providers' result parsing stays simple.
 def _post_json(url: str, body: dict, headers: dict, timeout: int = 12) -> dict:
-    data = json.dumps(body).encode("utf-8")
-    req = Request(url, data=data, headers=headers, method="POST")
-    with urlopen(req, timeout=timeout) as r:
-        return json.loads(r.read().decode("utf-8"))
+    return _net_post_json(url, body, headers=headers, timeout=timeout) or {}
 
 
 def _get_json(url: str, timeout: int = 12) -> dict:
-    req = Request(url, headers={"User-Agent": "scraper_v01-competitor/1.0"}, method="GET")
-    with urlopen(req, timeout=timeout) as r:
-        return json.loads(r.read().decode("utf-8"))
+    return _net_get_json(
+        url, timeout=timeout, headers={"User-Agent": "scraper_v01-competitor/1.0"}
+    ) or {}
 
 
 class SerperProvider:
