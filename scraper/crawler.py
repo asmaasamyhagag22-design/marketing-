@@ -723,7 +723,11 @@ def scrape(input_url: str, output_root: str = "scrapes") -> tuple[ScrapeManifest
                     # — every already-scraped page is lost. Catch it, record a failure,
                     # and keep going so the scrape always yields what it got.
                     try:
-                        sub_result = fetch_page(context, sub_url, keep_page=True)
+                        # LIGHT fetch: block heavy resources + skip the screenshot. Sub-pages are
+                        # crawled for text + links (visual identity is the homepage's job), so this
+                        # cuts per-page render time — the lever that makes deep e-commerce crawls
+                        # fit the budget (the page cap/time bind together at ~11-16s/page).
+                        sub_result = fetch_page(context, sub_url, keep_page=True, light=True)
                         manifest.scrape_meta.bytes_downloaded += sub_result.bytes_downloaded
 
                         if not sub_result.ok:

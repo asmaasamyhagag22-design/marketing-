@@ -193,7 +193,28 @@ _TRANSIENT_ERRORS = {
 }
 
 
-def fetch_page(context: BrowserContext, url: str, keep_page: bool = False) -> FetchResult:
+# Heavy, non-essential resource types blocked on LIGHT sub-page fetches: sub-pages are crawled
+# for TEXT + LINKS (+ DOM-based image URLs, which are attributes, not loaded pixels), so loading
+# images/media/fonts only burns time. Scripts / XHR / CSS / documents still load, so JS-injected
+# content (products, links, lazy text) is preserved. Universal (helps any heavy page).
+_HEAVY_RESOURCE_TYPES = frozenset({"image", "media", "font"})
+
+
+def _block_heavy_route(route) -> None:
+    try:
+        if route.request.resource_type in _HEAVY_RESOURCE_TYPES:
+            route.abort()
+        else:
+            route.continue_()
+    except Exception:
+        try:
+            route.continue_()
+        except Exception:
+            pass
+
+
+def fetch_page(context: BrowserContext, url: str, keep_page: bool = False,
+               light: bool = False) -> FetchResult:
     """Fetch one page, retrying ONLY transient transport failures.
 
     A successful or permanently-failed result returns immediately. A transient
@@ -202,22 +223,27 @@ def fetch_page(context: BrowserContext, url: str, keep_page: bool = False) -> Fe
     finally), so retries never leak a page; only a successful keep_page result
     holds the live Page open for the caller.
     """
-    result = _fetch_page_once(context, url, keep_page=keep_page)
+    result = _fetch_page_once(context, url, keep_page=keep_page, light=light)
     attempt = 0
     while (not result.ok
            and result.error_code in _TRANSIENT_ERRORS
            and attempt < RETRY_ATTEMPTS):
         attempt += 1
         time.sleep(RETRY_BACKOFF_SECONDS * attempt)
-        result = _fetch_page_once(context, url, keep_page=keep_page)
+        result = _fetch_page_once(context, url, keep_page=keep_page, light=light)
     if attempt and result.error_message:
         result.error_message = f"[retry {attempt}/{RETRY_ATTEMPTS}] {result.error_message}"
     return result
 
 
-def _fetch_page_once(context: BrowserContext, url: str, keep_page: bool = False) -> FetchResult:
+def _fetch_page_once(context: BrowserContext, url: str, keep_page: bool = False,
+                     light: bool = False) -> FetchResult:
     """Fetch one page (single attempt). Caller is responsible for the context
     lifecycle.
+
+    `light=True` (sub-page mode): block heavy resources (images/media/fonts) and skip the
+    full-page screenshot — sub-pages need text + links, not pixels. Big render-time saving on
+    image-heavy e-commerce; scripts/XHR/CSS still load so JS content is preserved.
 
     If keep_page=True, the returned FetchResult carries the live Page
     so extractors can run page.evaluate(). Caller MUST close the page
@@ -235,6 +261,11 @@ def _fetch_page_once(context: BrowserContext, url: str, keep_page: bool = False)
     page = context.new_page()
     page.set_default_timeout(PAGE_TIMEOUT_MS)
     page.set_default_navigation_timeout(NAV_TIMEOUT_MS)
+    if light:
+        try:
+            page.route("**/*", _block_heavy_route)
+        except Exception:
+            pass
 
     try:
         response = page.goto(url, wait_until="domcontentloaded")
@@ -268,8 +299,10 @@ def _fetch_page_once(context: BrowserContext, url: str, keep_page: bool = False)
             result.error_code = ErrorCode.EMPTY_RENDERED_DOM
             result.error_message = "Rendered DOM has no body or visible text"
 
-        else:
-            # Screenshots — only when content is real
+        elif not light:
+            # Screenshots — only when content is real, and only for FULL fetches. The homepage
+            # needs them for visual identity; LIGHT sub-pages skip them (pixels aren't used, and
+            # the full-page screenshot is the slowest step + can hang on font loads).
             try:
                 result.full_screenshot_bytes = page.screenshot(full_page=True, type="png")
             except PWError as e:
