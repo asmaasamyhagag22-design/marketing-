@@ -2303,9 +2303,19 @@ Chromium). VERIFIED OFFLINE (no Veo/ffmpeg cost): rendered the te.eg intro text-
 composited it on a dark bg — "المسافات / بينا / **كلام**" stacked, the accent word "كلام" in the
 brand purple gradient + the RTL accent spine — matches the poster lockup. Tests:
 `tests/test_voiceover.py::test_textlayer_is_bottom_anchored_scrim_and_accent` updated (hero=lockup
-`lw acc`, non-hero=`hl`). Suite **796 passed**. NEXT (the rest of the reel port, its own measured
-step): carry the MARKETING ARCHETYPES to reel SCENE composition (the reel has no free-form text_box
-LLM layout yet) + a live Veo/ffmpeg render to verify the lockup on real moving footage.
+`lw acc`, non-hero=`hl`). Suite **796 passed**.
+STEP 2 (scene composition) — the MARKETING ARCHETYPE now also steers the reel's GENERATED scene:
+`reel/schemas.Storyboard.marketing_archetype`; `reel/storyboard._reel_archetype(category)` derives
+it deterministically (no LLM cost — product_hero / typographic_anchor / proof_and_trust by category
+tokens, magazine_editorial default) with a `build_storyboard(marketing_archetype=)` override so a
+caller can match the poster's chosen one; `reel/art_director.build_scene_prompt(..., archetype=)`
+appends a composition cue (`_ARCHETYPE_SCENE`) to each TEXT-TO-VIDEO scene prompt (seeded real-photo
+scenes keep the faithful i2v motion prompt). Offline-verifiable (prompt text); the VISUAL result on
+moving footage still needs a live Veo/ffmpeg render (the documented final reel step). Tests:
+`tests/test_reel_scene_identity.py` (+3: archetype cue in the prompt, category->archetype map,
+storyboard carries it + override). Suite **799 passed**. NEXT: a live reel render to judge the
+lockup + archetype on real footage; consider reusing the poster's LLM-chosen archetype for poster↔reel
+consistency (currently the reel derives it deterministically from category).
 
 ## Backlog (each its own measured fix)
 - **Logo-vs-photo on multi-variant seals:** Azza Fahmy emits its seal in several

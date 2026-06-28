@@ -49,6 +49,9 @@ class Storyboard(BaseModel):
     palette_hex: list[str] = Field(default_factory=list, max_length=6)
     primary_color: Optional[str] = None
     tone: Optional[str] = None
+    # The reel's marketing archetype (poster parity) — steers the generated SCENE composition
+    # (text-to-video prompts). None/Optional keeps old storyboards valid (backward-compatible).
+    marketing_archetype: Optional[str] = None
 
     logo_url: Optional[str] = Field(default=None, max_length=1000)
     logo_text: Optional[str] = None

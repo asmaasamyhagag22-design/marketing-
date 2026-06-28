@@ -152,10 +152,30 @@ def _fit_durations(scenes: list[ReelScene], max_total_s: float) -> None:
             break
 
 
+_REEL_ARCHETYPE_TOKENS = (
+    ("product_hero", ("ecommerce", "e-commerce", "store", "shop", "retail", "product", "jewel")),
+    ("typographic_anchor", ("sale", "promo", "offer", "discount", "deal", "campaign")),
+    ("proof_and_trust", ("b2b", "saas", "software", "enterprise", "agency", "consult",
+                         "service", "telecom", "clinic", "finance")),
+)
+
+
+def _reel_archetype(category: Optional[str]) -> str:
+    """Deterministic reel-level marketing archetype from the scraped category (no LLM cost).
+    Mirrors the poster's archetype intent; magazine_editorial is the premium/lifestyle default.
+    A caller (e.g. the poster's design-spec) can override via build_storyboard(marketing_archetype=)."""
+    c = (category or "").lower()
+    for arche, toks in _REEL_ARCHETYPE_TOKENS:
+        if any(t in c for t in toks):
+            return arche
+    return "magazine_editorial"
+
+
 def build_storyboard(
     brief: PosterBrief, *, profile: Optional[dict] = None, caller: Optional[Any] = None,
     max_total_s: float = 28.0, target_scenes: int = 10,
     selected_images: Optional[list[str]] = None, variation: Optional[dict] = None,
+    marketing_archetype: Optional[str] = None,
 ) -> Storyboard:
     """Compose the ordered, length-capped scene list. `profile` (the serialized
     BusinessProfile) grounds the footage; `caller` (an OpenAI caller) enables the
@@ -165,6 +185,9 @@ def build_storyboard(
     b-roll scenes fill up to `target_scenes` so it reads as a real reel, not a
     static slideshow. The contact scene uses the clean phone/email."""
     primary_dir = "rtl" if (is_rtl(brief.headline) or is_rtl(brief.business_name)) else "ltr"
+    # Reel-level marketing archetype (poster parity): caller-supplied, else derived from the
+    # scraped category. Steers the GENERATED (text-to-video) scene composition prompts.
+    arche = marketing_archetype or _reel_archetype(brief.category)
     # One LLM art-director call per reel — only used for the no-seed (text-to-video)
     # fallback prompt; seeded scenes use the faithful motion prompt instead. Also returns
     # a recurring CHARACTER anchor repeated in every scene so the generated reel keeps the
@@ -219,7 +242,8 @@ def build_storyboard(
         else:
             base_kind = spec["kind"] if spec["kind"] != "gallery" else "intro"
             prompt = build_scene_prompt(base_kind, brief, profile=profile, base_scene=base_scene,
-                                        character_anchor=character_anchor, variation=variation)
+                                        character_anchor=character_anchor, variation=variation,
+                                        archetype=arche)
         scenes.append(ReelScene(visual_prompt=prompt, seed_image_url=seed, **spec))
 
     _fit_durations(scenes, max_total_s)
@@ -232,6 +256,7 @@ def build_storyboard(
         palette_hex=list(brief.palette_hex[:6]),
         primary_color=brief.primary_color,
         tone=brief.tone,
+        marketing_archetype=arche,
         logo_url=brief.logo_url,
         logo_text=brief.logo_text,
         heading_font=brief.heading_font,

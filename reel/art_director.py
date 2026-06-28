@@ -229,10 +229,19 @@ def build_brand_scene(
         return None, None
 
 
+# Marketing-archetype steering for the reel's GENERATED scene composition (poster parity).
+_ARCHETYPE_SCENE = {
+    "magazine_editorial": "Editorial, premium composition with generous negative space; the subject is one elegant focal point.",
+    "product_hero": "The product/offering is the clear HERO — prominent, centered, hero-lit, in a clean uncluttered composition.",
+    "typographic_anchor": "A bold, simple, graphic backdrop with calm negative space reserved for large overlaid text; minimal clutter.",
+    "proof_and_trust": "Clean, structured, professional and trustworthy composition; orderly and credible.",
+}
+
+
 def build_scene_prompt(
     scene_kind: str, brief: PosterBrief, *, profile: Optional[dict] = None,
     base_scene: Optional[str] = None, character_anchor: Optional[str] = None,
-    variation: Optional[dict] = None,
+    variation: Optional[dict] = None, archetype: Optional[str] = None,
 ) -> str:
     """A complete, text-free Veo prompt: on-identity people + place, brand color
     grade, culturally accurate, with room for the overlay. When `base_scene` is
@@ -282,7 +291,11 @@ def build_scene_prompt(
             var_cue = ""
     var_phrase = f"{var_cue} " if var_cue else ""
 
+    # Marketing archetype -> the scene's overall composition behavior (poster parity).
+    arche_cue = _ARCHETYPE_SCENE.get((archetype or "").strip())
+    arche_phrase = f"{arche_cue} " if arche_cue else ""
+
     return (
-        f"{continuity}{beat} Scene: {base}. {culture}{tone_phrase}{color_cue}{var_phrase}"
+        f"{continuity}{beat} Scene: {base}. {arche_phrase}{culture}{tone_phrase}{color_cue}{var_phrase}"
         f"Premium, modern, documentary-real for the brand '{brief.business_name}'. {_TEXT_FREE}"
     )
