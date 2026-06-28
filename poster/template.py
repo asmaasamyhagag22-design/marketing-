@@ -612,33 +612,31 @@ def _freeform_lower_css(text_box, scrim_strength: float, align: str,
     s_hi = round(max(0.0, min(1.0, scrim_strength)), 3)
     s_mid = round(s_hi * 0.72, 3)
     s_lo = round(s_hi * 0.34, 3)
-    # ARCHETYPE-aware scrim. EMERGING (product_hero, or any LOW text block): a feathered
-    # VERTICAL gradient — solid at the cluster's base, fading up to transparent — so the text
-    # reads as emerging organically from the base of the image, NOT sitting in a hard box.
-    # Otherwise: a soft radial wash that melts into the image (no hard seam).
+    # EMERGING (product_hero, or any LOW text block): a FULL-WIDTH feathered base gradient — solid
+    # at the bottom, fading up to transparent — so the text reads as EMERGING organically from the
+    # base of the image. NO rounded card, NO box-shadow, NO side edges (owner: it looked "stuck
+    # like a sticker"). The text cluster keeps the LLM's horizontal placement via side padding.
     emerging = (archetype == "product_hero") or (y >= 0.5)
     if emerging:
+        pad_x = max(64, left)
         scrim = (
             f"background:linear-gradient(to top, rgba(8,12,18,{s_hi}) 0%, "
-            f"rgba(8,12,18,{s_mid}) 52%, rgba(8,12,18,{s_lo}) 80%, rgba(8,12,18,0) 100%); "
-            f"backdrop-filter:blur(3px); box-shadow:0 26px 64px 34px rgba(8,12,18,{round(s_hi*0.5,3)});"
+            f"rgba(8,12,18,{round(s_hi * 0.88, 3)}) 24%, rgba(8,12,18,{s_mid}) 50%, "
+            f"rgba(8,12,18,{s_lo}) 76%, rgba(8,12,18,0) 100%);"
         )
-    else:
-        scrim = (
-            f"background:radial-gradient(120% 130% at 30% 40%, rgba(8,12,18,{s_hi}) 0%, "
-            f"rgba(8,12,18,{s_mid}) 58%, rgba(8,12,18,{s_lo}) 84%, "
-            f"rgba(8,12,18,0) 100%); backdrop-filter:blur(4px); "
-            f"box-shadow:0 0 70px 50px rgba(8,12,18,{round(s_hi*0.45,3)});"
-        )
-    # Generous padding so the text BREATHES inside the box (Step 3: spacing).
+        return (f".lower{{position:absolute; left:0; right:0; bottom:0; text-align:{align}; "
+                f"display:flex; flex-direction:column; align-items:{items}; "
+                f"padding:170px {pad_x}px {_SAFE_MARGIN}px {pad_x}px; box-sizing:border-box; "
+                f"{scrim}}}")
+    # Upper placement -> a soft RADIAL wash that melts into the image (a hint of legibility
+    # backing, feathered to transparent at every edge — NOT a hard rounded-card with a drop-shadow).
+    scrim = (
+        f"background:radial-gradient(135% 135% at 50% 42%, rgba(8,12,18,{s_hi}) 0%, "
+        f"rgba(8,12,18,{s_mid}) 50%, rgba(8,12,18,{s_lo}) 78%, rgba(8,12,18,0) 100%);"
+    )
     common = (f"position:absolute; left:{left}px; width:{width}px; text-align:{align}; "
               f"display:flex; flex-direction:column; align-items:{items}; "
-              f"padding:40px 46px; border-radius:24px; box-sizing:border-box; {scrim}")
-    if y >= 0.45:
-        # Lower placement -> pin the BOTTOM at a safe margin; content (and the CTA) grow UP,
-        # so the CTA can never fall off the bottom edge. The panel auto-sizes to its content.
-        return f".lower{{{common} bottom:{_SAFE_MARGIN}px;}}"
-    # Upper placement -> anchor the TOP (y is clamped high enough that short copy stays in frame).
+              f"padding:48px 56px; box-sizing:border-box; {scrim}")
     return f".lower{{{common} top:{round(y * _CH)}px;}}"
 
 
@@ -921,8 +919,8 @@ def render_poster_html(
      pops on ANY background (QA: the chip read low-contrast over a busy scene). */
   .cta {{
     display:inline-flex; align-items:center; gap:12px;
-    background:{cta_bg}; color:{cta_text}; padding:21px 46px; border-radius:16px;
-    border:1.5px solid rgba(255,255,255,.24);
+    background:{cta_bg}; color:{cta_text}; padding:22px 52px; border-radius:999px;
+    border:1.5px solid rgba(255,255,255,.28);
     box-shadow:0 16px 40px -10px rgba(0,0,0,.6);
   }}
   .cta-text {{ font-family:{font_body}; font-weight:800; font-size:28px; text-transform:capitalize; letter-spacing:.01em; }}

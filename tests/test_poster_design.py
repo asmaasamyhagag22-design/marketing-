@@ -246,7 +246,9 @@ def test_freeform_layout_bottom_anchors_to_prevent_cta_clip():
     # never clipped); an upper one anchors to the top; wild coords are clamped on-canvas.
     from poster.template import _freeform_lower_css, _SAFE_MARGIN
     low = _freeform_lower_css([0.1, 0.72, 0.6], 0.8, "left")
-    assert f"bottom:{_SAFE_MARGIN}px" in low and "top:" not in low
+    # emerging now bottom-anchors a FULL-WIDTH base (bottom:0) with the safe margin as bottom
+    # padding -> the CTA grows up and is never clipped; no rounded card.
+    assert "bottom:0" in low and f"{_SAFE_MARGIN}px" in low and "top:" not in low
     high = _freeform_lower_css([0.1, 0.08, 0.6], 0.8, "left")
     assert "top:" in high and "bottom:" not in high
     wild = _freeform_lower_css([2.0, 2.0, 5.0], 0.8, "left")   # out of range -> clamped
@@ -263,7 +265,7 @@ def test_archetype_drives_treatment_and_emerging_scrim():
                                  "text_box": [0.06, 0.62, 0.86], "show": ["headline"]})
     html = render_poster_html(brief, None, ph)
     assert "linear-gradient(to top" in html       # emerging from the base, not a radial box
-    assert "padding:40px 46px" in html            # generous breathing room
+    assert "left:0; right:0; bottom:0" in html     # full-width feathered base, NOT a rounded card
     me = base.model_copy(update={"marketing_archetype": "magazine_editorial",
                                  "text_box": [0.55, 0.30, 0.40], "show": ["headline"]})
     assert "lockup-headline" in render_poster_html(brief, None, me)
