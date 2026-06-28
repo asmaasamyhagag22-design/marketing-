@@ -2317,6 +2317,30 @@ storyboard carries it + override). Suite **799 passed**. NEXT: a live reel rende
 lockup + archetype on real footage; consider reusing the poster's LLM-chosen archetype for poster↔reel
 consistency (currently the reel derives it deterministically from category).
 
+## Done — reel: Motion/Music engine (cinematic, not a slideshow) — route C (2026-06-28) ✅
+Owner: the Ken Burns reel was "بشع … صور جنب بعض كلام ع الله" (a slideshow with text slapped on);
+asked, as a marketing brief, to make it genuinely distinctive (VEED-class) and to focus on the
+VISUAL (text removed for now). Diagnosis: VEED-class tools look pro because of MUSIC + beat-synced
+cuts + animated captions + transitions — not smarter shots. The slow single-zoom Ken Burns + hard
+cuts = PowerPoint. Built the missing "polish" layer (route C, FREE — ffmpeg only, no Veo, no text):
+- NEW `reel/motion.py` `build_motion_reel(images, out, *, music_path=, bpm=, ...)`:
+  * RHYTHM — `_grid_durations` puts shots on a BEAT grid (a short HOOK first, varied pacing),
+    BPM-aligned so cuts land on the beat when a music track is supplied.
+  * MOTION — eased push-IN / pull-OUT alternating across shots (dynamic), not one slow zoom.
+  * TRANSITIONS — real `xfade` dissolves/slides between shots (`_xfade_filtergraph` + offset math),
+    no hard seams.
+  * MUSIC — optional `--music` track muxed + trimmed (`-shortest`); silent when none.
+  Real photos only (never fabricates); raises if no photo loads (caller decides the fallback).
+- Pure helpers (grid + xfade offsets/graph + total_duration) are unit-tested
+  (`tests/test_reel_motion.py`, 4); the ffmpeg render is verified live.
+VERIFIED LIVE on elkbabgi (8 real photos, ~13.7s, 12s render, $0): eased motion + xfade
+cross-dissolves confirmed (a transition frame shows two real shots blending) -> reads as an ad,
+not a slideshow. `outputs/reels/elkbabgi_motion.mp4`. Suite **803 passed**.
+NEXT (owner to react first): wire a `python -m reel --motion [--music ...]` CLI flag; add a
+royalty-free track (we have none bundled — music needs a supplied file); the cinematic upgrade
+(route A: Veo i2v to make the real photos truly MOVE, not just zoom) is the paid next step; then
+re-introduce KINETIC captions as a designed layer (not "slapped on").
+
 ## Backlog (each its own measured fix)
 - **Logo-vs-photo on multi-variant seals:** Azza Fahmy emits its seal in several
   color variants; only the selected one is excluded by filename, so a variant can leak
