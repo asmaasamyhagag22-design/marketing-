@@ -87,24 +87,24 @@ def _good_fetch(u):
     return _png(800, 1000)
 
 
-def test_cascade_outpaints_when_usable_photo():
+def test_cascade_styles_first_when_refs_exist():
+    # understand->generate is PREFERRED: STYLE fires first (refs = the brand's own photos),
+    # OUTPAINT (literal reuse) is NOT reached when STYLE works.
     edit = _FakeEdit()
     path, model = _generate_background(_prof_with_photo(), None, "p",
                                        fetch=_good_fetch, edit_provider=edit, t2i=_t2i)
-    assert path == "OUT.png" and model.endswith("/outpaint")
-    assert edit.calls == [("outpaint", "https://x/good.png")]   # style/t2i not reached
-
-
-def test_cascade_falls_to_style_when_outpaint_fails():
-    edit = _FakeEdit(outpaint_ok=False)
-    dna = _DNA(["https://ads/1.png"])
-    path, model = _generate_background(_prof_with_photo(), dna, "p",
-                                       fetch=_good_fetch, edit_provider=edit, t2i=_t2i)
     assert path == "STYLE.png" and model.endswith("/style")
-    assert ("outpaint", "https://x/good.png") in edit.calls
-    # style refs = the real ad FIRST, then the brand's own site photo (both real, capped at 2)
-    style_calls = [c for c in edit.calls if c[0] == "style"]
-    assert style_calls and style_calls[-1][1][0] == "https://ads/1.png"
+    assert edit.calls[0][0] == "style"
+    assert all(c[0] != "outpaint" for c in edit.calls)          # no literal-photo reuse
+
+
+def test_cascade_falls_to_outpaint_when_style_fails():
+    # OUTPAINT is the FALLBACK now — only when STYLE fails (and a usable photo exists).
+    edit = _FakeEdit(style_ok=False)
+    path, model = _generate_background(_prof_with_photo(), None, "p",
+                                       fetch=_good_fetch, edit_provider=edit, t2i=_t2i)
+    assert path == "OUT.png" and model.endswith("/outpaint")
+    assert [c[0] for c in edit.calls] == ["style", "outpaint"]   # style first, then outpaint
 
 
 def test_cascade_styles_when_no_photo_but_refs():
@@ -127,7 +127,7 @@ def test_cascade_text_to_image_when_both_edit_modes_fail():
     path, model = _generate_background(_prof_with_photo(), None, "p",
                                        fetch=_good_fetch, edit_provider=edit, t2i=_t2i)
     assert path == "T2I.png" and model == "imagen-4.0"
-    assert [c[0] for c in edit.calls] == ["outpaint", "style"]   # both tried, then fell through
+    assert [c[0] for c in edit.calls] == ["style", "outpaint"]   # style first, then outpaint, then t2i
 
 
 # ---- letterbox fix -----------------------------------------------------------

@@ -2266,6 +2266,31 @@ CTA NOT clipped, QA **pass=True score=9 ("overall execution is excellent")**. Su
 NEXT: carry the archetype engine to the reel; minor (QA note): the light CTA-chip contrast +
 the accent word's legibility over a busy area.
 
+## Done — poster bg: UNDERSTAND→GENERATE (STYLE-first), not literal-photo reuse (2026-06-28) ✅
+Owner caught it on elkbabgi: "ليه قصر الكبابجي ماسك في الصورة دي؟ … المفروض نفهم البراند ونخترع
+واحد." ROOT CAUSE: the adaptive bg cascade was **OUTPAINT-first** — `_best_usable_photo` returns
+the FIRST usable scraped photo (deterministic), so a photo-rich brand kept OUTPAINTING the SAME
+literal image every run (only the extended edges varied) → "stuck on one image", and it REUSES a
+photo instead of INVENTING one. Owner's principle (correct): we already UNDERSTAND the brand
+(scrape + BrandCreativeDNA/BrandBook vision) → we should GENERATE a fresh on-brand scene, not
+reuse a literal photo. (Pure unanchored text-to-image was already shown to drift OFF-brand — the
+reliable middle is STYLE conditioning: generate fresh, anchored to the brand's real images.)
+FIX (`poster/pipeline._generate_background`): flipped the cascade to **STYLE-first** —
+  1) STYLE-condition a FRESH scene on the brand's real creatives (harvested ads first, else its
+     own scraped photos) — a NEW invented image every run in the brand's visual world;
+  2) OUTPAINT a real photo = literal max-fidelity FALLBACK only when there are no style refs /
+     STYLE failed (no longer the default);
+  3) text-to-image last resort.
+VERIFIED LIVE on elkbabgi: BEFORE = OUTPAINT kept reusing the same stuffed-pigeon platter;
+AFTER = mode=STYLE invented a FRESH, relevant scene — a vibrant shared grilled-feast table with
+hands reaching in ("The Main Dish is the Moment" / "Book Your Gathering Now"), on-brand, different
+from the literal photo. (QA still fails on elkbabgi's garbled low-res LOGO — a known separate data
+gap, not the bg.) Tests: `tests/test_poster_pipeline_bg.py` cascade tests updated for STYLE-first
+(styles-first-when-refs / falls-to-outpaint-when-style-fails / both-fail→t2i). Suite **796 passed**.
+NEXT: elkbabgi-class garbled-logo data gap (force a clean wordmark when the logo asset is low-conf /
+unreadable); per-run photo rotation is now moot for STYLE (gen varies) but still applies if OUTPAINT
+fallback is ever hit.
+
 ## Backlog (each its own measured fix)
 - **Logo-vs-photo on multi-variant seals:** Azza Fahmy emits its seal in several
   color variants; only the selected one is excluded by filename, so a variant can leak

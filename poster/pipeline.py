@@ -204,10 +204,12 @@ def _generate_background(
     profile: dict, brand_dna: Any, prompt: str, *,
     log=_safe_log, fetch=None, edit_provider=None, t2i=None,
 ) -> tuple[str, str]:
-    """ADAPTIVE brand-anchored background, with a safe cascade (never raises here):
-      1) OUTPAINT a usable REAL scraped photo (max fidelity), else
-      2) STYLE-condition on the brand's real creatives (universal floor), else
-      3) plain text-to-image (the previous behaviour — last-resort fallback).
+    """ADAPTIVE brand-anchored background, safe cascade (never raises here). PREFERS
+    understand->generate (a FRESH on-brand INVENTED image) over reusing a literal photo:
+      1) STYLE-condition on the brand's real creatives (its ads / own photos) -> a NEW scene
+         in the brand's visual world (different every run), else
+      2) OUTPAINT a usable REAL scraped photo (literal max-fidelity FALLBACK), else
+      3) plain text-to-image (last resort).
     Returns (background_path, model_label). `edit_provider`/`t2i`/`fetch` are injectable for tests."""
     t2i = t2i or _generate_imagen
     _prov = {"p": edit_provider}
@@ -218,27 +220,31 @@ def _generate_background(
             _prov["p"] = ImagenEditProvider()
         return _prov["p"]
 
-    photo = _best_usable_photo(profile, fetch=fetch)
-    if photo:
-        try:
-            # Extend the REAL photo (keep the literal product/place); the guard handles the scene.
-            p = _edit().outpaint(photo, "")
-            log("[bg] mode=OUTPAINT (real scraped photo)")
-            return str(p), "imagen-3.0-capability-001/outpaint"
-        except Exception as e:  # noqa: BLE001 — fall through to the next mode, never crash
-            log(f"[bg] outpaint failed ({type(e).__name__}: {e}); -> style")
-
+    # 1) UNDERSTAND -> GENERATE (preferred): a FRESH on-brand scene STYLE-conditioned on the
+    #    brand's real creatives (harvested ads first, then its own scraped photos) — a NEW
+    #    invented image every run in the brand's visual world, NOT a reused literal photo.
     refs = _brand_style_refs(profile, brand_dna)
     if refs:
         try:
             p = _edit().style(prompt, refs)
             log(f"[bg] mode=STYLE ({len(refs)} real brand refs)")
             return str(p), "imagen-3.0-capability-001/style"
+        except Exception as e:  # noqa: BLE001 — fall through, never crash
+            log(f"[bg] style failed ({type(e).__name__}: {e}); -> outpaint")
+
+    # 2) FALLBACK: OUTPAINT a usable REAL scraped photo (literal max-fidelity) only when there
+    #    are NO style refs / STYLE failed — kept as a safety net, no longer the default.
+    photo = _best_usable_photo(profile, fetch=fetch)
+    if photo:
+        try:
+            p = _edit().outpaint(photo, "")
+            log("[bg] mode=OUTPAINT (real scraped photo, fallback)")
+            return str(p), "imagen-3.0-capability-001/outpaint"
         except Exception as e:  # noqa: BLE001
-            log(f"[bg] style failed ({type(e).__name__}: {e}); -> text-to-image")
+            log(f"[bg] outpaint failed ({type(e).__name__}: {e}); -> text-to-image")
 
     p, model = t2i(prompt)
-    log("[bg] mode=text-to-image (fallback)")
+    log("[bg] mode=text-to-image (last resort)")
     return str(p), model
 
 
