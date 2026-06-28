@@ -400,6 +400,29 @@ def _headline_block(
         ]
         return f'<h1 class="headline hl-head">{" ".join(parts)}</h1>'
 
+    # 'lockup' — a bold, DESIGNED graphic headline driven by the brand's typographic DNA
+    # (heavy weight + gradient fill + outline + shadow, one word in the accent gradient), so
+    # the headline reads as a custom AD LOCKUP, not plain text laid over a photo. Words are
+    # stacked (each on its own line) and auto-fit to the column.
+    if treatment == "lockup":
+        n = len(words)
+        if 1 <= n <= 6 and 0 < longest <= 22:
+            max_size = 154 if column_px >= 800 else 120
+            size = max(58, min(max_size, int(column_px / (longest * 0.58))))
+            upper_cls = "" if rtl else " upper"
+            spans = []
+            for i, w in enumerate(words):
+                is_accent = n > 1 and (
+                    (accent_word == "last" and i == n - 1)
+                    or (accent_word == "first" and i == 0)
+                )
+                spans.append(f'<span class="lw{" accent" if is_accent else ""}">{_esc(w)}</span>')
+            return (
+                f'<div class="lockup-headline{upper_cls}" style="font-size:{size}px">'
+                f'{"".join(spans)}</div>'
+            )
+        return f'<h1 class="headline lockup-flat">{_esc(text)}</h1>'
+
     can_hero = 1 <= len(words) <= 5 and 0 < longest <= 20
     if treatment != "stacked_hero" or not can_hero:
         return f'<h1 class="headline">{_esc(text)}</h1>'
@@ -568,7 +591,8 @@ def _clampf(v: float, lo: float, hi: float) -> float:
 _SAFE_MARGIN = 42        # px every element must stay inside the frame by
 
 
-def _freeform_lower_css(text_box, scrim_strength: float, align: str) -> str:
+def _freeform_lower_css(text_box, scrim_strength: float, align: str,
+                        archetype: Optional[str] = None) -> str:
     """Position the text cluster at a free [x,y,w] (normalized) with a soft, rounded scrim
     panel sized to it — readable on any background, a different composition every time, and
     NEVER clipped.
@@ -587,18 +611,29 @@ def _freeform_lower_css(text_box, scrim_strength: float, align: str) -> str:
     items = {"center": "center", "right": "flex-end"}.get(align, "flex-start")
     s_hi = round(max(0.0, min(1.0, scrim_strength)), 3)
     s_mid = round(s_hi * 0.72, 3)
-    # FEATHERED scrim (art-critic: the flat grey rectangle had a hard seam). A radial wash
-    # that's solid where the text sits and fades to transparent at the panel edges, plus a
-    # soft same-colour glow so the panel melts into the image instead of being a pasted slab.
-    scrim = (
-        f"background:radial-gradient(120% 130% at 30% 40%, rgba(8,12,18,{s_hi}) 0%, "
-        f"rgba(8,12,18,{s_mid}) 58%, rgba(8,12,18,{round(s_hi*0.35,3)}) 84%, "
-        f"rgba(8,12,18,0) 100%); backdrop-filter:blur(4px); "
-        f"box-shadow:0 0 70px 50px rgba(8,12,18,{round(s_hi*0.45,3)});"
-    )
+    s_lo = round(s_hi * 0.34, 3)
+    # ARCHETYPE-aware scrim. EMERGING (product_hero, or any LOW text block): a feathered
+    # VERTICAL gradient — solid at the cluster's base, fading up to transparent — so the text
+    # reads as emerging organically from the base of the image, NOT sitting in a hard box.
+    # Otherwise: a soft radial wash that melts into the image (no hard seam).
+    emerging = (archetype == "product_hero") or (y >= 0.5)
+    if emerging:
+        scrim = (
+            f"background:linear-gradient(to top, rgba(8,12,18,{s_hi}) 0%, "
+            f"rgba(8,12,18,{s_mid}) 52%, rgba(8,12,18,{s_lo}) 80%, rgba(8,12,18,0) 100%); "
+            f"backdrop-filter:blur(3px); box-shadow:0 26px 64px 34px rgba(8,12,18,{round(s_hi*0.5,3)});"
+        )
+    else:
+        scrim = (
+            f"background:radial-gradient(120% 130% at 30% 40%, rgba(8,12,18,{s_hi}) 0%, "
+            f"rgba(8,12,18,{s_mid}) 58%, rgba(8,12,18,{s_lo}) 84%, "
+            f"rgba(8,12,18,0) 100%); backdrop-filter:blur(4px); "
+            f"box-shadow:0 0 70px 50px rgba(8,12,18,{round(s_hi*0.45,3)});"
+        )
+    # Generous padding so the text BREATHES inside the box (Step 3: spacing).
     common = (f"position:absolute; left:{left}px; width:{width}px; text-align:{align}; "
               f"display:flex; flex-direction:column; align-items:{items}; "
-              f"padding:30px 34px; border-radius:22px; box-sizing:border-box; {scrim}")
+              f"padding:40px 46px; border-radius:24px; box-sizing:border-box; {scrim}")
     if y >= 0.45:
         # Lower placement -> pin the BOTTOM at a safe margin; content (and the CTA) grow UP,
         # so the CTA can never fall off the bottom edge. The panel auto-sizes to its content.
@@ -634,6 +669,9 @@ def render_poster_html(
     # the LLM art-director supplies a data-driven spec in the full pipeline.
     spec = spec or default_design_spec(brief, density)
     show = spec.show or _MINIMAL_SHOW
+    # The marketing archetype (behavioral guide from the art-director) steers the renderer's
+    # headline treatment + scrim style — without hardcoding the layout (coords stay the LLM's).
+    arche = getattr(spec, "marketing_archetype", None)
     # Accent = the brand's most VIVID real palette color (legible on the scrim) — never a
     # muted/off-scheme tan, never a generic default.
     accent = _brand_accent(brief, spec)
@@ -641,6 +679,11 @@ def render_poster_html(
     kicker_color = _legible_on_dark(accent_rgb)   # readable on the dark scrim
     cta_bg = accent                               # keep the brand color on the button
     cta_text = _readable_on(accent_rgb)           # white on a dark brand color, dark on a light one
+    # Lockup-headline gradient (the DNA "internal gradient" treatment): the brand accent -> a
+    # second vivid palette color, or a lighter shade of the accent when the palette has only one.
+    _pal2 = [str(c) for c in ([brief.primary_color] + list(brief.palette_hex or []))
+             if c and str(c).startswith("#") and str(c).lower() != accent.lower()]
+    grad2 = _pal2[0] if _pal2 else _to_hex(_mix(accent_rgb, (255, 255, 255), 0.45))
 
     if background_path:
         bg_layer = f"url('{_data_uri(background_path)}') center/cover no-repeat"
@@ -715,7 +758,7 @@ def render_poster_html(
     # Layout-driven CSS. FREE-FORM (spec.text_box set) places the cluster + logo at
     # continuous coords (unbounded compositions); else one of the 6 fixed archetypes.
     if spec.text_box:
-        lower_layout_css = _freeform_lower_css(spec.text_box, spec.scrim_strength, align)
+        lower_layout_css = _freeform_lower_css(spec.text_box, spec.scrim_strength, align, arche)
         logo_pos_css = _freeform_logo_css(spec.logo_xy)
     else:
         mark_corner = _mirror_corner(spec.logo_corner, rtl)
@@ -751,8 +794,13 @@ def render_poster_html(
         column_px = _freeform_column_px(spec.text_box)
     else:
         column_px = 520 if spec.layout in ("side_panel_left", "side_panel_right") else 920
+    # ARCHETYPE -> headline treatment: editorial/promotional archetypes want a bold DESIGNED
+    # lockup (the headline becomes the visual anchor); others keep the spec's treatment.
+    treatment = spec.headline_treatment
+    if arche in ("magazine_editorial", "typographic_anchor") and treatment != "lockup":
+        treatment = "lockup"
     headline_html = _headline_block(
-        brief, rtl, spec.headline_treatment, spec.accent_word, column_px=column_px
+        brief, rtl, treatment, spec.accent_word, column_px=column_px
     )
 
     # Assemble the visible blocks per the spec's `show` list (decoration always),
@@ -823,6 +871,32 @@ def render_poster_html(
      leading; weight 800 keeps the lockup punch. */
   [dir="rtl"] .headline {{ letter-spacing:normal; line-height:1.2; }}
   [dir="rtl"] .hero-headline {{ letter-spacing:normal; line-height:1.12; gap:2px; }}
+  /* 'lockup' — a DESIGNED graphic headline (brand DNA: extremely bold, internal gradient,
+     heavy outline, 3D shadow; the headline itself becomes a brand icon). Outlined gradient
+     text so it reads as a custom ad lockup, not plain text over a photo. */
+  .lockup-headline {{
+    display:flex; flex-direction:column; gap:2px; margin-bottom:28px;
+    font-family:{font_head}; font-weight:800; line-height:.92; letter-spacing:-.02em;
+  }}
+  .lockup-headline.upper .lw {{ text-transform:uppercase; }}
+  .lockup-headline .lw {{
+    display:block;
+    background:linear-gradient(180deg, #ffffff 0%, #d7dee7 100%);
+    -webkit-background-clip:text; background-clip:text;
+    -webkit-text-fill-color:transparent; color:transparent;
+    -webkit-text-stroke:1.6px rgba(6,9,14,.5);
+    /* dual shadow: a tight dark halo for legibility over a BUSY area + a soft depth shadow */
+    filter:drop-shadow(0 3px 8px rgba(0,0,0,.9)) drop-shadow(0 10px 24px rgba(0,0,0,.5));
+  }}
+  .lockup-headline .lw.accent {{
+    background:linear-gradient(180deg, {accent} 0%, {grad2} 100%);
+    -webkit-background-clip:text; background-clip:text;
+    -webkit-text-fill-color:transparent; color:transparent;
+    -webkit-text-stroke:1.4px rgba(6,9,14,.42);
+    filter:drop-shadow(0 3px 8px rgba(0,0,0,.9)) drop-shadow(0 10px 24px {accent}66);
+  }}
+  .lockup-flat {{ -webkit-text-stroke:1.3px rgba(6,9,14,.40); }}
+  [dir="rtl"] .lockup-headline {{ letter-spacing:normal; line-height:1.08; gap:4px; }}
   /* 'highlight' treatment — one word knocked out inside a clean brand-colored block.
      No tilt: a rotated sticker read amateurish over a photo (MEASURED on ITI). */
   .hl-head {{ line-height:1.32; }}
@@ -843,10 +917,13 @@ def render_poster_html(
     border-radius:999px; color:#f3f7fb; backdrop-filter:blur(2px);
   }}
   /* A confident, high-contrast CTA button (art-critic: the pill was a tiny footnote). */
+  /* CTA: a solid high-contrast button — a light hairline border + strong dark shadow so it
+     pops on ANY background (QA: the chip read low-contrast over a busy scene). */
   .cta {{
     display:inline-flex; align-items:center; gap:12px;
-    background:{cta_bg}; color:{cta_text}; padding:20px 42px; border-radius:16px;
-    box-shadow:0 12px 32px -8px {accent}99;
+    background:{cta_bg}; color:{cta_text}; padding:21px 46px; border-radius:16px;
+    border:1.5px solid rgba(255,255,255,.24);
+    box-shadow:0 16px 40px -10px rgba(0,0,0,.6);
   }}
   .cta-text {{ font-family:{font_body}; font-weight:800; font-size:28px; text-transform:capitalize; letter-spacing:.01em; }}
   .contact {{ font-family:{font_body}; font-size:18px; color:#cdd6df; margin-top:22px; }}

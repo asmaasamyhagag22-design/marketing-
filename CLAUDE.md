@@ -2083,6 +2083,189 @@ Built it as a contained, verified-live first step (NOT yet wired into the pipeli
   `poster/pipeline.generate_poster` (pick OUTPAINT vs STYLE vs text-to-image by available real
   assets), then carry the same engine to the reel.
 
+## Done — brand-anchored images STEP 2: ADAPTIVE selector wired into the poster pipeline (2026-06-27) ✅
+Wired the STEP-1 edit provider into `poster/pipeline.generate_poster` (the ONE path shared by
+CLI + web app), so generated posters are now anchored to the brand's REAL assets instead of
+drifting on pure text-to-image. New `_generate_background(profile, brand_dna, prompt)` runs a
+SAFE CASCADE (never raises — each mode falls through to the next):
+  1. **OUTPAINT** a usable REAL scraped photo (`_best_usable_photo` reuses the real
+     `reel.image_quality` gate, max_keep=1) — maximum fidelity (the literal place/product ships).
+  2. **STYLE** on the brand's real creatives (`_brand_style_refs`: BrandCreativeDNA.references_seen
+     FIRST, then the brand's own content_images; capped at 2 = the non-square ref limit) — the
+     universal floor (works when there's no usable photo).
+  3. **text-to-image** (the previous `_generate_imagen`, Ultra->4.0) — last-resort fallback.
+`use_edit=True` default (flag to force the legacy text-to-image path); `no_image` stub unchanged.
+The cascade replaces ONLY the background-generation call (line ~224); the design-spec, concept,
+QA-regenerate loop, audit sidecar and response shape are untouched — so the WEB APP inherits the
+adaptive path automatically (`api/routes/poster.py` calls `generate_poster` with the defaults).
+- Helpers are injectable (fetch / edit_provider / t2i) so the cascade is hermetically tested:
+  `tests/test_poster_pipeline_bg.py` (7 — ref ordering+cap, quality-gate photo pick, and the
+  full cascade: outpaint-first / fall-to-style-on-outpaint-fail / style-when-no-photo /
+  t2i-when-no-assets / t2i-when-both-edit-modes-fail). Suite **783 passed** (was 776).
+- VERIFIED LIVE end-to-end (full `generate_poster`, Gemini + Imagen edit): **elkbabgi -> OUTPAINT**
+  (real feast photos extended to the canvas + Arabic-free English copy "Experience The Sizzle" +
+  chips + CTA; QA failed ONLY on the low-res logo asset — a known elkbabgi data gap, NOT the
+  scene/this change) and **WE/Telecom -> STYLE** from its 7 cached real ads (purple digital-
+  twilight, desert-highway truck matching the fleet-tracking offer, Arabic copy, logos; QA
+  **pass=True, clean**). The adaptive selector chose the right mode for each brand.
+HONEST watch-items (NOT yet addressed, each its own measured follow-up): (a) for a thin-photo
+brand whose content_images are unreachable (te_eg: 11/12 CDN-blocked), `_best_usable_photo` pays
+sequential fetch-timeout latency before falling to STYLE — consider caching the "no usable photo"
+verdict or using scraper-recorded dims; (b) `load_or_build_dna` still runs for photo-rich brands
+(outpaint doesn't need it, but concept/design do, so not wasted); (c) an OUTPAINTed busy photo has
+no deliberate calm text zone — the renderer's scrim/adaptive-logo-plate handles legibility, but
+measure whether STYLE composes better than OUTPAINT for some photo-rich brands. NEXT: carry the
+same adaptive engine to the REEL; then the elkbabgi-class low-res-logo asset gap.
+
+## Done — poster: letterbox fix + DNA-driven "lockup" typography (real-ad design) (2026-06-27) ✅
+Owner: a generated poster "البك جراوND مش كاملة" (WE bg had black bars) and "هو بس بياخد صورة
+ويحط عليها كلام" — it should be a DESIGNED ad, not a photo with text on top. Owner chose: real
+ad design. CONSTRAINT (kept): text is NEVER baked by the image model (Arabic garbles +
+zero-hallucination), so "ad design" = elevate OUR controlled HTML/CSS layer, driven by the
+brand's BrandCreativeDNA. Two changes this step (CLI + web app share the pipeline):
+1. **Letterbox fix** (the "incomplete background"). ROOT CAUSE (MEASURED on the saved WE bg
+   bg_3afdf4e7): the STYLE/text-to-image model rendered a LANDSCAPE scene centered in the 3:4
+   portrait frame with dark bars (band mean ~15, **max 17** — NOT pure black). NB: Imagen has no
+   "4:5"; 3:4 is the closest portrait and was already set — aspect wasn't the cause. Fix = (a)
+   FULL-BLEED instruction in `imagen_provider._COMPOSITION_CONTRACT` + `imagen_edit_provider.
+   _OUTPAINT_GUARD` ("fill the ENTIRE frame edge-to-edge, NO black bars/letterbox"), AND (b) a
+   DETERMINISTIC safety net `poster.pipeline._trim_letterbox` (row-MEAN detector, calibrated
+   threshold 24 — a first per-pixel bbox at 16 MISSED the bars because their max was 17; caught
+   by measuring) applied after every bg gen. MEASURED: bg_3afdf4e7 1280 -> **552px** (728px of
+   bars removed); the live WE re-render came out full-bleed (prompt worked) so the net was a
+   no-op there (correct).
+2. **"lockup" typography** (`template.py` + `pipeline.py`). New `_headline_block` treatment
+   `"lockup"`: stacked words as a bold DESIGNED graphic lockup — gradient text fill +
+   `-webkit-text-stroke` outline + drop-shadow, the accent word in the brand-gradient (the DNA
+   "extremely bold / internal gradients / heavy outlines / headline-as-icon" look). Gradient
+   colors come from the brand palette. `pipeline._dna_wants_lockup(brand_dna)` selects it when
+   the BrandCreativeDNA `typographic_character`/`signature_moves` reads bold/graphic (WE matches)
+   — so it's DNA-DRIVEN, not hardcoded. Falls back to the existing treatments otherwise.
+Tests: `tests/test_poster_pipeline_bg.py` (+4: letterbox crop + noop, DNA lockup detection,
+lockup headline renders gradient+outline). Suite **787 passed** (was 783).
+VERIFIED LIVE on WE (before adaptive_te_eg.png -> after): BEFORE = letterboxed truck + plain
+small text; AFTER = full-bleed purple WE scene + a big bold gradient/outline Arabic LOCKUP
+("خدمات/تقربك/أكتر"). HONEST: QA flagged the big lockup OVERLAPPING the central subject (focal
+clutter, score 6) — the typography "exploded" correctly but the COMPOSITION needs the lockup
+placed in the image's calm zone. NEXT (before expanding to all brands, per owner): fix lockup
+placement vs the subject (calm-zone aware), then generalize the DNA-driven typography + add brand
+MOTIFS (light streaks / color blocks as CSS/SVG) for a fuller "designed ad", then carry to reel.
+
+## Done — scraper: adaptive crawl budget for e-commerce (Pillar 1) (2026-06-28) ✅
+MEASURED FIRST (`benchmark/measure_ecom_coverage.py` + `_bottleneck.py` over saved scrapes;
+e-commerce detected UNIVERSALLY by product-URL density, no hardcoded names): e-commerce coverage
+was **~2.5%** (4-12 of 100-300+ discovered pages). KEY finding that RESHAPED the fix — the page CAP
+was NOT the binding constraint: at ~11s/page the 150s budget fits only ~12 pages, so the cap (12)
+and the time budget bind TOGETHER; **raising `MAX_INTERNAL_PAGES` alone is a no-op**. HONESTY caveat:
+the saved scrapes were old-budget (60s), overstating the gap — re-measured live (azzafahmy fresh:
+12 pages). FIX (`scraper/config.py` + `crawler.py`): when the homepage links + sitemap reveal many
+PRODUCTS-type URLs (>= `ECOMMERCE_PRODUCT_URL_MIN`=15, via the EXISTING `classify_url` — a SIGNAL,
+never a vertical), raise BOTH the cap (12 -> 30) AND the time budget (150 -> 330s).
+`_looks_like_ecommerce(home_links, sitemap_urls)` dedups + early-exits at the threshold; threaded as
+`page_cap`/`budget_secs` into `_select_subpages_to_fetch` + the crawl loop. VERIFIED LIVE on elietop
+(Shopify store): **20 pages** crawled (vs 12 default / ~6 old), 3401 text blocks, ready=True — hit the
+330s budget at 20 pages (this store renders ~16s/page; a store scrape now takes ~5.6 min — render
+speed is the follow-up to cut that). Tests: `tests/test_crawler_ecom_budget.py` (3). Suite **790 passed**.
+NEXT: per-page render SPEED (resource-blocking on sub-pages) so 30+ pages fit faster; duplication
+early-termination; re-anchor the saved-scrape baseline on fresh runs.
+
+## Done — scraper: a malformed scraped LINK no longer crashes the whole crawl (2026-06-28) ✅
+EXPOSED by the deeper e-commerce crawl above (the disciplined value of one fix surfacing the next):
+`ensure_scheme` — a low-level util that `normalize_url` calls on EVERY scraped link href during
+dedup — called `validate_input_url`, which RAISES on a concatenated URL (`https://a/https://b`). Real
+stores emit such links (MEASURED LIVE: elietop has a Shopify-auth redirect href with an embedded
+second absolute URL), so `build_inventory` CRASHED the ENTIRE scrape (exit 1, no manifest). ROOT FIX
+(`scraper/url_utils.py` + `crawler.py`): `ensure_scheme` is now pure/ROBUST (never raises — just adds
+the scheme); the malformed-INPUT guard `validate_input_url` is called explicitly at the BOUNDARY (the
+`scrape()` entry; the API already validated in its request schema). So a bad LINK is handled
+gracefully while a concatenated USER input is still rejected (same external behaviour). Updated
+`tests/test_current_hotfixes.py`: the rejection now asserts at the boundary (`validate_input_url`
+raises) and `normalize_url` must NOT raise on a link href. VERIFIED LIVE: elietop completed with **0
+failures** (a guaranteed crash before the fix). Suite **790 passed**.
+
+## Done — scraper: light sub-page fetches (render-speed, Pillar 1 enabler) (2026-06-28) ✅
+The lever that makes adaptive depth feasible — the page cap + the time budget bind TOGETHER at
+~11-16s/page, so deeper crawls need FASTER pages. Sub-pages are crawled for TEXT + LINKS only (visual
+identity is the homepage's job), so they don't need rendered pixels. `scraper/fetcher.py`: a new
+`light=True` fetch mode (1) blocks heavy resources (image/media/font) via `page.route` —
+`_block_heavy_route` aborts those, continues documents/scripts/XHR/CSS so JS-injected content
+(products/links/lazy text) is preserved — and (2) SKIPS the full-page screenshot (the slowest step;
+it also caused a font-load-timeout failure on a fresh run). Wired in `crawler.py`: the homepage stays
+FULL (light=False); every sub-page fetch is `light=True`. VERIFIED LIVE (elietop, full -> light):
+**20 -> 24 pages**, 337s (budget-bound) -> **323s (NOT budget-bound)**, ~16.8 -> **~13.5s/page (~20%
+faster)**, text blocks 3401 -> 3794, social 4 -> 6, 0 failures, ready=True — faster + MORE coverage +
+MORE data, with data integrity PRESERVED (the key risk). Tests: `tests/test_fetcher_light.py` (2,
+hermetic). Suite **792 passed**.
+HONEST: the ~20% win is from resource-blocking + skipping screenshots; the BIGGER remaining per-page
+cost is `_scroll_to_load` (scroll loop + 1.4s dwell + networkidle waits, ~10-14s) — trimming those on
+light sub-pages is the next lever but HIGHER-risk (lazy product/footer content), so it needs its own
+measured before/after. NOTE: sub-page screenshots are now empty by design (unused; visual identity is
+homepage-only).
+
+## Done — poster: image quality (photoreal faces + 2x upscale) (2026-06-27) ✅
+Owner: "الكوالتي محتاجة تتحسن + مينفعش يكون وشوش حقيقية؟" Chose (option 1): keep generating but
+make the AI people look REAL/believable + higher quality (NOT real actual faces — that needs a
+real source photo, which a thin-photo brand like WE lacks; conditioning on a real ad face = a
+rights risk, deferred). Two changes (CLI + web app share the pipeline):
+1. **Photoreal/face-realism prompt clause** appended to `imagen_provider._COMPOSITION_CONTRACT`
+   (covers STYLE + text-to-image): "Photorealistic, high-resolution, crisp focus … any PEOPLE
+   must look REAL and lifelike — natural skin/features, eyes with catchlights, well-formed hands;
+   NOT plastic/waxy/distorted/AI-uncanny."
+2. **2x upscale** for crispness + sharper faces. LIVE probe (the Veo/edit lesson — don't assume a
+   model): `upscale_image` IS provisioned on image-498715 via **imagen-3.0-generate-002** (and
+   3.0-generate-001 / 3.0-capability-001; imagegeneration@002 -> 404). New
+   `imagen_edit_provider.upscale_to_file` (never raises; no-op without a project) wired into
+   `pipeline._maybe_upscale` after the letterbox trim (`upscale=True` default flag).
+MEASURED LIVE on WE (re-render): photoreal clause + upscale -> background **896x1280 -> 1792x2560**,
+and the vision-QA verdict rose **6 -> 9 (clean pass)** vs the pre-quality lockup render; the scene
+read as a premium WE ad (conductor figure + brand light-shard motifs + bold Arabic lockup),
+faces sharper/less uncanny. Tests: `tests/test_imagen_edit_provider.py` (+2: upscale safe-no-op on
+unreadable / no-project, hermetic). Suite **794 passed** (was 787). HONEST: faces are still
+AI-GENERATED (believable, not real people) per the owner's choice; upscale adds an API call per bg
+(cost/latency — currently runs per QA attempt; optimizing to upscale-final-only is a follow-up).
+NEXT: lockup placement vs subject (calm-zone aware) + brand MOTIFS as CSS/SVG, then carry to reel.
+
+## Done — poster: Marketing Archetypes + creative typographic layouts (code green; live pending) ✅
+Owner brief (acting as senior art-director + AI eng): guide the free-form LLM layout with
+MARKETING ARCHETYPES so output follows pro advertising principles — creative text placement,
+high-end typography, visual harmony — WITHOUT hardcoding CSS grids (archetypes are BEHAVIORAL
+prompt constraints; the LLM still emits continuous text_box/logo_xy). Zero-hallucination kept
+(text overlaid; image text-free). Done one file at a time, suite green between steps, NO live
+API yet (live Imagen run reserved to do together).
+- **Step 1 — design-spec archetypes** (`art_director.build_design_spec` + `_DesignSpecResponse`
+  + `schemas.PosterDesignSpec.marketing_archetype`): the LLM FIRST picks one of
+  magazine_editorial / product_hero / typographic_anchor / proof_and_trust, then lets it DRIVE
+  text_box / logo_xy / headline_treatment / text_align (system prompt describes each archetype's
+  placement behavior). The chosen archetype is mapped onto the spec (verified it carries through).
+- **Step 2 — strict, placement-aware calm zone** (`art_director._calm_zone_instruction(zone,
+  text_box)` + `build_llm_concept_prompt`): when the LLM chose a free text_box, the Imagen prompt
+  now names the PRECISE band that must stay clear (e.g. "keep the BOTTOM ~35% ENTIRELY clear of
+  the main subject's face … reserved for overlaid text"), so the subject sits OUT of where the
+  text lands. Still forbids the flat color block.
+- **Step 3 — archetype-aware renderer** (`template.py`): the renderer reads
+  `spec.marketing_archetype` and (a) renders the headline as a bold designed LOCKUP for
+  magazine_editorial / typographic_anchor (the headline becomes the visual anchor; the accent
+  word uses the brand's most-saturated palette color); (b) EMERGING effect — for product_hero or
+  any LOW text block, a feathered VERTICAL linear-gradient scrim (solid at the base, fading up)
+  so text emerges organically from the image instead of sitting in a hard box (else the soft
+  radial wash); (c) generous padding (40x46) so text breathes, never touching the canvas edge
+  (coords still clamped to safe margins). No hardcoded grid — coords stay the LLM's.
+Tests: `tests/test_poster_design.py` (+2 Step-3: emerging-scrim/lockup by archetype, radial-vs-
+emerging by placement; 3 fixtures + an assert updated for the new required field). Suite **796
+passed** (was 794).
+LIVE-VERIFIED + FOLLOW-UP FIX (archetype-aware `show`): first live WE run picked
+`magazine_editorial` (right-third lockup) correctly BUT QA caught a **clipped CTA** — root cause:
+`pipeline.generate_poster` FORCED logo+headline+sub+offerings+cta into a top-anchored side third
+-> overflow. Fix: `must_show` is now SCALED TO THE ARCHETYPE — magazine_editorial = logo+headline+
+cta (the massive lockup is the hero); typographic_anchor/product_hero add one sub line; only
+proof_and_trust/None show the evidence bullets. Re-VERIFIED LIVE on a FRESH te.eg scrape (the
+owner's improved scraper: 9 pages, palette now has real WE purple #512283/#6449cd, 12 content
+images): archetype=magazine_editorial, show=[logo,headline,cta], full-bleed warm emotional scene
+(woman on an evening phone call, purple-twilight city), bold Arabic lockup "المسافات بينا كلام",
+CTA NOT clipped, QA **pass=True score=9 ("overall execution is excellent")**. Suite **796 passed**.
+NEXT: carry the archetype engine to the reel; minor (QA note): the light CTA-chip contrast +
+the accent word's legibility over a busy area.
+
 ## Backlog (each its own measured fix)
 - **Logo-vs-photo on multi-variant seals:** Azza Fahmy emits its seal in several
   color variants; only the selected one is excluded by filename, so a variant can leak

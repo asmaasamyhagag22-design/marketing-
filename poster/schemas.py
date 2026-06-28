@@ -93,6 +93,13 @@ class PosterDesignSpec(BaseModel):
     text_box: Optional[list[float]] = None    # [x, y, w] — top-left + width of the text cluster
     logo_xy: Optional[list[float]] = None     # [x, y] — top-left anchor of the brand mark
 
+    # The marketing archetype that shaped this composition (a behavioral guide from the LLM
+    # art-director). Drives the renderer's treatment (emerging scrim / lockup) and the Imagen
+    # calm-zone instruction. Optional/None keeps old specs valid (backward-compatible).
+    marketing_archetype: Optional[Literal[
+        "magazine_editorial", "product_hero", "typographic_anchor", "proof_and_trust",
+    ]] = None
+
 
 class PosterArtDirection(BaseModel):
     provider_prompt: str

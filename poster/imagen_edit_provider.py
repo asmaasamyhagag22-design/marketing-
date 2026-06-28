@@ -43,8 +43,9 @@ DEFAULT_EDIT_MODEL = "imagen-3.0-capability-001"
 _OUTPAINT_GUARD = (
     "Photorealistic, seamless continuation of the SAME single scene — same place, same "
     "lighting, same depth of field and color; one continuous photo with no seams, borders, "
-    "frames, panels, or collage. Absolutely no text, words, letters, numbers, logos, or "
-    "signage anywhere."
+    "frames, panels, or collage. Fill the ENTIRE frame edge-to-edge (full-bleed): NO black "
+    "bars, NO letterbox or pillarbox, NO empty margins. Absolutely no text, words, letters, "
+    "numbers, logos, or signage anywhere."
 )
 
 ImgSrc = Union[bytes, bytearray, str]
@@ -98,6 +99,34 @@ def build_outpaint_canvas_and_mask(
     canvas.save(cb, "PNG")
     mask.save(mb, "PNG")
     return cb.getvalue(), mb.getvalue(), (ox, oy, nw, nh)
+
+
+def upscale_to_file(src_path: str, *, project=None, location=None, model=None, factor="x2") -> str:
+    """Upscale a generated background ~2x for crispness + finer detail (sharper faces). Imagen
+    upscale, MEASURED provisioned on image-498715 (imagen-3.0-generate-002). Overwrites src_path
+    in place; returns it. NEVER raises — returns the original on any failure (no project / read
+    error / model error), so it can't break poster generation."""
+    try:
+        data = Path(src_path).read_bytes()
+        proj = project or os.getenv("GOOGLE_CLOUD_PROJECT")
+        if not data or not proj:
+            return src_path
+        from google import genai
+        from google.genai import types as t
+        client = genai.Client(vertexai=True, project=proj,
+                              location=location or os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1"))
+        resp = client.models.upscale_image(
+            model=model or os.getenv("IMAGEN_UPSCALE_MODEL") or "imagen-3.0-generate-002",
+            image=t.Image(image_bytes=data, mime_type=_detect_mime(data)),
+            upscale_factor=factor,
+            config=t.UpscaleImageConfig(output_mime_type="image/png"),
+        )
+        imgs = getattr(resp, "generated_images", None) or []
+        if imgs and imgs[0].image.image_bytes:
+            Path(src_path).write_bytes(imgs[0].image.image_bytes)
+    except Exception:
+        pass
+    return src_path
 
 
 class ImagenEditProvider:

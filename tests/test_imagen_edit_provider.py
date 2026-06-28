@@ -4,10 +4,12 @@ SSRF-guarded fetch, and the no-reference / unfetchable-base guard paths."""
 import io
 
 import pytest
+from PIL import Image
 
 from poster.imagen_edit_provider import (
     ImagenEditProvider,
     build_outpaint_canvas_and_mask,
+    upscale_to_file,
     _fetch_bytes,
 )
 
@@ -69,3 +71,15 @@ def test_outpaint_raises_when_base_unfetchable_no_network():
     prov = ImagenEditProvider(project="dummy", fetch=lambda u: None)
     with pytest.raises(RuntimeError, match="could not load base image"):
         prov.outpaint("https://example.com/missing.png")
+
+
+def test_upscale_to_file_safe_noop_on_unreadable(tmp_path):
+    missing = str(tmp_path / "nope.png")
+    assert upscale_to_file(missing) == missing          # unreadable -> returns original, no raise
+
+
+def test_upscale_to_file_noop_without_project(tmp_path, monkeypatch):
+    p = tmp_path / "x.png"
+    Image.new("RGB", (64, 64), (10, 20, 30)).save(p)
+    monkeypatch.delenv("GOOGLE_CLOUD_PROJECT", raising=False)
+    assert upscale_to_file(str(p), project="") == str(p)  # no project -> no network, no-op

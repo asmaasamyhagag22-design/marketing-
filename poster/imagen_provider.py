@@ -39,7 +39,14 @@ _COMPOSITION_CONTRACT = (
     "color-blocked panel, or a diagonal band/wedge that divides the image. The reserved calm "
     "area must be a NATURAL part of the single photo (a softly-lit wall, a shallow-focus "
     "background, or atmospheric depth), only as large as the text needs, plus clean margins. "
-    "Absolutely no text, words, letters, numbers, logos, or signage anywhere."
+    "The scene MUST fill the ENTIRE vertical frame edge-to-edge (FULL-BLEED): absolutely NO "
+    "black bars, NO letterbox or pillarbox, NO cinematic bars, NO empty/solid borders or "
+    "margins — the photographed scene reaches all four edges of a tall vertical portrait frame. "
+    "Absolutely no text, words, letters, numbers, logos, or signage anywhere. "
+    "Photorealistic and high-resolution: crisp focus, fine detail, natural lighting. Any PEOPLE "
+    "must look REAL and lifelike — natural skin texture and facial features, natural eyes with "
+    "catchlights, well-formed hands; NOT plastic, waxy, distorted, asymmetric, blurry, or "
+    "AI-uncanny. Commercial editorial photography quality."
 )
 
 

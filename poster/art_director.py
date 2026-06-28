@@ -24,18 +24,37 @@ def _zone_phrase(zone: Optional[str]) -> str:
     return _ZONE_PHRASE.get(zone or "bottom", "lower third")
 
 
-def _calm_zone_instruction(zone: Optional[str]) -> str:
+def _calm_zone_instruction(zone: Optional[str], text_box: Optional[list] = None) -> str:
     """Reserve the text area as a NATURAL calm part of the SAME photo — never a flat color
     block. Imagen otherwise satisfies 'GENEROUS empty negative space' by painting a hard
     color-blocked panel that splits the frame (MEASURED: a cream diagonal eating ~40% of the
     Digilians background). So we ask for an IN-SCENE calm zone, sized to the text, and forbid
-    the flat block explicitly."""
-    return (
+    the flat block explicitly. When the LLM chose a free `text_box`, name the PRECISE band that
+    must stay clear of the subject (Step 2: strict, placement-aware calm zone)."""
+    base = (
         f"Keep the {_zone_phrase(zone)} a naturally calm, uncluttered part of the SAME single "
         "photo — a softly-lit wall, a shallow-focus background, or gentle atmospheric depth — "
         "sized just enough for the overlaid text plus clean margins. It MUST be a real part of "
         "the scene, NEVER a flat color block, a solid color field, a hard-edged or color-blocked "
         "panel, or a diagonal band dividing the frame."
+    )
+    if not text_box or len(text_box) < 3:
+        return base
+    try:
+        x, y, w = float(text_box[0]), float(text_box[1]), float(text_box[2])
+    except Exception:
+        return base
+    if y >= 0.45:
+        band = f"the BOTTOM ~{max(20, min(60, round((1.0 - y) * 100)))}% of the image"
+    elif (y + 0.30) <= 0.60 and zone in (None, "top"):
+        band = f"the TOP ~{max(20, min(60, round((y + 0.32) * 100)))}% of the image"
+    else:
+        band = f"the {_zone_phrase(zone)} (a vertical band around x {round(x * 100)}%-{round((x + w) * 100)}%)"
+    return (
+        f"CRITICAL TEXT SAFE ZONE: keep {band} ENTIRELY clear of the main subject's face and any "
+        "important detail — place the subject OUTSIDE it. That area must be a smooth, calm, "
+        "low-detail part of the SAME photo (soft-lit wall, shallow focus, or gentle in-scene "
+        "gradient) reserved for overlaid text. " + base
     )
 
 
@@ -715,8 +734,10 @@ def build_llm_concept_prompt(
     PERSONA and its VISUAL IDENTITY; with `brand_dna` it renders in the brand's
     learned design language.
     """
-    # The text block lands in this zone -> the image must keep it calm there.
+    # The text block lands in this zone -> the image must keep it calm there. The free
+    # text_box (when present) lets us name the PRECISE band the subject must stay out of.
     zone = spec.negative_space_zone if spec else "bottom"
+    text_box = spec.text_box if spec else None
     if caller is None:
         return build_creative_prompt(brief, zone=zone, variation=variation)
 
@@ -744,7 +765,7 @@ def build_llm_concept_prompt(
             "- Respect the audience's cultural context (Arabic brands: regionally authentic "
             "people and settings, never clichés).\n"
             "- Photorealistic premium campaign photography; cinematic lighting.\n"
-            f"- {_calm_zone_instruction(zone)}\n"
+            f"- {_calm_zone_instruction(zone, text_box)}\n"
             "- ABSOLUTELY NO text, words, letters, numbers, logos, or signage in the image.\n"
             "- Vertical 4:5. Purely visual: no factual claims, prices, or guarantees."
         )
@@ -762,7 +783,7 @@ def build_llm_concept_prompt(
             "- Respect the audience's cultural context (e.g. Arabic-language brands: "
             "regionally authentic settings, props, and people — never clichés).\n"
             "- Photorealistic, editorial, high-end campaign aesthetic; cinematic lighting.\n"
-            f"- {_calm_zone_instruction(zone)}\n"
+            f"- {_calm_zone_instruction(zone, text_box)}\n"
             "- ABSOLUTELY NO text, words, letters, numbers, logos, or signage in the image.\n"
             "- Vertical 4:5. Purely visual: no factual claims, prices, or guarantees."
         )
@@ -875,6 +896,11 @@ class _DesignSpecResponse(BaseModel):
     show: list[str]
     accent_hex: str
     rationale: str
+    # The marketing archetype the LLM commits to — a BEHAVIORAL guide that drives the
+    # placement below (NOT a rigid CSS grid). Carried onto the spec for the renderer.
+    marketing_archetype: Literal[
+        "magazine_editorial", "product_hero", "typographic_anchor", "proof_and_trust",
+    ]
     # FREE-FORM placement (continuous, 0..1 of the canvas) — the real template-breaker.
     text_box: list[float]    # [x, y, w]: top-left + width of the text cluster
     logo_xy: list[float]     # [x, y]: top-left of the brand mark
@@ -961,6 +987,23 @@ def build_design_spec(
         "— great posters show FEW elements; never list contact/social unless they truly help\n"
         "- accent_hex: the ONE brand color to lead, copied EXACTLY from the brand palette "
         "below (or empty string if unsure)\n"
+        "- marketing_archetype: FIRST pick the ONE archetype that fits THIS brand, then let it "
+        "DRIVE your text_box / logo_xy / headline_treatment / text_align below. These are "
+        "creative BEHAVIORAL guides (you still output continuous coordinates), NOT rigid grids:\n"
+        "   * magazine_editorial (premium/lifestyle): full-bleed atmospheric image; a MASSIVE "
+        "bold typographic lockup elegantly on the LEFT or RIGHT third, interacting with the "
+        "image's negative space as the visual anchor. (text_box = a tall side third; stacked_hero.)\n"
+        "   * product_hero (e-commerce): the product/scene dominates center/top; the text block "
+        "ANCHORS at the BOTTOM, appearing to EMERGE from the base of the product — clean, minimal, "
+        "direct. (text_box low + wide; block or stacked_hero.)\n"
+        "   * typographic_anchor (promo/flash sale): TEXT is the hero — the headline occupies "
+        "~40-50% of the canvas (e.g. the top half); the image sits low / faded behind a strong "
+        "scrim. (text_box large + high; stacked_hero; higher scrim_strength.)\n"
+        "   * proof_and_trust (B2B/lead-gen): clean, structured, solid; a well-defined text block "
+        "(centered or bottom-right) with a strong headline + the 2-3 evidence offerings as bullets. "
+        "(block; include 'offerings' in show.)\n"
+        "   Fit it to the brand: lifestyle->magazine_editorial, store/product->product_hero, "
+        "sale/announcement->typographic_anchor, B2B/services->proof_and_trust.\n"
         "- text_box: [x, y, w] as FRACTIONS of the canvas (0..1) — the TOP-LEFT (x,y) and "
         "WIDTH of the text cluster. This is the real composition control: place it where the "
         "image is calmest and VARY it (corner, side, lower band, off-center) — do NOT default "
@@ -1030,4 +1073,5 @@ def build_design_spec(
         variation_seed=variation_seed_int(variation),
         text_box=text_box,
         logo_xy=logo_xy,
+        marketing_archetype=getattr(resp, "marketing_archetype", None),
     )

@@ -112,10 +112,12 @@ def test_build_design_spec_maps_and_validates_llm_output():
         layout="side_panel_right", headline_treatment="stacked_hero", accent_word="last",
         text_align="left", scrim_strength=0.7, show=["logo", "headline", "cta", "BOGUS"],
         accent_hex="#8B5542", rationale="warm grill identity",
+        marketing_archetype="magazine_editorial",
         text_box=[0.52, 0.5, 0.42], logo_xy=[0.06, 0.05],
     )
     spec = build_design_spec(brief, caller=MockCaller({"poster_design": resp}))
     assert spec.layout == "side_panel_right"
+    assert spec.marketing_archetype == "magazine_editorial"   # archetype mapped through
     assert spec.text_box == [0.52, 0.5, 0.42]       # FREE-FORM coords mapped through
     assert spec.logo_xy == [0.06, 0.05]
     assert spec.negative_space_zone == "right"      # derived from the free text_box (cx>0.6)
@@ -129,6 +131,7 @@ def test_build_design_spec_rejects_offpalette_accent():
         layout="bottom_band", headline_treatment="block", accent_word="none",
         text_align="left", scrim_strength=0.8, show=["logo", "headline", "cta"],
         accent_hex="#00ff00", rationale="x",   # NOT in the brand palette
+        marketing_archetype="product_hero",
         text_box=[0.06, 0.62, 0.6], logo_xy=[0.07, 0.05],
     )
     spec = build_design_spec(brief, caller=MockCaller({"poster_design": resp}))
@@ -210,7 +213,8 @@ def test_variation_reaches_the_design_spec_prompt():
     resp = _DesignSpecResponse(
         layout="bottom_band", headline_treatment="block", accent_word="none",
         text_align="left", scrim_strength=0.8, show=["logo", "headline", "cta"],
-        accent_hex="", rationale="x", text_box=[0.06, 0.62, 0.6], logo_xy=[0.07, 0.05])
+        accent_hex="", rationale="x", marketing_archetype="proof_and_trust",
+        text_box=[0.06, 0.62, 0.6], logo_xy=[0.07, 0.05])
     mock = MockCaller({"poster_design": resp})
     build_design_spec(_brief("Acme"), caller=mock, variation=build_variation(1))
     assert "Creative direction for THIS render" in mock.calls[0].user_prompt
@@ -247,6 +251,31 @@ def test_freeform_layout_bottom_anchors_to_prevent_cta_clip():
     assert "top:" in high and "bottom:" not in high
     wild = _freeform_lower_css([2.0, 2.0, 5.0], 0.8, "left")   # out of range -> clamped
     assert "left:-" not in wild and "width:0px" not in wild
+
+
+def test_archetype_drives_treatment_and_emerging_scrim():
+    # Step 3: the marketing archetype steers the RENDERER (not the coords) — product_hero ->
+    # an EMERGING feathered vertical scrim (not a hard/radial box) + generous breathing padding;
+    # an editorial archetype -> the headline renders as a bold designed LOCKUP.
+    brief = _brief("Acme", headline="Big Bold Sale")
+    base = default_design_spec(brief)
+    ph = base.model_copy(update={"marketing_archetype": "product_hero",
+                                 "text_box": [0.06, 0.62, 0.86], "show": ["headline"]})
+    html = render_poster_html(brief, None, ph)
+    assert "linear-gradient(to top" in html       # emerging from the base, not a radial box
+    assert "padding:40px 46px" in html            # generous breathing room
+    me = base.model_copy(update={"marketing_archetype": "magazine_editorial",
+                                 "text_box": [0.55, 0.30, 0.40], "show": ["headline"]})
+    assert "lockup-headline" in render_poster_html(brief, None, me)
+
+
+def test_emerging_scrim_only_for_low_or_product_hero():
+    # A HIGH text block on a non-product archetype keeps the soft radial wash (no emerging).
+    from poster.template import _freeform_lower_css
+    high = _freeform_lower_css([0.1, 0.10, 0.6], 0.8, "left", "typographic_anchor")
+    assert "radial-gradient" in high and "linear-gradient(to top" not in high
+    low = _freeform_lower_css([0.1, 0.10, 0.6], 0.8, "left", "product_hero")
+    assert "linear-gradient(to top" in low        # product_hero forces emerging even when high
 
 
 def test_headline_override_drives_the_brief():
