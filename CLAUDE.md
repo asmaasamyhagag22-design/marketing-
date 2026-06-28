@@ -2291,6 +2291,22 @@ NEXT: elkbabgi-class garbled-logo data gap (force a clean wordmark when the logo
 unreadable); per-run photo rotation is now moot for STYLE (gen varies) but still applies if OUTPAINT
 fallback is ever hit.
 
+## Done — reel: typography parity (poster LOCKUP ported to the reel text layer) (2026-06-28) ✅
+First step of carrying the poster's creative-typography engine to the reel (owner: "خلّص ج").
+`reel/textlayer.py`: the HERO scenes (intro/outro) now render the headline as the poster's
+designed LOCKUP — stacked words, gradient text fill + heavy `-webkit-text-stroke` outline, the
+LAST word in the brand-accent GRADIENT (accent = the most-saturated palette color, already shared
+with the poster via the reused color helpers; 2nd palette color drives the accent-word gradient).
+Non-hero scenes (offering/contact) keep the simpler single-line `.hl` accent + the v2 bottom
+scrim + accent spine. Zero-hallucination kept (verbatim words, CSS-only styling; RTL-correct via
+Chromium). VERIFIED OFFLINE (no Veo/ffmpeg cost): rendered the te.eg intro text-layer PNG and
+composited it on a dark bg — "المسافات / بينا / **كلام**" stacked, the accent word "كلام" in the
+brand purple gradient + the RTL accent spine — matches the poster lockup. Tests:
+`tests/test_voiceover.py::test_textlayer_is_bottom_anchored_scrim_and_accent` updated (hero=lockup
+`lw acc`, non-hero=`hl`). Suite **796 passed**. NEXT (the rest of the reel port, its own measured
+step): carry the MARKETING ARCHETYPES to reel SCENE composition (the reel has no free-form text_box
+LLM layout yet) + a live Veo/ffmpeg render to verify the lockup on real moving footage.
+
 ## Backlog (each its own measured fix)
 - **Logo-vs-photo on multi-variant seals:** Azza Fahmy emits its seal in several
   color variants; only the selected one is excluded by filename, so a variant can leak

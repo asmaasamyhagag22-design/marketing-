@@ -112,6 +112,20 @@ def _highlight_last_word(headline: str) -> str:
     return f'<span class="hl">{words[0]}</span>' if words and words[0] else ""
 
 
+def _lockup_headline(headline: str) -> str:
+    """A DESIGNED graphic lockup (parity with the poster): each word stacked on its own line,
+    the LAST word in the brand-accent gradient. Verbatim words, CSS-only styling — none added,
+    removed, reordered, or reworded (zero-hallucination)."""
+    words = [w for w in _esc(headline).split(" ") if w]
+    if not words:
+        return ""
+    n = len(words)
+    return "".join(
+        f'<span class="lw{" acc" if (n > 1 and i == n - 1) else ""}">{w}</span>'
+        for i, w in enumerate(words)
+    )
+
+
 def _scene_html(scene: ReelScene, storyboard: Storyboard, width: int, height: int,
                 logo_uri: Optional[str]) -> str:
     """Transparent text-layer HTML for one scene — a bottom-anchored caption with a strong
@@ -124,6 +138,10 @@ def _scene_html(scene: ReelScene, storyboard: Storyboard, width: int, height: in
     accent_rgb = _hex_to_rgb(accent)
     accent_on_dark = _legible_on_dark(accent_rgb)      # accent text/spine on the dark scrim
     chip_text = _readable_on(accent_rgb)               # text INSIDE the accent CTA chip
+    # 2nd palette color for the lockup accent-word gradient (else solid accent) — poster parity
+    _pal2 = [str(c) for c in ([storyboard.primary_color] + list(storyboard.palette_hex or []))
+             if c and str(c).startswith("#") and str(c).lower() != accent.lower()]
+    accent2 = _pal2[0] if _pal2 else accent
 
     short = len((scene.headline or "").split()) <= 3
     head_px = round(width * (0.112 if short else 0.088))
@@ -141,9 +159,13 @@ def _scene_html(scene: ReelScene, storyboard: Storyboard, width: int, height: in
     logo_html = (f'<div class="logo" style="{logo_pos}"><img src="{logo_uri}"></div>'
                  if show_logo else "")
 
+    lockup = scene.kind in ("intro", "outro")          # the hero scenes get a designed lockup
     inner: list[str] = []
     if scene.headline:
-        inner.append(f'<div class="headline">{_highlight_last_word(scene.headline)}</div>')
+        if lockup:
+            inner.append(f'<div class="headline lockup">{_lockup_headline(scene.headline)}</div>')
+        else:
+            inner.append(f'<div class="headline">{_highlight_last_word(scene.headline)}</div>')
     if scene.sublines:
         items = "".join(f'<div class="item">{_atom(s)}</div>' for s in scene.sublines)
         inner.append(f'<div class="items">{items}</div>')
@@ -170,6 +192,20 @@ def _scene_html(scene: ReelScene, storyboard: Storyboard, width: int, height: in
     font-size:{head_px}px;line-height:1.0;letter-spacing:-0.5px;text-transform:uppercase;
     text-wrap:balance;text-shadow:{shadow};-webkit-text-stroke:0.4px rgba(0,0,0,.3);}}
   .headline .hl{{color:var(--accent);}}
+  /* designed LOCKUP (poster parity) for the hero scenes: stacked words, gradient fill +
+     heavy outline, the last word in the brand-accent gradient. */
+  .headline.lockup{{display:flex;flex-direction:column;gap:2px;line-height:.92;
+    text-shadow:none;-webkit-text-stroke:0;}}
+  .lockup .lw{{display:block;
+    background:linear-gradient(180deg,#ffffff 0%,#d7dee7 100%);
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;
+    -webkit-text-stroke:1.4px rgba(6,9,14,.5);
+    filter:drop-shadow(0 3px 8px rgba(0,0,0,.9)) drop-shadow(0 10px 22px rgba(0,0,0,.5));}}
+  .lockup .lw.acc{{
+    background:linear-gradient(180deg,{accent} 0%,{accent2} 100%);
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;
+    -webkit-text-stroke:1.2px rgba(6,9,14,.42);
+    filter:drop-shadow(0 3px 8px rgba(0,0,0,.9));}}
   .items{{margin-top:4px;}}
   .item{{font-family:'Inter','Cairo',system-ui,sans-serif;font-weight:600;
     font-size:{item_px}px;line-height:1.5;margin:0.06em 0;letter-spacing:0.2px;
