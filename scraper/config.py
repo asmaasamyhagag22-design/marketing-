@@ -12,6 +12,19 @@ All tunable values live here. No magic numbers in the rest of the code.
 # takes ~2.5 min instead of ~1 min. Tune down for speed-over-coverage.
 TOTAL_BUDGET_SECONDS = 150
 MAX_INTERNAL_PAGES = 12  # in addition to homepage
+
+# Adaptive crawl budget for E-COMMERCE (Pillar 1). MEASURED (benchmark/measure_ecom_*.py): a
+# store discovers 100-300+ internal pages but the default 12-page / 150s budget reaches only
+# ~12 of them (azzafahmy fresh scrape: 12 pages / 4% coverage) — AND the page cap and the time
+# budget now bind at roughly the SAME point (~13 pages at ~11s/page render), so raising the
+# page cap ALONE is a no-op; a store needs BOTH a higher cap AND a proportionally larger time
+# budget. Triggered UNIVERSALLY when the homepage links + sitemap reveal many product-type URLs
+# (a SIGNAL via the page-type classifier — never a vertical or a hardcoded name). A store scrape
+# then takes ~5-6 min; per-page render-speed work is the follow-up to bring that down.
+ECOMMERCE_MAX_INTERNAL_PAGES = 30
+ECOMMERCE_BUDGET_SECONDS = 330        # ~30 pages at ~11s/page (cap and time bind together)
+ECOMMERCE_PRODUCT_URL_MIN = 15        # >= this many PRODUCTS-type URLs (homepage+sitemap) -> store
+
 PAGE_TIMEOUT_MS = 20_000
 NAV_TIMEOUT_MS = 25_000
 INTER_PAGE_DELAY_SECONDS = 1.0

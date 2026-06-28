@@ -49,8 +49,12 @@ def validate_input_url(url: str) -> str:
 
 
 def ensure_scheme(url: str) -> str:
-    """Add https:// if no scheme is provided."""
-    url = validate_input_url(url)
+    """Add https:// if no scheme is provided. Pure/robust — NEVER raises: this is called by
+    `normalize_url` on EVERY scraped link href during crawl/dedup, so a single malformed link
+    (a real site can emit `https://a.com/https://b.com`) must not crash the whole scrape.
+    Malformed USER INPUT is rejected separately by `validate_input_url` at the entry boundary
+    (the `scrape()` entry + the API request schema), not here."""
+    url = (url or "").strip()
     if not url:
         return url
     if not url.startswith(("http://", "https://")):

@@ -244,5 +244,12 @@ def test_black_gold_brown_restaurant_palette_is_preserved():
 
 
 def test_malformed_concatenated_input_url_is_rejected():
+    # Rejection happens at the INPUT BOUNDARY (validate_input_url / the scrape() entry), NOT in
+    # normalize_url — which is called on every scraped LINK href and must stay ROBUST: a real
+    # site can emit a concatenated link (https://a/https://b) and it must not crash the crawl.
+    from scraper.url_utils import validate_input_url
+    bad = "https://www.elkbabgi.com/https://www.digilians.gov.eg/"
     with pytest.raises(ValueError, match="multiple absolute URLs"):
-        normalize_url("https://www.elkbabgi.com/https://www.digilians.gov.eg/")
+        validate_input_url(bad)
+    # normalize_url must NOT raise on the same string (a scraped link href).
+    assert isinstance(normalize_url(bad), str)

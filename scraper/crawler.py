@@ -25,6 +25,9 @@ from typing import Optional
 from playwright.sync_api import sync_playwright
 
 from .config import (
+    ECOMMERCE_BUDGET_SECONDS,
+    ECOMMERCE_MAX_INTERNAL_PAGES,
+    ECOMMERCE_PRODUCT_URL_MIN,
     INTER_PAGE_DELAY_SECONDS,
     MAX_INTERNAL_PAGES,
     TOTAL_BUDGET_SECONDS,
@@ -62,6 +65,7 @@ from .url_utils import (
     resolve,
     same_registrable_host,
     site_root_if_deep,
+    validate_input_url,
 )
 
 logger = logging.getLogger(__name__)
@@ -215,6 +219,36 @@ def _select_subpages_to_fetch(
     candidates = list(by_norm.values())
     candidates.sort(key=lambda c: (tier_rank[c[2]], type_priority.get(c[1], 50)))
     return candidates[:cap]
+
+
+def _looks_like_ecommerce(home_links: list, sitemap_urls: list[str]) -> tuple[bool, int]:
+    """UNIVERSAL e-commerce detection for the adaptive crawl budget (Pillar 1): a store exposes
+    MANY product/collection pages. Counts DISTINCT URLs (homepage links + sitemap) that the
+    existing page-type classifier labels PRODUCTS — a SIGNAL, never a vertical or a hardcoded
+    name. Returns (is_store, product_url_count); early-exits at the threshold so a huge sitemap
+    is not fully classified."""
+    seen: set[str] = set()
+    n_products = 0
+    candidates = [getattr(l, "href", "") for l in (home_links or [])] + list(sitemap_urls or [])
+    for u in candidates:
+        if not u:
+            continue
+        try:
+            key = normalize_url(u)
+        except Exception:
+            key = u
+        if key in seen:
+            continue
+        seen.add(key)
+        try:
+            pt, _tier = classify_url(u)
+        except Exception:
+            continue
+        if pt == PageType.PRODUCTS:
+            n_products += 1
+            if n_products >= ECOMMERCE_PRODUCT_URL_MIN:
+                return True, n_products
+    return False, n_products
 
 
 # ---------------------------------------------------------------------
@@ -472,6 +506,10 @@ def scrape(input_url: str, output_root: str = "scrapes") -> tuple[ScrapeManifest
     recorded inside.
     """
     started = time.monotonic()
+    # Validate the USER INPUT once, here at the boundary (ensure_scheme no longer validates,
+    # so a malformed scraped LINK can't crash the crawl — but a concatenated/malformed input
+    # URL is still rejected). The API rejects it earlier in its request schema.
+    validate_input_url(input_url)
     normalized = normalize_url(input_url)
     # If the seed is a DEEP content page (e.g. ITI's /tracks/... page), anchor brand
     # IDENTITY to the site ROOT (homepage) instead — the deep page becomes a high-priority
@@ -629,10 +667,22 @@ def scrape(input_url: str, output_root: str = "scrapes") -> tuple[ScrapeManifest
                 site_metadata = merge_metadata(home_meta, site_metadata)
                 manifest.images_of_interest.extend(home_images)
 
+                # ---- Adaptive budget: detect e-commerce UNIVERSALLY (product-URL density) so a
+                # store (100-300+ pages) is crawled deeper than the default 12/150s. Raises BOTH
+                # the page cap AND the time budget (raising the cap alone is a no-op — MEASURED).
+                is_store, n_prod = _looks_like_ecommerce(home_links, sitemap_result.urls)
+                page_cap = ECOMMERCE_MAX_INTERNAL_PAGES if is_store else MAX_INTERNAL_PAGES
+                budget_secs = ECOMMERCE_BUDGET_SECONDS if is_store else TOTAL_BUDGET_SECONDS
+                if is_store:
+                    manifest.notes.append(
+                        f"E-commerce detected ({n_prod}+ product URLs) -> adaptive crawl budget "
+                        f"(cap={page_cap}, {budget_secs}s)"
+                    )
+
                 # ---- Select subpages -----------------------------
                 subpages = _select_subpages_to_fetch(
                     home_links, normalized, home_result.final_url,
-                    extra_urls=sitemap_result.urls,
+                    extra_urls=sitemap_result.urls, cap=page_cap,
                 )
                 # Re-anchored to the root -> ensure the ORIGINAL deep seed is fetched
                 # FIRST (its content — offerings / menu / track — is why the user gave
@@ -647,7 +697,7 @@ def scrape(input_url: str, output_root: str = "scrapes") -> tuple[ScrapeManifest
                 # ---- Fetch subpages within budget ----------------
                 for i, (sub_url, pt, tier, anchor) in enumerate(subpages, start=1):
                     elapsed = time.monotonic() - started
-                    if elapsed > TOTAL_BUDGET_SECONDS:
+                    if elapsed > budget_secs:
                         manifest.scrape_meta.budget_exceeded = True
                         manifest.notes.append(
                             f"Budget exceeded after {i-1} subpages (elapsed {elapsed:.1f}s)"
