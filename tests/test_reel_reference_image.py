@@ -199,19 +199,20 @@ def test_compositor_seeds_only_intro_and_outro(tmp_path: Path, monkeypatch):
     )
 
     # Stub out the heavy collaborators: no Chromium text render, no real ffmpeg.
-    def _fake_text_layers(storyboard, *, width, height, out_dir, include_logo=True):
+    def _fake_text_seqs(storyboard, *, width, height, fps, out_dir, entrance_s=1.2,
+                        include_logo=True):
         out = []
         for i in range(len(storyboard.scenes)):
-            p = Path(out_dir) / f"t{i}.png"
-            p.write_bytes(b"\x00")
-            out.append(p)
+            d = Path(out_dir) / f"seq{i}"
+            d.mkdir(parents=True, exist_ok=True)
+            out.append(str(d / "f%04d.png"))   # one image2 pattern per scene
         return out
 
     def _fake_run_ffmpeg(args, **kwargs):
         Path(args[-1]).write_bytes(b"\x00")  # the output path is always the last arg
         return None
 
-    monkeypatch.setattr(comp, "render_text_layers", _fake_text_layers)
+    monkeypatch.setattr(comp, "render_text_sequences", _fake_text_seqs)
     monkeypatch.setattr(comp, "run_ffmpeg", _fake_run_ffmpeg)
 
     provider = _RecordingProvider()
@@ -243,19 +244,20 @@ class _FailingProvider:
 
 def _stub_compositor_io(comp, monkeypatch):
     """Stub the heavy collaborators (Chromium text render + real ffmpeg)."""
-    def _fake_text_layers(storyboard, *, width, height, out_dir, include_logo=True):
+    def _fake_text_seqs(storyboard, *, width, height, fps, out_dir, entrance_s=1.2,
+                        include_logo=True):
         out = []
         for i in range(len(storyboard.scenes)):
-            p = Path(out_dir) / f"t{i}.png"
-            p.write_bytes(b"\x00")
-            out.append(p)
+            d = Path(out_dir) / f"seq{i}"
+            d.mkdir(parents=True, exist_ok=True)
+            out.append(str(d / "f%04d.png"))   # one image2 pattern per scene
         return out
 
     def _fake_run_ffmpeg(args, **kwargs):
         Path(args[-1]).write_bytes(b"\x00")  # output path is always the last arg
         return None
 
-    monkeypatch.setattr(comp, "render_text_layers", _fake_text_layers)
+    monkeypatch.setattr(comp, "render_text_sequences", _fake_text_seqs)
     monkeypatch.setattr(comp, "run_ffmpeg", _fake_run_ffmpeg)
 
 

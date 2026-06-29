@@ -103,6 +103,25 @@ def _atom(text: str) -> str:
     return esc
 
 
+# --- Kinetic entrance (frame-sequence) -------------------------------------
+# Per-element animation descriptors, driven by the in-page __seek(t) JS so the
+# Playwright capture is FRAME-PERFECT and deterministic (no reliance on the
+# browser's wall-clock animation timeline). Easing is computed in JS; transforms
+# touch ONLY opacity + translateY/scale, NEVER the text content/font — so Arabic
+# glyph shaping/joining is identical in every frame (transform is compositing).
+_ENTRANCE_S = 1.2                 # entrance window; the compositor holds the last frame after
+_HEAD_ANIM = 'data-anim data-d="0" data-dur="0.36" data-dy="46" data-ease="back" data-sc="0.94"'
+_LW_STAGGER = 0.07                # per-word delay for the hero lockup
+_ITEM_BASE, _ITEM_STAGGER = 0.30, 0.15   # sublines: first delay + per-line stagger
+_CTA_ANIM = 'data-anim data-d="0.55" data-dur="0.42" data-dy="44" data-ease="cubic"'
+_LOGO_ANIM = 'data-anim data-d="0.05" data-dur="0.40" data-dy="0" data-ease="cubic"'
+
+
+def _anim_attrs(delay: float, dur: float, dy: float, ease: str, sc: float = 1.0) -> str:
+    return (f'data-anim data-d="{delay:.3f}" data-dur="{dur:.3f}" '
+            f'data-dy="{dy:.0f}" data-ease="{ease}" data-sc="{sc:.3f}"')
+
+
 def _highlight_last_word(headline: str) -> str:
     """Escape the headline and wrap its LAST token in the accent span (one accent word —
     the editorial 'pop'). Verbatim text, CSS-only emphasis (zero-hallucination)."""
@@ -114,14 +133,16 @@ def _highlight_last_word(headline: str) -> str:
 
 def _lockup_headline(headline: str) -> str:
     """A DESIGNED graphic lockup (parity with the poster): each word stacked on its own line,
-    the LAST word in the brand-accent gradient. Verbatim words, CSS-only styling — none added,
-    removed, reordered, or reworded (zero-hallucination)."""
+    the LAST word in the brand-accent gradient, each word entering on a staggered kinetic beat.
+    Verbatim words, CSS-only styling — none added, removed, reordered, or reworded
+    (zero-hallucination)."""
     words = [w for w in _esc(headline).split(" ") if w]
     if not words:
         return ""
     n = len(words)
     return "".join(
-        f'<span class="lw{" acc" if (n > 1 and i == n - 1) else ""}">{w}</span>'
+        f'<span class="lw{" acc" if (n > 1 and i == n - 1) else ""}" '
+        f'{_anim_attrs(i * _LW_STAGGER, 0.42, 34, "cubic")}>{w}</span>'
         for i, w in enumerate(words)
     )
 
@@ -153,24 +174,33 @@ def _scene_html(scene: ReelScene, storyboard: Storyboard, width: int, height: in
     spine = "border-right" if rtl else "border-left"   # accent spine on the leading edge
     spine_pad = "padding-right" if rtl else "padding-left"
     shadow = "0 2px 10px rgba(0,0,0,.9), 0 1px 3px rgba(0,0,0,.95)"
+    # Negative letter-spacing BREAKS Arabic glyph joining (CLAUDE.md) -> 0 for RTL.
+    # LTR display type gets the tight tracking the brief asks for.
+    head_track = "0" if rtl else "-0.5px"
+    lock_track = "0" if rtl else "-1px"
 
     show_logo = bool(logo_uri) and scene.kind in ("intro", "outro", "contact")
     logo_pos = "right:64px" if rtl else "left:64px"
-    logo_html = (f'<div class="logo" style="{logo_pos}"><img src="{logo_uri}"></div>'
+    logo_html = (f'<div class="logo" {_LOGO_ANIM} style="{logo_pos}"><img src="{logo_uri}"></div>'
                  if show_logo else "")
 
     lockup = scene.kind in ("intro", "outro")          # the hero scenes get a designed lockup
     inner: list[str] = []
     if scene.headline:
-        if lockup:
+        if lockup:                                     # each WORD carries its own kinetic beat
             inner.append(f'<div class="headline lockup">{_lockup_headline(scene.headline)}</div>')
         else:
-            inner.append(f'<div class="headline">{_highlight_last_word(scene.headline)}</div>')
+            inner.append(f'<div class="headline" {_HEAD_ANIM}>{_highlight_last_word(scene.headline)}</div>')
     if scene.sublines:
-        items = "".join(f'<div class="item">{_atom(s)}</div>' for s in scene.sublines)
+        items = "".join(
+            f'<div class="item" {_anim_attrs(_ITEM_BASE + i * _ITEM_STAGGER, 0.40, 26, "cubic")}>'
+            f'{_atom(s)}</div>'
+            for i, s in enumerate(scene.sublines)
+        )
         inner.append(f'<div class="items">{items}</div>')
     if scene.cta_text:
-        inner.append(f'<div class="cta-wrap"><span class="cta">{_esc(scene.cta_text)}</span></div>')
+        inner.append(f'<div class="cta-wrap" {_CTA_ANIM}>'
+                     f'<span class="cta">{_esc(scene.cta_text)}</span></div>')
     cluster = f'<div class="cluster">{"".join(inner)}</div>' if inner else ""
 
     return f"""<!doctype html><html dir="{dir_attr}" lang="ar"><head><meta charset="utf-8">
@@ -189,18 +219,18 @@ def _scene_html(scene: ReelScene, storyboard: Storyboard, width: int, height: in
   .cluster{{{spine}:9px solid var(--accent);{spine_pad}:30px;text-align:{align};max-width:88%;}}
   .cluster>*{{unicode-bidi:plaintext;}}
   .headline{{font-family:'Oswald','Cairo',system-ui,sans-serif;font-weight:700;
-    font-size:{head_px}px;line-height:1.0;letter-spacing:-0.5px;text-transform:uppercase;
+    font-size:{head_px}px;line-height:1.0;letter-spacing:{head_track};text-transform:uppercase;
     text-wrap:balance;text-shadow:{shadow};-webkit-text-stroke:0.4px rgba(0,0,0,.3);}}
   .headline .hl{{color:var(--accent);}}
   /* designed LOCKUP (poster parity) for the hero scenes: stacked words, gradient fill +
      heavy outline, the last word in the brand-accent gradient. */
   .headline.lockup{{display:flex;flex-direction:column;gap:2px;line-height:.92;
-    text-shadow:none;-webkit-text-stroke:0;}}
+    letter-spacing:{lock_track};text-shadow:none;-webkit-text-stroke:0;}}
   .lockup .lw{{display:block;
     background:linear-gradient(180deg,#ffffff 0%,#d7dee7 100%);
     -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;
-    -webkit-text-stroke:1.4px rgba(6,9,14,.5);
-    filter:drop-shadow(0 3px 8px rgba(0,0,0,.9)) drop-shadow(0 10px 22px rgba(0,0,0,.5));}}
+    -webkit-text-stroke:1.4px rgba(6,9,14,.72);
+    filter:drop-shadow(0 3px 8px rgba(0,0,0,.92)) drop-shadow(0 12px 26px rgba(0,0,0,.6));}}
   .lockup .lw.acc{{
     background:linear-gradient(180deg,{accent} 0%,{accent2} 100%);
     -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;
@@ -212,13 +242,47 @@ def _scene_html(scene: ReelScene, storyboard: Storyboard, width: int, height: in
     text-shadow:{shadow};}}
   .cta-wrap{{margin-top:32px;}}
   .cta{{display:inline-block;font-family:'Space Grotesk','Cairo',sans-serif;font-weight:700;
-    font-size:{cta_px}px;background:{accent};color:{chip_text};padding:0.46em 1.05em;
-    border-radius:16px;letter-spacing:0.3px;box-shadow:0 8px 26px rgba(0,0,0,.5);}}
+    font-size:{cta_px}px;background:{accent};color:{chip_text};padding:0.54em 1.5em;
+    border-radius:999px;letter-spacing:0.3px;box-shadow:0 10px 30px rgba(0,0,0,.55);}}
   .logo{{position:absolute;top:64px;}}
   .logo img{{height:{logo_h}px;max-width:42%;object-fit:contain;
     filter:drop-shadow(0 2px 14px rgba(0,0,0,.6));}}
+  /* Kinetic entrance: every animated element starts hidden; __seek(t) drives it. */
+  [data-anim]{{opacity:0;will-change:transform,opacity;}}
 </style></head>
-<body><div class="stage">{logo_html}<div class="scrim"></div><div class="lower">{cluster}</div></div></body></html>"""
+<body><div class="stage">{logo_html}<div class="scrim"></div><div class="lower">{cluster}</div></div>
+<script>
+(function(){{
+  function _back(p){{var c1=1.70158,c3=c1+1;return 1+c3*Math.pow(p-1,3)+c1*Math.pow(p-1,2);}}
+  function _cubic(p){{return 1-Math.pow(1-p,3);}}
+  // Set every [data-anim] element's opacity + translateY/scale for global time t (seconds).
+  // Transforms only — text content/shaping is untouched, so Arabic stays joined in every frame.
+  window.__seek=function(t){{
+    var els=document.querySelectorAll('[data-anim]');
+    for(var i=0;i<els.length;i++){{
+      var el=els[i],ds=el.dataset;
+      var d=parseFloat(ds.d||'0'),dur=parseFloat(ds.dur||'0.4'),
+          dy=parseFloat(ds.dy||'0'),sc=parseFloat(ds.sc||'1'),ease=ds.ease||'cubic';
+      var p=dur>0?(t-d)/dur:1; if(p<0){{p=0;}} if(p>1){{p=1;}}
+      var e=(ease==='back')?_back(p):_cubic(p);
+      var op=(t-d)/(dur*0.6); if(op<0){{op=0;}} if(op>1){{op=1;}}
+      var ty=dy*(1-e), s=sc+(1-sc)*e;
+      el.style.opacity=op;
+      el.style.transform='translateY('+ty.toFixed(2)+'px) scale('+s.toFixed(3)+')';
+    }}
+  }};
+  window.__seek(0);
+}})();
+</script>
+</body></html>"""
+
+
+def _n_entrance_frames(duration_s: float, fps: int, entrance_s: float = _ENTRANCE_S) -> int:
+    """How many frames to capture for a scene's kinetic entrance: the entrance window
+    (clamped to the scene length), at the video fps. The compositor HOLDS the last frame
+    for the remainder, so we never capture the static tail."""
+    ent = min(entrance_s, max(0.2, duration_s))
+    return max(1, round(ent * fps))
 
 
 def render_text_layers(
@@ -229,8 +293,9 @@ def render_text_layers(
     out_dir: Path,
     include_logo: bool = True,
 ) -> list[Path]:
-    """Render one transparent PNG per scene (single browser session). Returns the
-    paths in scene order."""
+    """Render one transparent PNG per scene at the FINAL (held) state — the entrance
+    fully resolved. Kept for static/preview use; the compositor uses the kinetic
+    `render_text_sequences` instead. Returns the paths in scene order."""
     from playwright.sync_api import sync_playwright
 
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -252,6 +317,7 @@ def render_text_layers(
                     page.evaluate("async () => { await document.fonts.ready; }")
                 except Exception:
                     pass
+                page.evaluate("(t) => window.__seek(t)", 99.0)   # resolve to the held final state
                 out = out_dir / f"text{i}.png"
                 page.screenshot(
                     path=str(out), omit_background=True,
@@ -263,3 +329,61 @@ def render_text_layers(
             browser.close()
 
     return paths
+
+
+def render_text_sequences(
+    storyboard: Storyboard,
+    *,
+    width: int,
+    height: int,
+    fps: int,
+    out_dir: Path,
+    entrance_s: float = _ENTRANCE_S,
+    include_logo: bool = True,
+) -> list[str]:
+    """Render the KINETIC text overlay as a per-scene PNG SEQUENCE (one folder per scene,
+    frames `f0000.png` ... at `fps`). Each frame is captured by seeking the in-page __seek(t)
+    driver to an exact timestamp, so the per-element stagger (headline pop -> sublines ->
+    CTA) is FRAME-PERFECT and deterministic. Returns one ffmpeg image2 PATTERN string per
+    scene (e.g. `.../seq0/f%04d.png`), in scene order. The compositor feeds each as an input
+    stream and holds the last frame for the rest of the scene.
+
+    Transforms touch only opacity/translateY/scale — never the text — so Arabic shaping and
+    RTL joining are identical across ALL frames (zero-hallucination: text stays verbatim)."""
+    from playwright.sync_api import sync_playwright
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+    logo_uri = _logo_data_uri(storyboard.logo_url) if include_logo else None
+    patterns: list[str] = []
+
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        try:
+            for i, scene in enumerate(storyboard.scenes):
+                seq_dir = out_dir / f"seq{i}"
+                seq_dir.mkdir(parents=True, exist_ok=True)
+                page = browser.new_page(
+                    viewport={"width": width, "height": height}, device_scale_factor=1,
+                )
+                page.set_content(
+                    _scene_html(scene, storyboard, width, height, logo_uri),
+                    wait_until="networkidle",
+                )
+                try:
+                    page.evaluate("async () => { await document.fonts.ready; }")
+                except Exception:
+                    pass
+                n = _n_entrance_frames(scene.duration_s, fps, entrance_s)
+                clip = {"x": 0, "y": 0, "width": width, "height": height}
+                for f in range(n):
+                    page.evaluate("(t) => window.__seek(t)", f / float(fps))
+                    page.screenshot(
+                        path=str(seq_dir / f"f{f:04d}.png"),
+                        omit_background=True, clip=clip,
+                    )
+                page.close()
+                patterns.append(str(seq_dir / "f%04d.png"))
+        finally:
+            browser.close()
+
+    return patterns

@@ -33,7 +33,41 @@ def test_textlayer_is_bottom_anchored_scrim_and_accent():
     # hero (intro/outro) scene -> a DESIGNED lockup, last word in the brand-accent gradient
     assert "headline lockup" in html and "class=\"lw acc\"" in html
     assert "class=\"cta\"" in html                                           # CTA chip
+    assert "border-radius:999px" in html                                     # CTA is a full pill
     assert "translateY(-50%)" not in html                                    # old centered rows gone
+    # Arabic (RTL) must NOT get negative letter-spacing (it breaks glyph joining);
+    # the LTR hero lockup DOES get tight tracking.
+    rtl_sb = Storyboard(business_name="قصر", primary_dir="rtl",
+                        palette_hex=["#512283", "#6449cd"], primary_color="#1b1340")
+    rtl_html = _scene_html(ReelScene(kind="intro", duration_s=3.0, visual_prompt="x",
+                                     headline="المسافات بينا"),
+                           rtl_sb, 1080, 1920, None)
+    assert "letter-spacing:0;" in rtl_html and "letter-spacing:-1px" not in rtl_html
+    assert "letter-spacing:-1px" in html                                     # the LTR lockup is tight-tracked
+    # KINETIC scaffolding: per-element animation data + the in-page __seek(t) driver
+    # (the frame-sequence overlay is built by seeking this; no static single PNG).
+    assert "window.__seek" in html and "data-anim" in html
+    assert "translateY(-50%)" not in rtl_html                                # no centered-row hack in RTL either
+
+
+def test_textlayer_kinetic_stagger_and_frame_count():
+    # Per-element STAGGER (headline -> sublines -> CTA) + the entrance frame-count math.
+    from reel.textlayer import _scene_html, _n_entrance_frames
+    sb = Storyboard(business_name="X", primary_dir="ltr", palette_hex=["#62a3c7"])
+    off = ReelScene(kind="offering", duration_s=4.0, visual_prompt="x",
+                    headline="Fast Internet", sublines=["one", "two", "three"], cta_text="Go")
+    html = _scene_html(off, sb, 1080, 1920, None)
+    assert "window.__seek" in html and "data-anim" in html
+    # the non-hero headline pops with a spring/overshoot ('back') easing
+    assert 'data-ease="back"' in html
+    # sublines enter on a staggered cadence: 0.300s, 0.450s, 0.600s
+    assert 'data-d="0.300"' in html and 'data-d="0.450"' in html and 'data-d="0.600"' in html
+    # the CTA enters LAST (~0.55s), after every subline
+    assert 'data-d="0.55"' in html
+    # frame-count: a 1.2s entrance at the video fps; clamped to short scenes
+    assert _n_entrance_frames(4.0, 30) == 36
+    assert _n_entrance_frames(0.5, 30) == 15
+    assert _n_entrance_frames(3.0, 24, entrance_s=1.0) == 24
     # a NON-hero scene keeps the simpler single-line accent word (.hl)
     off = ReelScene(kind="offering", duration_s=4.0, visual_prompt="x", headline="Fast Internet")
     assert "class=\"hl\"" in _scene_html(off, sb, 1080, 1920, None)

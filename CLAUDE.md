@@ -2572,6 +2572,45 @@ in the OpenAPI; frontend compiled clean (898->918 modules, 0 errors) at localhos
 optional music input; a job/streaming variant so the long render shows progress (the scrape already
 has SSE); the paid Veo i2v as a higher-fidelity reel mode.
 
+## Done — reel CLI text overlay: TRUE kinetic typography (frame-sequence) + pill/Arabic polish (2026-06-29) ✅
+Owner: the reel text read as an "ugly static sticker". DIAGNOSED FIRST (rule 2): the
+committed `reel/textlayer.py` was ALREADY the v2 bottom-anchored design (feathered scrim +
+accent spine + lockup) — NOT "text in the middle / hard box" — so the real gaps were (a) the
+text was ONE static PNG with a single block fade+slide in the compositor (no per-element
+motion), and (b) the CTA was a 16px chip not a pill. NOTE the path split surfaced here: the
+WEB-APP reel (`api/routes/reel.py` -> `reel/motion.py`/`generate.py`) has **NO text by
+design**; `textlayer.py` feeds ONLY the CLI `render_reel` path — so this redesign targets the
+CLI path (owner chose it first). Done in two approved steps, measured between:
+- **STEP 1 (static polish, offline-verified):** `_scene_html` only — CTA `border-radius`
+  16px -> **999px full pill** (+padding); **Arabic-safe tracking** (negative `letter-spacing`
+  BREAKS Arabic joining -> `0` for RTL, `-1px` tight for the LTR lockup); deeper lockup dark
+  stroke (`.5`->`.72`) + drop-shadow so white holds on a near-white worst-case frame. Measured
+  via an offline harness (text PNG composited over busy + near-white bgs, AR+EN): pill renders,
+  Arabic stays joined, legibility up.
+- **STEP 2 (true kinetic, frame-sequence):** per-element entrance via an in-page JS `__seek(t)`
+  driver (`reel/textlayer.py`) — headline POP (spring/easeOutBack, dy 46 + scale 0.94->1);
+  hero lockup per-WORD stagger (0.07s); sublines staggered fade+slide (base 0.30s, +0.15s/line);
+  CTA slide-up LAST (delay 0.55s). `render_text_sequences()` captures `_n_entrance_frames =
+  round(min(1.2,dur)*fps)` transparent PNGs per scene by seeking `__seek` to each exact
+  timestamp -> FRAME-PERFECT, deterministic (transforms touch ONLY opacity/translateY/scale,
+  NEVER the text, so Arabic shaping/joining is identical in every frame). `reel/compositor.py`
+  feeds the sequence via the **ffmpeg image2 demuxer** at `fps`, `tpad=stop_mode=clone` HOLDS
+  the last frame for the rest of the scene, keeps the scene-end alpha fade-out, and DROPS the
+  old block-slide. `render_text_layers()` kept (now renders the held final frame).
+VERIFIED (rule 3): full suite **838 passed** (was 837; +1 kinetic test). Offline frame
+extraction at t=0.1/0.4/0.8/~1.17s PROVES the stagger — t0.1 only the first lockup words enter;
+t0.4 headline fully in, CTA not yet; t0.8 CTA pill entering; ~1.17 all settled — AND Arabic
+joining is correct in EVERY frame + the `background-clip:text` accent-word gradient survives the
+transform. End-to-end OFFLINE render (StubVideoProvider + REAL ffmpeg, no Veo) produced a
+playable 6s mp4 with the overlay correctly composited and held (the new filtergraph is valid).
+Zero-hallucination: pure CSS/motion, text verbatim. Tests: `tests/test_voiceover.py`
+(kinetic scaffolding + stagger cadence + `_n_entrance_frames`), `tests/test_reel_reference_image.py`
+(both compositor stubs repointed `render_text_layers` -> `render_text_sequences`). NEXT (Step 3,
+separate, owner-gated): wire this kinetic caption layer into the WEB-APP motion/generate reel
+(currently text-less) so the surface the owner tests gets text too; then a LIVE Veo render to
+judge the kinetic overlay on real moving footage (out-of-CI cost). UNCOMMITTED working-tree
+change to `reel/textlayer.py` + `reel/compositor.py` + the two tests.
+
 ## Backlog (each its own measured fix)
 - **Logo-vs-photo on multi-variant seals:** Azza Fahmy emits its seal in several
   color variants; only the selected one is excluded by filename, so a variant can leak

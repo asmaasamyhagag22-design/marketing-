@@ -24,7 +24,7 @@ from typing import Optional
 
 from .ffmpeg_tools import run_ffmpeg
 from .schemas import REEL_H, REEL_W, ReelRenderResult, Storyboard
-from .textlayer import render_text_layers
+from .textlayer import render_text_sequences
 from .video_provider import KenBurnsProvider, VideoProvider
 
 
@@ -66,9 +66,10 @@ def render_reel(
     with tempfile.TemporaryDirectory(prefix="reel_") as tmp:
         tmpd = Path(tmp)
 
-        # 1) text layer PNGs (Chromium shapes Arabic correctly).
-        text_pngs = render_text_layers(
-            storyboard, width=W, height=H, out_dir=tmpd, include_logo=include_logo,
+        # 1) KINETIC text layer — one PNG SEQUENCE per scene (Chromium shapes Arabic
+        # correctly AND drives the per-element entrance: headline pop -> sublines -> CTA).
+        text_seqs = render_text_sequences(
+            storyboard, width=W, height=H, fps=fps, out_dir=tmpd, include_logo=include_logo,
         )
 
         # 2) per scene: text-free clip -> normalize + overlay text (alpha fade).
@@ -105,20 +106,21 @@ def render_reel(
             norm = tmpd / f"norm{i}.mp4"
             d = scene.duration_s
             fout = max(0.0, d - fade)
-            # Text layer: fade in/out (alpha) AND a slide-up entrance (overlay y
-            # eases from a small offset to 0 over ~0.5s) so the text feels alive,
-            # not static. The y expression is single-quoted to protect its commas
-            # inside the filtergraph.
+            # The kinetic PNG SEQUENCE already carries the per-element entrance (pop /
+            # slide-up / staggered fade), so the overlay no longer block-slides. We feed
+            # the sequence via the image2 demuxer at `fps`, HOLD its last frame for the
+            # rest of the scene (tpad clone), and keep the scene-end alpha fade-out for a
+            # clean cut. The sequence starts at the scene's first frame (t=0).
             fc = (
                 f"[0:v]scale={W}:{H}:force_original_aspect_ratio=increase,"
                 f"crop={W}:{H},settb=AVTB,fps={fps},format=yuv420p[bg];"
-                f"[1:v]format=rgba,fade=t=in:st=0:d={fade}:alpha=1,"
-                f"fade=t=out:st={fout:.2f}:d={fade}:alpha=1[tx];"
-                f"[bg][tx]overlay=x=0:y='(main_h*0.035)*pow(max(0,1-t/0.6),3)':format=auto,"
-                f"format=yuv420p[v]"
+                f"[1:v]format=rgba,fps={fps},tpad=stop_mode=clone:stop_duration={d:.2f},"
+                f"settb=AVTB,fade=t=out:st={fout:.2f}:d={fade}:alpha=1[tx];"
+                f"[bg][tx]overlay=x=0:y=0:format=auto,format=yuv420p[v]"
             )
             run_ffmpeg([
-                "-i", str(raw), "-loop", "1", "-i", str(text_pngs[i]),
+                "-i", str(raw),
+                "-framerate", str(fps), "-start_number", "0", "-i", str(text_seqs[i]),
                 "-filter_complex", fc, "-map", "[v]", "-t", f"{d:.2f}",
                 "-c:v", "libx264", "-pix_fmt", "yuv420p",
                 "-profile:v", "high", "-preset", "medium", "-crf", "20",
