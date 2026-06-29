@@ -2528,6 +2528,25 @@ still pass because the test brand "WE" has no >=3-char tokens). Suite **833 pass
 NEXT (option B): wire the REEL to generate from these DNA ads (Gemini understand -> Veo/STYLE) instead
 of website photos; add the SearchApi/CSE image fallback IF the owner provides a key.
 
+## Done — reel: GENERATE from the brand's real ads (understand->invent), not website photos (2026-06-28) ✅
+Owner: stop dumping website photos into the reel — UNDERSTAND the brand from its real ADS (search)
+and INVENT fresh footage (use Vertex/Gemini). NEW `reel/generate.py build_brand_generated_reel`:
+  BrandCreativeDNA references (the brand's REAL ads, from the tiered-filter search) -> STYLE-generate
+  N fresh, TEXT-FREE, on-brand still scenes (Imagen edit / `ImagenEditProvider.style`, conditioned on
+  those real ads, at 9:16) -> the Motion/Music engine animates them (eased motion + xfade + optional
+  music). NO literal website-photo reuse. `_scene_prompts` are brand-grounded (hero + the real
+  offerings + a lifestyle beat); `_dna_refs` uses a supplied/cached DNA, else builds with caller=None
+  (refs only — no Gemini-vision spend just to get the reference URLs). Raises if no ad reference exists.
+VERIFIED LIVE on Telecom Egypt (7 real ad refs, caller=None, 3 STYLE scenes, NO Veo — ~$ of 3 Imagen
+edits + free ffmpeg, 57s): 3 DISTINCT invented on-brand WE scenes (a WE phone in purple bokeh; a
+laptop under a dramatic purple twilight sky; a lifestyle beat) -> motion reel `we_generated.mp4`. Real
+brand WORLD, generated, varied — not a website-photo slideshow. Tests: `tests/test_reel_generate.py`
+(4, hermetic — brand-grounded prompts, dna-ref resolution, no-refs empty). Suite **837 passed**.
+HONEST minor: one still rendered a small "WE" logo badge (the image model echoing the brand mark from
+the refs) + a faint top letterbox on the 9:16 gen (the motion engine cover-crops it) — small follow-ups.
+NEXT: wire a `python -m reel --generate` CLI flag (the function is ready); reuse the poster's
+letterbox-trim in the motion engine; the paid Veo i2v remains the higher-fidelity option.
+
 ## Backlog (each its own measured fix)
 - **Logo-vs-photo on multi-variant seals:** Azza Fahmy emits its seal in several
   color variants; only the selected one is excluded by filename, so a variant can leak
