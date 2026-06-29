@@ -63,6 +63,16 @@ def create_reel_from_profile(request: ReelFromProfileRequest) -> ReelFromProfile
         except Exception as exc:  # noqa: BLE001
             raise HTTPException(status_code=500, detail=f"Reel generation failed: {exc}") from exc
 
+    # Overlay the kinetic CAPTION layer (HOOK headline + CTA pill) onto the cinematic
+    # video. Best-effort — the motion/generate engines are text-free by design, so a
+    # failure here just returns the text-free reel rather than erroring.
+    try:
+        from reel.text_overlay import add_kinetic_text_to_reel
+        if not add_kinetic_text_to_reel(profile, out):
+            warnings.append("Rendered without the kinetic text overlay.")
+    except Exception:  # noqa: BLE001
+        warnings.append("Rendered without the kinetic text overlay.")
+
     try:
         data = out.read_bytes()
     except Exception as exc:  # noqa: BLE001
