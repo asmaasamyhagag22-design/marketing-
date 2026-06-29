@@ -51,7 +51,7 @@ def _dna_refs(profile: dict, caller: Any, brand_dna: Any) -> list[str]:
 
 def build_brand_generated_reel(
     profile: dict, *, caller: Any = None, out_path: str | Path, brand_dna: Any = None,
-    n_scenes: int = 4, music_path: Optional[str] = None, width: int = 1080, height: int = 1920,
+    n_scenes: int = 5, music_path: Optional[str] = None, width: int = 1080, height: int = 1920,
     log=print,
 ) -> Path:
     """STYLE-generate fresh on-brand stills from the brand's real ads, then motion-animate them.

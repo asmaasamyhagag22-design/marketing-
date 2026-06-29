@@ -102,7 +102,8 @@ class ReelRenderResult(BaseModel):
 
 class ReelFromProfileRequest(BaseModel):
     profile: dict[str, Any]
-    n_scenes: int = Field(default=3, ge=2, le=6)
+    # 5 calmer ~4s shots => ~17s reel (was 3 short shots => ~4.5s frantic reel).
+    n_scenes: int = Field(default=5, ge=2, le=6)
 
 
 class ReelFromProfileResponse(BaseModel):

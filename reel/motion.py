@@ -24,17 +24,20 @@ _TRANSITIONS = ("fade", "smoothleft", "fadeblack", "smoothup", "dissolve", "smoo
 _MOVES = ("in", "out")
 
 
-def _grid_durations(n: int, *, bpm: float = 100.0, hook_beats: int = 2,
-                    cycle_beats=(4, 3, 4)) -> list[float]:
-    """Per-shot durations on a BEAT grid (so cuts feel rhythmic and align to music at `bpm`).
-    The FIRST shot is a short HOOK; the rest cycle a varied pattern. Returns n durations."""
-    beat = 60.0 / max(40.0, bpm)
+def _grid_durations(n: int, *, hook_s: float = 2.8,
+                    body_cycle=(4.4, 3.8, 4.4, 4.0),
+                    bpm: Optional[float] = None) -> list[float]:
+    """Per-shot durations: a slightly punchy HOOK first (~2.8s), then calmer ~4s body shots so the
+    reel BREATHES — a premium ad pace, not a frantic music-video (a 3-shot reel was ~4.5s of
+    1.2-2.4s cuts, which read as fast and tiny). When `bpm` is supplied (a music track), each
+    duration snaps to the nearest beat so the cuts land on the beat. Returns n durations."""
     if n <= 0:
         return []
-    durs = [round(max(1, hook_beats) * beat, 3)]
-    for i in range(1, n):
-        durs.append(round(cycle_beats[(i - 1) % len(cycle_beats)] * beat, 3))
-    return durs
+    raw = [hook_s] + [body_cycle[(i - 1) % len(body_cycle)] for i in range(1, n)]
+    if bpm:
+        beat = 60.0 / max(40.0, bpm)
+        return [round(max(1, round(d / beat)) * beat, 3) for d in raw]
+    return [round(d, 3) for d in raw]
 
 
 def _xfade_offsets(durs: list[float], t: float) -> list[float]:
@@ -68,9 +71,9 @@ def _make_clip(img_path: Path, out_path: Path, *, move: str, duration_s: float,
     (`in`) or pull-out (`out`), centered. (zoompan `on` = output frame index.)"""
     frames = max(2, int(round(duration_s * 30)))
     if move == "out":
-        zexpr = f"1.18-0.16*on/{frames}"        # start zoomed, pull out
+        zexpr = f"1.10-0.10*on/{frames}"        # start zoomed, pull out (gentle 10% drift)
     else:
-        zexpr = f"1.0+0.16*on/{frames}"         # push in
+        zexpr = f"1.0+0.10*on/{frames}"         # push in (gentle 10% drift)
     vf = (
         f"scale={width}:{height}:force_original_aspect_ratio=increase,crop={width}:{height},"
         f"scale=3000:-2,"
@@ -92,8 +95,8 @@ def build_motion_reel(
     height: int = 1920,
     palette: Optional[list[str]] = None,
     music_path: Optional[str] = None,
-    bpm: float = 100.0,
-    transition_s: float = 0.45,
+    bpm: Optional[float] = None,
+    transition_s: float = 0.5,
     max_clips: int = 8,
     fetch: Optional[Callable[[str], Optional[tuple[bytes, str]]]] = None,
 ) -> Path:

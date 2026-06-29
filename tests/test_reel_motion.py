@@ -5,13 +5,23 @@ from reel.motion import (
 )
 
 
-def test_grid_durations_hook_first_and_beat_aligned():
-    d = _grid_durations(4, bpm=100, hook_beats=2, cycle_beats=(4, 3, 4))
-    beat = 0.6                                   # 60/100
+def test_grid_durations_hook_first_and_calmer_body():
+    d = _grid_durations(4)
     assert len(d) == 4
-    assert d[0] == round(2 * beat, 3)            # short HOOK first
-    assert d[1] == round(4 * beat, 3) and d[2] == round(3 * beat, 3)   # varied cycle
+    assert d[0] == 2.8                           # punchy HOOK first
+    assert all(x >= 3.5 for x in d[1:])          # calmer ~4s body shots (no frantic <2s cuts)
     assert _grid_durations(0) == []
+
+
+def test_grid_durations_a_3_shot_reel_is_no_longer_tiny():
+    # the bug: 3 shots used to total ~4.5s. Now ~10s before the (smaller) xfade overlaps.
+    d = _grid_durations(3)
+    assert sum(d) >= 10.0
+
+
+def test_grid_durations_snaps_to_beat_when_music_supplied():
+    d = _grid_durations(3, bpm=120)              # beat = 0.5s
+    assert all(abs(x / 0.5 - round(x / 0.5)) < 1e-6 for x in d)   # every cut on a beat
 
 
 def test_xfade_offsets_accumulate_with_overlap():
