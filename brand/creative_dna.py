@@ -122,8 +122,9 @@ def harvest_creative_urls(
                 continue
             page = (it.get("link") or it.get("source") or "").strip()
             host = (it.get("domain") or "").strip().lower() or _host(page)
+            title = (it.get("title") or "").strip()
             seen.add(img)
-            out.append({"image_url": img, "page_host": host, "page_link": page})
+            out.append({"image_url": img, "page_host": host, "page_link": page, "title": title})
         if len(out) >= num * 2:
             break
     return out
@@ -155,20 +156,57 @@ def _brand_social_profiles(profile: dict) -> list[tuple[str, str]]:
     return out
 
 
-def _is_brand_owned(cand: dict, brand_url: str, social: list[tuple[str, str]]) -> bool:
-    """STRICT: the image's PAGE must be the brand's OWN site, OR the brand's OWN social
-    profile (handle confirmed in the link). Anything else — a random domain, an aggregator,
-    stock, or a CDN we cannot attribute — is NOT brand-owned and is rejected. A grounded,
-    weaker DNA beats a confident fabricated one (the same principle as the copy gate)."""
+# Reputable creative / ad portfolios where a brand's REAL ads legitimately live (NOT the
+# brand's own domain, but attributable to it when the brand is named on the page). The
+# brand's strongest creatives are usually here, not on its own site — so the strict
+# own-domain-only filter wrongly threw them away and fell back to website product photos.
+_CREATIVE_PORTFOLIOS = (
+    "behance.net", "adsoftheworld.com", "dribbble.com", "lovethework.com", "designrush.com",
+    "thedrum.com", "adforum.com", "adsspot.me", "creativepool.com", "adeevee.com", "famouscampaigns",
+)
+# Stock / aggregator / unattributable hosts — NEVER accepted (generic or wrong-brand risk).
+_STOCK_AGGREGATORS = (
+    "shutterstock", "istockphoto", "gettyimages", "alamy", "dreamstime", "123rf",
+    "depositphotos", "freepik", "vecteezy", "stock.adobe", "unsplash", "pexels", "pixabay",
+)
+
+
+def _brand_tokens(name: str, domain: str = "") -> list[str]:
+    """Significant lowercase tokens that identify the brand on a page (for attribution)."""
+    import re as _re
+    toks = [t for t in _re.split(r"[^a-z0-9]+", (name or "").lower()) if len(t) >= 3]
+    dom = (domain or "").split(".")[0].lower()
+    if len(dom) >= 3 and dom not in toks:
+        toks.append(dom)
+    return toks
+
+
+def _attributed_to_brand(cand: dict, tokens: list[str]) -> bool:
+    """A brand token appears in the page link or title -> the ad is attributable to THIS brand
+    (the guard against a portfolio ad for a DIFFERENT brand surfacing on the same host)."""
+    hay = ((cand.get("page_link") or "") + " " + (cand.get("title") or "")).lower()
+    return any(t in hay for t in tokens) if tokens else False
+
+
+def _is_brand_owned(cand: dict, brand_url: str, social: list[tuple[str, str]],
+                    tokens: Optional[list[str]] = None) -> bool:
+    """TIERED brand attribution (grounded-image principle, relaxed to REACH the brand's real ads):
+      tier 1 — the brand's OWN site, or its OWN social profile (handle confirmed in the link);
+      tier 2 — a REPUTABLE creative/ad portfolio (behance / adsoftheworld / ...) AND the brand is
+               NAMED on the page (token in link/title) — i.e. the brand's real ad, attributable.
+    Stock/aggregator hosts and unattributed pages are REJECTED. Gemini vision over the kept set is
+    the final wrong-brand catch. (A grounded, weaker DNA still beats a confident fabricated one.)"""
     host = (cand.get("page_host") or "").strip().lower()
     link = (cand.get("page_link") or "").lower()
-    if not host:
+    if not host or any(s in host for s in _STOCK_AGGREGATORS):
         return False
     if brand_url and same_registrable_host(host, brand_url):
         return True
     for sp_host, sp_path in social:
         if same_registrable_host(host, sp_host) and sp_path and sp_path in link:
             return True
+    if any(p in host for p in _CREATIVE_PORTFOLIOS) and _attributed_to_brand(cand, tokens or []):
+        return True
     return False
 
 
@@ -202,9 +240,10 @@ def build_creative_dna(
     brand_url = _brand_root_url(profile)
     brand_dom = _registrable_domain(brand_url) or ""
     social = _brand_social_profiles(profile)
+    tokens = _brand_tokens(name, brand_dom)
 
-    # HARVEST -> STRICT brand-ownership filter (tiered, like the copy gate). Only the brand's
-    # OWN creatives count; doubtful search hits are REJECTED outright (never fill a slot).
+    # HARVEST -> TIERED brand-attribution filter (own site/social, OR a reputable creative
+    # portfolio where the brand is NAMED). Doubtful/stock/unattributed hits are REJECTED.
     raw = _harvester(name, brand_domain=brand_dom, num=max_refs, api_key=serper_api_key) or []
     cands = [c if isinstance(c, dict) else {"image_url": c, "page_host": _host(c), "page_link": c}
              for c in raw]
@@ -212,7 +251,7 @@ def build_creative_dna(
     brand_ads: list[str] = []
     for c in cands:
         u = (c.get("image_url") or "").strip()
-        if u and u not in brand_ads and _is_brand_owned(c, brand_url, social):
+        if u and u not in brand_ads and _is_brand_owned(c, brand_url, social, tokens):
             brand_ads.append(u)
     kept = len(brand_ads)
 

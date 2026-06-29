@@ -35,8 +35,8 @@ def _dna_resp() -> _DnaResponse:
     )
 
 
-def _cand(image_url, page_host="", page_link=""):
-    return {"image_url": image_url, "page_host": page_host, "page_link": page_link}
+def _cand(image_url, page_host="", page_link="", title=""):
+    return {"image_url": image_url, "page_host": page_host, "page_link": page_link, "title": title}
 
 
 # ---- harvest ----
@@ -119,3 +119,33 @@ def test_build_no_caller_returns_stub():
                              _harvester=lambda *a, **k: [], _image_fetcher=lambda urls: [])
     assert isinstance(dna, BrandCreativeDNA)
     assert dna.used_vision is False and dna.business_name == "WE"
+
+
+# ---- tier 2: the brand's REAL ads on a reputable creative portfolio (attribution-guarded) ----
+
+def test_brand_tokens_skips_short_words():
+    from brand.creative_dna import _brand_tokens
+    assert _brand_tokens("Telecom Egypt", "te.eg") == ["telecom", "egypt"]   # 'te' too short
+    assert _brand_tokens("WE", "we.com.eg") == []                            # all short -> no attribution
+
+
+def test_tier2_reputable_portfolio_only_when_brand_named():
+    social = []
+    toks = ["telecom", "egypt"]                                              # from "Telecom Egypt"
+    # a real ad on adsoftheworld with the brand NAMED in the link -> accepted (tier 2)
+    assert _is_brand_owned(_cand("i", "adsoftheworld.com",
+                                 "https://adsoftheworld.com/campaigns/telecom-egypt-we"),
+                           "https://te.eg/", social, toks)
+    # attribution via the TITLE also counts
+    assert _is_brand_owned(_cand("i", "www.behance.net", "https://behance.net/gallery/123",
+                                 "Telecom Egypt — WE rebrand"), "https://te.eg/", social, toks)
+    # SAME reputable host but a DIFFERENT brand named -> rejected (wrong-brand guard)
+    assert not _is_brand_owned(_cand("i", "adsoftheworld.com",
+                                     "https://adsoftheworld.com/campaigns/vodafone-x", "Vodafone ad"),
+                               "https://te.eg/", social, toks)
+    # stock host -> rejected even if the brand is named
+    assert not _is_brand_owned(_cand("i", "shutterstock.com", "https://shutterstock.com/telecom-egypt"),
+                               "https://te.eg/", social, toks)
+    # no usable tokens (short brand) -> tier 2 can't attribute -> rejected (old strict behavior)
+    assert not _is_brand_owned(_cand("i", "behance.net", "https://behance.net/x"),
+                               "https://te.eg/", social, [])

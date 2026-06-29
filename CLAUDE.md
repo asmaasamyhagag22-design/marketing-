@@ -2341,6 +2341,193 @@ royalty-free track (we have none bundled — music needs a supplied file); the c
 (route A: Veo i2v to make the real photos truly MOVE, not just zoom) is the paid next step; then
 re-introduce KINETIC captions as a designed layer (not "slapped on").
 
+## Done — poster: emerging scrim (kill the "sticker") + pill CTA + stronger no-text prompt (2026-06-28) ✅
+Owner (Architect): the overlay looked "stuck like a sticker" (a rounded card behind the text) and the
+CTA wasn't a clear button; Imagen also still bakes text (e.g. Foovad). DIAGNOSED OFFLINE on the exact
+WE bg (`outputs/posters/backgrounds/bg_3afdf4e7.png`), reproduced via an overlay harness (no Imagen/LLM
+spend): `_freeform_lower_css`'s EMERGING branch wrapped the cluster in a `border-radius:24px` +
+`box-shadow` + blur panel — a visible rounded CARD, not text emerging from the image.
+- SCRIM (`poster/template.py`): the emerging case (product_hero / any low text block) is now a
+  FULL-WIDTH feathered base gradient (linear to-top, solid at the bottom fading to transparent),
+  anchored `bottom:0` with the safe margin as bottom padding (the CTA still can't clip) — NO card, NO
+  box-shadow, NO side edges. The upper-placement case is a soft radial wash (also de-carded).
+- CTA (`poster/template.py`): `.cta` is now a full PILL (`border-radius:999px`), bigger padding.
+- VERIFIED OFFLINE (before/after render over the WE bg): the sticker card -> text emerging from the
+  scene; CTA -> a clean pill. Tests: `tests/test_poster_design.py` (2 updated to the new emerging
+  full-width/bottom-anchor + pill). Suite **803 passed**.
+- NO-TEXT (`poster/imagen_provider._COMPOSITION_CONTRACT`): far more forceful + specific + bilingual
+  ("100% free of any typography in ANY script; any surface that would carry writing must be blank; a
+  single rendered letter ruins the asset"). HONEST: this REDUCES but cannot fully ELIMINATE Imagen's
+  baked text (a model limitation) — judging the real rate needs multiple LIVE runs (owner's spend).
+NOTE: the saved-bg black bars are handled by the pipeline's `_trim_letterbox` on real generation; the
+headline-over-subject overlap is a separate composition concern (text_box / calm-zone), not the scrim.
+
+## Done — Pillar 2 (RAG) STEPS 0–5: truncation baseline → embeddings → retriever → wiring → LIVE measure → production ON (2026-06-28) ✅
+The LLM profile-extraction only sees a TRUNCATED slice of the scraped text, so real
+offerings/value-props in the long tail are silently lost. Pillar 2 = per-group SEMANTIC
+retrieval (RAG) to feed each extraction group its most-relevant blocks instead of a blind
+count-capped slice. This lands the measurement gate (Step 0) + the embeddings primitive
+(Step 1); NOTHING is wired into the live pipeline yet (the retriever + extractor wiring are
+Steps 2-3).
+- **STEP 0 — read-only baseline** (`benchmark/measure_evidence_truncation.py`, NEW): replays the
+  REAL path (`apply_rules -> build_evidence_pack -> as_llm_text(30_000)`) over every saved manifest
+  and counts the 4 block populations: total / blocks_after_filter / pack (200-block + 60-per-type
+  cap) / fit30k (lines surviving the 30k-char cap = what the LLM actually reads). Touches no
+  pipeline code. MEASURED across **43 freshest-per-site manifests**: the LLM sees only **37.8% of
+  post-filter relevant content (4,948 / 13,074 blocks)**; median per-site coverage 62%; **31 / 27 /
+  16** sites lose >0 / >=25% / >=50% of relevant content. The spec's named case is CONFIRMED
+  EXACTLY: te.eg = **153 of 1352** blocks reach the LLM (47% of its 328 post-filter blocks).
+  E-commerce is hit hardest (jewelpin 8%, elmenus 9%, alfouadpharmacies 14%).
+  **REFINED the spec's hypothesis (measured, important for the design):** the spec assumed the
+  200-block cap AND the 30k-char cap "stack". They DON'T — in EVERY one of the 67 lossy rows
+  `fit30k == pack`, i.e. the **30k-char cap NEVER truncates**; 100% of the loss is the pack-SELECTION
+  cap. And it's often the **60-per-page-type sub-quota**, not the 200 ceiling: te.eg packs only 153
+  (< 200) because its high-scoring blocks cluster in a few page types capped at 60 each — brutal for
+  e-commerce (all products -> PRODUCTS type -> 60 max regardless of catalog size). So RAG must lift
+  the SELECTION cap; the 30k char budget is currently SLACK (headroom for more relevant blocks per
+  group, and the real ceiling once selection is uncapped — tune K to fill, not exceed, 30k).
+  HONEST: "post-filter" blocks aren't all equally valuable (a blog `<p>` != a product name), so the
+  %-lost is an UPPER bound on real loss; RAG's job is to guarantee the semantically-relevant tail
+  survives. Freshest-per-site (37.8%) is lower than all-97-manifests (44.8%) because newer scrapes
+  are DEEPER (Pillar 1) -> more blocks -> more loss: improving the scraper makes truncation WORSE.
+- **STEP 1 — embeddings primitive** (`business_profile/llm/embeddings.py`, NEW): `embed_texts(texts)
+  -> list[list[float]] | None` (Gemini `text-embedding-004` via the EXISTING google-genai Vertex/ADC
+  path — same auth/credits as Imagen/Veo/Gemini, **NO new dependency**, batched, lazy SDK) + pure-
+  stdlib `cosine(a,b)` + `top_k(query_vec, vecs, k)`. Same discipline as the other data-fetch helpers:
+  side-effect free (no `.env`/`os.environ` mutation), NEVER raises (no SDK / no credential / API error
+  / malformed-or-miscounted response -> None) so callers degrade to today's non-RAG path. `client` is
+  injectable for tests. Not imported by anything yet (inert until Step 2). Tests:
+  `tests/test_embeddings.py` (12, hermetic — cosine identity/orthogonal/opposite/degenerate, top_k
+  ranking+tie-break+bounds, embed_texts aligned/batched/order-preserving + graceful-None on API error
+  & count-mismatch; live embedding API out-of-CI via injected fake client). Suite **815 passed** (was 803).
+- **STEP 2 — RAG retriever** (`business_profile/llm/rag.py`, NEW; INERT — not wired into the pipeline yet):
+  `build_full_evidence_pack(manifest, rules_profile)` = the EXISTING `build_evidence_pack` with the
+  200-block + 60-per-page-type SELECTION caps lifted (reuses the same filter/score/dedup — zero logic
+  duplication; only the count caps removed). `RagRetriever(full_pack, fallback_pack, embed_fn)` embeds all
+  blocks ONCE (cached; a failure is remembered, not retried) and `retrieve(query, k) -> EvidencePack`
+  returns the top-K cosine-relevant blocks as a per-group pack — provenance (`block_id`/`page_url`/verbatim
+  text) preserved so the validator is unchanged. `default_query_for(group)` holds the 4 UNIVERSAL intents
+  (identity/offerings/positioning/trust — generic marketing concepts, no vertical hacks). GRACEFUL DEGRADE:
+  any embedding failure (None / mis-count / empty full pack / query-embed fail) -> `retrieve` returns the
+  standard 200-capped `fallback_pack` (today's behavior, no regression). `build_rag_retriever(manifest,
+  rules_profile, embed_fn=)` is the factory the extractor will call in Step 3. `DEFAULT_K=200` (the 30k
+  char budget fits ~200 short blocks per Step 0; the prompt builder's `as_llm_text(30_000)` stays as the
+  final safety). Tests: `tests/test_rag.py` (10, hermetic — injected fake embed_fn: ranking, top-K order,
+  per-group query map, provenance preserved, 3 graceful-degrade paths, and the cap-lift proven by a
+  70-block one-page-type manifest: capped=60 vs full=70). Suite **825 passed** (was 815).
+- **STEP 3 — wire the retriever into extraction (OPT-IN, default OFF)**: `extractor.run_llm_extraction(...,
+  retriever=None)` — when a retriever is passed, each of the 4 groups builds its prompt from
+  `retriever.retrieve(default_query_for(group), DEFAULT_K)`; when None, byte-for-byte today's behavior
+  (global pack). `build.build_profile(..., use_rag=False, embed_fn=embed_texts)` — when `use_rag`, builds
+  the FULL (uncapped) pack + a `RagRetriever` over it (reusing the already-built capped `pack` as the
+  graceful fallback) and passes it in. CRITICAL CORRECTNESS FIX caught by reading the validator: with RAG a
+  group reads blocks from the FULL pack (some beyond the 200-cap), so `validate_llm_extraction` is now given
+  the FULL pack (a strict superset of the capped `pack`) — otherwise a legitimately-retrieved citation would
+  be rejected as a hallucination. `BuildResult.pack` follows suit (full pack when RAG). WHY default OFF
+  (deliberate, not the spec's bundling): this machine has `GOOGLE_CLOUD_PROJECT` set, so a default-ON
+  `build_profile` would make every MockCaller UNIT TEST fire a real Vertex embedding call (breaks hermeticity
+  + costs) — default OFF keeps all 825 existing tests untouched, and measure-first (Step 4) must prove RAG
+  helps te.eg BEFORE flipping production on (Step 5). Tests: `tests/test_rag.py` (+3: a beyond-cap block
+  reaches each group's prompt WITH a retriever and NOT without; an end-to-end `build_profile(use_rag=True)`
+  surfaces AND validates an offering cited from a beyond-200-cap block (1 survives) while `use_rag=False`
+  rejects the same citation (0) — proving BOTH the extractor-feeds-full-pack and validator-uses-full-pack
+  wiring; and the default path never embeds, guarded by a `_boom` embed_fn). Suite **828 passed** (was 825).
+- **STEP 4 — LIVE before/after on te.eg** (`benchmark/measure_rag_extraction.py`, NEW): runs the REAL
+  pipeline twice on the SAME freshest te.eg manifest with the SAME Gemini Flash caller — `use_rag=False`
+  (today's 200-cap) vs `use_rag=True` (retrieval over the full pack). VERIFIED LIVE
+  (text-embedding-004 IS provisioned on project image-498715, 768-dim; probe-first per the Veo/Imagen
+  "don't assume the model" lesson). MEASURED (ONE stochastic pass each, $0.0545 total on GCP credits):
+  pack the LLM sees **153 (capped) → 265 (full)**; validation **rejections 0 in BOTH** (no new fabrication —
+  RAG is grounding-safe). Content: trust **1 → 5** (real gain), insights **1 → 2**, offerings **11 → 12**,
+  value_props **5 → 5** and audience **3 → 3** (pure re-phrasing — stochastic, not signal). HONEST, MIXED
+  result — NOT the offerings landslide the spec hypothesised. ROOT-CAUSE FINDING that refines the plan: the
+  offerings prompt has its OWN hard cap ("at most 12 offerings"), so for a giant like te.eg the output is now
+  bottlenecked by that PROMPT cap, not the evidence truncation (both runs sat at 11–12). RAG also shifted
+  offerings from specific feature-level items to cleaner top-level service categories (a quality change, not a
+  count win). Caveat recorded: a single pass can't separate small gains from LLM variance — the certain,
+  non-stochastic facts are 153→265 blocks seen, 0 rejections, and the +trust/+insights depth.
+- **STEP 5 — RAG ON in production** (all 3 build_profile entry points): `business_profile/__main__` (CLI) +
+  `competitor/full_run.py` pass `use_rag=True`; `api/jobs/runner.py` (the web-app pipeline, which inlines
+  rules→pack→extract→validate rather than calling build_profile) got the SAME retriever + full-pack-validator
+  wiring, GATED `rag_on = use_rag if use_rag is not None else (caller_factory is None)` so it's ON in
+  production but OFF when a test injects a caller (every LLM-path API test passes `caller_factory`, so the
+  828-test suite stays hermetic — VERIFIED: still green at the same ~18.8s, no embedding network hit). The
+  EVIDENCE_PACK SSE event now reports `rag_enabled` + `rag_full_block_count`. WHY enable despite a MODEST
+  measured gain: RAG is SAFE (0 rejections, graceful degrade to today's pack when embeddings are absent),
+  architecturally CORRECT (the truncation worsens as Pillar-1 deepens crawls — RAG fixes the root), and gives
+  a real (if modest) depth gain; enabling it is low-risk and right, the offerings win is gated elsewhere.
+Suite **828 passed** (unchanged — Steps 4-5 add no unit tests; the live measure is a benchmark, the API gate
+is covered by the existing hermetic runner tests). NEW BOTTLENECK to attack next (measured here): the
+offerings prompt's **12-item cap** (`prompts.build_offerings_prompt`) — for multi-service giants lift/scale it
+(measure offering quality vs noise before changing, rule 2). Other open knobs: per-group **K** + the 30k char
+cap may now bind once the pack is uncapped (tune so each group fills, not exceeds, the budget); **cross-lingual
+retrieval** on Arabic (English intents worked on te.eg — the Arabic offerings/trust were retrieved — so the
+bilingual-query change is NOT needed yet, MEASURED); text-embedding-004 task_type (RETRIEVAL_QUERY/DOCUMENT)
+still omitted (symmetric worked).
+
+## Done — offerings: category-aware item cap (12 -> 30 for service giants) (2026-06-28) ✅
+The Pillar-2 RAG live measure (above) found offerings stayed flat (te.eg 11->12) NOT because
+retrieval failed but because the offerings PROMPT had its own hard cap ("at most 12 offerings").
+Fixed that next bottleneck, measured-first (rules 1+2).
+- **PATTERN measured** (`benchmark/measure_offering_cap.py`, read-only): across 43 freshest
+  manifests, **24 (56%) are "RICH"** (>=36 offering-page blocks, ~3x the 12 cap) — so the cap is a
+  CORPUS-WIDE bottleneck, not a te.eg edge case (HONEST: block-count is a proxy that overstates
+  offering count, so "RICH" = "plausibly >12", not exact).
+- **A/B measured** (`benchmark/measure_offering_cap_ab.py`, LIVE, cap 12 vs 30 across 3 verticals):
+  telecom **te.eg 12->30, every extra a real distinct WE service** (call-tracking, call-blocking,
+  e-SIM, silver bundle, ...); education **almentor 9->9** (the model returned the SAME 9 even at 30
+  — a higher cap NEVER pads, the "honest-stop" rule holds); the ONLY downside was **ecommerce
+  (alfouad) drifting toward individual SKUs** (Durex 12pc/10pc) which the ecommerce guidance wants
+  AVOIDED in favor of collection-level — and it self-limited to 23, not 30.
+- **FIX** (`prompts.offerings_cap_for(rules_category)` + `build_offerings_prompt(..., max_offerings=)`,
+  used in `extractor.run_llm_extraction`): a CATEGORY-AWARE cap — **30 default**, **12 for
+  ecommerce/retail** (avoids the SKU drift; the prompt is ALREADY category-aware via per-vertical
+  guidance, so this fits the design, NOT a new vertical hack). Decided from the two MEASURED points
+  (12 clean for ecommerce, 30 real for services), no interpolation to unmeasured values. SAFE BY
+  CONSTRUCTION: the validator drops any offering whose evidence doesn't ground, so a higher cap can
+  only ADD real offerings, never hallucinations.
+- **LIVE PROOF on the real validated pipeline** (rule 3): `build_profile(te.eg, use_rag=True)` now
+  yields **30 validated offerings with 0 validation rejections** (every one grounded) — vs ~11
+  before. Combined Pillar-2 effect on te.eg: ~11 -> **30 grounded offerings** (RAG 153->265 blocks +
+  cap 12->30). Tests: `tests/test_llm_extractor.py` (+3: `offerings_cap_for` by category,
+  `max_offerings` param honored, extractor applies the category-aware cap). Suite **831 passed**
+  (was 828). NOTE: ecommerce kept at 12 by design — lifting it cleanly (collection-level, no SKU
+  explosion) is a separate measured follow-up (strengthen the "never every SKU" guidance first).
+
+## Done — BrandCreativeDNA: tiered brand-ad search filter (reach the REAL ads, guard wrong-brand) (2026-06-28) ✅
+Owner: the reel was dumping website photos ("عبث") and asked to GENERATE from the brand's OLD ADS
+found via SEARCH — "بس اتأكد السيرش بيجيب نتايج صح" (verify the search, don't hallucinate). VERIFIED
+the search FIRST (rule 2/3): ran `harvest_creative_urls` live + eyeballed a contact sheet — WE's
+search returns the CORRECT brand (6 real WE ads: purple "digital twilight", the `we` logo, from
+adsoftheworld/behance), zero wrong-brand. TWO findings:
+1. **The search is rate-limit FLAKY** (Serper free tier: 20 results then 0 under bursts; the
+   scraper.net breaker opens -> harvest returns [] silently). Mitigated by the per-brand DNA CACHE
+   (search once) + scraper.net's transient retry. A fallback provider (SearchApi/Google CSE image
+   search) was NOT added — both keys are absent, so it'd be dead code; noted for when a key exists.
+2. **ROOT CAUSE of the website-photo "عبث": the ownership filter was TOO STRICT.** `_is_brand_owned`
+   accepted ONLY the brand's own domain/social, so WE's real ads (which live on adsoftheworld/behance
+   ad portfolios, NOT te.eg) were ALL rejected -> kept_after_brand_filter=0 -> it fell back to the
+   thin website product photos. (The cached telecom_egypt_dna with adsoftheworld refs was STALE,
+   from before this strict filter.)
+FIX (`brand/creative_dna.py`): a TIERED, attribution-guarded filter —
+  * tier 1: the brand's OWN site / OWN social profile (handle in link) — unchanged;
+  * tier 2: a REPUTABLE creative/ad portfolio (`_CREATIVE_PORTFOLIOS`: behance / adsoftheworld /
+    dribbble / ...) AND the brand is NAMED on the page (`_brand_tokens` in the link/title) -> the
+    brand's real ad, attributable;
+  * `_STOCK_AGGREGATORS` (shutterstock/getty/freepik/...) ALWAYS rejected; Gemini vision over the
+    kept set is the final wrong-brand catch. `harvest_creative_urls` now also captures the `title`
+    (for attribution). The brand-token guard rejects a DIFFERENT brand's ad on the same portfolio
+    host (e.g. a Vodafone ad won't pass a "Telecom Egypt" search).
+MEASURED LIVE on Telecom Egypt (caller=None, harvest+filter only, no vision $): harvested 16 ->
+**kept_after_brand_filter 0 -> 9** (nine real WE ads from adsoftheworld/behance now pass, attributed
+by 'telecom'/'egypt'), **site_images_used 0** (no website-photo fallback needed). So the POSTER's
+STYLE generation now conditions on the brand's REAL ADS, not website product photos — directly the
+"نفهم ونخترع" the owner wanted. Tests: `tests/test_creative_dna.py` (+2: tier-2 accept only when the
+brand is named, wrong-brand/stock rejected, short-brand-no-tokens stays strict; existing strict tests
+still pass because the test brand "WE" has no >=3-char tokens). Suite **833 passed, 0 failed**.
+NEXT (option B): wire the REEL to generate from these DNA ads (Gemini understand -> Veo/STYLE) instead
+of website photos; add the SearchApi/CSE image fallback IF the owner provides a key.
+
 ## Backlog (each its own measured fix)
 - **Logo-vs-photo on multi-variant seals:** Azza Fahmy emits its seal in several
   color variants; only the selected one is excluded by filename, so a variant can leak
