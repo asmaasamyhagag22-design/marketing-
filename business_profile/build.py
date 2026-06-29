@@ -35,8 +35,10 @@ from typing import Optional, Union
 from scraper.schemas import ScrapeManifest
 
 from .llm.caller import Caller
+from .llm.embeddings import embed_texts
 from .llm.evidence_pack import EvidencePack, build_evidence_pack
 from .llm.extractor import LLMExtractionResult, run_llm_extraction
+from .llm.rag import RagRetriever, build_full_evidence_pack
 from .llm.validator import ValidatedPayload, validate_llm_extraction
 from .merger import merge_profile
 from .rules.orchestrator import apply_rules
@@ -131,12 +133,23 @@ def build_profile(
     caller: Caller,
     *,
     return_details: bool = False,
+    use_rag: bool = False,
+    embed_fn=embed_texts,
 ) -> Union[BusinessProfile, BuildResult]:
     """Run the full pipeline. Returns the final BusinessProfile.
 
     If return_details=True, returns a BuildResult that exposes the
     intermediate pack, LLM result, and validated payload — useful for
     debugging and for the CLI's verbose mode.
+
+    use_rag (Pillar 2, OPT-IN, default OFF): when True, each extraction group
+    reads the top-K blocks SEMANTICALLY relevant to its intent (retrieved from
+    the FULL, uncapped pack) instead of a blind 200-block score-ranked slice —
+    so the LLM sees the relevant long tail the count cap used to drop. Embeddings
+    run on Gemini text-embedding-004 via `embed_fn`; if they're unavailable the
+    retriever transparently degrades to the standard pack (no regression). Default
+    OFF keeps every existing unit test hermetic (a MockCaller build never embeds).
+    embed_fn is injectable so the RAG path is testable without the network.
     """
     manifest, path, digest = _load_manifest(source)
 
@@ -152,6 +165,21 @@ def build_profile(
         pack.block_count, pack.blocks_total_in_manifest, pack.blocks_after_filter,
     )
 
+    # 2b. Pillar 2 RAG (opt-in). Build the retriever over the FULL (uncapped)
+    # pack; reuse the already-built `pack` as its graceful fallback. The
+    # validator must then see the full pack's block_ids (a superset of `pack`)
+    # so a legitimately-retrieved citation isn't mistaken for a hallucination.
+    retriever: Optional[RagRetriever] = None
+    validation_pack = pack
+    if use_rag:
+        full_pack = build_full_evidence_pack(manifest, rules_profile)
+        retriever = RagRetriever(full_pack, pack, embed_fn=embed_fn)
+        validation_pack = full_pack
+        logger.info(
+            "RAG enabled: full pack = %d blocks (vs %d in the capped pack)",
+            full_pack.block_count, pack.block_count,
+        )
+
     # 3. LLM extract
     # Pass the rules-derived category (if any) so the offerings prompt
     # can swap in per-category guidance. None → generic guidance.
@@ -161,7 +189,7 @@ def build_profile(
         else None
     )
     llm_result = run_llm_extraction(
-        pack, caller, rules_category=rules_category_value,
+        pack, caller, rules_category=rules_category_value, retriever=retriever,
     )
     logger.info(
         "LLM extraction: %d/4 calls ok, $%.4f, %d input + %d output tokens",
@@ -169,8 +197,8 @@ def build_profile(
         llm_result.total_input_tokens, llm_result.total_output_tokens,
     )
 
-    # 4. Validate
-    payload = validate_llm_extraction(llm_result, pack)
+    # 4. Validate (against the full pack when RAG is on — superset of `pack`)
+    payload = validate_llm_extraction(llm_result, validation_pack)
     logger.info(
         "Validation: %d rejections, %d fields dropped, %d items dropped",
         payload.diagnostics.total_rejections,
@@ -188,7 +216,7 @@ def build_profile(
 
     if return_details:
         return BuildResult(
-            profile=final_profile, pack=pack,
+            profile=final_profile, pack=validation_pack,
             llm_result=llm_result, payload=payload,
         )
     return final_profile

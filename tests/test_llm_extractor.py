@@ -33,7 +33,7 @@ from business_profile.llm.prompts import (
     AUDIENCE_TYPE_VALUES, CATEGORY_VALUES, PRICING_POSTURE_VALUES,
     SYSTEM_PROMPT, TONE_VALUES,
     build_identity_prompt, build_offerings_prompt,
-    build_positioning_prompt, build_trust_prompt,
+    build_positioning_prompt, build_trust_prompt, offerings_cap_for,
 )
 from business_profile.llm.responses import (
     IdentityResponse, OfferingItem, OfferingsResponse,
@@ -257,6 +257,35 @@ def test_offerings_prompt_includes_pricing_posture():
         assert posture in p
     # Should reference the cap
     assert "12" in p  # cap on offerings
+
+
+def test_offerings_cap_is_category_aware():
+    # Measured policy: multi-service verticals get 30; ecommerce/retail stay at 12.
+    assert offerings_cap_for("ecommerce") == 12
+    assert offerings_cap_for("retail") == 12
+    assert offerings_cap_for("RETAIL ") == 12       # normalized (case/space)
+    assert offerings_cap_for("education") == 30
+    assert offerings_cap_for("services_b2b") == 30
+    assert offerings_cap_for(None) == 30            # unknown category -> default 30
+
+
+def test_offerings_prompt_honors_max_offerings_param():
+    pack = _small_pack()
+    assert "at most 30 offerings" in build_offerings_prompt(pack, max_offerings=30)
+    assert "at most 12 offerings" in build_offerings_prompt(pack)  # default unchanged
+
+
+def test_extractor_applies_category_aware_offering_cap():
+    pack = _small_pack()
+    mock = MockCaller(_staged_responses())
+    run_llm_extraction(pack, mock, rules_category="education")
+    off = next(c for c in mock.calls if c.group_name == "offerings")
+    assert "at most 30 offerings" in off.user_prompt        # services/education -> 30
+
+    mock2 = MockCaller(_staged_responses())
+    run_llm_extraction(pack, mock2, rules_category="ecommerce")
+    off2 = next(c for c in mock2.calls if c.group_name == "offerings")
+    assert "at most 12 offerings" in off2.user_prompt       # ecommerce -> 12
 
 
 def test_positioning_prompt_lists_all_enums():

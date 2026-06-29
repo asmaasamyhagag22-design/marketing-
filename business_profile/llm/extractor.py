@@ -24,7 +24,9 @@ from .prompts import (
     build_offerings_prompt,
     build_positioning_prompt,
     build_trust_prompt,
+    offerings_cap_for,
 )
+from .rag import DEFAULT_K, RagRetriever, default_query_for
 from .responses import (
     IdentityResponse,
     OfferingsResponse,
@@ -90,6 +92,7 @@ def run_llm_extraction(
     caller: Caller,
     skip_if_empty_pack: bool = True,
     rules_category: Optional[str] = None,
+    retriever: Optional[RagRetriever] = None,
 ) -> LLMExtractionResult:
     """Run all four grouped LLM calls and aggregate the results.
 
@@ -97,6 +100,15 @@ def run_llm_extraction(
     "restaurant", "education") used to inject per-category guidance
     into the offerings prompt. When None, the generic guidance runs.
     The other three group prompts ignore this argument.
+
+    retriever: optional Pillar-2 RAG retriever. When provided, each group's
+    prompt is built from the top-K blocks most relevant to THAT group's intent
+    (`retriever.retrieve(default_query_for(group), K)`) instead of the shared
+    global `pack`. When None, behavior is exactly as before (global pack). The
+    retriever degrades to the global pack itself when embeddings are unavailable,
+    so passing one never regresses. NOTE: when a retriever is used the caller
+    must validate against the retriever's FULL pack (a superset of `pack`), else
+    a legitimately-retrieved citation reads as a hallucination.
 
     If the pack is empty, returns an all-empty result without making
     any API calls (saves cost on broken scrapes).
@@ -125,11 +137,24 @@ def run_llm_extraction(
     model = ""
 
     for group_name, response_model, prompt_builder in _GROUPS:
-        # Offerings prompt is category-aware (v0.2-b1). Others take pack only.
+        # Pillar 2 RAG: when a retriever is present, each group reads the top-K
+        # blocks most relevant to ITS intent; otherwise the shared global pack
+        # (today's behavior). An unknown group query -> keep the global pack.
+        group_pack = pack
+        if retriever is not None:
+            query = default_query_for(group_name)
+            if query is not None:
+                group_pack = retriever.retrieve(query, DEFAULT_K)
+        # Offerings prompt is category-aware (v0.2-b1): swappable guidance AND a
+        # category-aware item cap (measured — multi-service giants get 30, ecommerce
+        # stays 12 to avoid SKU drift). Others take pack only.
         if group_name == "offerings":
-            user_prompt = prompt_builder(pack, rules_category=rules_category)
+            user_prompt = prompt_builder(
+                group_pack, rules_category=rules_category,
+                max_offerings=offerings_cap_for(rules_category),
+            )
         else:
-            user_prompt = prompt_builder(pack)
+            user_prompt = prompt_builder(group_pack)
         try:
             response, usage = caller(
                 system_prompt=SYSTEM_PROMPT,

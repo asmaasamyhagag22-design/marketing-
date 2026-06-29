@@ -131,7 +131,7 @@ def main():
 
     say("[2/5] building BusinessProfile (OpenAI extraction)...")
     caller = _make_caller()
-    profile = _as_profile(build_profile(manifest, caller))
+    profile = _as_profile(build_profile(manifest, caller, use_rag=True))
     if not hasattr(profile, "category"):
         print("!! build_profile() didn't return something with a .category field.", file=sys.stderr)
         return 1

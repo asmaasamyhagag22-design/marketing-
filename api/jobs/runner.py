@@ -25,8 +25,10 @@ from typing import Any, Optional
 
 # Pipeline imports — identical to what the CLI uses.
 from business_profile.llm.caller import Caller, MockCaller, default_caller
+from business_profile.llm.embeddings import embed_texts
 from business_profile.llm.evidence_pack import build_evidence_pack
 from business_profile.llm.extractor import run_llm_extraction
+from business_profile.llm.rag import RagRetriever, build_full_evidence_pack
 from business_profile.llm.validator import validate_llm_extraction
 from business_profile.merger import merge_profile
 from business_profile.rules.orchestrator import apply_rules
@@ -73,6 +75,8 @@ def run_pipeline_job(
     caller_factory: Optional[Any] = None,  # for tests: callable returning a Caller
     scraper_fn: Optional[Any] = None,      # for tests: callable replacing scraper.scrape
     output_root: str = "scrapes",
+    use_rag: Optional[bool] = None,        # Pillar 2; default: on in prod, off when a test injects a caller
+    embed_fn: Any = embed_texts,           # for tests: inject a fake embedder
 ) -> None:
     """Run the full pipeline for one job. Called in a worker thread.
 
@@ -162,12 +166,29 @@ def run_pipeline_job(
         t0 = time.monotonic()
         pack = build_evidence_pack(manifest, rules_profile)
         pack_ms = int((time.monotonic() - t0) * 1000)
+
+        # Pillar 2 RAG (default ON in production; OFF when a test injects a
+        # caller_factory, so unit tests never fire a real embedding call). The
+        # retriever serves each group its top-K relevant blocks from the FULL
+        # (uncapped) pack; the validator must then see that full pack (a superset
+        # of the capped `pack`), else a legit retrieved citation reads as a
+        # hallucination. Degrades to the capped pack if embeddings are unavailable.
+        rag_on = use_rag if use_rag is not None else (caller_factory is None)
+        retriever = None
+        validation_pack = pack
+        if rag_on and not skip_llm:
+            full_pack = build_full_evidence_pack(manifest, rules_profile)
+            retriever = RagRetriever(full_pack, pack, embed_fn=embed_fn)
+            validation_pack = full_pack
+
         emit(
             Stage.EVIDENCE_PACK, StageStatus.DONE, duration_ms=pack_ms,
             payload={
                 "blocks_total_in_manifest": pack.blocks_total_in_manifest,
                 "blocks_after_filter": pack.blocks_after_filter,
                 "block_count": pack.block_count,
+                "rag_enabled": retriever is not None,
+                "rag_full_block_count": validation_pack.block_count,
                 "page_type_distribution": pack.page_type_distribution,
                 "missing_fields": pack.missing_fields,
             },
@@ -192,7 +213,7 @@ def run_pipeline_job(
             else None
         )
         llm_result = run_llm_extraction(
-            pack, caller, rules_category=rules_category_value,
+            pack, caller, rules_category=rules_category_value, retriever=retriever,
         )
         llm_ms = int((time.monotonic() - t0) * 1000)
         # v0.2-b1: detect silent failure for the LLM stage's DONE event.
@@ -218,7 +239,7 @@ def run_pipeline_job(
         # ---- 5. Validate ----
         emit(Stage.VALIDATE, StageStatus.STARTED)
         t0 = time.monotonic()
-        payload = validate_llm_extraction(llm_result, pack)
+        payload = validate_llm_extraction(llm_result, validation_pack)
         validate_ms = int((time.monotonic() - t0) * 1000)
         emit(
             Stage.VALIDATE, StageStatus.DONE, duration_ms=validate_ms,

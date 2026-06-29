@@ -101,7 +101,7 @@ def main(
         caller = _make_caller(provider, model)
         console.print(f"[cyan]Building (rules + {type(caller).__name__})[/cyan] {manifest_path}")
         result: BuildResult = build_profile(
-            manifest_path, caller=caller, return_details=True,
+            manifest_path, caller=caller, return_details=True, use_rag=True,
         )
         profile = result.profile
         llm_summary = (

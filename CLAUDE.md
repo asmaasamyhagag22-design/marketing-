@@ -2608,8 +2608,60 @@ Zero-hallucination: pure CSS/motion, text verbatim. Tests: `tests/test_voiceover
 (both compositor stubs repointed `render_text_layers` -> `render_text_sequences`). NEXT (Step 3,
 separate, owner-gated): wire this kinetic caption layer into the WEB-APP motion/generate reel
 (currently text-less) so the surface the owner tests gets text too; then a LIVE Veo render to
-judge the kinetic overlay on real moving footage (out-of-CI cost). UNCOMMITTED working-tree
-change to `reel/textlayer.py` + `reel/compositor.py` + the two tests.
+judge the kinetic overlay on real moving footage (out-of-CI cost). Committed as `7e6bec6`.
+
+## Done — reel WEB-APP: kinetic caption layer on the Motion/Generate reel (Step 3) (2026-06-29) ✅
+The web-app reel (`api/routes/reel.py` -> `reel/generate.py`/`reel/motion.py`) was TEXT-FREE
+by design (the engines are pure footage). Owner: the surface they TEST is the web app, so the
+Step-2 kinetic typography must reach it. Wired the caption layer at the COMPOSITION BOUNDARY so
+`motion.py`/`generate.py` stay pure footage producers (their docstrings hold).
+- NEW `reel/text_overlay.py`: `plan_beats(headline, name, cta, total_s)` -> a MINIMAL 2-beat
+  plan (HOOK = headline lockup; OUTRO = brand name + the scraped CTA pill) timed across the
+  video's real duration (non-overlapping windows, a clean gap so the footage breathes; CTA
+  holds to the end). `render_timeline_overlay()` renders ONE transparent FULL-DURATION kinetic
+  overlay via Chromium — an in-page `__seektl(tg)` driver shows/animates each beat in its window
+  with the SAME per-element stagger + easing as Step 2 (reuses `reel/textlayer` helpers), then
+  beat-level fades out before the next. `overlay_timeline_on_video()` composites it onto the
+  finished mp4 in a SINGLE ffmpeg overlay pass (audio copied through). `add_kinetic_text_to_reel(
+  profile, video)` is the entry: build the verbatim brief -> probe duration (ffmpeg stderr, no
+  ffprobe) -> plan beats -> render -> overlay IN PLACE. BEST-EFFORT: any failure / no usable
+  headline+CTA returns False and leaves the text-free reel (never raises, never crashes the route).
+- Wired into `api/routes/reel.py` (both the `generated` and `motion`-fallback branches) as a
+  final best-effort step; adds a warning when the overlay is skipped.
+VERIFIED (rule 3) OFFLINE end-to-end (no Veo/Imagen spend): built a real Motion reel (8.40s) from
+synthetic photos, planned beats hook[0.3,4.2]/cta[4.62,8.40], rendered the full-duration overlay
+and composited it onto the cinematic footage. Frame extraction PROVES it: hook@1.3s = the Arabic
+headline lockup over the moving footage; gap@4.41s = CLEAN footage (no text/scrim between beats);
+cta@5.62s = brand-name lockup + the "اعرف أكتر" CTA pill — Arabic shaping correct on all frames.
+Zero-hallucination: verbatim brief text, CSS/motion only. Tests: `tests/test_reel_text_overlay.py`
+(3 hermetic — beat ordering/bounds, partial/empty content, kinetic+RTL+pill HTML; Chromium/ffmpeg
+out-of-CI). Suite **841 passed** (was 838). NEXT (owner-gated, deferred per the plan): a LIVE web-app
+reel (Imagen/Veo + this overlay) to judge it on REAL generated footage — and whether the scrim is
+strong enough over busy moving frames (may need strengthening). UNCOMMITTED working-tree: NEW
+`reel/text_overlay.py`, `api/routes/reel.py`, `tests/test_reel_text_overlay.py`, this CLAUDE.md entry.
+
+## Done — reel: calmer + longer Motion pacing (kill the "4s, too fast" reel) (2026-06-29) ✅
+Owner: the reels were "very bad, just 4 seconds + very fast animation". DIAGNOSED on the real
+code (rule 2), not guessed: the web `ReelFromProfileRequest` defaulted to **3 scenes**, and the
+Motion engine's `_grid_durations(n, bpm=100, hook_beats=2, cycle_beats=(4,3,4))` produced a
+**1.2s hook + 2.4/1.8s** body shots → `total_duration` of a 3-shot reel = **~4.5s** of frantic
+~1-2s cuts, and `_make_clip` zoomed **16%** over those tiny shots (fast). Three measured fixes in
+`reel/motion.py` (the SHARED engine for the web generate path + the real-photo fallback + the CLI
+motion path — one fix point):
+1. **Calmer/longer shots**: `_grid_durations` redesigned to a **~2.8s hook + ~4s body** grid
+   (body_cycle 4.4/3.8/4.4/4.0) so the reel BREATHES (a premium ad pace). `bpm` is now OPTIONAL —
+   durations snap to the beat ONLY when a music track supplies a bpm (decoupled from the default).
+2. **Gentler motion**: `_make_clip` zoom **16% → 10%** drift (subtle push-in/pull-out, not an
+   aggressive lunge), and the xfade default 0.45 → **0.5s**.
+3. **More scenes**: web `ReelFromProfileRequest.n_scenes` default **3 → 5**, `generate.build_brand_generated_reel`
+   default **4 → 5** → a fuller reel.
+MEASURED (offline, exact): a 3-shot reel **4.5s → 10.0s**; the new 5-scene default **17.4s**.
+VERIFIED LIVE on the real ffmpeg path (free, no API): rendered a 5-image motion reel →
+`outputs/reels/motion_demo_NEW.mp4`, **ffprobe Duration = 00:00:17.40**, 1080x1920, 30fps, gentle
+10% drift. Tests: `tests/test_reel_motion.py` (hook-first + calmer body, a 3-shot reel is no longer
+tiny, beat-snap only with music). Suite **843 passed**. NOTE: the demo render used sample poster
+backgrounds to prove the timing/motion fix for free; the web-app reel uses the SAME engine, so it
+inherits the calm 17s pacing. The kinetic CAPTION layer + STYLE-scene generation are unchanged.
 
 ## Backlog (each its own measured fix)
 - **Logo-vs-photo on multi-variant seals:** Azza Fahmy emits its seal in several

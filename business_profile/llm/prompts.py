@@ -214,9 +214,31 @@ def _category_key(rules_category: Optional[str]) -> str:
     return key if key in _OFFERINGS_GUIDANCE else "_generic"
 
 
+# Category-aware offering cap. MEASURED A/B (benchmark/measure_offering_cap_ab.py,
+# cap 12 vs 30 across telecom/pharmacy/education): a higher cap surfaces MANY MORE
+# real, distinct offerings on multi-SERVICE giants (te.eg 12->30, all real WE
+# services) and NEVER pads thin sites (almentor returned 9 even at 30 — the
+# "honest-empty/honest-stop" rule holds). The ONE downside was ECOMMERCE drifting
+# toward individual SKUs (the ecommerce guidance wants collection-level), so
+# ecommerce/retail stay at the conservative 12. Safe regardless: the validator drops
+# any offering whose evidence doesn't ground, so a higher cap can only ADD real
+# offerings, never hallucinations.
+_OFFERINGS_CAP_DEFAULT = 30
+_OFFERINGS_CAP_ECOMMERCE = 12
+_ECOMMERCE_CATS = {"ecommerce", "retail"}
+
+
+def offerings_cap_for(rules_category: Optional[str]) -> int:
+    """How many offerings the model may return for this category (measured policy)."""
+    if rules_category and rules_category.lower().strip() in _ECOMMERCE_CATS:
+        return _OFFERINGS_CAP_ECOMMERCE
+    return _OFFERINGS_CAP_DEFAULT
+
+
 def build_offerings_prompt(
     pack: EvidencePack,
     rules_category: Optional[str] = None,
+    max_offerings: int = 12,
 ) -> str:
     """Build the universal offerings prompt.
 
@@ -224,6 +246,11 @@ def build_offerings_prompt(
     based on rules_category. Pass the rules-derived category (which may
     be from schema.org or None). Passing None falls through to generic
     guidance.
+
+    max_offerings caps how many offerings the model returns (default 12).
+    The "honest-empty over padding" rule below still applies, so a higher
+    cap surfaces more REAL offerings on multi-service sites without forcing
+    filler on thin ones.
     """
     guidance = _OFFERINGS_GUIDANCE[_category_key(rules_category)]
 
@@ -241,7 +268,7 @@ def build_offerings_prompt(
         + "- Look in services/products/menu/pricing/booking/courses/"
         "programs/branches pages first; homepage second.\n"
         + "- Skip blog-post titles and generic mentions.\n"
-        + "- Cap: at most 12 offerings — pick the most prominent.\n"
+        + f"- Cap: at most {max_offerings} offerings — pick the most prominent.\n"
         + "- Prefer SPECIFIC named offerings (actual dish / service / program / "
         "product names the page lists). If only broad categories exist, capture at "
         "most 1-2 of them; if nothing concrete is listed, return an EMPTY list — "
