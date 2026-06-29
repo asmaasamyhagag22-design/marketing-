@@ -54,7 +54,7 @@ from fastapi import FastAPI  # noqa: E402
 from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 
 from .jobs.store import JobStore  # noqa: E402
-from .routes import health, jobs, poster, run, swot  # noqa: E402
+from .routes import health, jobs, poster, reel, run, swot  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
@@ -126,4 +126,5 @@ app.include_router(health.router, prefix="/api", tags=["health"])
 app.include_router(run.router, prefix="/api", tags=["run"])
 app.include_router(jobs.router, prefix="/api", tags=["jobs"])
 app.include_router(poster.router, prefix="/api", tags=["poster"])
+app.include_router(reel.router, prefix="/api", tags=["reel"])
 app.include_router(swot.router, prefix="/api", tags=["swot"])

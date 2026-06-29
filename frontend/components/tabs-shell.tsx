@@ -1,6 +1,6 @@
 "use client";
 
-import { Activity, FileText, ImageIcon, Quote, Target } from "lucide-react";
+import { Activity, Clapperboard, FileText, ImageIcon, Quote, Target } from "lucide-react";
 
 import {
   Tabs,
@@ -16,6 +16,7 @@ import { VisualIdentityCard } from "./visual-identity-card";
 import { ValuePropsAndTrust } from "./value-props-and-trust";
 import { DiagnosticsPanel } from "./diagnostics-panel";
 import { PosterStudioCard } from "./poster-studio-card";
+import { ReelStudioCard } from "./reel-studio-card";
 import { SwotCard } from "./swot-card";
 
 import type { BusinessProfile, StageEvent } from "@/lib/types";
@@ -46,6 +47,15 @@ export function TabsShell({ profile, events, enablePosterTab }: TabsShellProps) 
         {enablePosterTab && (
           <TabsTrigger value="poster" className="gap-1.5">
             <ImageIcon className="h-4 w-4" /> Poster Studio
+            <Badge className="ml-1 border-transparent bg-brand-gradient px-1.5 text-[10px] text-white">
+              new
+            </Badge>
+          </TabsTrigger>
+        )}
+
+        {enablePosterTab && (
+          <TabsTrigger value="reel" className="gap-1.5">
+            <Clapperboard className="h-4 w-4" /> Reel Studio
             <Badge className="ml-1 border-transparent bg-brand-gradient px-1.5 text-[10px] text-white">
               new
             </Badge>
@@ -85,6 +95,12 @@ export function TabsShell({ profile, events, enablePosterTab }: TabsShellProps) 
       {enablePosterTab && (
         <TabsContent value="poster" className="space-y-4">
           <PosterStudioCard profile={profile} />
+        </TabsContent>
+      )}
+
+      {enablePosterTab && (
+        <TabsContent value="reel" className="space-y-4">
+          <ReelStudioCard profile={profile} />
         </TabsContent>
       )}
     </Tabs>

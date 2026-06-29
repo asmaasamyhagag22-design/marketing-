@@ -6,7 +6,7 @@ add only the genuinely reel-specific structure: timed scenes and render results.
 """
 from __future__ import annotations
 
-from typing import Literal, Optional
+from typing import Any, Literal, Optional
 
 from pydantic import BaseModel, Field
 
@@ -94,3 +94,25 @@ class ReelRenderResult(BaseModel):
     provider: str
     fallback_used: bool = False
     has_audio: bool = False
+
+
+# ---------------------------------------------------------------------
+# Web API contract — POST /api/reel/from-profile
+# ---------------------------------------------------------------------
+
+class ReelFromProfileRequest(BaseModel):
+    profile: dict[str, Any]
+    n_scenes: int = Field(default=3, ge=2, le=6)
+
+
+class ReelFromProfileResponse(BaseModel):
+    video_base64: str                       # the rendered mp4, base64 (data-URI in a <video>)
+    filename: str
+    mime_type: Literal["video/mp4"] = "video/mp4"
+    width: int = REEL_W
+    height: int = REEL_H
+    duration_s: float = 0.0
+    scene_count: int = 0
+    mode: str = ""                          # "generated" (from brand ads) | "motion" (real photos)
+    business_name: str = ""
+    warnings: list[str] = Field(default_factory=list)

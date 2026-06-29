@@ -2547,6 +2547,31 @@ the refs) + a faint top letterbox on the 9:16 gen (the motion engine cover-crops
 NEXT: wire a `python -m reel --generate` CLI flag (the function is ready); reuse the poster's
 letterbox-trim in the motion engine; the paid Veo i2v remains the higher-fidelity option.
 
+## Done — web app: Reel Studio added to the deploy (+ local deploy hardened) (2026-06-28) ✅
+Owner: "ظبط الديبلوي اللوكال وظبط الديبلوي ديزاين وحط فيها الريل" — make the local deploy solid,
+polish the design, and put the REEL in the web app (it was CLI-only). Done end-to-end:
+- **API** `api/routes/reel.py` POST `/api/reel/from-profile` (mounted in `api/main.py`): SYNC route
+  (ffmpeg/Playwright sync, like the poster route). PREFERS UNDERSTAND->GENERATE
+  (`reel.generate.build_brand_generated_reel`: the brand's real ads -> STYLE stills -> Motion
+  engine); FALLS BACK to the Motion engine over the brand's real scraped photos when no ad
+  references exist. Returns the mp4 as base64 (a data-URI for a <video>). `reel/schemas.py`:
+  `ReelFromProfileRequest`/`ReelFromProfileResponse`.
+- **Frontend** `frontend/components/reel-studio-card.tsx` + a "Reel Studio" tab in `tabs-shell.tsx`
+  (gated by the same poster-tab flag): a brand-gradient Generate button, a clear "directing your
+  reel… takes a minute" loading state, an HTML5 <video> player (autoplay/loop/muted), version
+  history, Download MP4, and a mode line ("generated from the brand's real ads" vs "motion over
+  real photos") — consistent with the festive Poster Studio design.
+- **Deploy hardened**: the local API/frontend kept dropping (session teardown leaves no marker) and
+  `--reload` MISSED new files on Windows (the reel route wasn't picked up). Lesson: after adding a
+  ROUTE module, RESTART uvicorn cleanly (don't trust --reload to register a new router). Restarted
+  on a clean load -> the reel route registers.
+VERIFIED LIVE end-to-end (POST /api/reel/from-profile with the elkbabgi profile): **mode=generated,
+3 scenes, a 2.65 MB mp4 in ~70s** (no Veo — STYLE stills + ffmpeg). API /api/health ok; reel route
+in the OpenAPI; frontend compiled clean (898->918 modules, 0 errors) at localhost:3000. Suite
+**837 passed** (no new unit tests — the route is heavy/live, verified by the live call). NEXT:
+optional music input; a job/streaming variant so the long render shows progress (the scrape already
+has SSE); the paid Veo i2v as a higher-fidelity reel mode.
+
 ## Backlog (each its own measured fix)
 - **Logo-vs-photo on multi-variant seals:** Azza Fahmy emits its seal in several
   color variants; only the selected one is excluded by filename, so a variant can leak
