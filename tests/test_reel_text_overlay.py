@@ -33,4 +33,4 @@ def test_timeline_html_is_kinetic_rtl_pill():
     assert "border-radius:999px" in html                              # CTA pill
     assert "linear-gradient(to top" in html                           # legibility scrim
     assert "letter-spacing:0;" in html                                # Arabic-safe (RTL) tracking
-    assert "headline lockup" in html and 'class="lw acc"' in html     # hero lockup, accent word
+    assert "headline lockup" in html and 'class="lw"' in html         # minimal clean white hero lockup

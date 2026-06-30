@@ -9,12 +9,12 @@ class _Brief:
     palette_hex = ["#512283"]
 
 
-def test_scene_prompts_are_brand_grounded():
+def test_scene_prompts_are_varied_and_footage_only():
     ps = _scene_prompts(_Brief(), 4)
     assert len(ps) >= 4
-    assert any("Fiber Internet" in p for p in ps) and any("eSIM" in p for p in ps)  # real offerings
-    assert all("WE" in p for p in ps)                                                # the brand
-    assert all("text" not in p.lower() for p in ps)                                  # footage-only briefs
+    assert all("WE" in p for p in ps)                    # the brand name grounds every scene
+    assert all("text" not in p.lower() for p in ps)      # footage-only briefs (no baked text)
+    assert len(set(ps)) >= 2                              # VARIED scenes, not the same shot repeated
 
 
 class _DNA:

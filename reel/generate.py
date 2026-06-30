@@ -19,13 +19,16 @@ def _scene_prompts(brief: Any, n: int) -> list[str]:
     """N brand-grounded, TEXT-FREE scene briefs for the generated stills — a hero moment, the real
     offerings, and an aspirational lifestyle beat. The STYLE reference carries the brand look; the
     image stays text-free (ImagenEditProvider appends the no-text contract)."""
-    base = f"A premium, photorealistic on-brand marketing scene for {brief.business_name}"
-    offers = [o for o in (brief.offerings or []) if o][:3]
-    prompts = [f"{base}: a striking HERO moment that captures the brand's world and energy."]
-    for o in offers:
-        prompts.append(f"{base}: a real, candid moment that shows {o}.")
-    prompts.append(f"{base}: an aspirational lifestyle moment with the brand's real audience.")
-    # cycle to fill n, keep at least 2
+    base = f"A premium, photorealistic commercial scene for {brief.business_name}"
+    # VARIED human + city moments (not every shot a person staring at a blank phone). The brand
+    # vibe comes from the people + city energy + the persistent logo overlay, NOT a literal screen.
+    prompts = [
+        f"{base}: a confident hero portrait of a real person, genuine expression, natural light.",
+        f"{base}: friends or family together, authentically connected and happy, a warm real moment.",
+        f"{base}: a person out in a vibrant modern Egyptian city street, dynamic urban energy.",
+        f"{base}: a relaxed aspirational lifestyle moment at home or a cafe, real and unposed.",
+        f"{base}: a cinematic wide establishing shot of a modern city skyline at golden hour.",
+    ]
     out: list[str] = []
     i = 0
     while len(out) < max(2, n):
@@ -49,32 +52,59 @@ def _dna_refs(profile: dict, caller: Any, brand_dna: Any) -> list[str]:
         return []
 
 
+def _onbrand_context(profile: dict, brief: Any) -> str:
+    """On-brand, TEXT-FREE context for text-to-image: brand region (from the ccTLD) + the brand
+    palette + a HARD no-text clause. With no ad references there is no text to copy, so the scene
+    stays clean while the prompt keeps it on-brand."""
+    url = ""
+    try:
+        url = str(profile.get("source_url") or "").lower() if isinstance(profile, dict) else ""
+    except Exception:
+        url = ""
+    region = ""
+    if ".eg" in url:
+        region = ("Set in EGYPT with authentic local Egyptian people and real Egyptian "
+                  "surroundings — NOT Western, NOT Gulf/Khaleeji. ")
+    pal = ", ".join(str(c) for c in (getattr(brief, "palette_hex", None) or [])[:3])
+    palline = (f"The brand colours ({pal}) appear ONLY as small accents in the environment, "
+               f"décor, wardrobe or props. " if pal else "")
+    return (
+        "Clean, modern, photorealistic commercial photography with NATURAL, true-to-life colour "
+        "and REALISTIC HUMAN SKIN TONES under soft natural daylight. CRITICAL: do NOT cast green, "
+        "purple or any coloured light onto people's faces or skin; NO duotone, NO neon/RGB or "
+        "gel lighting on people — they must look like normal real humans. " + region + palline +
+        "If a phone or screen appears it is incidental, held naturally, and shows only a soft "
+        "natural glow — never a blank white screen. ABSOLUTELY NO text, words, letters, numbers, "
+        "logos, signage, watermarks or typography anywhere — a completely text-free photograph."
+    )
+
+
 def build_brand_generated_reel(
     profile: dict, *, caller: Any = None, out_path: str | Path, brand_dna: Any = None,
     n_scenes: int = 5, music_path: Optional[str] = None, width: int = 1080, height: int = 1920,
     log=print,
 ) -> Path:
-    """STYLE-generate fresh on-brand stills from the brand's real ads, then motion-animate them.
-    Returns out_path. Raises if no ad references exist or no scene could be generated."""
+    """Generate fresh, on-brand, TEXT-FREE scenes (text-to-image) then motion-animate them.
+    NOTE: STYLE-conditioning on the brand's real ADS was DROPPED — Imagen reproduced the ads'
+    text-heavy look as GARBLED baked text (the owner's "الكلام معكوس / عبث"). Brand fidelity now
+    comes from the PROMPT (region + palette + the brand's real offerings), and the image stays
+    text-free. Returns out_path; raises only if no scene could be generated."""
     from poster.from_profile import build_poster_brief
-    from poster.imagen_edit_provider import ImagenEditProvider
+    from poster.imagen_provider import VertexImagenProvider
     from reel.motion import build_motion_reel
 
     brief = build_poster_brief(profile)
-    refs = _dna_refs(profile, caller, brand_dna)
-    if not refs:
-        raise RuntimeError("build_brand_generated_reel: no brand-ad references to generate from "
-                           "(search returned nothing brand-owned)")
-    log(f"[gen] {len(refs)} real brand-ad references -> generating {n_scenes} on-brand scenes")
+    log(f"[gen] generating {n_scenes} on-brand TEXT-FREE scenes (text-to-image)")
 
     out_path = Path(out_path)
     work = out_path.parent / "_genscenes"
     work.mkdir(parents=True, exist_ok=True)
-    provider = ImagenEditProvider()
+    provider = VertexImagenProvider()
+    ctx = _onbrand_context(profile, brief)
     stills: list[str] = []
     for i, prompt in enumerate(_scene_prompts(brief, n_scenes)):
         try:
-            p = provider.style(prompt, refs, out_dir=str(work), aspect_ratio="9:16")  # vertical reel
+            p = provider.generate(f"{prompt}\n{ctx}", out_dir=str(work), aspect_ratio="9:16")
             stills.append(str(p))
             log(f"[gen] scene {i + 1}/{n_scenes} ok")
         except Exception as exc:  # noqa: BLE001 — skip a failed scene, keep the rest

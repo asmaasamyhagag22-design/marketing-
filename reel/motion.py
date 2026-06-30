@@ -18,10 +18,22 @@ from typing import Callable, Optional
 
 from reel.ffmpeg_tools import run_ffmpeg
 
-# A small, tasteful transition vocabulary (cycled). All are stock ffmpeg `xfade` transitions.
-_TRANSITIONS = ("fade", "smoothleft", "fadeblack", "smoothup", "dissolve", "smoothright")
+# MOTIVATED transition vocabulary (cycled) — directional wipes + a shape reveal, not naive
+# crossfades. All are stock ffmpeg `xfade` transitions, so they read as intentional camera
+# moves between shots instead of a lazy dissolve.
+_TRANSITIONS = ("smoothleft", "wipeleft", "slideup", "circleopen", "smoothup", "diagtl")
 # Alternating camera moves so consecutive shots contrast (push-in vs pull-out) = dynamic.
 _MOVES = ("in", "out")
+
+# ONE cinematic grade applied IDENTICALLY to every clip so the shots read as one film
+# (cohesion — the owner's #5): a gentle punch (contrast + saturation) + a filmic curve that
+# lifts blacks slightly and rolls off highlights. Limited, uniform — not a per-clip look.
+_GRADE = "curves=m='0/0.02 0.5/0.5 1/0.98',eq=contrast=1.04:saturation=1.0:gamma=0.99"
+
+# Finishing layer (the owner's #7) applied to the FOOTAGE only (text is composited later, so it
+# stays crisp): a soft vignette to focus the eye + subtle temporal film grain so the frame reads
+# cinematic, not flat-digital. Bloom/DoF deferred (need a split/blend filtergraph).
+_FINISH = "vignette=a=PI/4.6,noise=alls=6:allf=t"
 
 
 def _grid_durations(n: int, *, hook_s: float = 2.8,
@@ -66,25 +78,40 @@ def total_duration(durs: list[float], t: float) -> float:
 
 
 def _make_clip(img_path: Path, out_path: Path, *, move: str, duration_s: float,
-               width: int, height: int) -> None:
+               width: int, height: int, clut: Optional[str] = None) -> None:
     """One cinematic shot: cover-crop the photo to the vertical frame, then an EASED push-in
-    (`in`) or pull-out (`out`), centered. (zoompan `on` = output frame index.)"""
+    (`in`) or pull-out (`out`) with a slight directional drift. The camera move is smoothstep
+    (ease-in-out) on the frame index — NOT linear — so it starts/stops softly (premium feel).
+    When `clut` (a brand Hald-CLUT png) is given it is applied via the `haldclut` filter (fed as
+    an input) for identical film cohesion; else the inline eq+curves grade. (zoompan `on` = frame.)"""
     frames = max(2, int(round(duration_s * 30)))
+    p = f"(on/{frames})"
+    ease = f"({p}*{p}*(3-2*{p}))"               # smoothstep ease-in-out on normalized progress
+    amp = 0.16                                   # more noticeable push/pull (was too static at 0.10)
     if move == "out":
-        zexpr = f"1.10-0.10*on/{frames}"        # start zoomed, pull out (gentle 10% drift)
+        zexpr = f"({1.0 + amp:.2f}-{amp}*{ease})"   # start zoomed, ease out
+        dx = -30                                    # drift left
     else:
-        zexpr = f"1.0+0.10*on/{frames}"         # push in (gentle 10% drift)
-    vf = (
+        zexpr = f"(1.0+{amp}*{ease})"               # ease in
+        dx = 30                                     # drift right
+    xexpr = f"iw/2-(iw/zoom/2)+({dx})*{ease}"       # subtle horizontal parallax-ish drift
+    pre = (
         f"scale={width}:{height}:force_original_aspect_ratio=increase,crop={width}:{height},"
         f"scale=3000:-2,"
-        f"zoompan=z='{zexpr}':d={frames}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':"
-        f"s={width}x{height}:fps=30,format=yuv420p"
+        f"zoompan=z='{zexpr}':d={frames}:x='{xexpr}':y='ih/2-(ih/zoom/2)':"
+        f"s={width}x{height}:fps=30"
     )
-    run_ffmpeg([
-        "-loop", "1", "-i", str(img_path), "-t", f"{duration_s:.2f}", "-vf", vf, "-r", "30",
-        "-c:v", "libx264", "-pix_fmt", "yuv420p", "-preset", "medium", "-crf", "20",
-        str(out_path),
-    ])
+    # NOTE: -t is an OUTPUT option (caps the looped image). With a 2nd input (the CLUT) it must
+    # NOT sit between the inputs, or it caps the CLUT and the main image loops forever.
+    enc = ["-t", f"{duration_s:.2f}", "-r", "30", "-c:v", "libx264", "-pix_fmt", "yuv420p",
+           "-preset", "medium", "-crf", "20", str(out_path)]
+    if clut:                                          # brand CLUT as an input -> no fragile path
+        fc = f"[0:v]{pre}[g];[g][1:v]haldclut,{_FINISH},format=yuv420p[v]"
+        run_ffmpeg(["-loop", "1", "-i", str(img_path), "-i", str(clut),
+                    "-filter_complex", fc, "-map", "[v]"] + enc)
+    else:
+        vf = f"{pre},{_GRADE},{_FINISH},format=yuv420p"
+        run_ffmpeg(["-loop", "1", "-i", str(img_path), "-vf", vf] + enc)
 
 
 def build_motion_reel(
@@ -98,7 +125,8 @@ def build_motion_reel(
     bpm: Optional[float] = None,
     transition_s: float = 0.5,
     max_clips: int = 8,
-    fetch: Optional[Callable[[str], Optional[tuple[bytes, str]]]] = None,
+    sound_design: bool = False,        # synth bed is OFF by default — silent beats a bad synth;
+    fetch: Optional[Callable[[str], Optional[tuple[bytes, str]]]] = None,  # supply music_path for real audio
 ) -> Path:
     """Render a cinematic motion reel from real photos. Returns out_path. Raises if no photo
     can be loaded (the caller decides the fallback — never fabricates footage here)."""
@@ -126,26 +154,47 @@ def build_motion_reel(
     n = len(loaded)
     durs = _grid_durations(n, bpm=bpm)
     t = min(transition_s, min(durs) * 0.5)                 # transition must fit the shortest shot
+
+    # ONE brand Hald CLUT baked from the palette -> identical film grade across every clip (#ب).
+    clut: Optional[str] = None
+    try:
+        from reel.grade import build_brand_clut
+        _c = build_brand_clut(work / "_brand_clut.png", palette)
+        clut = str(_c) if _c else None
+    except Exception:
+        clut = None
+
     clips: list[Path] = []
     for i, src in enumerate(loaded):
         clip = work / f"_motion_clip{i}.mp4"
         _make_clip(src, clip, move=_MOVES[i % len(_MOVES)], duration_s=durs[i],
-                   width=width, height=height)
+                   width=width, height=height, clut=clut)
         clips.append(clip)
 
     graph, vlabel = _xfade_filtergraph(n, durs, t)
+
+    # AUDIO (the owner's #6): a supplied track wins (its bpm beat-syncs the cut grid above);
+    # else synthesize a FREE sound-design bed (pad + a whoosh on every cut + opening impact) so
+    # the reel is NEVER silent. cut_times land at each transition midpoint.
+    audio_path = music_path if (music_path and Path(music_path).exists()) else None
+    if audio_path is None and sound_design:
+        from reel.sound import synth_sound_bed
+        cut_times = [round(o + t / 2, 3) for o in _xfade_offsets(durs, t)]
+        bed = synth_sound_bed(work / "_soundbed.m4a", total_duration(durs, t), cut_times)
+        audio_path = str(bed) if bed else None
+    has_audio = bool(audio_path) and Path(audio_path).exists()
+
     args: list[str] = []
     for c in clips:
         args += ["-i", str(c)]
-    has_music = bool(music_path) and Path(music_path).exists()
-    if has_music:
-        args += ["-i", str(music_path)]
+    if has_audio:
+        args += ["-i", str(audio_path)]
 
     if graph:
         args += ["-filter_complex", graph, "-map", vlabel]
     else:
         args += ["-map", "0:v"]
-    if has_music:
+    if has_audio:
         args += ["-map", f"{n}:a", "-c:a", "aac", "-b:a", "192k", "-shortest"]
     args += ["-c:v", "libx264", "-pix_fmt", "yuv420p", "-r", "30",
              "-profile:v", "high", "-preset", "medium", "-crf", "20", str(out_path)]

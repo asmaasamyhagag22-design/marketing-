@@ -30,8 +30,8 @@ def test_textlayer_is_bottom_anchored_scrim_and_accent():
                       headline="Stay Connected", cta_text="Shop")
     html = _scene_html(scene, sb, 1080, 1920, None)
     assert "class=\"lower\"" in html and "linear-gradient(to top" in html   # bottom scrim
-    # hero (intro/outro) scene -> a DESIGNED lockup, last word in the brand-accent gradient
-    assert "headline lockup" in html and "class=\"lw acc\"" in html
+    # hero (intro/outro) scene -> a MINIMAL clean white lockup (no clashing accent word)
+    assert "headline lockup" in html and "class=\"lw\"" in html
     assert "class=\"cta\"" in html                                           # CTA chip
     assert "border-radius:999px" in html                                     # CTA is a full pill
     assert "translateY(-50%)" not in html                                    # old centered rows gone

@@ -2663,6 +2663,108 @@ tiny, beat-snap only with music). Suite **843 passed**. NOTE: the demo render us
 backgrounds to prove the timing/motion fix for free; the web-app reel uses the SAME engine, so it
 inherits the calm 17s pacing. The kinetic CAPTION layer + STYLE-scene generation are unchanged.
 
+## Done/WIP — reel craft overhaul (motion-graphics, owner's 7-point brief) (2026-06-29) 🚧
+Owner: the reel is still "بشع" — the gap to a "تحفة" is motion-graphics CRAFT, not the AI imagery.
+A live te.eg render exposed: flat linear-ish fade, 8 words at one size on 7 lines, hard cuts, dead
+stills, no grade, NO audio, text at the edge, wrong CTA. Plan = 7 levers in the owner's priority
+order, one at a time, FREE offline ffmpeg/frame verification between each (no API spend). Grounding
+untouched (captions verbatim; only motion/size/style change). Plan file:
+`~/.claude/plans/linear-enchanting-hummingbird.md`.
+- **Lever 1 — Easing → ease-out-expo + snap/settle (DONE).** Added `_expo(p)=1-2^(-10p)` (JS twin of
+  cubic-bezier(0.16,1,0.3,1)) to BOTH caption drivers (`reel/textlayer.py` `__seek`, `reel/text_overlay.py`
+  `_seekEls`) + made it the default smooth curve; the hero word keeps `back` (overshoot snap); shortened
+  the headline entrance 0.36→0.26s. The captions were already eased (back/cubic) NOT linear — the upgrade
+  is expo's snappier in-curve (MEASURED: at 10% of the entrance, expo is 50% arrived vs cubic 27%).
+  VERIFIED by a free frame-strip render (words snap+settle, accent intact, no JS error).
+- **Lever 2 — Kinetic typography HIERARCHY (DONE — the biggest visible win).** Root of the 8-equal-lines
+  eyesore: the lockup stacked EVERY word at the same size. New `_split_hook(headline)` → big HERO (lead
+  1-3 words, ≤~18 chars) + small SUPPORT line (the rest); `_lockup_headline` rewritten to render hero
+  `.lw` (last word accent gradient, `back` snap) + a small `.hsub` support line; `head_px` now sized by
+  HERO word count (1→0.205·W, 2→0.165·W, 3→0.13·W) so the hero is HUGE; `.hsub` CSS added (both files).
+  Verbatim words only (a subset, never reworded) → zero-hallucination intact. VERIFIED on the exact
+  te.eg case: "SCALABLE CALL CENTER CAPACITY BASED ON CALL VOLUME" → big "SCALABLE/CALL" (CALL in brand
+  purple) + small "center capacity based on call volume" — a real hierarchy vs 8 equal lines.
+  Tests for both: `tests/test_voiceover.py` + `tests/test_reel_text_overlay.py` green.
+- **Lever 3 — Eased camera + motivated transitions (DONE).** `reel/motion.py` `_make_clip`: the LINEAR
+  zoom (`1.0+0.10*on/frames`) → smoothstep ease-in-out (`p*p*(3-2*p)`) + a subtle ±22px directional
+  drift; `_TRANSITIONS` swapped from naive fade/dissolve to a MOTIVATED set (smoothleft/wipeleft/slideup/
+  circleopen/smoothup/diagtl). VERIFIED: render shows a directional wipe mid-transition; 6 motion tests green.
+  (Speed-ramp deferred — needs per-clip setpts/time-remap, riskier.)
+- **Lever 5 — Color grade for cohesion (DONE).** One `_GRADE` (eq contrast/saturation/gamma + a filmic
+  curve) applied IDENTICALLY to every clip in `_make_clip` so the shots read as one film. VERIFIED on a
+  render (punchy cinematic look).
+- **Lever 7 (partial) — Finishing + safe margins (DONE).** `_FINISH` = soft `vignette` + subtle temporal
+  `noise` (film grain) on the FOOTAGE only (text composited later stays crisp); caption `.lower` safe
+  margins widened (72→84px sides, 300→332px bottom) so IG/TikTok UI can't cover text. VERIFIED (vignette
+  + grade visible). DEFERRED: bloom/glow + DoF (need a split/blend filtergraph); the telecom CTA fix.
+- MILESTONE render (free, offline): graded footage + the new hero/support captions on the real te.eg
+  profile → `outputs/reels/_ms_hook.png` shows big "SCALABLE/CALL" + small support — the full free
+  visual craft together.
+- **Lever 6 — Sound design (DONE — the reel was SILENT).** No music is bundled (can't license one), so
+  NEW `reel/sound.py` `synth_sound_bed` synthesizes a FREE bed ENTIRELY with the bundled ffmpeg's
+  audio-synth filters (VERIFIED present: sine/anoisesrc/aevalsrc): a quiet low PAD + a WHOOSH on every
+  cut (at each transition midpoint) + an opening IMPACT. Wired into `build_motion_reel` (`sound_design=True`
+  default; a supplied `music_path` still wins and its bpm beat-syncs the cut grid). MEASURED: the reel now
+  carries an AAC audio stream (was silent). Owner add **#ج (DONE)**: `_wave_impact_fallback` writes a real
+  impact WAV via the stdlib `wave` module if the ffmpeg synth ever fails → never dead-silent.
+- **Owner add #ب — Hald CLUT brand grade (DONE, upgrades Lever 5).** NEW `reel/grade.py` `build_brand_clut`
+  bakes the film grade + a gentle midtone push toward the brand-DNA hue into ONE Hald CLUT via
+  `haldclutsrc`, applied to every clip with the `haldclut` filter — fed as an INPUT (no fragile Windows
+  filtergraph path). One identical transform = true film cohesion + brand mood; falls back to the inline
+  eq+curves grade. BUG caught + fixed: with a 2nd input, `-t` between the inputs capped the CLUT and looped
+  the image forever (600s timeout) → moved `-t` to an OUTPUT option. MEASURED: WE palette → a cohesive
+  purple film mood across clips.
+- **Owner add #أ — Dynamic pacing (NOTED, not yet wired).** Correct model FOR THE VO PATH (scene duration
+  follows the spoken line so there's no silent gap). The current default is sound-DESIGN (music bed), where
+  the equivalent is the cuts beat-syncing to the track — so #أ applies when VO is the audio; a VO-path
+  enhancement to wire later (scene durations ← `narration_lines` lengths in the compositor).
+- MILESTONE (free, offline, 843 tests green): `build_motion_reel` (brand palette) + `add_kinetic_text_to_reel`
+  on the real te.eg profile → `outputs/reels/_FINAL_craft.mp4` (17.4s) = hero/support captions + expo snap +
+  eased camera + motivated wipes + brand CLUT grade + vignette/grain + a synth sound bed. Frame
+  `outputs/reels/_F_hook.png` shows the full free craft together — a massive jump from the 8-equal-lines,
+  flat, silent original.
+- **CLEANUP after owner's harsh live feedback ("الريل بزمت… واي الصوت دي… الخط الجنب ذي نشرة الإعلان…
+  الألوان بايظة… الكلام معكوس… الكلام قليل") — I OVER-designed; reverted the excess (2026-06-29):**
+  (1) **Spine REMOVED** — the `.cluster` accent bar (read as a news-ticker/ad-rail, on EVERY reel) deleted
+      from both `textlayer.py` + `text_overlay.py`.
+  (2) **Captions MINIMAL** — `_lockup_headline` is now the HERO words only (no wordy `.hsub` support line),
+      clean WHITE (no coloured accent word) — a reel carries LITTLE text.
+  (3) **Audio OFF by default** — the synth bed sounded bad; `build_motion_reel(sound_design=False)` →
+      silent unless a real `music_path` is supplied (silent beats a bad synth).
+  (4) **Colours NEUTRAL** — dropped the brand-hue tint from the CLUT + softened `_GRADE`/`_BASE`
+      (no saturation pump) so the grade never clashes with the footage (purple-on-green was "بايظة").
+  (5) **"الكلام معكوس" = Imagen baking GARBLED text INTO the footage** (STYLE mode copying WE's text-heavy
+      ads). FIRST tried strengthening `imagen_edit_provider.style` `style_description` (take only
+      colour/lighting/mood, no text/logos) — a paid re-render (owner said "جرب بفلوس") PROVED it STILL
+      baked garbled text (STYLE on text-heavy ads is fundamentally leaky). ROOT FIX: switched the reel
+      footage from STYLE-on-ads to **text-to-image** (`reel/generate.build_brand_generated_reel` now uses
+      `VertexImagenProvider.generate` + a new `_onbrand_context`: region-from-ccTLD + brand palette + a hard
+      no-text clause). No ad pixels to copy → no baked text; brand fidelity comes from the PROMPT. VERIFIED
+      LIVE: clean real Egyptian people using phones, text-free, on-brand telecom scene
+      (`outputs/reels/we_t2i.mp4`, frame `_t2i_6.0.png`) — the "عبث" is gone.
+  Verified: `outputs/reels/_clean_caption.png` (clean white, no spine) + the LIVE `we_t2i.mp4` (text-free
+  footage + minimal captions + neutral colours + silent). Suite **843 passed**; reel tests 44 green.
+  REMAINING (owner's call, AFTER the cleaned base): real MUSIC (needs a track) so it's not silent; the
+  telecom CTA («تسوق»); the heavier Lever 4 depth-parallax / Luma I2V (gated). Owner's adds #أ (VO-path
+  dynamic pacing) still noted.
+- **ROUND 2 of owner feedback ("ليه الناس الوانها كدا دول بني آدمين عادي… فين وي… اللوجو لازم يبقا فوق
+  كله… التليفون أبيض… ستاتيك أوي… المفروض جرافيك ديزاينر يقرر") — 4 art-direction fixes (2026-06-29):**
+  (1) **De-RGB skin** — `generate._onbrand_context`: brand colours now appear ONLY as small accents in
+      environment/décor/wardrobe, NEVER as coloured light on skin; "REALISTIC HUMAN SKIN TONES under soft
+      natural daylight, NO green/purple/neon cast on faces". VERIFIED: people now look like NORMAL humans
+      (natural skin) vs the earlier alien green/purple cast.
+  (2) **Persistent logo** — `text_overlay._timeline_html`: the brand logo is now a `.toplogo` shown the
+      WHOLE reel (top corner), not just the intro/outro beats (answers "فين وي / اللوجو فوق كله").
+  (3) **Varied scenes, no blank-phone** — `generate._scene_prompts`: confident portrait / friends together
+      / city street / lifestyle / skyline (was "a moment that shows {offering}" → literal blank-white-phone
+      shots). "if a phone appears it's incidental, soft glow, never a blank white screen."
+  (4) **More dynamic motion** — `motion._make_clip` zoom 0.10→0.16 + drift 22→30 (was "ستاتيك أوي").
+  VERIFIED LIVE (`outputs/reels/we_v2.mp4`): natural-skin Egyptian people (group + city walk), persistent
+  WE logo top, varied shots, clean white minimal captions. Tests updated (`test_reel_generate`), 17 reel
+  green. HONEST REMAINING: the ENVIRONMENT reads heavy purple because the SCRAPED te.eg palette is purple
+  (#512283) while WE's actual brand is GREEN — a palette-DATA mismatch (scenes vary green/purple), not a
+  craft bug; the clean fix is correcting the palette. STILL silent (needs a real music track).
+
 ## Backlog (each its own measured fix)
 - **Logo-vs-photo on multi-variant seals:** Azza Fahmy emits its seal in several
   color variants; only the selected one is excluded by filename, so a variant can leak

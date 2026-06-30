@@ -184,7 +184,12 @@ class ImagenEditProvider:
         prompt: str,
         style_refs: Sequence[ImgSrc],
         *,
-        style_description: str = "the brand's visual style, lighting, palette and mood",
+        style_description: str = (
+            "ONLY the brand's colour palette, lighting and overall mood. Do NOT reproduce or "
+            "imitate any text, words, letters, numbers, logos, watermarks, captions, slogans or "
+            "graphic typography from the reference images — the generated scene must be a clean, "
+            "completely TEXT-FREE photograph"
+        ),
         aspect_ratio: str = DEFAULT_ASPECT,
         out_dir: str | Path = DEFAULT_OUT,
         number_of_images: int = 1,

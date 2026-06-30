@@ -110,11 +110,11 @@ def _atom(text: str) -> str:
 # touch ONLY opacity + translateY/scale, NEVER the text content/font — so Arabic
 # glyph shaping/joining is identical in every frame (transform is compositing).
 _ENTRANCE_S = 1.2                 # entrance window; the compositor holds the last frame after
-_HEAD_ANIM = 'data-anim data-d="0" data-dur="0.36" data-dy="46" data-ease="back" data-sc="0.94"'
+_HEAD_ANIM = 'data-anim data-d="0" data-dur="0.26" data-dy="46" data-ease="back" data-sc="0.94"'
 _LW_STAGGER = 0.07                # per-word delay for the hero lockup
 _ITEM_BASE, _ITEM_STAGGER = 0.30, 0.15   # sublines: first delay + per-line stagger
-_CTA_ANIM = 'data-anim data-d="0.55" data-dur="0.42" data-dy="44" data-ease="cubic"'
-_LOGO_ANIM = 'data-anim data-d="0.05" data-dur="0.40" data-dy="0" data-ease="cubic"'
+_CTA_ANIM = 'data-anim data-d="0.55" data-dur="0.40" data-dy="44" data-ease="expo"'
+_LOGO_ANIM = 'data-anim data-d="0.05" data-dur="0.40" data-dy="0" data-ease="expo"'
 
 
 def _anim_attrs(delay: float, dur: float, dy: float, ease: str, sc: float = 1.0) -> str:
@@ -131,19 +131,41 @@ def _highlight_last_word(headline: str) -> str:
     return f'<span class="hl">{words[0]}</span>' if words and words[0] else ""
 
 
+def _split_hook(headline: str) -> tuple[list[str], str]:
+    """Split a headline into a big HERO (the leading 1-3 words, up to ~18 chars) and a small
+    SUPPORT line (the rest). A short headline (<=3 words) is ALL hero, no support. Verbatim
+    words only — a subset, never reworded/reordered — so it's a pure visual hierarchy, not a
+    content change (zero-hallucination)."""
+    words = [w for w in (headline or "").split(" ") if w]
+    if len(words) <= 3:
+        return words, ""
+    hero: list[str] = []
+    chars = 0
+    for w in words:
+        nxt = chars + (1 if hero else 0) + len(w)
+        if hero and (len(hero) >= 3 or nxt > 18):
+            break
+        hero.append(w)
+        chars = nxt
+    return hero, " ".join(words[len(hero):])
+
+
+def hero_word_count(headline: str) -> int:
+    """How many words land in the big HERO line (used to size it)."""
+    return len(_split_hook(headline)[0])
+
+
 def _lockup_headline(headline: str) -> str:
-    """A DESIGNED graphic lockup (parity with the poster): each word stacked on its own line,
-    the LAST word in the brand-accent gradient, each word entering on a staggered kinetic beat.
-    Verbatim words, CSS-only styling — none added, removed, reordered, or reworded
-    (zero-hallucination)."""
-    words = [w for w in _esc(headline).split(" ") if w]
-    if not words:
+    """A MINIMAL hero lockup: the lead 1-3 words ONLY (a reel carries LITTLE text), stacked and
+    clean WHITE — no wordy support line, no coloured accent word that can clash with the footage.
+    Verbatim words (a subset), CSS-only (none reordered/reworded → zero-hallucination)."""
+    hero, _support = _split_hook(headline)
+    hero = [_esc(w) for w in hero if w]
+    if not hero:
         return ""
-    n = len(words)
     return "".join(
-        f'<span class="lw{" acc" if (n > 1 and i == n - 1) else ""}" '
-        f'{_anim_attrs(i * _LW_STAGGER, 0.42, 34, "cubic")}>{w}</span>'
-        for i, w in enumerate(words)
+        f'<span class="lw" {_anim_attrs(i * _LW_STAGGER, 0.34, 38, "expo")}>{w}</span>'
+        for i, w in enumerate(hero)
     )
 
 
@@ -164,8 +186,13 @@ def _scene_html(scene: ReelScene, storyboard: Storyboard, width: int, height: in
              if c and str(c).startswith("#") and str(c).lower() != accent.lower()]
     accent2 = _pal2[0] if _pal2 else accent
 
-    short = len((scene.headline or "").split()) <= 3
-    head_px = round(width * (0.112 if short else 0.088))
+    lockup = scene.kind in ("intro", "outro")          # the hero scenes get a designed lockup
+    if lockup and scene.headline:                      # size the HERO by its word count (huge)
+        _nh = hero_word_count(scene.headline)
+        head_px = round(width * (0.205 if _nh <= 1 else 0.165 if _nh == 2 else 0.13))
+    else:
+        short = len((scene.headline or "").split()) <= 3
+        head_px = round(width * (0.112 if short else 0.088))
     item_px = round(width * 0.046)
     cta_px = round(width * 0.048)
     logo_h = round(width * 0.12)
@@ -184,7 +211,6 @@ def _scene_html(scene: ReelScene, storyboard: Storyboard, width: int, height: in
     logo_html = (f'<div class="logo" {_LOGO_ANIM} style="{logo_pos}"><img src="{logo_uri}"></div>'
                  if show_logo else "")
 
-    lockup = scene.kind in ("intro", "outro")          # the hero scenes get a designed lockup
     inner: list[str] = []
     if scene.headline:
         if lockup:                                     # each WORD carries its own kinetic beat
@@ -193,7 +219,7 @@ def _scene_html(scene: ReelScene, storyboard: Storyboard, width: int, height: in
             inner.append(f'<div class="headline" {_HEAD_ANIM}>{_highlight_last_word(scene.headline)}</div>')
     if scene.sublines:
         items = "".join(
-            f'<div class="item" {_anim_attrs(_ITEM_BASE + i * _ITEM_STAGGER, 0.40, 26, "cubic")}>'
+            f'<div class="item" {_anim_attrs(_ITEM_BASE + i * _ITEM_STAGGER, 0.40, 26, "expo")}>'
             f'{_atom(s)}</div>'
             for i, s in enumerate(scene.sublines)
         )
@@ -214,9 +240,9 @@ def _scene_html(scene: ReelScene, storyboard: Storyboard, width: int, height: in
     background:linear-gradient(to top,
       rgba(6,9,14,.96) 0%, rgba(6,9,14,.92) 20%, rgba(6,9,14,.74) 42%,
       rgba(6,9,14,.34) 66%, rgba(6,9,14,0) 100%);}}
-  .lower{{position:absolute;left:0;right:0;bottom:0;padding:0 72px 300px;box-sizing:border-box;
+  .lower{{position:absolute;left:0;right:0;bottom:0;padding:0 84px 332px;box-sizing:border-box;
     display:flex;flex-direction:column;align-items:{edge};}}
-  .cluster{{{spine}:9px solid var(--accent);{spine_pad}:30px;text-align:{align};max-width:88%;}}
+  .cluster{{text-align:{align};max-width:86%;}}
   .cluster>*{{unicode-bidi:plaintext;}}
   .headline{{font-family:'Oswald','Cairo',system-ui,sans-serif;font-weight:700;
     font-size:{head_px}px;line-height:1.0;letter-spacing:{head_track};text-transform:uppercase;
@@ -236,6 +262,11 @@ def _scene_html(scene: ReelScene, storyboard: Storyboard, width: int, height: in
     -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;
     -webkit-text-stroke:1.2px rgba(6,9,14,.42);
     filter:drop-shadow(0 3px 8px rgba(0,0,0,.9));}}
+  /* small SUPPORT line under the hero (hierarchy): readable, not uppercase, no gradient. */
+  .lockup .hsub{{display:block;font-size:0.30em;font-family:'Inter','Cairo',system-ui,sans-serif;
+    font-weight:600;letter-spacing:0;text-transform:none;line-height:1.2;margin-top:0.34em;
+    color:#e9edf3;-webkit-text-fill-color:#e9edf3;-webkit-text-stroke:0;
+    text-shadow:{shadow};filter:none;max-width:18ch;}}
   .items{{margin-top:4px;}}
   .item{{font-family:'Inter','Cairo',system-ui,sans-serif;font-weight:600;
     font-size:{item_px}px;line-height:1.5;margin:0.06em 0;letter-spacing:0.2px;
@@ -255,6 +286,8 @@ def _scene_html(scene: ReelScene, storyboard: Storyboard, width: int, height: in
 (function(){{
   function _back(p){{var c1=1.70158,c3=c1+1;return 1+c3*Math.pow(p-1,3)+c1*Math.pow(p-1,2);}}
   function _cubic(p){{return 1-Math.pow(1-p,3);}}
+  // ease-out-expo — the JS twin of cubic-bezier(0.16,1,0.3,1): fast snap in, long premium settle.
+  function _expo(p){{return p>=1?1:1-Math.pow(2,-10*p);}}
   // Set every [data-anim] element's opacity + translateY/scale for global time t (seconds).
   // Transforms only — text content/shaping is untouched, so Arabic stays joined in every frame.
   window.__seek=function(t){{
@@ -262,9 +295,9 @@ def _scene_html(scene: ReelScene, storyboard: Storyboard, width: int, height: in
     for(var i=0;i<els.length;i++){{
       var el=els[i],ds=el.dataset;
       var d=parseFloat(ds.d||'0'),dur=parseFloat(ds.dur||'0.4'),
-          dy=parseFloat(ds.dy||'0'),sc=parseFloat(ds.sc||'1'),ease=ds.ease||'cubic';
+          dy=parseFloat(ds.dy||'0'),sc=parseFloat(ds.sc||'1'),ease=ds.ease||'expo';
       var p=dur>0?(t-d)/dur:1; if(p<0){{p=0;}} if(p>1){{p=1;}}
-      var e=(ease==='back')?_back(p):_cubic(p);
+      var e=(ease==='back')?_back(p):(ease==='expo')?_expo(p):_cubic(p);
       var op=(t-d)/(dur*0.6); if(op<0){{op=0;}} if(op>1){{op=1;}}
       var ty=dy*(1-e), s=sc+(1-sc)*e;
       el.style.opacity=op;
