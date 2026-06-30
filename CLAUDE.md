@@ -2764,6 +2764,41 @@ untouched (captions verbatim; only motion/size/style change). Plan file:
   green. HONEST REMAINING: the ENVIRONMENT reads heavy purple because the SCRAPED te.eg palette is purple
   (#512283) while WE's actual brand is GREEN — a palette-DATA mismatch (scenes vary green/purple), not a
   craft bug; the clean fix is correcting the palette. STILL silent (needs a real music track).
+- **ROUND 3 — "purple-people" ROOT CAUSE found + Runway built (2026-06-29):** owner: the people look like
+  "كائنات بنفسجية" (monochromatic purple overkill, alien skin). DIAGNOSED layer-by-layer (rule 2): the RAW
+  Imagen stills are NATURAL (golden-hour, warm skin — the text-to-image de-purple prompt WORKS); applying a
+  neutral CLUT to a still kept it natural; but `_make_clip`'s `haldclut` step turned a natural still PURPLE.
+  ROOT CAUSE = the brand Hald-CLUT grade (owner idea #ب) was tinting everything purple despite the code
+  looking neutral — a buggy CLUT. FIX: **removed the colour grade from `_make_clip` entirely** (kept only
+  the hue-neutral vignette+grain finish) so the natural text-to-image colour is PRESERVED; dropped the CLUT
+  build in `build_motion_reel`. Also strengthened `_onbrand_context` (no brand-palette instruction at all —
+  it produced the purple dye; demand "true-to-life colour, warm realistic skin, NO single-colour tint/
+  monochrome/coloured-gel on people"). VERIFIED FREE (re-assembled the existing natural stills, no Imagen
+  spend): `outputs/reels/we_natural.mp4` / `_nat_a.png` — the same group scene that was purple is now warm
+  natural-skin Egyptians + persistent WE logo + clean white caption. Suite 843 passed. `reel/grade.py` is
+  now ORPHANED (the CLUT path removed) — leave for a future correct grade.
+  **Runway I2V provider BUILT** (`video_provider.RunwayProvider`, gen4_turbo, api.dev.runwayml.com, image
+  as base64 data-URI so it animates LOCAL Imagen stills; selected first in `default_video_provider` when
+  RUNWAY_API_KEY set). API VERIFIED correct (host/auth/version/`/v1/image_to_video` payload + ratio
+  720:1280 all accepted) BUT the Runway account returned **"You do not have enough credits"** → can't
+  generate live; wiring it into the reel assembly is deferred until the account has credits (to build+verify
+  together). NOT committed-as-working: the provider is ready, the animation is credit-blocked.
+- **ROUND 4 — the reel now EXPRESSES the brand as a STORY (2026-06-29):** owner: "اي علاقة الريل بـ we…
+  المفروض يعبّر عن البراند… زي خطوة البوستر اللي بتفهم أعمال البراند… هو حكاية مش صور ورا بعض". The reel was
+  generic Egyptian people — nothing said WE. FIX: new `art_director.build_brand_story(brief, profile, caller,
+  n, brand_dna)` — an LLM director (Gemini Pro) crafts a coherent SHORT-FILM narrative ARC (hook → build →
+  emotional peak → brand pay-off) with ONE recurring PROTAGONIST, GROUNDED in the brand's real persona/
+  offerings (reuses the poster's `_persona_lines`; optional BrandCreativeDNA themes for the brand's learned
+  visual language — themes/mood only, NOT colour/text). `build_brand_generated_reel` now resolves a default
+  `default_caller(strong=True)` so the WEB reel gets the story too, threads the recurring character into every
+  scene, and falls back to the deterministic varied scenes with no LLM. Scenes stay TEXT-FREE + NATURAL
+  colour (identity from the persistent logo + on-brand subjects, never a dye). VERIFIED LIVE on te.eg
+  (`outputs/reels/we_story.mp4`): a real WE connectivity STORY — a young Egyptian woman artisan misses a
+  business call → sets up a professional system → a stable video call with a client → closes a deal on her
+  balcony at golden hour → relaxed at an ahwa with friends, present. SAME protagonist across scenes, warm
+  natural skin, Egyptian settings, persistent WE logo, clean white caption, CTA «اعرف أكتر». Suite 843 passed.
+  This is the "express the brand, tell a story" the owner asked for — NEXT layer: feed the real BrandCreativeDNA
+  (the brand's actual ads) into the story for even tighter visual-language fidelity, and Runway animation once credited.
 
 ## Backlog (each its own measured fix)
 - **Logo-vs-photo on multi-variant seals:** Azza Fahmy emits its seal in several

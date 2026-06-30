@@ -101,17 +101,14 @@ def _make_clip(img_path: Path, out_path: Path, *, move: str, duration_s: float,
         f"zoompan=z='{zexpr}':d={frames}:x='{xexpr}':y='ih/2-(ih/zoom/2)':"
         f"s={width}x{height}:fps=30"
     )
-    # NOTE: -t is an OUTPUT option (caps the looped image). With a 2nd input (the CLUT) it must
-    # NOT sit between the inputs, or it caps the CLUT and the main image loops forever.
+    # NO colour grade — the brand Hald-CLUT was tinting everything PURPLE (the owner's
+    # "كائنات بنفسجية"); the text-to-image stills are already natural golden-hour colour, so we
+    # PRESERVE them and only add the hue-neutral finish (vignette + film grain). `clut` is kept
+    # in the signature for compatibility but intentionally IGNORED.
     enc = ["-t", f"{duration_s:.2f}", "-r", "30", "-c:v", "libx264", "-pix_fmt", "yuv420p",
            "-preset", "medium", "-crf", "20", str(out_path)]
-    if clut:                                          # brand CLUT as an input -> no fragile path
-        fc = f"[0:v]{pre}[g];[g][1:v]haldclut,{_FINISH},format=yuv420p[v]"
-        run_ffmpeg(["-loop", "1", "-i", str(img_path), "-i", str(clut),
-                    "-filter_complex", fc, "-map", "[v]"] + enc)
-    else:
-        vf = f"{pre},{_GRADE},{_FINISH},format=yuv420p"
-        run_ffmpeg(["-loop", "1", "-i", str(img_path), "-vf", vf] + enc)
+    vf = f"{pre},{_FINISH},format=yuv420p"
+    run_ffmpeg(["-loop", "1", "-i", str(img_path), "-vf", vf] + enc)
 
 
 def build_motion_reel(
@@ -155,20 +152,11 @@ def build_motion_reel(
     durs = _grid_durations(n, bpm=bpm)
     t = min(transition_s, min(durs) * 0.5)                 # transition must fit the shortest shot
 
-    # ONE brand Hald CLUT baked from the palette -> identical film grade across every clip (#ب).
-    clut: Optional[str] = None
-    try:
-        from reel.grade import build_brand_clut
-        _c = build_brand_clut(work / "_brand_clut.png", palette)
-        clut = str(_c) if _c else None
-    except Exception:
-        clut = None
-
     clips: list[Path] = []
     for i, src in enumerate(loaded):
         clip = work / f"_motion_clip{i}.mp4"
         _make_clip(src, clip, move=_MOVES[i % len(_MOVES)], duration_s=durs[i],
-                   width=width, height=height, clut=clut)
+                   width=width, height=height)               # no colour grade — keep natural colour
         clips.append(clip)
 
     graph, vlabel = _xfade_filtergraph(n, durs, t)

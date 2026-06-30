@@ -229,6 +229,76 @@ def build_brand_scene(
         return None, None
 
 
+class _StoryResponse(BaseModel):
+    # ONE recurring protagonist so the reel reads as a single story (not strangers per cut).
+    character: str = ""
+    # An ordered NARRATIVE arc of text-free scenes that EXPRESS the brand.
+    scenes: list[str] = []
+
+
+def build_brand_story(
+    brief: PosterBrief, profile: Optional[dict], caller: Optional[Any], n: int = 5,
+    brand_dna: Optional[Any] = None,
+) -> tuple[Optional[str], list[str]]:
+    """LLM director: a coherent SHORT-FILM STORY — `n` text-free scenes forming a narrative ARC
+    that EXPRESSES this brand (its real persona, offerings, world), with ONE recurring protagonist,
+    so the reel feels like THIS brand and tells a story (the owner: "هو حكاية بتعبّر عن البراند، مش
+    صور ورا بعض"). Returns (character, scenes); (None, []) when no caller / on failure so the caller
+    falls back to deterministic varied scenes. NATURAL colour, TEXT-FREE (the brand identity comes
+    from the persistent LOGO + the on-brand SUBJECTS, never a colour dye or baked text)."""
+    if caller is None:
+        return None, []
+    try:
+        from poster.art_director import _persona_lines
+        persona = _persona_lines(profile)
+    except Exception:
+        persona = ""
+    ground = _ground_text(brief, profile)
+    langs = [str(l).lower()[:2] for l in ((profile or {}).get("languages") or [])]
+    is_mena = ("ar" in langs) or any(t in ground for t in _MENA_TOKENS)
+    culture = ("The brand is Egyptian: every scene shows authentic Egyptian people and real "
+               "Egyptian settings, culturally accurate (NOT Western, NOT Gulf). " if is_mena else "")
+    # The brand's learned VISUAL LANGUAGE (from its real ads) — themes/mood only, NOT colour/text.
+    dna_lines = ""
+    for attr in ("imagery_style", "mood", "photography_style", "motifs", "positioning"):
+        v = getattr(brand_dna, attr, None) if brand_dna is not None else None
+        if v:
+            dna_lines += f"- {attr}: {v if isinstance(v, str) else ', '.join(map(str, v))}\n"
+
+    system = (
+        f"You are an award-winning director of premium vertical (9:16) brand REELS. A reel is a "
+        f"SHORT FILM that tells ONE coherent STORY expressing the brand — NOT a row of random "
+        f"clips. Write a {n}-scene narrative ARC (a hook that grabs in the first second, a build, "
+        f"an emotional peak, then a brand pay-off) that authentically expresses THIS brand's world "
+        f"and what it does for its people. ONE recurring PROTAGONIST (from the brand's real "
+        f"audience) carries all the scenes so it reads as one story. Ground EVERYTHING in the brand "
+        f"persona below — its real offerings, value, audience and tone; be CREATIVE but NEVER leave "
+        f"the brand's personality. " + culture +
+        "Each scene = a vivid, photoreal, TEXT-FREE b-roll moment (people, place, action, light, "
+        "emotion). NATURAL, true-to-life colour with WARM realistic human skin tones — absolutely "
+        "NO single-colour tint, monochrome wash or coloured-gel lighting on people or scene. "
+        "ABSOLUTELY NO text, words, letters, numbers, logos or signage in any image. Each scene 1-2 "
+        "sentences, concrete and shootable."
+    )
+    user = (
+        f"Brand: {brief.business_name}\nCategory: {brief.category}\n"
+        f"Real offerings: {'; '.join([o for o in (brief.offerings or [])[:6] if o]) or (brief.category or '')}\n"
+        f"Tone: {brief.tone or 'premium'}\n"
+        + (f"\nBrand persona (verbatim from the real website):\n{persona}\n" if persona else "")
+        + (f"\nThe brand's visual language (learned from its real ads — themes/mood, do NOT copy "
+           f"text or colour):\n{dna_lines}" if dna_lines else "")
+        + f"\nReturn 'character' (the one recurring protagonist) and 'scenes' ({n} text-free scenes "
+          f"that tell the brand's story in order)."
+    )
+    try:
+        resp, _u = caller(system, user, _StoryResponse, group_name="reel_story")
+        scenes = [s.strip() for s in (getattr(resp, "scenes", []) or []) if s and s.strip()]
+        character = (getattr(resp, "character", "") or "").strip()
+        return (character or None), scenes
+    except Exception:
+        return None, []
+
+
 # Marketing-archetype steering for the reel's GENERATED scene composition (poster parity).
 _ARCHETYPE_SCENE = {
     "magazine_editorial": "Editorial, premium composition with generous negative space; the subject is one elegant focal point.",

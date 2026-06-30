@@ -65,17 +65,18 @@ def _onbrand_context(profile: dict, brief: Any) -> str:
     if ".eg" in url:
         region = ("Set in EGYPT with authentic local Egyptian people and real Egyptian "
                   "surroundings — NOT Western, NOT Gulf/Khaleeji. ")
-    pal = ", ".join(str(c) for c in (getattr(brief, "palette_hex", None) or [])[:3])
-    palline = (f"The brand colours ({pal}) appear ONLY as small accents in the environment, "
-               f"décor, wardrobe or props. " if pal else "")
+    # DELIBERATELY no brand-palette instruction: telling the model to use the (purple) brand
+    # colour produced a monochromatic purple DYE over people + scene ("purple-people"). Brand
+    # identity comes from the persistent LOGO overlay, NOT from tinting the footage.
     return (
-        "Clean, modern, photorealistic commercial photography with NATURAL, true-to-life colour "
-        "and REALISTIC HUMAN SKIN TONES under soft natural daylight. CRITICAL: do NOT cast green, "
-        "purple or any coloured light onto people's faces or skin; NO duotone, NO neon/RGB or "
-        "gel lighting on people — they must look like normal real humans. " + region + palline +
-        "If a phone or screen appears it is incidental, held naturally, and shows only a soft "
-        "natural glow — never a blank white screen. ABSOLUTELY NO text, words, letters, numbers, "
-        "logos, signage, watermarks or typography anywhere — a completely text-free photograph."
+        "Natural, vibrant, TRUE-TO-LIFE colour like a real professional photograph: WARM realistic "
+        "human SKIN TONES, full natural colour contrast and depth, clean soft daylight. CRITICAL — "
+        "do NOT apply ANY single-colour tint, duotone, monochrome wash, colour grade or coloured-gel "
+        "lighting to the people or the scene; NO purple, green or neon cast on skin or environment; "
+        "every person and object keeps its OWN natural colour. " + region +
+        "If a phone or screen appears it is incidental, held naturally, with only a soft natural "
+        "glow — never a blank white screen. ABSOLUTELY NO text, words, letters, numbers, logos, "
+        "signage, watermarks or typography anywhere — a clean, text-free photograph."
     )
 
 
@@ -91,10 +92,29 @@ def build_brand_generated_reel(
     text-free. Returns out_path; raises only if no scene could be generated."""
     from poster.from_profile import build_poster_brief
     from poster.imagen_provider import VertexImagenProvider
+    from reel.art_director import build_brand_story
     from reel.motion import build_motion_reel
 
     brief = build_poster_brief(profile)
-    log(f"[gen] generating {n_scenes} on-brand TEXT-FREE scenes (text-to-image)")
+    # The reel must EXPRESS the brand (the owner: "هو حكاية بتعبّر عن البراند، مش صور ورا بعض").
+    # An LLM director crafts a brand-grounded STORY (narrative arc + recurring character) from the
+    # real persona — like the poster understands the brand. Resolve a default caller so the web
+    # reel gets it too; fall back to deterministic varied scenes when no LLM is available.
+    if caller is None:
+        try:
+            from business_profile.llm.caller import default_caller
+            caller = default_caller(strong=True)
+        except Exception:
+            caller = None
+    character, story = build_brand_story(brief, profile, caller, n=n_scenes, brand_dna=brand_dna)
+    cont = f" The SAME recurring person appears in this scene: {character}." if character else ""
+    if story:
+        scene_prompts = [f"{s}{cont}" for s in story][:n_scenes]
+        log(f"[gen] brand STORY: {len(scene_prompts)} scenes"
+            + (" + recurring character" if character else ""))
+    else:
+        scene_prompts = _scene_prompts(brief, n_scenes)
+        log(f"[gen] no LLM story -> {len(scene_prompts)} deterministic varied scenes")
 
     out_path = Path(out_path)
     work = out_path.parent / "_genscenes"
@@ -102,7 +122,7 @@ def build_brand_generated_reel(
     provider = VertexImagenProvider()
     ctx = _onbrand_context(profile, brief)
     stills: list[str] = []
-    for i, prompt in enumerate(_scene_prompts(brief, n_scenes)):
+    for i, prompt in enumerate(scene_prompts):
         try:
             p = provider.generate(f"{prompt}\n{ctx}", out_dir=str(work), aspect_ratio="9:16")
             stills.append(str(p))
