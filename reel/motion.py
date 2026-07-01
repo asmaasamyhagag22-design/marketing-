@@ -194,3 +194,69 @@ def build_motion_reel(
         except OSError:
             pass
     return out_path
+
+
+def _clip_duration(path: Path) -> float:
+    """Probe a video clip's duration (seconds) from ffmpeg's stderr banner. 4.0 on failure."""
+    import re
+    import subprocess
+    from reel.ffmpeg_tools import ffmpeg_exe
+    try:
+        r = subprocess.run([ffmpeg_exe(), "-i", str(path)], capture_output=True, text=True)
+        m = re.search(r"Duration:\s*(\d+):(\d+):(\d+\.?\d*)", r.stderr)
+        if m:
+            h, mi, s = m.groups()
+            return int(h) * 3600 + int(mi) * 60 + float(s)
+    except Exception:
+        pass
+    return 4.0
+
+
+def _normalize_clip(in_clip: Path, out_clip: Path, width: int, height: int) -> None:
+    """Cover-crop ANY video clip to the vertical WxH @30fps (drop its audio) + the hue-neutral
+    finish, so mixed clips (Veo 720x1280 real video / Ken-Burns 1080x1920) cross-fade cleanly.
+    Natural colour preserved — no grade."""
+    vf = (f"scale={width}:{height}:force_original_aspect_ratio=increase,crop={width}:{height},"
+          f"fps=30,{_FINISH},format=yuv420p")
+    run_ffmpeg(["-i", str(in_clip), "-vf", vf, "-an", "-c:v", "libx264", "-pix_fmt", "yuv420p",
+                "-preset", "medium", "-crf", "20", str(out_clip)])
+
+
+def build_animated_reel(clips, out_path: Path, *, width: int = 1080, height: int = 1920,
+                        transition_s: float = 0.5) -> Path:
+    """Assemble PRE-ANIMATED video clips — REAL Veo 3.1 i2v footage (or a Ken-Burns fallback clip)
+    — into one reel with xfade transitions. Each clip is normalized to WxH@30fps, then cross-faded
+    on its ACTUAL (probed) duration. This is the primary web-reel assembler now that Veo makes the
+    scenes MOVE (real video, not a slideshow). Returns out_path; raises if no clip is usable."""
+    paths = [Path(c) for c in (clips or []) if c and Path(c).is_file()]
+    if not paths:
+        raise RuntimeError("build_animated_reel: no usable clips")
+    out_path = Path(out_path)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    work = out_path.parent
+    norm: list[Path] = []
+    durs: list[float] = []
+    for i, c in enumerate(paths):
+        nc = work / f"_anorm{i}.mp4"
+        _normalize_clip(c, nc, width, height)
+        norm.append(nc)
+        durs.append(_clip_duration(nc))
+    n = len(norm)
+    t = min(transition_s, min(durs) * 0.5) if durs else 0.0
+    graph, vlabel = _xfade_filtergraph(n, durs, t)
+    args: list[str] = []
+    for c in norm:
+        args += ["-i", str(c)]
+    if graph:
+        args += ["-filter_complex", graph, "-map", vlabel]
+    else:
+        args += ["-map", "0:v"]
+    args += ["-c:v", "libx264", "-pix_fmt", "yuv420p", "-r", "30",
+             "-profile:v", "high", "-preset", "medium", "-crf", "20", str(out_path)]
+    run_ffmpeg(args)
+    for c in norm:
+        try:
+            c.unlink()
+        except OSError:
+            pass
+    return out_path

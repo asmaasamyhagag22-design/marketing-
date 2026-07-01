@@ -93,7 +93,8 @@ def build_brand_generated_reel(
     from poster.from_profile import build_poster_brief
     from poster.imagen_provider import VertexImagenProvider
     from reel.art_director import build_brand_story
-    from reel.motion import build_motion_reel
+    from reel.motion import _grid_durations, _make_clip, build_animated_reel
+    from reel.video_provider import VeoProvider
 
     brief = build_poster_brief(profile)
     # The reel must EXPRESS the brand (the owner: "هو حكاية بتعبّر عن البراند، مش صور ورا بعض").
@@ -132,11 +133,35 @@ def build_brand_generated_reel(
     if not stills:
         raise RuntimeError("build_brand_generated_reel: no scene could be generated")
 
-    def _local_fetch(u: str):
-        pth = Path(u)
-        return (pth.read_bytes(), "image/png") if pth.exists() else None
-
-    log(f"[gen] {len(stills)} scenes generated -> motion engine")
-    return build_motion_reel(stills, out_path, width=width, height=height,
-                             palette=list(brief.palette_hex or []), music_path=music_path,
-                             fetch=_local_fetch)
+    # PRIMARY PATH: animate each Imagen still into REAL video with Veo 3.1 (image-to-video), so the
+    # reel MOVES (a real short film, not a slideshow). Ken Burns (static zoom) is ONLY the per-scene
+    # fallback when Veo fails. The still is passed as the i2v reference so the motion is anchored to
+    # the exact on-brand scene; the story action steers the motion.
+    veo = VeoProvider()
+    durs = _grid_durations(len(stills))
+    clips: list[str] = []
+    veo_ok = 0
+    for i, still in enumerate(stills):
+        clip = work / f"_scene_clip{i}.mp4"
+        d = durs[i] if i < len(durs) else 5.0
+        veo_prompt = ((story[i] + " " if (story and i < len(story)) else "")
+                      + "Gentle, natural cinematic motion — the person and scene move naturally, "
+                      "subtle camera move; photoreal, absolutely NO text, letters or logos.")
+        try:
+            veo.generate(veo_prompt, out_path=clip, duration_s=d, width=width, height=height,
+                         reference_image=still)
+            veo_ok += 1
+            log(f"[veo] scene {i + 1}/{len(stills)} -> REAL video")
+        except Exception as exc:  # noqa: BLE001 — Veo failed this scene: Ken Burns fallback only
+            log(f"[veo] scene {i + 1} FAILED ({type(exc).__name__}: {str(exc)[:90]}) -> Ken Burns")
+            _make_clip(Path(still), clip, move="in" if i % 2 == 0 else "out",
+                       duration_s=d, width=width, height=height)
+        clips.append(str(clip))
+    log(f"[gen] Veo real video: {veo_ok}/{len(stills)} scenes; assembling reel")
+    reel = build_animated_reel(clips, out_path, width=width, height=height)
+    for c in clips:                                    # tidy the per-scene clips
+        try:
+            Path(c).unlink()
+        except OSError:
+            pass
+    return reel

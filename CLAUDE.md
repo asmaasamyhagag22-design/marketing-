@@ -2800,6 +2800,33 @@ untouched (captions verbatim; only motion/size/style change). Plan file:
   This is the "express the brand, tell a story" the owner asked for — NEXT layer: feed the real BrandCreativeDNA
   (the brand's actual ads) into the story for even tighter visual-language fidelity, and Runway animation once credited.
 
+## Done — reel: Veo 3.1 REAL video is the primary web path (no more slideshow) (2026-07-01) ✅
+Owner mission: GCP deprecated `veo-3.0-generate-001` → migrate to `veo-3.1-generate-001`; make the
+WEB reel generate ACTUAL moving video (not Ken-Burns stills); drop Runway entirely; keep the text
+overlay untouched. VERIFIED the CLAUDE.md's old "3.1 404s here" note is STALE — `veo-3.1-generate-001`
+is now provisioned on project image-498715.
+- **Model** (`reel/video_provider.py`): `DEFAULT_VEO_MODEL` `veo-3.0-generate-001` → **`veo-3.1-generate-001`**
+  (the earlier 404 was the `-preview` suffix; the GA `-generate-001` resolves). `.env` `REEL_VIDEO_MODEL`
+  updated to match (it overrides the default). VeoProvider auto-uses the **Vertex** path (no Gemini key in
+  .env → `genai.Client(vertexai=True, project=image-498715)` + ADC).
+- **ISOLATED VERIFICATION (mission's crucial gate):** one Veo 3.1 i2v call from a real still →
+  **SUCCESS in 52s, no 404** — a real 4.01s 720x1280 h264 clip. So Veo 3.1 works via Vertex.
+- **Web path forced to REAL video** (`reel/generate.build_brand_generated_reel`): after the Imagen stills
+  it now animates EACH still with `VeoProvider` (image-to-video, the still as the i2v reference so the
+  motion is anchored to the exact on-brand scene; the story action steers the motion). Ken Burns
+  (`_make_clip`) is ONLY the per-scene FALLBACK when Veo raises. New `motion.build_animated_reel` assembles
+  the pre-animated clips (normalize each to 1080x1920@30fps via `_normalize_clip`, probe each ACTUAL
+  duration via `_clip_duration`, xfade on the real durations) — natural colour, no grade. Uses VeoProvider
+  EXPLICITLY (not `default_video_provider`, which prefers Runway) so **Runway is fully ignored** per the
+  mission; the RunwayProvider class stays but is unused by the web path.
+- **END-TO-END VERIFIED:** a 2-scene web reel → both scenes `[veo] -> REAL video` (2/2), a 7.47s 1080x1920
+  reel; frames 0.4s apart in one scene show the artisan turning her head + moving her hand (REAL motion,
+  not a frozen slideshow — mean-abs frame-diff 8.0). `outputs/reels/we_veo31.mp4`. Text overlay / kinetic
+  typography UNTOUCHED (mission constraint). Suite **843 passed**. NOTE: Veo i2v ~50s/clip + Imagen /
+  clip, so a full 5-scene reel is several minutes + real spend (out-of-CI, same policy as all live paths).
+  Veo 3.1 also emits native audio; the reel drops it (`-an`) for now — the reel stays silent until a real
+  music track is supplied (unchanged).
+
 ## Backlog (each its own measured fix)
 - **Logo-vs-photo on multi-variant seals:** Azza Fahmy emits its seal in several
   color variants; only the selected one is excluded by filename, so a variant can leak

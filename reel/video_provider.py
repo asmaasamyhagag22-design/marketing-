@@ -30,10 +30,10 @@ from typing import Optional, Protocol, runtime_checkable
 from .ffmpeg_tools import hex_to_ffmpeg, run_ffmpeg
 
 DEFAULT_ASPECT = "9:16"
-# Veo 3 GA — the model provisioned on this project. MEASURED: veo-3.1-generate-preview
-# and veo-3.1-generate-001 both 404 NOT_FOUND here (3.1 not provisioned). Switch the
-# default to a 3.1 model only after confirming it resolves (override via REEL_VIDEO_MODEL).
-DEFAULT_VEO_MODEL = "veo-3.0-generate-001"
+# Veo 3.1 GA — GCP deprecated veo-3.0-generate-001 and recommends veo-3.1-generate-001.
+# The earlier 404 was the `-preview` suffix; the GA `-generate-001` is the supported id.
+# Override via REEL_VIDEO_MODEL. (Runs on Vertex via ADC + GOOGLE_CLOUD_PROJECT.)
+DEFAULT_VEO_MODEL = "veo-3.1-generate-001"
 # Veo accepts only these clip lengths (seconds).
 _VEO_DURATIONS = (4, 6, 8)
 
