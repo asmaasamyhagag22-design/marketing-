@@ -107,6 +107,18 @@ def build_brand_generated_reel(
             caller = default_caller(strong=True)
         except Exception:
             caller = None
+    # GROUND THE STORY IN THE BRAND'S REAL CREATIVE (owner: "اعتمد ع الريلز القديمة بالسيرش"): the
+    # BrandCreativeDNA searches the brand's actual ads and vision-UNDERSTANDS their visual language
+    # (themes/mood/imagery — as TEXT), so the story reflects the real brand world. We feed only the
+    # learned DESCRIPTION into the prompt, never the ad pixels (which baked garbled text/colour).
+    if brand_dna is None and caller is not None:
+        try:
+            from poster.pipeline import load_or_build_dna
+            brand_dna = load_or_build_dna(profile, caller)
+            if brand_dna is not None:
+                log(f"[gen] brand DNA loaded ({len(getattr(brand_dna, 'references_seen', []) or [])} real ads)")
+        except Exception:
+            brand_dna = None
     character, story = build_brand_story(brief, profile, caller, n=n_scenes, brand_dna=brand_dna)
     cont = f" The SAME recurring person appears in this scene: {character}." if character else ""
     if story:

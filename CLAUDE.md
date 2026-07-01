@@ -2827,6 +2827,21 @@ is now provisioned on project image-498715.
   Veo 3.1 also emits native audio; the reel drops it (`-an`) for now — the reel stays silent until a real
   music track is supplied (unchanged).
 
+## Done — reel: ground the STORY in the brand's REAL ads (BrandCreativeDNA via search) (2026-07-01) ✅
+Owner: "يظهر هوية البراند… يبقا في حاجة علاقتها بالبراند الأصلي… اعتمد ع الريلز القديمة بالسيرش؟" — the reel
+felt generic (logo + persona only), not tied to WE's actual creative. FIX (`reel/generate.build_brand_generated_reel`):
+before crafting the story it now `load_or_build_dna(profile, caller)` (reuses the poster's cached
+`BrandCreativeDNA` — Serper searches the brand's REAL ads + Gemini VISION understands their visual language)
+and passes it to `build_brand_story(..., brand_dna=)`, which already weaves the DNA's imagery_style / mood /
+motifs / positioning into the narrative — as TEXT (themes/mood), NEVER the ad pixels or colour (so no garbled
+baked text, no purple dye). VERIFIED on te.eg (cached `telecom_egypt_dna.json`, used_vision=True, **7 real WE
+ads** analyzed): DNA captured WE's actual world — "beams/streaks of light visualizing data & connectivity,
+glowing night cityscapes, aspirational futuristic tech mood, the purple 'S' brand mark". The story now reflects
+it (an ambitious Cairo architect; city-lights-at-dusk, a crystal-clear video call, the glowing Cairo skyline at
+night) instead of generic scenes. Graceful: no caller / no ads → None → persona-only story (unchanged). So the
+reel is grounded in the brand's real creative (searched), staying on-brand-but-creative — WITHOUT the pixel-copy
+that baked garbled text/colour. Suite **843 passed**.
+
 ## Backlog (each its own measured fix)
 - **Logo-vs-photo on multi-variant seals:** Azza Fahmy emits its seal in several
   color variants; only the selected one is excluded by filename, so a variant can leak
