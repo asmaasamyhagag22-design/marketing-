@@ -11,9 +11,12 @@ vertical-specific hacks.
 
 ## Runtime
 - Windows PowerShell, Anaconda, Python 3.11, conda env `marketing_scraper`.
-- **Working copy: `C:\dev\scraper_v01`** (moved 2026-06-11). The old
-  `G:\Other computers\...\scraper_v01` is a Google-Drive-synced copy — too slow
-  to work in (searches time out, Next.js first compile crawls); treat as backup.
+- **Working copy is PER-MACHINE** (verify before assuming): one machine works in
+  `C:\dev\scraper_v01` (moved 2026-06-11); on the `asmaa` machine (checked
+  2026-07-02) `C:\dev` does NOT exist and the live repo IS the
+  `G:\Other computers\...\scraper_v01` Google-Drive copy (git works there; env
+  `C:\Users\asmaa\anaconda3\envs\marketing_scraper`). The G: copy is slow —
+  repo-wide searches time out; scope Grep/Glob to single directories.
 - `conda`/`npm` are not on PATH in fresh shells; use
   `C:\Users\asmaa\anaconda3\envs\marketing_scraper\python.exe` and
   `C:\Program Files\nodejs` directly if needed.
@@ -2841,6 +2844,54 @@ it (an ambitious Cairo architect; city-lights-at-dusk, a crystal-clear video cal
 night) instead of generic scenes. Graceful: no caller / no ads → None → persona-only story (unchanged). So the
 reel is grounded in the brand's real creative (searched), staying on-brand-but-creative — WITHOUT the pixel-copy
 that baked garbled text/colour. Suite **843 passed**.
+
+## Done — reel: on-screen STORY captions (Ledger-gated) + brand END-CARD wired (2026-07-02) ✅
+Finished the two half-wired WIP pieces found uncommitted in the working tree (owner: "خلصهم")
+— the reel now READS its story on the footage (owner: "فين القصة؟") and ends on an unmistakable
+brand moment (owner: "فين WE؟"). All layered at the COMPOSITION BOUNDARY (api/routes/reel.py);
+the footage engines stay pure.
+- **Story captions**: `_StoryResponse.captions` (was schema-only, unconsumed) now flows
+  end-to-end: `art_director.build_brand_story` returns `(character, scenes, captions)` (aligned
+  1:1, padded; the prompt now REQUESTS ~2-5-word narrative lines in the audience language and
+  FORBIDS numbers/rankings/awards) -> **`reel/grounding.grounded_captions` — the reel's FIRST
+  BLOCKING Ledger piece**: drop-to-grounded, a caption with an unsourced falsifiable claim is
+  BLANKED (never rewritten), alignment preserved -> `generate.build_brand_generated_reel` times
+  each surviving caption on the assembled xfade timeline (`_caption_windows` mirrors
+  `build_animated_reel`'s math on the clips' ACTUAL probed durations) and returns
+  **`GeneratedReel(path, caption_beats)`** (was a bare Path; only caller is the API route) ->
+  `text_overlay.plan_beats(captions=, include_outro=)` renders them as mid-reel kinetic beats,
+  clipped so they never collide with the hook/outro. FIX surfaced by frame inspection: the
+  2-beat-era hook hold (≤5.5s) SWALLOWED scene-2's caption window — the hook now ENDS before the
+  first caption starts (floor 2.4s). BONUS bugfix: a failed Imagen scene used to shift later
+  scenes off their `story[i]` Veo prompt (index drift) — stills now carry their scene index.
+- **End-card**: `reel/endcard.py` (was an orphan, no caller) wired into the web route for BOTH
+  modes (generated + motion fallback): probe `footage_s` -> `append_endcard_to_reel` (~2.6s
+  push-in card: big REAL logo + name + CTA pill on the brand-colour gradient, xfaded in place)
+  -> the overlay then runs with `include_outro=False` (the card replaces the outro beat — no
+  doubled CTA) and `logo_until=footage_s` (the persistent corner logo FADES OUT during the
+  cross-fade so it never doubles the card's big logo). Dead `_legible_on_dark` call + unused
+  imports removed. Route also now fills `duration_s` in the response (was always 0.0).
+- **`_appropriate_cta` documented** (landed with this WIP cluster, was unrecorded): swaps a
+  shopping verb («تسوق»/shop/buy) for «اعرف أكتر»/"Learn more" when the category isn't
+  ecommerce/retail — closes the "telecom CTA «تسوق»" open item. Used by the overlay AND the card.
+- GROUNDING HONESTY: captions are LLM narrative copy on the reel (an UNGATED surface) — so this
+  NEW text surface ships gated from day one via the shared Ledger policy; the voiceover/creative
+  (Opus) surfaces remain audit-only and the reel stays in `UNGATED_SURFACES` until the full gate
+  + per-asset trail land (unchanged next steps).
+- VERIFIED (rule 3) OFFLINE end-to-end, FREE (no Imagen/Veo/LLM — synthetic stills through the
+  EXACT route composition on the REAL te.eg profile): the gate blanked a deliberately fabricated
+  caption LIVE («أكبر شبكة في مصر» -> "") while keeping the narrative ones; frame extraction
+  PROVES hook@1.5s, the Arabic caption «شبكة بتقرّبنا» mid-reel (correct shaping + accent word),
+  the persistent WE logo during footage, and the end-card (real telecomegypt+we logo, purple
+  gradient, "Learn more" pill) with NO corner-logo double. Tests:
+  `tests/test_reel_story_captions.py` (5, hermetic) + `test_reel_text_overlay.py` (+3: caption
+  clipping vs hook/outro, include_outro=False, logo_until in the driver). Suite **851 passed**
+  (was 843). NOTE (this machine): `imageio-ffmpeg` was missing from the env — installed 0.6.0
+  (already pinned in requirements.txt).
+STILL OPEN (known, separate): the LIVE Imagen+Veo web render with captions+end-card (costs money
+— owner's call); `frontend/components/reel-studio-card.tsx` hardcodes `n_scenes: 3` overriding
+the calmer 5-scene default (one-line fix, measure the UX); real MUSIC track; reel gate steps
+2/3 (voiceover surfaces + `reel/audit.py` trail -> move reel to GATED_SURFACES).
 
 ## Backlog (each its own measured fix)
 - **Logo-vs-photo on multi-variant seals:** Azza Fahmy emits its seal in several

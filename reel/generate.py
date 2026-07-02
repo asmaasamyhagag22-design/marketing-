@@ -1,18 +1,43 @@
-"""Generate a reel from the brand's REAL ADS (understand -> generate), NOT website photos.
+"""Generate a brand reel: UNDERSTAND the brand -> INVENT fresh footage -> REAL motion.
 
-Owner's direction: don't dump the website's product photos; UNDERSTAND the brand from its real
-ads (found via search) and INVENT fresh on-brand footage. Pipeline:
-  BrandCreativeDNA (the brand's real ads from search, attribution-filtered)  -- the references
-   -> STYLE-generate N fresh, text-free, on-brand STILL scenes (Imagen edit, conditioned on those
-      real ads, via the poster's ImagenEditProvider)                          -- the "invent"
-   -> the Motion/Music engine animates them cinematically (eased motion + xfade + optional music).
-No literal website-photo reuse. Stills are brand-world scenes, varied per shot. Never fabricates
-the FACTS (this is footage only — no text is rendered here); raises if nothing can be generated.
+Owner's direction: don't dump the website's product photos; UNDERSTAND the brand and INVENT
+on-brand footage that tells its STORY. Pipeline:
+  BrandCreativeDNA (the brand's real ads via search — used as LEARNED TEXT: themes/mood,
+      never the ad pixels, which baked garbled text/colour)
+   -> an LLM director writes a brand-grounded STORY (narrative arc + ONE recurring protagonist
+      + a short on-screen CAPTION per beat, gated by the Evidence Ledger: drop-to-grounded)
+   -> text-to-image stills (Imagen; region + natural-skin + hard no-text guards)
+   -> Veo 3.1 image-to-video animates EACH still (Ken Burns is the per-scene fallback)
+   -> xfade assembly on the clips' ACTUAL durations.
+Returns the reel + the captions timed on its timeline (for the kinetic overlay layer). Never
+fabricates the FACTS (footage is text-free; captions are gated); raises if nothing generates.
 """
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, NamedTuple, Optional
+
+
+class GeneratedReel(NamedTuple):
+    """The assembled footage + the story captions timed on ITS timeline (for the overlay layer)."""
+    path: Path
+    caption_beats: list  # (text, t_in, t_out) tuples, in footage seconds
+
+
+def _caption_windows(durs: list[float], transition_s: float = 0.5) -> list[tuple[float, float]]:
+    """Pure: each clip's fully-visible window on the assembled xfade timeline (mirrors
+    `build_animated_reel`'s math — clip i starts at sum(durs[:i]) - i*t). The window opens just
+    after the incoming transition settles and closes before the outgoing one starts."""
+    if not durs:
+        return []
+    t = min(transition_s, min(durs) * 0.5)
+    wins: list[tuple[float, float]] = []
+    for i, d in enumerate(durs):
+        start = sum(durs[:i]) - i * t
+        t_in = start + (0.3 if i else 0.2)
+        t_out = start + d - t - 0.15
+        wins.append((round(t_in, 2), round(max(t_in, t_out), 2)))
+    return wins
 
 
 def _scene_prompts(brief: Any, n: int) -> list[str]:
@@ -84,16 +109,18 @@ def build_brand_generated_reel(
     profile: dict, *, caller: Any = None, out_path: str | Path, brand_dna: Any = None,
     n_scenes: int = 5, music_path: Optional[str] = None, width: int = 1080, height: int = 1920,
     log=print,
-) -> Path:
+) -> GeneratedReel:
     """Generate fresh, on-brand, TEXT-FREE scenes (text-to-image) then motion-animate them.
     NOTE: STYLE-conditioning on the brand's real ADS was DROPPED — Imagen reproduced the ads'
     text-heavy look as GARBLED baked text (the owner's "الكلام معكوس / عبث"). Brand fidelity now
-    comes from the PROMPT (region + palette + the brand's real offerings), and the image stays
-    text-free. Returns out_path; raises only if no scene could be generated."""
+    comes from the PROMPT (region + the brand's real offerings), and the image stays text-free.
+    Returns GeneratedReel(path, caption_beats) — the caption beats are the story's GROUNDED
+    on-screen lines timed on the footage timeline, for the kinetic overlay layer; raises only
+    if no scene could be generated."""
     from poster.from_profile import build_poster_brief
     from poster.imagen_provider import VertexImagenProvider
     from reel.art_director import build_brand_story
-    from reel.motion import _grid_durations, _make_clip, build_animated_reel
+    from reel.motion import _clip_duration, _grid_durations, _make_clip, build_animated_reel
     from reel.video_provider import VeoProvider
 
     brief = build_poster_brief(profile)
@@ -119,14 +146,27 @@ def build_brand_generated_reel(
                 log(f"[gen] brand DNA loaded ({len(getattr(brand_dna, 'references_seen', []) or [])} real ads)")
         except Exception:
             brand_dna = None
-    character, story = build_brand_story(brief, profile, caller, n=n_scenes, brand_dna=brand_dna)
+    character, story, captions = build_brand_story(brief, profile, caller, n=n_scenes,
+                                                   brand_dna=brand_dna)
+    # The captions are LLM copy on a CUSTOMER-FACING surface -> gate them (drop-to-grounded):
+    # a caption carrying an unsourced falsifiable claim is BLANKED (that scene shows no caption).
+    if any(captions):
+        from reel.grounding import grounded_captions
+        kept = grounded_captions(profile, captions)
+        blanked = sum(1 for a, b in zip(captions, kept) if a and not b)
+        if blanked:
+            log(f"[gen] {blanked} caption(s) blanked (unsourced hard claim)")
+        captions = kept
     cont = f" The SAME recurring person appears in this scene: {character}." if character else ""
     if story:
         scene_prompts = [f"{s}{cont}" for s in story][:n_scenes]
+        captions = (captions + [""] * len(scene_prompts))[: len(scene_prompts)]
         log(f"[gen] brand STORY: {len(scene_prompts)} scenes"
-            + (" + recurring character" if character else ""))
+            + (" + recurring character" if character else "")
+            + (f" + {sum(1 for c in captions if c)} captions" if any(captions) else ""))
     else:
         scene_prompts = _scene_prompts(brief, n_scenes)
+        captions = [""] * len(scene_prompts)
         log(f"[gen] no LLM story -> {len(scene_prompts)} deterministic varied scenes")
 
     out_path = Path(out_path)
@@ -134,11 +174,11 @@ def build_brand_generated_reel(
     work.mkdir(parents=True, exist_ok=True)
     provider = VertexImagenProvider()
     ctx = _onbrand_context(profile, brief)
-    stills: list[str] = []
-    for i, prompt in enumerate(scene_prompts):
+    stills: list[tuple[int, str]] = []       # (scene index, still path) — a failed scene must not
+    for i, prompt in enumerate(scene_prompts):  # shift the later scenes off their story/caption
         try:
             p = provider.generate(f"{prompt}\n{ctx}", out_dir=str(work), aspect_ratio="9:16")
-            stills.append(str(p))
+            stills.append((i, str(p)))
             log(f"[gen] scene {i + 1}/{n_scenes} ok")
         except Exception as exc:  # noqa: BLE001 — skip a failed scene, keep the rest
             log(f"[gen] scene {i + 1} failed: {type(exc).__name__}: {exc}")
@@ -153,27 +193,36 @@ def build_brand_generated_reel(
     durs = _grid_durations(len(stills))
     clips: list[str] = []
     veo_ok = 0
-    for i, still in enumerate(stills):
-        clip = work / f"_scene_clip{i}.mp4"
-        d = durs[i] if i < len(durs) else 5.0
-        veo_prompt = ((story[i] + " " if (story and i < len(story)) else "")
+    for j, (si, still) in enumerate(stills):
+        clip = work / f"_scene_clip{j}.mp4"
+        d = durs[j] if j < len(durs) else 5.0
+        veo_prompt = ((story[si] + " " if (story and si < len(story)) else "")
                       + "Gentle, natural cinematic motion — the person and scene move naturally, "
                       "subtle camera move; photoreal, absolutely NO text, letters or logos.")
         try:
             veo.generate(veo_prompt, out_path=clip, duration_s=d, width=width, height=height,
                          reference_image=still)
             veo_ok += 1
-            log(f"[veo] scene {i + 1}/{len(stills)} -> REAL video")
+            log(f"[veo] scene {si + 1}/{n_scenes} -> REAL video")
         except Exception as exc:  # noqa: BLE001 — Veo failed this scene: Ken Burns fallback only
-            log(f"[veo] scene {i + 1} FAILED ({type(exc).__name__}: {str(exc)[:90]}) -> Ken Burns")
-            _make_clip(Path(still), clip, move="in" if i % 2 == 0 else "out",
+            log(f"[veo] scene {si + 1} FAILED ({type(exc).__name__}: {str(exc)[:90]}) -> Ken Burns")
+            _make_clip(Path(still), clip, move="in" if j % 2 == 0 else "out",
                        duration_s=d, width=width, height=height)
         clips.append(str(clip))
     log(f"[gen] Veo real video: {veo_ok}/{len(stills)} scenes; assembling reel")
+    # Time each scene's caption on the ASSEMBLED footage timeline (actual clip durations, same
+    # xfade math as build_animated_reel) BEFORE the per-scene clips are deleted.
+    actual = [_clip_duration(Path(c)) for c in clips]
+    wins = _caption_windows(actual)
+    caption_beats: list[tuple[str, float, float]] = []
+    for j, (si, _still) in enumerate(stills):
+        text = captions[si] if si < len(captions) else ""
+        if text and j < len(wins):
+            caption_beats.append((text, wins[j][0], wins[j][1]))
     reel = build_animated_reel(clips, out_path, width=width, height=height)
     for c in clips:                                    # tidy the per-scene clips
         try:
             Path(c).unlink()
         except OSError:
             pass
-    return reel
+    return GeneratedReel(reel, caption_beats)

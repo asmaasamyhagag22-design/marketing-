@@ -1,0 +1,81 @@
+{
+  "manifest": "C:\\Users\\Admin\\Desktop\\dev\\scraper_v01\\scrapes\\te_eg_20260628_085013\\manifest.json",
+  "before": {
+    "pack_blocks": 153,
+    "rejections": 0,
+    "cost": 0.0254407,
+    "offerings": [
+      "احجز رقم WE Gold",
+      "جدد إشتراك WE إنترنت",
+      "الاحتفاظ بالمكالمات",
+      "اتحكم فى فاتورتك",
+      "سلفنى Extra",
+      "تحويل الرصيد",
+      "خاصية الإنتظار",
+      "خدمة عالم واحد للمكالمات الدولية",
+      "التجوال",
+      "الشريحة الإلكترونية",
+      "مركز الاتصال المستضاف"
+    ],
+    "value_props": [
+      "No hardware, software, or infrastructure costs for hosted call centers",
+      "Rapid deployment and minimal setup for call center solutions",
+      "No specialized technical staff required for call center management",
+      "Scalable call center capacity based on call volume",
+      "Cheapest monthly subscription for international calls in Egypt"
+    ],
+    "insights": [
+      "Hosted Call Center solutions can be built starting from 3 devices for a monthly rental fee."
+    ],
+    "trust": [
+      "Systems owned and managed by WE"
+    ],
+    "audience": [
+      "Businesses seeking hosted call center solutions",
+      "Individuals needing mobile, internet, and fixed-line services",
+      "Prepaid mobile customers"
+    ]
+  },
+  "after": {
+    "pack_blocks": 265,
+    "rejections": 0,
+    "cost": 0.029045500000000002,
+    "offerings": [
+      "خدمات الموبايل",
+      "خدمات الرصيد",
+      "خدمات التليفون الارضي",
+      "خدمات الانترنت",
+      "المكالمات الدولية و التجوال",
+      "مركز الاتصال المستضاف",
+      "خدمة عالم واحد للمكالمات الدولية",
+      "التجوال",
+      "سلفنى Extra",
+      "تحويل الرصيد",
+      "خدمات نفاذ الرصيد",
+      "نقل الخط الأرضي المنزلي"
+    ],
+    "value_props": [
+      "speed of execution",
+      "cost reduction",
+      "no technical expertise required",
+      "focus on core call center operations",
+      "cheapest monthly subscription price in Egypt"
+    ],
+    "insights": [
+      "Hosted call center systems are owned and managed by WE, requiring no hardware, software, or infrastructure costs for the client's company.",
+      "Clients can build their call center starting from 3 devices for a monthly rental fee, with flexible capacity adjustments."
+    ],
+    "trust": [
+      "Systems are owned and managed by WE",
+      "No hardware, software, or infrastructure costs required",
+      "No specialized technical staff in call centers needed",
+      "Remote support and control",
+      "No technical expertise required"
+    ],
+    "audience": [
+      "prepaid customers",
+      "family and friends",
+      "companies needing call centers"
+    ]
+  }
+}

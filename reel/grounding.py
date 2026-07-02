@@ -1,11 +1,12 @@
-"""Reel copy grounding — read-only audit primitive (Evidence-Ledger Step 1 for the reel).
+"""Reel copy grounding — audit primitives + the story-caption gate (Evidence Ledger, reel side).
 
 The reel is the LAST customer-facing creative surface still OUTSIDE the Evidence-Ledger
-brand-safety trail (see `grounding/audit.py` UNGATED_SURFACES). This module is the FIRST,
-read-only step toward closing that gap: it APPLIES the existing `grounding.EvidenceLedger`
-to the reel's copy surfaces so we can MEASURE how often a reel line carries a HARD CLAIM with
-no source in the brand's evidence. It BLOCKS NOTHING — no softening, no regenerate (that is a
-later step); it only audits.
+brand-safety trail (see `grounding/audit.py` UNGATED_SURFACES). This module APPLIES the existing
+`grounding.EvidenceLedger` to the reel's copy surfaces: the audit helpers below are READ-ONLY
+(they MEASURE, block nothing — Step 1), while `grounded_captions` is the FIRST BLOCKING piece —
+it gates the LLM story CAPTIONS (the new on-screen text surface) with the shared drop-to-grounded
+policy. The voiceover/creative (Opus) surfaces are still audit-only; the full reel gate + per-asset
+trail remain the next steps, so the reel stays listed as UNGATED until they land.
 
 Two copy surfaces (verified from the reel code):
   * The CREATIVE path (`reel.creative_director.design_creative_reel`, `--creative`) — an Opus
@@ -58,6 +59,25 @@ def narration_copy_fields(storyboard: Any) -> dict[str, str]:
         if line:
             fields[f"scene_{i}"] = line
     return fields
+
+
+def grounded_captions(profile: dict, captions: list[str]) -> list[str]:
+    """DROP-TO-GROUNDED for the reel's on-screen story captions: any caption carrying an
+    UNSOURCED falsifiable claim (per the shared Ledger policy — numbers, rankings, superlatives,
+    awards/certifications with no real evidence) is BLANKED, so that scene simply shows no
+    caption — we never invent a replacement. Pure narrative/emotive copy passes untouched.
+    Returns a SAME-LENGTH list (alignment with the scenes is preserved). Best-effort: if the
+    audit itself fails (the Ledger is documented never to raise, so this is theoretical) the
+    captions are returned unchanged rather than losing the reel."""
+    caps = [str(c or "").strip() for c in (captions or [])]
+    if not any(caps):
+        return caps
+    try:
+        ledger = EvidenceLedger.from_profile(profile or {})
+        return [c if (not c or all(v.sourced for v in ledger.audit_text(c))) else ""
+                for c in caps]
+    except Exception:  # noqa: BLE001 — never lose the reel to an audit failure
+        return caps
 
 
 def audit_reel_copy(profile: dict, fields: dict[str, str]) -> AuditReport:

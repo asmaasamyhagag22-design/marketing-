@@ -6,17 +6,21 @@ background). This module adds the kinetic CAPTION layer ON TOP, at the compositi
 boundary, so the engines stay pure footage producers.
 
 Approach (mirrors the CLI compositor's verified kinetic overlay, Step 2):
-  * Build a 2-beat content storyboard from the brand's verbatim brief — a HOOK
-    (headline lockup) and an OUTRO (brand name + the scraped CTA pill). Minimal text
-    so the cinematic footage stays the star.
+  * Build the content beats from the brand's verbatim brief — a HOOK (headline
+    lockup), optional per-scene STORY captions (short LLM narrative lines, timed by
+    the generator and GATED by the Evidence Ledger before they reach here), and an
+    OUTRO (brand name + the scraped CTA pill; skipped when a brand END-CARD carries
+    the pay-off). Minimal text so the cinematic footage stays the star.
   * Render ONE transparent, FULL-DURATION kinetic overlay (Chromium): each beat
     enters with the per-element stagger (`__seektl` drives the same easing as
     `reel/textlayer`), holds in its time window, then fades out before the next.
   * Composite the overlay onto the finished video in a SINGLE ffmpeg overlay pass
     (audio copied through). Best-effort: any failure returns the text-free reel.
 
-ZERO HALLUCINATION: every word is the brand's verbatim brief; transforms touch only
-opacity/translate/scale, so Arabic shaping/joining is identical in every frame.
+GROUNDING: the hook/name/CTA are the brand's verbatim brief; the story captions are LLM
+narrative copy that has already passed the Ledger's drop-to-grounded gate (an unsourced
+falsifiable claim never reaches this layer). Transforms touch only opacity/translate/scale,
+so Arabic shaping/joining is identical in every frame.
 """
 from __future__ import annotations
 
@@ -41,10 +45,14 @@ _BEAT_FADE = 0.45                       # beat-level cross fade (in/hold handled
 # --------------------------------------------------------------------------- #
 # Beat planning (pure)                                                          #
 # --------------------------------------------------------------------------- #
-def plan_beats(headline: str, business_name: str, cta_text: str, total_s: float
-               ) -> list[tuple[ReelScene, float, float]]:
-    """Plan the minimal HOOK + OUTRO beats across a `total_s` video. Returns
-    (scene, t_in, t_out) tuples in time order; windows never overlap and sit
+def plan_beats(headline: str, business_name: str, cta_text: str, total_s: float,
+               *, captions: Optional[list[tuple[str, float, float]]] = None,
+               include_outro: bool = True) -> list[tuple[ReelScene, float, float]]:
+    """Plan the caption beats across a `total_s` video: a HOOK (headline lockup), optional
+    per-scene STORY captions (pre-timed (text, t_in, t_out) windows from the generator,
+    clipped here so they never collide with the hook/outro), and an OUTRO (brand name +
+    CTA pill). Pass `include_outro=False` when a brand END-CARD carries the pay-off instead.
+    Returns (scene, t_in, t_out) tuples in time order; windows never overlap and sit
     within [0, total_s]. Empty when there is no usable text."""
     T = max(2.0, float(total_s))
     beats: list[tuple[ReelScene, float, float]] = []
@@ -52,18 +60,43 @@ def plan_beats(headline: str, business_name: str, cta_text: str, total_s: float
     cta_text = (cta_text or "").strip()
     business_name = (business_name or "").strip()
 
+    hook_out = 0.0
     if headline:
         hook = ReelScene(kind="intro", duration_s=3.0, visual_prompt="x", headline=headline)
         hook_out = max(2.4, min(T * 0.5, 5.5))
+        # Story captions carry the narrative from the next scene on — the long hook hold was
+        # designed for the 2-beat plan and would SWALLOW the early caption windows, so end the
+        # hook before the FIRST caption starts (floor 2.4s ≈ the hook scene itself).
+        first_cap = min((float(c[1]) for c in (captions or []) if c and str(c[0] or "").strip()),
+                        default=None)
+        if first_cap is not None:
+            hook_out = max(2.4, min(hook_out, first_cap - 0.2))
         beats.append((hook, 0.3, round(hook_out, 2)))
 
-    if cta_text:
+    cta_in = T
+    if cta_text and include_outro:
         outro = ReelScene(kind="outro", duration_s=3.0, visual_prompt="x",
                           headline=business_name or None, cta_text=cta_text)
         prev_out = beats[-1][2] if beats else 0.3
         cta_in = min(max(prev_out + 0.3, T * 0.55), max(0.3, T - 2.4))
         if cta_in < T - 0.6:                       # only if there's room to show it
             beats.append((outro, round(cta_in, 2), round(T, 2)))
+        else:
+            cta_in = T
+
+    # STORY captions (generated mode): each arrives timed to its scene's window; clip it
+    # against the hook and the outro so beats never overlap, drop it if too little remains.
+    for cap in (captions or []):
+        text = (str(cap[0]) if cap and cap[0] else "").strip()
+        lo = max(float(cap[1]), (hook_out + 0.2) if hook_out else 0.15)
+        hi = min(float(cap[2]), cta_in - 0.2, T - 0.2)
+        if not text or hi - lo < 1.2:
+            continue
+        scene = ReelScene(kind="value_prop", duration_s=max(1.0, min(10.0, hi - lo)),
+                          visual_prompt="x", headline=text)
+        beats.append((scene, round(lo, 2), round(hi, 2)))
+
+    beats.sort(key=lambda b: b[1])
     return beats
 
 
@@ -103,7 +136,8 @@ def _beat_inner(scene: ReelScene, rtl: bool, width: int, logo_uri: Optional[str]
 
 
 def _timeline_html(beats: list[tuple[ReelScene, float, float]], sb: Storyboard,
-                   width: int, height: int, logo_uri: Optional[str]) -> str:
+                   width: int, height: int, logo_uri: Optional[str],
+                   logo_until: Optional[float] = None) -> str:
     rtl = sb.primary_dir == "rtl"
     dir_attr = "rtl" if rtl else "ltr"
     accent = _accent(sb)
@@ -211,8 +245,13 @@ def _timeline_html(beats: list[tuple[ReelScene, float, float]], sb: Storyboard,
     }}
   }}
   var FADE={_BEAT_FADE};
+  // The persistent corner logo hides past LOGO_UNTIL (an appended brand END-CARD carries its
+  // own big logo, so the small corner one must fade out during the cross-fade into it).
+  var LOGO_UNTIL={(f"{float(logo_until):.2f}" if logo_until else "-1")};
   // Show/animate the beat whose [t_in,t_out) window contains the global time tg.
   window.__seektl=function(tg){{
+    var tl=document.querySelector('.toplogo');
+    if(tl&&LOGO_UNTIL>0){{var lo=(LOGO_UNTIL-tg)/0.45;tl.style.opacity=Math.max(0,Math.min(1,lo));}}
     var beats=document.querySelectorAll('.beat');
     for(var b=0;b<beats.length;b++){{
       var beat=beats[b],tin=parseFloat(beat.dataset.tin),tout=parseFloat(beat.dataset.tout);
@@ -231,17 +270,18 @@ def _timeline_html(beats: list[tuple[ReelScene, float, float]], sb: Storyboard,
 def render_timeline_overlay(
     sb: Storyboard, beats: list[tuple[ReelScene, float, float]], *,
     width: int, height: int, fps: int, total_s: float, out_dir: Path,
-    include_logo: bool = True,
+    include_logo: bool = True, logo_until: Optional[float] = None,
 ) -> str:
     """Render the FULL-DURATION transparent kinetic overlay as an image2 PNG sequence
     (`f0000.png` ... at `fps`). Returns the ffmpeg image2 pattern. Each frame is captured
-    by seeking the in-page __seektl(t) driver to an exact timestamp (frame-perfect)."""
+    by seeking the in-page __seektl(t) driver to an exact timestamp (frame-perfect).
+    `logo_until` fades the persistent corner logo out by that timestamp (end-card case)."""
     from playwright.sync_api import sync_playwright
 
     seq_dir = out_dir / "tl"
     seq_dir.mkdir(parents=True, exist_ok=True)
     logo_uri = _logo_data_uri(sb.logo_url) if include_logo else None
-    html = _timeline_html(beats, sb, width, height, logo_uri)
+    html = _timeline_html(beats, sb, width, height, logo_uri, logo_until=logo_until)
     n = max(1, round(float(total_s) * fps))
     clip = {"x": 0, "y": 0, "width": width, "height": height}
 
@@ -328,10 +368,16 @@ def _appropriate_cta(cta: str, profile: dict, rtl: bool) -> str:
 
 
 def add_kinetic_text_to_reel(profile: dict[str, Any], video_path: str | Path, *,
-                             fps: int = 30) -> bool:
-    """Overlay the kinetic HOOK + CTA caption layer onto a finished motion/generated reel,
-    IN PLACE. Best-effort: returns False (leaving the text-free reel intact) on any failure
-    or when the brand brief has no usable headline/CTA. Never raises."""
+                             fps: int = 30,
+                             captions: Optional[list[tuple[str, float, float]]] = None,
+                             footage_s: Optional[float] = None,
+                             include_outro: bool = True) -> bool:
+    """Overlay the kinetic caption layer (HOOK + optional per-scene STORY captions + CTA)
+    onto a finished motion/generated reel, IN PLACE. When a brand END-CARD was appended,
+    pass `footage_s` (the pre-end-card duration) and `include_outro=False`: the beats stay
+    within the footage and the persistent corner logo fades out before the end-card (which
+    carries the big logo + CTA itself). Best-effort: returns False (leaving the text-free
+    reel intact) on any failure or when there is no usable text. Never raises."""
     try:
         from .from_profile import build_reel_brief, is_rtl
 
@@ -342,14 +388,18 @@ def add_kinetic_text_to_reel(profile: dict[str, Any], video_path: str | Path, *,
         headline = (brief.headline or "").strip()
         cta = (brief.cta_text or "").strip()
         name = (brief.business_name or "").strip()
-        if not headline and not cta:
+        cap_texts = [str(c[0] or "").strip() for c in (captions or [])]
+        if not headline and not cta and not any(cap_texts):
             return False
 
-        rtl = is_rtl(headline) or is_rtl(name) or is_rtl(cta)
+        rtl = (is_rtl(headline) or is_rtl(name) or is_rtl(cta)
+               or any(is_rtl(c) for c in cap_texts if c))
         cta = _appropriate_cta(cta, profile, rtl)        # telecom shouldn't say «تسوق»
 
         total_s = _probe_duration(video_path) or 10.0
-        beats = plan_beats(headline, name, cta, total_s)
+        window_s = min(float(footage_s), total_s) if footage_s else total_s
+        beats = plan_beats(headline, name, cta, window_s, captions=captions,
+                           include_outro=include_outro)
         if not beats:
             return False
 
@@ -365,6 +415,7 @@ def add_kinetic_text_to_reel(profile: dict[str, Any], video_path: str | Path, *,
             tmpd = Path(tmp)
             pattern = render_timeline_overlay(
                 sb, beats, width=REEL_W, height=REEL_H, fps=fps, total_s=total_s, out_dir=tmpd,
+                logo_until=(window_s if footage_s else None),
             )
             tmp_out = tmpd / "with_text.mp4"
             overlay_timeline_on_video(video_path, pattern, tmp_out, fps=fps)

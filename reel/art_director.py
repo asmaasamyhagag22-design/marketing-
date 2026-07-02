@@ -234,20 +234,27 @@ class _StoryResponse(BaseModel):
     character: str = ""
     # An ordered NARRATIVE arc of text-free scenes that EXPRESS the brand.
     scenes: list[str] = []
+    # A SHORT on-screen caption per scene (aligned with `scenes`) that NARRATES the beat — so the
+    # story is READABLE on the moving images (the owner: "فين القصة؟"). The footage can't tell the
+    # story alone; the captions carry it. In the brand's audience language, ~2-5 words each.
+    captions: list[str] = []
 
 
 def build_brand_story(
     brief: PosterBrief, profile: Optional[dict], caller: Optional[Any], n: int = 5,
     brand_dna: Optional[Any] = None,
-) -> tuple[Optional[str], list[str]]:
+) -> tuple[Optional[str], list[str], list[str]]:
     """LLM director: a coherent SHORT-FILM STORY — `n` text-free scenes forming a narrative ARC
     that EXPRESSES this brand (its real persona, offerings, world), with ONE recurring protagonist,
     so the reel feels like THIS brand and tells a story (the owner: "هو حكاية بتعبّر عن البراند، مش
-    صور ورا بعض"). Returns (character, scenes); (None, []) when no caller / on failure so the caller
-    falls back to deterministic varied scenes. NATURAL colour, TEXT-FREE (the brand identity comes
+    صور ورا بعض"). Returns (character, scenes, captions): `captions` is aligned 1:1 with `scenes`
+    (padded with "") — a SHORT ~2-5-word on-screen line that NARRATES each beat so the story READS
+    on the footage (the owner: "فين القصة؟"); it is design/narrative copy overlaid later, never
+    baked into the image. (None, [], []) when no caller / on failure so the caller falls back to
+    deterministic varied scenes. NATURAL colour, TEXT-FREE footage (the brand identity comes
     from the persistent LOGO + the on-brand SUBJECTS, never a colour dye or baked text)."""
     if caller is None:
-        return None, []
+        return None, [], []
     try:
         from poster.art_director import _persona_lines
         persona = _persona_lines(profile)
@@ -287,16 +294,25 @@ def build_brand_story(
         + (f"\nBrand persona (verbatim from the real website):\n{persona}\n" if persona else "")
         + (f"\nThe brand's visual language (learned from its real ads — themes/mood, do NOT copy "
            f"text or colour):\n{dna_lines}" if dna_lines else "")
-        + f"\nReturn 'character' (the one recurring protagonist) and 'scenes' ({n} text-free scenes "
-          f"that tell the brand's story in order)."
+        + f"\nReturn 'character' (the one recurring protagonist), 'scenes' ({n} text-free scenes "
+          f"that tell the brand's story in order), and 'captions' (ONE short on-screen line per "
+          f"scene, aligned with 'scenes', ~2-5 words each, in the brand's audience language, that "
+          f"NARRATES that beat so the story reads on the footage. Captions are pure narrative/"
+          f"emotive copy — NO numbers, prices, rankings, superlatives, awards or certifications; "
+          f"NEVER invent a fact)."
     )
     try:
         resp, _u = caller(system, user, _StoryResponse, group_name="reel_story")
-        scenes = [s.strip() for s in (getattr(resp, "scenes", []) or []) if s and s.strip()]
+        raw_scenes = [str(s or "").strip() for s in (getattr(resp, "scenes", []) or [])]
+        raw_caps = [str(c or "").strip() for c in (getattr(resp, "captions", []) or [])]
+        raw_caps = (raw_caps + [""] * len(raw_scenes))[: len(raw_scenes)]  # align 1:1 with scenes
+        pairs = [(s, c) for s, c in zip(raw_scenes, raw_caps) if s]        # drop empty scenes WITH their caption
+        scenes = [s for s, _ in pairs]
+        captions = [c for _, c in pairs]
         character = (getattr(resp, "character", "") or "").strip()
-        return (character or None), scenes
+        return (character or None), scenes, captions
     except Exception:
-        return None, []
+        return None, [], []
 
 
 # Marketing-archetype steering for the reel's GENERATED scene composition (poster parity).
