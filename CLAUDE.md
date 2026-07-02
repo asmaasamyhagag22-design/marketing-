@@ -2888,10 +2888,22 @@ the footage engines stay pure.
   clipping vs hook/outro, include_outro=False, logo_until in the driver). Suite **851 passed**
   (was 843). NOTE (this machine): `imageio-ffmpeg` was missing from the env — installed 0.6.0
   (already pinned in requirements.txt).
-STILL OPEN (known, separate): the LIVE Imagen+Veo web render with captions+end-card (costs money
-— owner's call); `frontend/components/reel-studio-card.tsx` hardcodes `n_scenes: 3` overriding
-the calmer 5-scene default (one-line fix, measure the UX); real MUSIC track; reel gate steps
-2/3 (voiceover surfaces + `reel/audit.py` trail -> move reel to GATED_SURFACES).
+- **VERIFIED LIVE on the web path (2026-07-03, owner-approved spend):** POST
+  /api/reel/from-profile with the real te.eg profile (no n_scenes -> default 5) -> **mode=
+  generated, 5 scenes, 19.97s, warnings=[]** (end-card AND overlay both succeeded), 933s
+  elapsed, ADC/Vertex confirmed working on the asmaa machine. Frames PROVE it on REAL Veo
+  footage: hook lockup over the DNA-grounded protagonist (Cairo dome out the window), LIVE
+  Gemini story captions mid-reel — «خيط نور يوصلنا.» / «أحلى لحظة بتجمعنا.» (pure narrative,
+  gate-clean, accent word in brand colour, correct shaping), the SAME recurring character
+  across scenes, natural skin (no dye), persistent WE logo through the footage, and the brand
+  end-card with NO corner-logo double. -> `outputs/reels/we_live_captions_endcard.mp4`.
+- **Frontend n_scenes fix**: `reel-studio-card.tsx` no longer hardcodes `n_scenes: 3` (it
+  silently overrode the calmer 5-scene default) — the POST now omits it; the backend default
+  was exercised by the live render above (scene_count=5).
+STILL OPEN (known, separate): the reel HOOK is the verbatim brief headline, so an English
+tagline yields an EN hook over AR captions (mixed languages on te.eg — the known "reel headline
+needs research/plan copy" item); real MUSIC track; reel gate steps 2/3 (voiceover surfaces +
+`reel/audit.py` trail -> move reel to GATED_SURFACES).
 
 ## Backlog (each its own measured fix)
 - **Logo-vs-photo on multi-variant seals:** Azza Fahmy emits its seal in several

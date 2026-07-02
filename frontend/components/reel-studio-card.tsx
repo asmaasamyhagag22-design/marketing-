@@ -56,7 +56,7 @@ export function ReelStudioCard({ profile }: ReelStudioCardProps) {
       const response = await fetch(`${API_BASE}/reel/from-profile`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ profile, n_scenes: 3 }),
+        body: JSON.stringify({ profile }), // n_scenes: backend default (5 — the calmer pacing)
       });
       if (!response.ok) {
         const text = await response.text();
