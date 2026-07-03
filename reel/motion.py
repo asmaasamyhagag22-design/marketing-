@@ -212,22 +212,63 @@ def _clip_duration(path: Path) -> float:
     return 4.0
 
 
-def _normalize_clip(in_clip: Path, out_clip: Path, width: int, height: int) -> None:
-    """Cover-crop ANY video clip to the vertical WxH @30fps (drop its audio) + the hue-neutral
-    finish, so mixed clips (Veo 720x1280 real video / Ken-Burns 1080x1920) cross-fade cleanly.
-    Natural colour preserved — no grade."""
+def _has_audio(path: Path) -> bool:
+    """True when the clip carries an audio stream (ffmpeg stderr banner probe)."""
+    import subprocess
+    from reel.ffmpeg_tools import ffmpeg_exe
+    try:
+        r = subprocess.run([ffmpeg_exe(), "-i", str(path)], capture_output=True, text=True)
+        return "Audio:" in (r.stderr or "")
+    except Exception:
+        return False
+
+
+def _acrossfade_filtergraph(n: int, t: float) -> tuple[str, str]:
+    """Pure: the AUDIO twin of `_xfade_filtergraph` — chain `acrossfade` joins between the n
+    clips' audio streams so the sound cross-fades exactly where the video wipes do (same overlap
+    `t`, same total-duration math: sum - (n-1)*t). n==1 -> no chain."""
+    if n <= 1:
+        return "", "[0:a]"
+    parts, prev = [], "[0:a]"
+    for i in range(1, n):
+        out = "[aout]" if i == n - 1 else f"[ax{i}]"
+        parts.append(f"{prev}[{i}:a]acrossfade=d={t}{out}")
+        prev = out
+    return ";".join(parts), "[aout]"
+
+
+def _normalize_clip(in_clip: Path, out_clip: Path, width: int, height: int,
+                    keep_audio: bool = False) -> None:
+    """Cover-crop ANY video clip to the vertical WxH @30fps + the hue-neutral finish, so mixed
+    clips (Veo 720x1280 real video / Ken-Burns 1080x1920) cross-fade cleanly. Natural colour
+    preserved — no grade. `keep_audio=False` drops audio (the legacy silent path);
+    `keep_audio=True` keeps Veo's NATIVE audio (voiceover + ambience) normalized to stereo
+    48kHz AAC — a silent clip (Ken-Burns fallback) gets a silent track so every clip carries
+    an audio stream and the acrossfade chain never breaks."""
     vf = (f"scale={width}:{height}:force_original_aspect_ratio=increase,crop={width}:{height},"
           f"fps=30,{_FINISH},format=yuv420p")
-    run_ffmpeg(["-i", str(in_clip), "-vf", vf, "-an", "-c:v", "libx264", "-pix_fmt", "yuv420p",
-                "-preset", "medium", "-crf", "20", str(out_clip)])
+    enc = ["-c:v", "libx264", "-pix_fmt", "yuv420p", "-preset", "medium", "-crf", "20"]
+    if not keep_audio:
+        run_ffmpeg(["-i", str(in_clip), "-vf", vf, "-an"] + enc + [str(out_clip)])
+        return
+    if _has_audio(in_clip):
+        run_ffmpeg(["-i", str(in_clip), "-vf", vf] + enc
+                   + ["-c:a", "aac", "-ar", "48000", "-ac", "2", "-b:a", "192k", str(out_clip)])
+    else:  # pad a silent stereo track so the audio graph downstream is uniform
+        run_ffmpeg(["-i", str(in_clip),
+                    "-f", "lavfi", "-i", "anullsrc=channel_layout=stereo:sample_rate=48000",
+                    "-vf", vf, "-map", "0:v", "-map", "1:a", "-shortest"] + enc
+                   + ["-c:a", "aac", "-b:a", "192k", str(out_clip)])
 
 
 def build_animated_reel(clips, out_path: Path, *, width: int = 1080, height: int = 1920,
-                        transition_s: float = 0.5) -> Path:
+                        transition_s: float = 0.5, keep_audio: bool = False) -> Path:
     """Assemble PRE-ANIMATED video clips — REAL Veo 3.1 i2v footage (or a Ken-Burns fallback clip)
     — into one reel with xfade transitions. Each clip is normalized to WxH@30fps, then cross-faded
-    on its ACTUAL (probed) duration. This is the primary web-reel assembler now that Veo makes the
-    scenes MOVE (real video, not a slideshow). Returns out_path; raises if no clip is usable."""
+    on its ACTUAL (probed) duration. `keep_audio=True` PRESERVES Veo 3.1's native audio (spoken
+    voiceover + ambience — the reel TALKS): every clip is padded to a uniform stereo track and the
+    audio acrossfades on the same overlap as the video wipes. This is the primary web-reel
+    assembler now that Veo makes the scenes MOVE. Returns out_path; raises if no clip is usable."""
     paths = [Path(c) for c in (clips or []) if c and Path(c).is_file()]
     if not paths:
         raise RuntimeError("build_animated_reel: no usable clips")
@@ -238,7 +279,7 @@ def build_animated_reel(clips, out_path: Path, *, width: int = 1080, height: int
     durs: list[float] = []
     for i, c in enumerate(paths):
         nc = work / f"_anorm{i}.mp4"
-        _normalize_clip(c, nc, width, height)
+        _normalize_clip(c, nc, width, height, keep_audio=keep_audio)
         norm.append(nc)
         durs.append(_clip_duration(nc))
     n = len(norm)
@@ -247,10 +288,17 @@ def build_animated_reel(clips, out_path: Path, *, width: int = 1080, height: int
     args: list[str] = []
     for c in norm:
         args += ["-i", str(c)]
-    if graph:
-        args += ["-filter_complex", graph, "-map", vlabel]
+    fc, amap = graph, None
+    if keep_audio:
+        agraph, alabel = _acrossfade_filtergraph(n, t)
+        fc = ";".join(g for g in (graph, agraph) if g)
+        amap = alabel if agraph else "0:a"        # single clip: map the stream, not a link label
+    if fc:
+        args += ["-filter_complex", fc, "-map", vlabel if graph else "0:v"]
     else:
         args += ["-map", "0:v"]
+    if amap:
+        args += ["-map", amap, "-c:a", "aac", "-b:a", "192k"]
     args += ["-c:v", "libx264", "-pix_fmt", "yuv420p", "-r", "30",
              "-profile:v", "high", "-preset", "medium", "-crf", "20", str(out_path)]
     run_ffmpeg(args)

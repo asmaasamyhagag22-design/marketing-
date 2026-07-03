@@ -238,23 +238,29 @@ class _StoryResponse(BaseModel):
     # story is READABLE on the moving images (the owner: "فين القصة؟"). The footage can't tell the
     # story alone; the captions carry it. In the brand's audience language, ~2-5 words each.
     captions: list[str] = []
+    # ONE SPOKEN line per scene (aligned with `scenes`) — Veo 3.1 renders it as NATIVE speech in
+    # the video (the TrendPulse insight: the reel should TALK). Conversational, in the audience's
+    # own dialect, ~5-12 words; complements the caption (never just repeats it).
+    voiceovers: list[str] = []
 
 
 def build_brand_story(
     brief: PosterBrief, profile: Optional[dict], caller: Optional[Any], n: int = 5,
     brand_dna: Optional[Any] = None,
-) -> tuple[Optional[str], list[str], list[str]]:
+) -> tuple[Optional[str], list[str], list[str], list[str]]:
     """LLM director: a coherent SHORT-FILM STORY — `n` text-free scenes forming a narrative ARC
     that EXPRESSES this brand (its real persona, offerings, world), with ONE recurring protagonist,
     so the reel feels like THIS brand and tells a story (the owner: "هو حكاية بتعبّر عن البراند، مش
-    صور ورا بعض"). Returns (character, scenes, captions): `captions` is aligned 1:1 with `scenes`
-    (padded with "") — a SHORT ~2-5-word on-screen line that NARRATES each beat so the story READS
-    on the footage (the owner: "فين القصة؟"); it is design/narrative copy overlaid later, never
-    baked into the image. (None, [], []) when no caller / on failure so the caller falls back to
+    صور ورا بعض"). Returns (character, scenes, captions, voiceovers), all aligned 1:1 with `scenes`
+    (padded with ""): `captions` = a SHORT ~2-5-word on-screen line that NARRATES each beat so the
+    story READS on the footage (the owner: "فين القصة؟"); `voiceovers` = ONE conversational SPOKEN
+    line per scene that Veo 3.1 renders as native speech so the reel TALKS. Both are design/
+    narrative copy (overlaid / spoken), never baked as image text, and both must pass the Ledger
+    gate downstream. (None, [], [], []) when no caller / on failure so the caller falls back to
     deterministic varied scenes. NATURAL colour, TEXT-FREE footage (the brand identity comes
     from the persistent LOGO + the on-brand SUBJECTS, never a colour dye or baked text)."""
     if caller is None:
-        return None, [], []
+        return None, [], [], []
     try:
         from poster.art_director import _persona_lines
         persona = _persona_lines(profile)
@@ -295,24 +301,30 @@ def build_brand_story(
         + (f"\nThe brand's visual language (learned from its real ads — themes/mood, do NOT copy "
            f"text or colour):\n{dna_lines}" if dna_lines else "")
         + f"\nReturn 'character' (the one recurring protagonist), 'scenes' ({n} text-free scenes "
-          f"that tell the brand's story in order), and 'captions' (ONE short on-screen line per "
+          f"that tell the brand's story in order), 'captions' (ONE short on-screen line per "
           f"scene, aligned with 'scenes', ~2-5 words each, in the brand's audience language, that "
-          f"NARRATES that beat so the story reads on the footage. Captions are pure narrative/"
-          f"emotive copy — NO numbers, prices, rankings, superlatives, awards or certifications; "
-          f"NEVER invent a fact)."
+          f"NARRATES that beat so the story reads on the footage), and 'voiceovers' (ONE spoken "
+          f"line per scene, aligned with 'scenes', ~5-12 words, warm and conversational in the "
+          f"audience's OWN dialect — it will be SPOKEN aloud in the video; it must complement the "
+          f"caption, never just repeat it). Captions and voiceovers are pure narrative/emotive "
+          f"copy — NO numbers, prices, rankings, superlatives, awards or certifications; NEVER "
+          f"invent a fact."
     )
     try:
         resp, _u = caller(system, user, _StoryResponse, group_name="reel_story")
         raw_scenes = [str(s or "").strip() for s in (getattr(resp, "scenes", []) or [])]
         raw_caps = [str(c or "").strip() for c in (getattr(resp, "captions", []) or [])]
         raw_caps = (raw_caps + [""] * len(raw_scenes))[: len(raw_scenes)]  # align 1:1 with scenes
-        pairs = [(s, c) for s, c in zip(raw_scenes, raw_caps) if s]        # drop empty scenes WITH their caption
-        scenes = [s for s, _ in pairs]
-        captions = [c for _, c in pairs]
+        raw_vos = [str(v or "").strip() for v in (getattr(resp, "voiceovers", []) or [])]
+        raw_vos = (raw_vos + [""] * len(raw_scenes))[: len(raw_scenes)]
+        trios = [(s, c, v) for s, c, v in zip(raw_scenes, raw_caps, raw_vos) if s]
+        scenes = [s for s, _, _ in trios]                # drop empty scenes WITH their copy lines
+        captions = [c for _, c, _ in trios]
+        voiceovers = [v for _, _, v in trios]
         character = (getattr(resp, "character", "") or "").strip()
-        return (character or None), scenes, captions
+        return (character or None), scenes, captions, voiceovers
     except Exception:
-        return None, [], []
+        return None, [], [], []
 
 
 # Marketing-archetype steering for the reel's GENERATED scene composition (poster parity).

@@ -96,7 +96,7 @@ def append_endcard_to_reel(profile: dict, video_path: str | Path, *, seconds: fl
     """Append a ~`seconds` brand end-card (gentle push-in + fade) to the reel, IN PLACE, with a
     short cross-fade from the last scene. Best-effort: returns False (reel untouched) on failure."""
     try:
-        from reel.motion import _clip_duration
+        from reel.motion import _clip_duration, _has_audio
 
         video_path = Path(video_path)
         if not video_path.is_file():
@@ -115,16 +115,25 @@ def append_endcard_to_reel(profile: dict, video_path: str | Path, *, seconds: fl
         run_ffmpeg(["-loop", "1", "-i", str(png), "-t", f"{seconds:.2f}", "-vf", vf, "-r", str(fps),
                     "-c:v", "libx264", "-pix_fmt", "yuv420p", "-preset", "medium", "-crf", "20", str(card)])
 
-        # xfade the reel -> the end-card
+        # xfade the reel -> the end-card; the reel's AUDIO (Veo voiceover + ambience) must
+        # SURVIVE the append — the silent card gets a padded track and the sound cross-fades
+        # to silence over it (mapping only [v] here used to drop the whole voiceover).
         t = 0.5
         main_dur = _clip_duration(video_path)
         off = max(0.0, main_dur - t)
         out = work / "_with_endcard.mp4"
-        graph = (f"[0:v]settb=AVTB,fps={fps}[a];[1:v]settb=AVTB,fps={fps}[b];"
-                 f"[a][b]xfade=transition=fade:duration={t}:offset={off:.2f}[v]")
-        run_ffmpeg(["-i", str(video_path), "-i", str(card), "-filter_complex", graph, "-map", "[v]",
-                    "-c:v", "libx264", "-pix_fmt", "yuv420p", "-r", str(fps),
-                    "-profile:v", "high", "-preset", "medium", "-crf", "20", str(out)])
+        graph = (f"[0:v]settb=AVTB,fps={fps}[va];[1:v]settb=AVTB,fps={fps}[vb];"
+                 f"[va][vb]xfade=transition=fade:duration={t}:offset={off:.2f}[v]")
+        args = ["-i", str(video_path), "-i", str(card)]
+        maps = ["-map", "[v]"]
+        if _has_audio(video_path):
+            args += ["-f", "lavfi", "-t", f"{seconds:.2f}",
+                     "-i", "anullsrc=channel_layout=stereo:sample_rate=48000"]
+            graph += f";[0:a][2:a]acrossfade=d={t}[aout]"
+            maps += ["-map", "[aout]", "-c:a", "aac", "-b:a", "192k"]
+        run_ffmpeg(args + ["-filter_complex", graph] + maps
+                   + ["-c:v", "libx264", "-pix_fmt", "yuv420p", "-r", str(fps),
+                      "-profile:v", "high", "-preset", "medium", "-crf", "20", str(out)])
         import shutil
         shutil.move(str(out), str(video_path))
         for f in (png, card):

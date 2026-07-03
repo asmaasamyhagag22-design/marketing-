@@ -2905,6 +2905,51 @@ tagline yields an EN hook over AR captions (mixed languages on te.eg — the kno
 needs research/plan copy" item); real MUSIC track; reel gate steps 2/3 (voiceover surfaces +
 `reel/audit.py` trail -> move reel to GATED_SURFACES).
 
+## Done — reel: Veo 3.1 NATIVE VOICEOVER — the reel TALKS (Ledger-gated) (2026-07-03) ✅
+Owner escalation: "البشمهندس قالي البوستر والريل مش صح" + a pointer to TrendPulse's `media/`
+(github.com/Ahmed-Adel-Hekal/TrendPulse). RE-REVIEWED that folder line-by-line (static_post.py +
+video_generator.py + the content_agent that feeds them). The REAL gaps vs ours are 3 specific
+architecture choices, NOT model quality: (1) **his reels TALK** — the Veo prompt carries
+'Voiceover: ... speaking in Egyptian Arabic: "..."' and Veo 3.1 renders NATIVE speech, while we
+were PAYING for Veo's audio and throwing it away (`-an`); (2) his poster is ONE-SHOT designed by a
+Gemini image model WITH the typography inside (nano-banana class renders text well — unlike the
+Imagen that forced our overlay architecture); (3) explicit per-scene cinematography fields
+(camera angle/movement/lighting/pacing). What his has NONE of (our moat, not conceded): zero
+grounding (LLM ideas can claim anything), no scraped brand identity (default `#4f8ef7`!), no
+logo/end-card, no RTL guarantee. Steps ب (one-shot poster pilot, Arabic-fidelity MEASURED first)
++ ج (cinematography fields) queued; THIS entry = step أ (voice), the grounded version of his idea:
+- `art_director._StoryResponse.voiceovers` + `build_brand_story` -> (character, scenes, captions,
+  **voiceovers**), aligned 1:1/padded; the prompt requests ~5-12-word conversational SPOKEN lines
+  in the audience's OWN dialect that COMPLEMENT the captions, same hard-claim ban.
+- BOTH captions and voiceovers pass the Ledger gate (`grounded_captions` reused — drop-to-
+  grounded; a blanked voiceover scene gets "Natural ambient sound only, no speech").
+- `generate._voiceover_clause(text, profile)`: UNIVERSAL dialect from the copy language + ccTLD
+  (Arabic + .eg -> "natural Egyptian Arabic (Masri)"; Arabic elsewhere -> neutral conversational
+  Arabic; else English) — no market hardcoding. Appended to each scene's Veo prompt.
+- AUDIO SURVIVES THE WHOLE CHAIN (was dropped at 3 points): `motion._normalize_clip(keep_audio=)`
+  keeps Veo's native track (silent Ken-Burns fallback clips get an anullsrc pad so the chain never
+  breaks) + `_acrossfade_filtergraph` (pure, the audio twin of the xfade chain, same overlap) +
+  `build_animated_reel(keep_audio=True)` from generate; `endcard.append_endcard_to_reel` now maps
+  audio through the append (it mapped ONLY [v] — the append would have silently killed the whole
+  voiceover) with the silent card padded + acrossfade to silence; the overlay pass already copied
+  audio ("0:a?" -c:a copy).
+- VERIFIED in 3 stages (rule 3): (a) OFFLINE free — sine/silent/sine synthetic clips through
+  assemble+endcard+overlay: speech zones -24.1dB / silent -91dB preserved end-to-end, endcard/
+  overlay keep audio; (b) LIVE PROBE (1 Veo clip): Gemini TRANSCRIBED the audio back —
+  «كل مكالمه بتقربنا لبعض» = the exact requested line, real Masri speech (no guessing);
+  (c) LIVE full web render (POST /api/reel/from-profile, te.eg, 750s): mode=generated, 5 scenes,
+  20.27s, warnings=[] — full-reel transcription = 8 consecutive Egyptian-Arabic narrative
+  utterances («كل ثانيه بتفرق | ... | وللي بعده»), ZERO hard claims (the gate held live), and the
+  visuals intact (WE light-streak DNA scene + caption «عالم جديد بيتفتح.» + logo + end-card).
+  -> `outputs/reels/we_talking_reel.mp4`. Tests: `test_reel_story_captions.py` (voiceover clause
+  dialect/empty, acrossfade graph, 4-tuple alignment). Suite **853 passed** (was 851).
+HONEST NOTES: Veo speaks MORE than the 5 lines (it extends narration in-dialect — sounds natural,
+but it is UNGATED model speech; if a stray claim ever appears the fix is a transcription gate,
+queued with reel audit 2/3); music under the voiceover still open; the EN-hook-over-AR-captions
+mixed-language item unchanged. NEXT: (ب) poster one-shot Gemini-image pilot behind a flag with a
+measured Arabic-text-fidelity gate + vision-QA verbatim check; (ج) per-scene cinematography
+fields in `_StoryResponse` -> Veo prompts.
+
 ## Backlog (each its own measured fix)
 - **Logo-vs-photo on multi-variant seals:** Azza Fahmy emits its seal in several
   color variants; only the selected one is excluded by filename, so a variant can leak

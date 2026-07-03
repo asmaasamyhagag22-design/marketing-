@@ -1,12 +1,13 @@
-"""Hermetic tests for the reel STORY CAPTIONS chain (the owner: "فين القصة؟"):
-schema -> build_brand_story returns aligned captions -> the Ledger gate blanks an unsourced
-hard claim (drop-to-grounded) -> pure caption-window math on the xfade timeline.
-The live Imagen/Veo render is out-of-CI (costs money)."""
+"""Hermetic tests for the reel STORY CAPTIONS + VOICEOVER chain (the owner: "فين القصة؟" +
+the TrendPulse insight "the reel should TALK"): schema -> build_brand_story returns aligned
+captions/voiceovers -> the Ledger gate blanks an unsourced hard claim (drop-to-grounded) ->
+pure caption-window math + the Veo voiceover clause. Live Imagen/Veo is out-of-CI."""
 from __future__ import annotations
 
 from reel.art_director import build_brand_story
-from reel.generate import GeneratedReel, _caption_windows
+from reel.generate import GeneratedReel, _caption_windows, _voiceover_clause
 from reel.grounding import grounded_captions
+from reel.motion import _acrossfade_filtergraph
 
 
 class _Brief:
@@ -24,22 +25,43 @@ class _Resp:
     character = "a young Egyptian engineer"
     scenes = ["Scene one.", "Scene two.", "Scene three."]
     captions = ["لحظة قرب", "شبكة بتقرّبنا"]      # shorter than scenes -> padded with ""
+    voiceovers = ["كل مكالمة بتقرّبنا لبعض"]      # shorter than scenes -> padded with ""
 
 
 def _caller(system, user, schema, group_name=""):
     assert "captions" in user                       # the prompt asks for the captions explicitly
+    assert "voiceovers" in user                     # ... and the spoken lines
     return _Resp(), None
 
 
-def test_build_brand_story_returns_aligned_captions():
-    character, scenes, captions = build_brand_story(_Brief(), {}, _caller, n=3)
+def test_build_brand_story_returns_aligned_captions_and_voiceovers():
+    character, scenes, captions, voiceovers = build_brand_story(_Brief(), {}, _caller, n=3)
     assert character == "a young Egyptian engineer"
-    assert len(scenes) == 3 and len(captions) == 3   # aligned 1:1, padded
+    assert len(scenes) == 3 and len(captions) == 3 and len(voiceovers) == 3  # aligned 1:1, padded
     assert captions == ["لحظة قرب", "شبكة بتقرّبنا", ""]
+    assert voiceovers == ["كل مكالمة بتقرّبنا لبعض", "", ""]
 
 
 def test_build_brand_story_no_caller_returns_empty_captions():
-    assert build_brand_story(_Brief(), {}, None, n=3) == (None, [], [])
+    assert build_brand_story(_Brief(), {}, None, n=3) == (None, [], [], [])
+
+
+def test_voiceover_clause_dialect_is_universal_from_copy_and_cctld():
+    eg = {"source_url": "https://te.eg/"}
+    c = _voiceover_clause("كل مكالمة بتقرّبنا", eg)
+    assert "Egyptian Arabic" in c and '"كل مكالمة بتقرّبنا"' in c    # .eg + Arabic copy -> Masri
+    c2 = _voiceover_clause("أهلاً بكم", {"source_url": "https://brand.com/"})
+    assert "Arabic" in c2 and "Egyptian" not in c2                   # Arabic elsewhere -> neutral
+    c3 = _voiceover_clause("Stay close to what matters", eg)
+    assert "English" in c3                                           # English copy -> English
+    assert "no speech" in _voiceover_clause("", eg)                  # empty -> ambience only
+
+
+def test_acrossfade_graph_mirrors_the_video_xfade_chain():
+    graph, label = _acrossfade_filtergraph(3, 0.5)
+    assert graph.count("acrossfade=d=0.5") == 2 and label == "[aout]"
+    assert "[0:a][1:a]" in graph and "[2:a]" in graph                # chained in clip order
+    assert _acrossfade_filtergraph(1, 0.5) == ("", "[0:a]")          # single clip: no chain
 
 
 def test_grounded_captions_blanks_unsourced_hard_claim_keeps_paraphrase():
