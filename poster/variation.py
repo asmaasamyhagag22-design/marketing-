@@ -45,6 +45,24 @@ _ENERGY = [
     "elegant and refined", "lively and dynamic",
 ]
 
+# COPYWRITING style axes (owner: "طريقة الكتابة نفسها ثابتة" — the design varied per
+# run but every poster's copy kept the SAME rhetorical formula: hook + proof line +
+# chips). These vary the FORM and VOICE of the writing — still design-domain (HOW it
+# is said); the facts inside remain Ledger-gated regardless of form.
+_COPY_FORMS = [
+    "a direct QUESTION that names the reader's real problem or desire",
+    "a bold declarative STATEMENT — short, confident, no filler",
+    "a COMMAND — an imperative telling the reader exactly what to do next",
+    "a YOU-benefit line — speak to the reader about what THEY get",
+    "a CONTRAST line — before/after, old-way/new-way, without/with",
+    "a concrete NUMBER or fact as the lead (ONLY if truly present in the evidence)",
+    "a tiny STORY/scene fragment the reader instantly sees themselves in",
+]
+_COPY_VOICES = [
+    "direct and no-frills", "playful with a light wink", "premium and understated",
+    "urgent and energizing", "warm and human", "expert and reassuring",
+]
+
 
 def build_variation(seed: Optional[int] = None) -> dict:
     """Pick one creative direction. `seed` -> deterministic (reproducible per index);
@@ -55,8 +73,24 @@ def build_variation(seed: Optional[int] = None) -> dict:
         "lighting": rng.choice(_LIGHTING),
         "composition": rng.choice(_COMPOSITIONS),
         "energy": rng.choice(_ENERGY),
+        "copy_form": rng.choice(_COPY_FORMS),
+        "copy_voice": rng.choice(_COPY_VOICES),
         "seed": seed,
     }
+
+
+def copy_style_cue(variation: Optional[dict]) -> str:
+    """The copywriting-style block for the CONCEPT prompt — varies the FORM/VOICE of
+    the writing per run (never the facts). Empty without a variation."""
+    if not variation or not variation.get("copy_form"):
+        return ""
+    return (
+        f"THIS RUN'S COPYWRITING STYLE — the headline must be {variation['copy_form']}; "
+        f"the overall voice of ALL copy is {variation['copy_voice']}. Let this form drive "
+        "the rhythm and structure of the writing — do NOT fall back to the same "
+        "hook-plus-proof formula every run. The FACTS may only come from the evidence; "
+        "the FORM is yours."
+    )
 
 
 def variation_seed_int(variation: Optional[dict]) -> Optional[int]:

@@ -6,7 +6,11 @@ the right engine:
     LOCAL     -> Places          (discovery.discover_competitors)
     ECOMMERCE -> web engine      (pluggable; NullWebDiscoveryEngine by default)
     HYBRID    -> Places + web    (merged, deduped)
-    UNKNOWN   -> skip            (no search)
+    UNKNOWN   -> web engine      (grounded SERP peers when one is wired; the Null
+                 engine returns [] -> standalone, the old skip behavior. MEASURED
+                 need: a B2B services company — no address, no cart — classified
+                 UNKNOWN and got NO discovery at all, so its SWOT could never have
+                 Opportunities/Threats.)
 
 Contract: never raises, never returns None. On a skip, an engine failure, or an
 empty result it returns a valid (possibly empty) PeerMatchResult — the SWOT layer
@@ -112,7 +116,14 @@ def route_discovery(
     base = f"business_type={bt.value} :: {cls.reasoning}"
 
     if bt is BusinessType.UNKNOWN:
-        return _empty([base, "UNKNOWN business type -> competitor search skipped; standalone analysis."])
+        # No physical/ecom signal to route on, but the SERP web engine can still
+        # find grounded category peers (e.g. a B2B services company). The Null
+        # engine yields [] -> the SWOT degrades to standalone exactly as before.
+        peers = _dedup(_safe_web(web_engine, profile, manifest))
+        tail = (f"{len(peers)} web peer(s)" if peers
+                else f"no peers (web engine '{web_engine.name}' wired no results); standalone analysis.")
+        return PeerMatchResult(peers, len(peers) < TARGET_PEERS, 0, 0,
+                               [base, f"UNKNOWN type -> web engine '{web_engine.name}': {tail}"], [])
 
     if bt is BusinessType.LOCAL:
         return _places(profile, places_client, base, **discovery_kwargs)

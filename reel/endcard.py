@@ -129,7 +129,11 @@ def append_endcard_to_reel(profile: dict, video_path: str | Path, *, seconds: fl
         if _has_audio(video_path):
             args += ["-f", "lavfi", "-t", f"{seconds:.2f}",
                      "-i", "anullsrc=channel_layout=stereo:sample_rate=48000"]
-            graph += f";[0:a][2:a]acrossfade=d={t}[aout]"
+            # apad the reel's audio to EXACTLY the probed video length first: if the
+            # AAC track runs a few ms short, acrossfade starves at the join and the
+            # voiceover cuts abruptly instead of fading into the card.
+            graph += (f";[0:a]apad=whole_dur={main_dur:.3f}[a0]"
+                      f";[a0][2:a]acrossfade=d={t}[aout]")
             maps += ["-map", "[aout]", "-c:a", "aac", "-b:a", "192k"]
         run_ffmpeg(args + ["-filter_complex", graph] + maps
                    + ["-c:v", "libx264", "-pix_fmt", "yuv420p", "-r", str(fps),

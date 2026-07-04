@@ -195,20 +195,34 @@ def build_creative_concept(
     variation: Optional[dict] = None,
     max_retries: int = 2,
     enforce_grounding: bool = False,
+    arabic: Optional[bool] = None,
+    research: Any = None,
 ) -> CreativeConcept:
     """One coherent campaign concept + brand-language copy. Arabic brands -> Arabic copy with
     ZERO Latin (validated + regenerated). Never raises.
+
+    `arabic` (optional): the OWNER's explicit output-language choice — True forces Arabic
+    copy (with the full zero-Latin lock), False forces English; None (default) infers from
+    the brand as before. Language is a DESIGN choice (two truth domains); the facts inside
+    the copy stay Ledger-gated regardless of language.
 
     `enforce_grounding` (opt-in; ON in the live pipeline): every falsifiable claim in the
     generated copy must trace to the profile's real evidence via the Evidence Ledger, else
     the line is regenerated (softened) — capped by `max_retries`, then a grounded fallback.
     Off by default so the language-lock layer's unit contract is unchanged."""
-    arabic = brand_is_arabic(profile)
+    if arabic is None:
+        arabic = brand_is_arabic(profile)
     ledger = None
     if enforce_grounding:
         try:
             from grounding import EvidenceLedger
-            ledger = EvidenceLedger.from_profile(profile)
+            # When web RESEARCH is supplied its sourced facts join the evidence, so
+            # a research-derived claim in the copy RESOLVES instead of being blanked.
+            research_dump = None
+            if research is not None:
+                research_dump = (research.model_dump()
+                                 if hasattr(research, "model_dump") else research)
+            ledger = EvidenceLedger.from_profile(profile, research=research_dump)
         except Exception:  # noqa: BLE001 — grounding must never break copy generation
             ledger = None
     if caller is None:
@@ -225,6 +239,30 @@ def build_creative_concept(
         vary = (f"\nThis run's creative angle: {variation.get('mood','')}, "
                 f"{variation.get('energy','')}. Pick a DIFFERENT single_message angle than an "
                 f"obvious one so repeated runs differ.")
+        # Vary the WRITING itself (owner: the copy kept one fixed hook+proof formula):
+        # a per-run rhetorical FORM + VOICE. Design-domain — facts stay Ledger-gated.
+        try:
+            from poster.variation import copy_style_cue
+            cue = copy_style_cue(variation)
+            if cue:
+                vary += "\n" + cue
+        except Exception:  # noqa: BLE001
+            pass
+
+    # FRESH sourced raw material (web research): real facts the homepage may not carry,
+    # each with its source — rotates the copy's CONTENT between runs, not just its look.
+    research_block = ""
+    facts = list(getattr(research, "facts", None) or []) if research is not None else []
+    if facts:
+        lines = []
+        for f in facts[:6]:
+            text = str(getattr(f, "text", "") or (f.get("text") if isinstance(f, dict) else "")).strip()
+            src = str(getattr(f, "source_url", "") or (f.get("source_url") if isinstance(f, dict) else "")).strip()
+            if text:
+                lines.append(f"- {text}" + (f" (source: {src})" if src else ""))
+        if lines:
+            research_block = ("\nFRESH SOURCED FACTS from live web research (REAL — you may "
+                              "build the message on any of them):\n" + "\n".join(lines) + "\n")
 
     lang_rule = (
         "EVERY customer-facing field (headline, subheadline, cta, proof_points) MUST be in "
@@ -269,6 +307,7 @@ def build_creative_concept(
         + (f"What they do: {desc[:400]}\n" if desc else "")
         + (f"Real offerings (raw, may be internal jargon): {', '.join(offers)}\n" if offers else "")
         + (f"Brand tone/style (from its real creatives): {tone_block}\n" if tone_block else "")
+        + research_block
         + vary
         + "\nReturn the structured concept."
     )

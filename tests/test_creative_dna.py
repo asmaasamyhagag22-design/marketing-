@@ -149,3 +149,50 @@ def test_tier2_reputable_portfolio_only_when_brand_named():
     # no usable tokens (short brand) -> tier 2 can't attribute -> rejected (old strict behavior)
     assert not _is_brand_owned(_cand("i", "behance.net", "https://behance.net/x"),
                                "https://te.eg/", social, [])
+
+
+# ---- the brand's OWN designed homepage as identity evidence ----
+
+def _shot_profile(tmp_path):
+    """A profile whose visual points at a real (tiny) homepage screenshot on disk."""
+    shot = tmp_path / "00_homepage_full.png"
+    shot.write_bytes(b"\x89PNG\r\n\x1a\nfakepixels")
+    return {
+        "name": {"value": "SmallBrand"},
+        "source_url": "https://smallbrand.example/",
+        "visual": {"content_images": [], "homepage_screenshot_path": str(shot)},
+    }, shot
+
+
+class _CapturingCaller:
+    """Caller fake that records the images + prompts it was given."""
+    def __init__(self, resp):
+        self.resp, self.images, self.system, self.user = resp, None, "", ""
+
+    def __call__(self, system, user, response_model, group_name="", images=None):
+        self.system, self.user, self.images = system, user, images
+        return self.resp, None
+
+
+def test_homepage_screenshot_feeds_vision_first_with_stock_caveat(tmp_path):
+    profile, shot = _shot_profile(tmp_path)
+    caller = _CapturingCaller(_dna_resp())
+    dna = build_creative_dna(profile, caller=caller,
+                             _harvester=lambda *a, **k: [], _image_fetcher=lambda urls: [])
+    # No ads, no content photos — the designed page alone builds a REAL vision DNA.
+    assert dna.used_vision is True
+    assert dna.homepage_screenshot_used is True
+    assert caller.images and caller.images[0][0] == shot.read_bytes()   # screenshot FIRST
+    # The owner's caveat is in the prompt: embedded photos may be stock/supplier shots.
+    assert "STOCK" in caller.system or "stock" in caller.system
+    assert "HOMEPAGE" in caller.user
+
+
+def test_missing_screenshot_file_degrades_to_honest_stub(tmp_path):
+    profile, shot = _shot_profile(tmp_path)
+    shot.unlink()                                     # the file is gone
+    dna = build_creative_dna(profile, caller=MockCaller({"creative_dna": _dna_resp()}),
+                             _harvester=lambda *a, **k: [], _image_fetcher=lambda urls: [])
+    assert dna.used_vision is False
+    assert dna.homepage_screenshot_used is False
+    assert "honest UNKNOWN" in (dna.note or "")

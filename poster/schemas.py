@@ -143,6 +143,13 @@ class PosterRenderResult(BaseModel):
 class PosterFromProfileRequest(BaseModel):
     profile: dict[str, Any]
     output_format: Literal["poster_1080x1350", "a4_print"] = "poster_1080x1350"
+    # "oneshot": the Gemini image model designs the WHOLE creative (per-run layout
+    # diversity, designed typography) behind a blocking verbatim-text gate, falling
+    # back to "classic" (bg + HTML overlay) on any gate failure.
+    engine: Literal["oneshot", "classic"] = "oneshot"
+    # Output copy language: "ar"/"en" force it (owner's choice); "auto" infers from
+    # the brand (the old behavior).
+    language: Literal["auto", "ar", "en"] = "auto"
 
 
 class PosterFromProfileResponse(BaseModel):
@@ -151,3 +158,10 @@ class PosterFromProfileResponse(BaseModel):
     background: BackgroundImageResult
     render: PosterRenderResult
     image_base64: str
+    # Brand-safety proof (Evidence Ledger): the raw per-asset audit trail + the
+    # client-facing Ad Compliance Sheet derived from it. None when the trail could
+    # not be built — never fabricated.
+    audit: Optional[dict] = None
+    compliance_sheet: Optional[dict] = None
+    # Which engine actually shipped this poster ("oneshot" | "classic").
+    engine_used: str = "classic"

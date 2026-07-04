@@ -1,7 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Download, ExternalLink, History, Loader2, Sparkles } from "lucide-react";
+import {
+  Download,
+  ExternalLink,
+  History,
+  Loader2,
+  ShieldCheck,
+  Sparkles,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -53,6 +60,49 @@ interface BackgroundResult {
   fallback_reason?: string | null;
 }
 
+interface ComplianceRow {
+  copy_field: string;
+  copy_text: string;
+  claim: string | null;
+  status: "verified" | "unverified" | "no_checkable_claims";
+  basis: string;
+  source_url?: string | null;
+  matched_quote?: string | null;
+  source_tier?: string | null;
+  lang_mismatch?: boolean;
+}
+
+interface ComplianceRemediationRow {
+  copy_field: string;
+  original_text: string;
+  claim: string;
+  status: "softened" | "dropped";
+  basis: string;
+  note?: string | null;
+}
+
+interface ComplianceSheet {
+  title: string;
+  asset_type: string;
+  generated_by: string;
+  verdict: "PASS" | "NEEDS_REVIEW";
+  policy?: string | null;
+  coverage?: {
+    covered_surfaces: string[];
+    excluded_surfaces: Record<string, string>;
+  } | null;
+  evidence_count?: number | null;
+  summary: {
+    rows: number;
+    claims_verified: number;
+    claims_unverified: number;
+    fields_without_claims: number;
+    claims_remediated: number;
+  };
+  shipped_copy: ComplianceRow[];
+  remediation: ComplianceRemediationRow[];
+}
+
 interface PosterResponse {
   brief: PosterBrief;
   art_direction: PosterArtDirection;
@@ -65,6 +115,9 @@ interface PosterResponse {
     mime_type: "image/png";
   };
   image_base64: string;
+  audit?: Record<string, unknown> | null;
+  compliance_sheet?: ComplianceSheet | null;
+  engine_used?: "oneshot" | "classic";
 }
 
 interface PosterVersion extends PosterResponse {
@@ -81,6 +134,9 @@ export function PosterStudioCard({ profile }: PosterStudioCardProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
+  const [showCompliance, setShowCompliance] = useState(false);
+  const [engine, setEngine] = useState<"oneshot" | "classic">("oneshot");
+  const [language, setLanguage] = useState<"auto" | "ar" | "en">("auto");
 
   const selected =
     versions.find((version) => version.id === selectedId) ?? versions[0] ?? null;
@@ -88,6 +144,21 @@ export function PosterStudioCard({ profile }: PosterStudioCardProps) {
   const imageSrc = selected
     ? `data:image/png;base64,${selected.image_base64}`
     : null;
+
+  const sheet = selected?.compliance_sheet ?? null;
+
+  function downloadComplianceSheet() {
+    if (!sheet || !selected) return;
+    const blob = new Blob([JSON.stringify(sheet, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = selected.render.filename.replace(/\.png$/i, "") + ".compliance.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
 
   async function generatePoster() {
     setIsGenerating(true);
@@ -102,6 +173,8 @@ export function PosterStudioCard({ profile }: PosterStudioCardProps) {
         body: JSON.stringify({
           profile,
           output_format: "poster_1080x1350",
+          engine,
+          language,
         }),
       });
 
@@ -140,19 +213,56 @@ export function PosterStudioCard({ profile }: PosterStudioCardProps) {
             </p>
           </div>
 
-          <Button onClick={generatePoster} disabled={isGenerating}>
-            {isGenerating ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Generating...
-              </>
-            ) : (
-              <>
-                <Sparkles className="mr-2 h-4 w-4" />
-                Generate Poster
-              </>
-            )}
-          </Button>
+          <div className="flex items-center gap-2">
+            <select
+              value={language}
+              onChange={(e) => setLanguage(e.target.value as "auto" | "ar" | "en")}
+              className="h-8 rounded-lg border bg-background px-2 text-xs font-medium"
+              title="Copy language"
+            >
+              <option value="auto">Auto</option>
+              <option value="ar">عربي</option>
+              <option value="en">English</option>
+            </select>
+            <div className="flex rounded-lg border p-0.5 text-xs" title="Design engine">
+              <button
+                type="button"
+                onClick={() => setEngine("oneshot")}
+                className={`rounded-md px-2.5 py-1.5 font-medium transition-colors ${
+                  engine === "oneshot"
+                    ? "bg-brand-gradient text-white"
+                    : "text-muted-foreground hover:bg-muted"
+                }`}
+              >
+                AI-designed
+              </button>
+              <button
+                type="button"
+                onClick={() => setEngine("classic")}
+                className={`rounded-md px-2.5 py-1.5 font-medium transition-colors ${
+                  engine === "classic"
+                    ? "bg-brand-gradient text-white"
+                    : "text-muted-foreground hover:bg-muted"
+                }`}
+              >
+                Classic
+              </button>
+            </div>
+
+            <Button onClick={generatePoster} disabled={isGenerating}>
+              {isGenerating ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  Generate Poster
+                </>
+              )}
+            </Button>
+          </div>
         </div>
       </CardHeader>
 
@@ -168,8 +278,9 @@ export function PosterStudioCard({ profile }: PosterStudioCardProps) {
             <div className="flex items-center justify-between gap-3">
               <div className="font-medium">Generated brief</div>
               <div className="text-xs text-muted-foreground">
-                {selected.background.provider}
-                {selected.background.model ? ` · ${selected.background.model}` : ""}
+                {selected.engine_used === "oneshot" ? "AI-designed (one-shot)" : "Classic overlay"}
+                {" · "}
+                {selected.background.model ?? selected.background.provider}
                 {selected.background.fallback_used ? " · fallback" : ""}
               </div>
             </div>
@@ -300,7 +411,153 @@ export function PosterStudioCard({ profile }: PosterStudioCardProps) {
               >
                 {showPrompt ? "Hide prompt" : "Show prompt"}
               </Button>
+
+              {sheet && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowCompliance((value) => !value)}
+                >
+                  <ShieldCheck className="mr-2 h-4 w-4" />
+                  {showCompliance ? "Hide compliance" : "Compliance Sheet"}
+                  <span
+                    className={`ml-2 rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                      sheet.verdict === "PASS"
+                        ? "bg-emerald-100 text-emerald-700"
+                        : "bg-amber-100 text-amber-800"
+                    }`}
+                  >
+                    {sheet.verdict === "PASS" ? "PASS" : "REVIEW"}
+                  </span>
+                </Button>
+              )}
             </div>
+
+            {sheet && showCompliance && (
+              <div className="space-y-3 rounded-xl border p-4 text-sm animate-fade-up">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 font-semibold">
+                    <ShieldCheck className="h-4 w-4 text-emerald-600" />
+                    Ad Compliance Sheet
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                        sheet.verdict === "PASS"
+                          ? "bg-emerald-100 text-emerald-700"
+                          : "bg-amber-100 text-amber-800"
+                      }`}
+                    >
+                      {sheet.verdict}
+                    </span>
+                  </div>
+                  <button
+                    onClick={downloadComplianceSheet}
+                    className="inline-flex items-center rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors hover:bg-muted"
+                  >
+                    <Download className="mr-1.5 h-3.5 w-3.5" />
+                    Download sheet
+                  </button>
+                </div>
+
+                <p className="text-xs text-muted-foreground">
+                  Every factual claim in the shipped copy, mapped to its real source —
+                  {" "}
+                  {sheet.summary.claims_verified} verified
+                  {sheet.summary.claims_remediated > 0 &&
+                    ` · ${sheet.summary.claims_remediated} caught & remediated before publish`}
+                  {sheet.summary.claims_unverified > 0 &&
+                    ` · ${sheet.summary.claims_unverified} need review`}
+                  {typeof sheet.evidence_count === "number" &&
+                    ` · checked against ${sheet.evidence_count} evidence items`}
+                  .
+                </p>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[560px] border-collapse text-xs">
+                    <thead>
+                      <tr className="border-b text-left text-muted-foreground">
+                        <th className="py-2 pr-3 font-medium">Copy</th>
+                        <th className="py-2 pr-3 font-medium">Claim</th>
+                        <th className="py-2 pr-3 font-medium">Status</th>
+                        <th className="py-2 font-medium">Basis</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {sheet.shipped_copy.map((row, i) => (
+                        <tr key={`s-${i}`} className="border-b align-top">
+                          <td className="py-2 pr-3">
+                            <div className="font-medium">{row.copy_text}</div>
+                            <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                              {row.copy_field}
+                            </div>
+                          </td>
+                          <td className="py-2 pr-3">{row.claim ?? "—"}</td>
+                          <td className="py-2 pr-3 whitespace-nowrap">
+                            {row.status === "verified" && (
+                              <span className="font-semibold text-emerald-600">✓ Verified</span>
+                            )}
+                            {row.status === "no_checkable_claims" && (
+                              <span className="text-muted-foreground">— No factual claims</span>
+                            )}
+                            {row.status === "unverified" && (
+                              <span className="font-semibold text-amber-600">⚠ Needs review</span>
+                            )}
+                          </td>
+                          <td className="py-2">
+                            {row.basis}
+                            {row.source_url && (
+                              <a
+                                href={row.source_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="ml-1 inline-flex items-center text-primary underline"
+                              >
+                                source
+                                <ExternalLink className="ml-0.5 h-3 w-3" />
+                              </a>
+                            )}
+                            {row.matched_quote && (
+                              <div className="mt-1 rounded bg-muted/50 p-1.5 text-[11px] text-muted-foreground">
+                                “{row.matched_quote}”
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                      {sheet.remediation.map((row, i) => (
+                        <tr key={`r-${i}`} className="border-b bg-amber-50/50 align-top">
+                          <td className="py-2 pr-3">
+                            <div className="font-medium line-through decoration-amber-500/70">
+                              {row.original_text}
+                            </div>
+                            <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                              {row.copy_field}
+                            </div>
+                          </td>
+                          <td className="py-2 pr-3">{row.claim}</td>
+                          <td className="py-2 pr-3 whitespace-nowrap">
+                            <span className="font-semibold text-amber-700">
+                              ↓ {row.status === "dropped" ? "Dropped" : "Softened"}
+                            </span>
+                          </td>
+                          <td className="py-2">{row.basis}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {sheet.coverage && (
+                  <p className="text-[11px] text-muted-foreground">
+                    Covers: {sheet.coverage.covered_surfaces.join("; ")}.
+                    {Object.keys(sheet.coverage.excluded_surfaces ?? {}).length > 0 && (
+                      <> Excluded: {Object.entries(sheet.coverage.excluded_surfaces)
+                        .map(([k, v]) => `${k} (${v})`)
+                        .join("; ")}.</>
+                    )}
+                  </p>
+                )}
+              </div>
+            )}
 
             {showPrompt && (
               <div className="space-y-3 rounded border bg-muted/30 p-3 text-xs">

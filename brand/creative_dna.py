@@ -49,6 +49,10 @@ class BrandCreativeDNA(BaseModel):
     harvested_total: int = 0
     kept_after_brand_filter: int = 0
     site_images_used: int = 0
+    # True when the vision call ALSO saw the brand's own designed homepage screenshot —
+    # identity BY CONSTRUCTION (the page is the brand's designed surface), available even
+    # for brands with no published ads and stock-only content photos.
+    homepage_screenshot_used: bool = False
 
     layout_philosophy: str = ""        # how they arrange a creative overall
     composition_patterns: str = ""     # framing, balance, focal points, grid habits
@@ -224,6 +228,26 @@ def _brand_photo_urls(profile: dict, limit: int) -> list[str]:
 # 2) Build
 # ---------------------------------------------------------------------
 
+def _homepage_screenshot(profile: Any) -> Optional[tuple[str, bytes, str]]:
+    """(path, bytes, mime) of the scrape's homepage full-page screenshot, or None.
+
+    LOCAL file only (written by our own scraper — no network, no SSRF surface). The
+    page AS DESIGNED is brand identity BY CONSTRUCTION; content photos may be stock/
+    supplier shots (the caveat lives in the vision prompt). Never raises."""
+    try:
+        v = profile.get("visual") if isinstance(profile, dict) else getattr(profile, "visual", None)
+        p = (v or {}).get("homepage_screenshot_path") if isinstance(v, dict) \
+            else getattr(v, "homepage_screenshot_path", None)
+        if not p:
+            return None
+        path = Path(str(p))
+        if path.is_file() and 0 < path.stat().st_size <= 12_000_000:
+            return (str(path), path.read_bytes(), "image/png")
+    except Exception:  # noqa: BLE001
+        pass
+    return None
+
+
 def build_creative_dna(
     profile: dict[str, Any],
     *,
@@ -266,15 +290,22 @@ def build_creative_dna(
     site_used = sum(1 for u in creative_urls if u not in brand_ads)
     images = _image_fetcher(creative_urls) if creative_urls else []
     seen_urls = [u for (u, _b, _m) in images]
+
+    # The brand's OWN designed HOMEPAGE (screenshot saved by the scrape) — identity BY
+    # CONSTRUCTION (the page is the brand's designed surface: layout, colour application,
+    # type in-situ, imagery TREATMENT), available even when no ad passes the filter and
+    # the content photos are stock. Shown FIRST; the prompt tells the model to read the
+    # DESIGN SYSTEM from it and to DISCOUNT embedded stock/supplier photo content.
+    shot = _homepage_screenshot(profile)
     _counts = dict(harvested_total=harvested_total, kept_after_brand_filter=kept,
-                   site_images_used=site_used)
+                   site_images_used=site_used, homepage_screenshot_used=bool(shot))
 
     if caller is None:
         return BrandCreativeDNA(
             business_name=name, used_vision=False, references_seen=seen_urls,
             note="no caller: profile-only DNA stub (no vision)", **_counts,
         )
-    if not images:
+    if not images and not shot:
         return BrandCreativeDNA(
             business_name=name, used_vision=False, references_seen=[],
             note="no brand-owned creatives passed the filter: no visual DNA built (honest UNKNOWN)",
@@ -303,18 +334,29 @@ def build_creative_dna(
         "- do_list / dont_list: concrete rules for a NEW on-brand poster.\n"
         "Judge ONLY what you SEE. Make no factual claims about the company. Be specific to THIS "
         "brand — never a generic design-textbook answer."
+        + ("\nIMPORTANT — the FIRST image is the brand's OWN designed HOMEPAGE (full-page "
+           "screenshot): read its DESIGN SYSTEM — layout, colour application, typography "
+           "in-situ, spacing, imagery TREATMENT. CAUTION: photos EMBEDDED inside that page "
+           "may be generic STOCK or a supplier's product shots that do NOT represent the "
+           "brand — NEVER infer imagery_style from an embedded photo's subject matter; "
+           "infer only from how the page USES and TREATS imagery (crops, overlays, framing, "
+           "the ratio of photo to graphic)." if shot else "")
     )
+    labels = (["[HOMEPAGE] the brand's OWN designed homepage (screenshot)"] if shot else []) \
+        + list(seen_urls)
     user = (
         f"Brand: {name}\n"
         + (f"Profile (verbatim, for context only):\n{persona}\n" if persona else "")
-        + f"\nReal creatives shown to you (by index 0..{len(seen_urls) - 1}):\n"
-        + "\n".join(f"[{i}] {u}" for i, u in enumerate(seen_urls))
+        + f"\nImages shown to you (by index 0..{len(labels) - 1}):\n"
+        + "\n".join(f"[{i}] {u}" for i, u in enumerate(labels))
     )
 
     try:
+        vision_images = ([(shot[1], shot[2])] if shot else []) \
+            + [(b, m) for (_u2, b, m) in images]
         resp, _u = caller(
             system, user, _DnaResponse, group_name="creative_dna",
-            images=[(b, m) for (_u2, b, m) in images],
+            images=vision_images,
         )
     except Exception as exc:  # noqa: BLE001
         return BrandCreativeDNA(

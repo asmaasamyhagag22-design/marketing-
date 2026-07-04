@@ -42,6 +42,7 @@ export function ReelStudioCard({ profile }: ReelStudioCardProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [language, setLanguage] = useState<"auto" | "ar" | "en">("auto");
 
   const selected =
     versions.find((v) => v.id === selectedId) ?? versions[0] ?? null;
@@ -56,7 +57,8 @@ export function ReelStudioCard({ profile }: ReelStudioCardProps) {
       const response = await fetch(`${API_BASE}/reel/from-profile`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ profile }), // n_scenes: backend default (5 — the calmer pacing)
+        // n_scenes: backend default (5 — the calmer pacing)
+        body: JSON.stringify({ profile, language }),
       });
       if (!response.ok) {
         const text = await response.text();
@@ -89,19 +91,31 @@ export function ReelStudioCard({ profile }: ReelStudioCardProps) {
               transitions). No website-photo slideshow. Each run varies.
             </p>
           </div>
-          <Button onClick={generateReel} disabled={isGenerating}>
-            {isGenerating ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Generating…
-              </>
-            ) : (
-              <>
-                <Sparkles className="mr-2 h-4 w-4" />
-                Generate Reel
-              </>
-            )}
-          </Button>
+          <div className="flex items-center gap-2">
+            <select
+              value={language}
+              onChange={(e) => setLanguage(e.target.value as "auto" | "ar" | "en")}
+              className="h-8 rounded-lg border bg-background px-2 text-xs font-medium"
+              title="Captions + voiceover language"
+            >
+              <option value="auto">Auto</option>
+              <option value="ar">عربي</option>
+              <option value="en">English</option>
+            </select>
+            <Button onClick={generateReel} disabled={isGenerating}>
+              {isGenerating ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Generating…
+                </>
+              ) : (
+                <>
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  Generate Reel
+                </>
+              )}
+            </Button>
+          </div>
         </div>
       </CardHeader>
 

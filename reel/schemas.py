@@ -104,6 +104,9 @@ class ReelFromProfileRequest(BaseModel):
     profile: dict[str, Any]
     # 5 calmer ~4s shots => ~17s reel (was 3 short shots => ~4.5s frantic reel).
     n_scenes: int = Field(default=5, ge=2, le=6)
+    # Output language for captions + spoken voiceover: "ar"/"en" force it (owner's
+    # choice); "auto" infers from the brand's audience (the old behavior).
+    language: Literal["auto", "ar", "en"] = "auto"
 
 
 class ReelFromProfileResponse(BaseModel):

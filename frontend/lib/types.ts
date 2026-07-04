@@ -353,10 +353,49 @@ export interface JobResultResponse {
 
 export type SwotMode = "competitive" | "standalone";
 
+export type ClaimStrength =
+  | "validated"
+  | "directional_not_validated"
+  | "internally_supported";
+
 export interface SwotItem {
   text: string;
   citation: string[];
   evidence: string;
+  claim_strength?: ClaimStrength;
+}
+
+export interface TowsStrategy {
+  type: "SO" | "ST" | "WO" | "WT";
+  title: string;
+  description: string;
+  anchors: string[];
+  claim_strength: ClaimStrength;
+  source: "rules" | "llm" | "llm_text_replaced";
+}
+
+export interface TowsPriorityAction {
+  rank: number;
+  action: string;
+  horizon: "now" | "next" | "later";
+  anchors: string[];
+  rationale: string;
+}
+
+export interface TowsResult {
+  strategies: TowsStrategy[];
+  priority_actions: TowsPriorityAction[];
+  posture: string;
+  notes: string[];
+}
+
+export interface CompetitorBrief {
+  name: string;
+  website?: string | null;
+  rating?: number | null;
+  review_count?: number | null;
+  source: "places" | "web";
+  why_selected: string;
 }
 
 export interface SwotResponse {
@@ -367,4 +406,6 @@ export interface SwotResponse {
   threats: SwotItem[];
   notes: string[];
   competitor_count: number;
+  competitors?: CompetitorBrief[];
+  tows?: TowsResult | null;
 }

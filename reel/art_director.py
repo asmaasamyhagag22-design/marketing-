@@ -242,25 +242,77 @@ class _StoryResponse(BaseModel):
     # the video (the TrendPulse insight: the reel should TALK). Conversational, in the audience's
     # own dialect, ~5-12 words; complements the caption (never just repeats it).
     voiceovers: list[str] = []
+    # A FRESH scroll-stopping opener for the reel's first seconds (2-5 words). Without it the
+    # overlay hook was the profile's VERBATIM tagline — the same opening line on every reel of
+    # the brand (the owner's "طريقة الكتابة ثابتة"). Narrative copy, Ledger-gated downstream.
+    hook: str = ""
+    # ONE narrator VOICE for the whole reel (gender + age + tone, matching the protagonist/
+    # audience). Without it Veo cast a random voice PER SCENE — a male voice reading lines
+    # written in feminine forms, switching mid-reel (the owner: "واحد بيتكلم بصيغة أنثى").
+    narrator: str = ""
+
+
+def _diverse_offering_sample(profile, brief, k: int = 6) -> list[str]:
+    """Up to `k` offerings from the FULL profile, deduped by name prefix so one product
+    family can't dominate the sample (nahdi: the brief's 3 slots were ALL coffee capsules
+    -> the reel became a coffee ad). Falls back to the brief's own offerings."""
+    names: list[str] = []
+    try:
+        for o in (profile or {}).get("offerings") or []:
+            n = o.get("name") if isinstance(o, dict) else getattr(o, "name", None)
+            n = (n or {}).get("value") if isinstance(n, dict) else getattr(n, "value", n)
+            if n and str(n).strip():
+                names.append(str(n).strip())
+    except Exception:  # noqa: BLE001
+        names = []
+    if not names:
+        names = [o for o in (getattr(brief, "offerings", None) or []) if o]
+    seen: set[str] = set()
+    out: list[str] = []
+    for n in names:
+        key = " ".join(n.split()[:2]).lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(n)
+        if len(out) >= k:
+            break
+    return out
+
+
+def _copy_language_label(language: str) -> str:
+    """The on-screen caption language instruction for the story prompt. 'auto' keeps the
+    old behavior (the brand's audience language, inferred by the model)."""
+    return {"ar": "Egyptian Arabic (عامية مصرية راقية)",
+            "en": "English"}.get(language, "the brand's audience language")
+
+
+def _spoken_language_label(language: str) -> str:
+    """The voiceover language/dialect instruction. 'auto' -> the audience's own dialect."""
+    return {"ar": "natural spoken Egyptian Arabic (Masri)",
+            "en": "natural conversational English"}.get(language, "the audience's OWN dialect")
 
 
 def build_brand_story(
     brief: PosterBrief, profile: Optional[dict], caller: Optional[Any], n: int = 5,
     brand_dna: Optional[Any] = None,
+    language: str = "auto",
 ) -> tuple[Optional[str], list[str], list[str], list[str]]:
     """LLM director: a coherent SHORT-FILM STORY — `n` text-free scenes forming a narrative ARC
     that EXPRESSES this brand (its real persona, offerings, world), with ONE recurring protagonist,
     so the reel feels like THIS brand and tells a story (the owner: "هو حكاية بتعبّر عن البراند، مش
-    صور ورا بعض"). Returns (character, scenes, captions, voiceovers), all aligned 1:1 with `scenes`
-    (padded with ""): `captions` = a SHORT ~2-5-word on-screen line that NARRATES each beat so the
-    story READS on the footage (the owner: "فين القصة؟"); `voiceovers` = ONE conversational SPOKEN
-    line per scene that Veo 3.1 renders as native speech so the reel TALKS. Both are design/
-    narrative copy (overlaid / spoken), never baked as image text, and both must pass the Ledger
-    gate downstream. (None, [], [], []) when no caller / on failure so the caller falls back to
-    deterministic varied scenes. NATURAL colour, TEXT-FREE footage (the brand identity comes
+    صور ورا بعض"). Returns (character, scenes, captions, voiceovers, hook), lists aligned 1:1 with
+    `scenes` (padded with ""): `captions` = a SHORT ~2-5-word on-screen line that NARRATES each beat
+    so the story READS on the footage (the owner: "فين القصة؟"); `voiceovers` = ONE conversational
+    SPOKEN line per scene that Veo 3.1 renders as native speech so the reel TALKS; `hook` = a FRESH
+    2-5-word opener (replaces the verbatim-tagline hook that repeated on every reel); `narrator` =
+    the ONE voice for the whole reel (gender/age/tone — Veo otherwise casts a random voice PER
+    SCENE, switching gender mid-reel). All are design/narrative copy (overlaid / spoken), never
+    baked as image text, and all must pass the Ledger gate downstream. (None, [], [], [], "", "")
+    when no caller / on failure so the caller falls back to deterministic varied scenes. NATURAL colour, TEXT-FREE footage (the brand identity comes
     from the persistent LOGO + the on-brand SUBJECTS, never a colour dye or baked text)."""
     if caller is None:
-        return None, [], [], []
+        return None, [], [], [], "", ""
     try:
         from poster.art_director import _persona_lines
         persona = _persona_lines(profile)
@@ -284,31 +336,59 @@ def build_brand_story(
         f"clips. Write a {n}-scene narrative ARC (a hook that grabs in the first second, a build, "
         f"an emotional peak, then a brand pay-off) that authentically expresses THIS brand's world "
         f"and what it does for its people. ONE recurring PROTAGONIST (from the brand's real "
-        f"audience) carries all the scenes so it reads as one story. Ground EVERYTHING in the brand "
-        f"persona below — its real offerings, value, audience and tone; be CREATIVE but NEVER leave "
-        f"the brand's personality. " + culture +
+        f"audience) carries all the scenes so it reads as one story. "
+        "IDENTITY ANCHOR (non-negotiable): the story's WORLD must be UNMISTAKABLY what this "
+        "business IS — a viewer who misses every caption must still recognize the business's "
+        "kind from the scenes alone (a pharmacy reel lives in the world of health, care and "
+        "wellbeing — not a coffee ad). The FIRST and LAST scenes especially must place the "
+        "viewer firmly in that world. The 'Real offerings' list is a SAMPLE of individual "
+        "products; treat them as supporting props ONLY, NEVER as the story's subject — the "
+        "subject is what the business as a whole does for people ('What the business IS' "
+        "below). Ground EVERYTHING in the brand persona — its real value, audience and tone; "
+        "be CREATIVE but NEVER leave the brand's world. " + culture +
         "Each scene = a vivid, photoreal, TEXT-FREE b-roll moment (people, place, action, light, "
         "emotion). NATURAL, true-to-life colour with WARM realistic human skin tones — absolutely "
         "NO single-colour tint, monochrome wash or coloured-gel lighting on people or scene. "
         "ABSOLUTELY NO text, words, letters, numbers, logos or signage in any image. Each scene 1-2 "
         "sentences, concrete and shootable."
     )
+    desc = ""
+    try:
+        d = (profile or {}).get("description")
+        desc = str((d or {}).get("value") if isinstance(d, dict) else (d or ""))[:350]
+    except Exception:
+        desc = ""
+    # A DIVERSE offerings sample from the FULL profile — the brief caps at 3, and on a
+    # marketplace those 3 can all be one product family (nahdi: 3x coffee capsules ->
+    # the whole reel became a coffee ad). Dedup by name prefix, spread across kinds.
+    sample = _diverse_offering_sample(profile, brief)
     user = (
         f"Brand: {brief.business_name}\nCategory: {brief.category}\n"
-        f"Real offerings: {'; '.join([o for o in (brief.offerings or [])[:6] if o]) or (brief.category or '')}\n"
+        + (f"What the business IS (the story's world MUST live here): {desc}\n" if desc else "")
+        + f"Real offerings (a product SAMPLE — props only, not the subject): "
+          f"{'; '.join(sample) or (brief.category or '')}\n"
         f"Tone: {brief.tone or 'premium'}\n"
         + (f"\nBrand persona (verbatim from the real website):\n{persona}\n" if persona else "")
         + (f"\nThe brand's visual language (learned from its real ads — themes/mood, do NOT copy "
            f"text or colour):\n{dna_lines}" if dna_lines else "")
         + f"\nReturn 'character' (the one recurring protagonist), 'scenes' ({n} text-free scenes "
           f"that tell the brand's story in order), 'captions' (ONE short on-screen line per "
-          f"scene, aligned with 'scenes', ~2-5 words each, in the brand's audience language, that "
-          f"NARRATES that beat so the story reads on the footage), and 'voiceovers' (ONE spoken "
-          f"line per scene, aligned with 'scenes', ~5-12 words, warm and conversational in the "
-          f"audience's OWN dialect — it will be SPOKEN aloud in the video; it must complement the "
-          f"caption, never just repeat it). Captions and voiceovers are pure narrative/emotive "
-          f"copy — NO numbers, prices, rankings, superlatives, awards or certifications; NEVER "
-          f"invent a fact."
+          f"scene, aligned with 'scenes', ~2-5 words each, in {_copy_language_label(language)}, "
+          f"that NARRATES that beat so the story reads on the footage), and 'voiceovers' (ONE "
+          f"spoken line per scene, aligned with 'scenes', ~5-12 words, warm and conversational "
+          f"in {_spoken_language_label(language)} — it will be SPOKEN aloud in the video), "
+          f"'narrator' (ONE voice for the WHOLE reel: gender + age + tone, matching the "
+          f"protagonist — e.g. 'a warm adult Egyptian woman, reassuring'), and 'hook' (ONE "
+          f"fresh scroll-stopping OPENER for the reel's first seconds, 2-5 words, in "
+          f"{_copy_language_label(language)} — NOT the brand's tagline verbatim; a new line "
+          f"each time). THE VOICEOVER LINES ARE ONE CONTINUOUS NARRATION: each line flows "
+          f"from the previous one — a single narrator telling ONE story, never 5 unrelated "
+          f"statements. Grammatical GENDER must be consistent with the narrator in every "
+          f"line INCLUDING the hook (Arabic: never mix مذكر/مؤنث forms); address the viewer "
+          f"in NEUTRAL/plural "
+          f"forms. Hook, captions and voiceovers are pure narrative/emotive copy — NO "
+          f"numbers, prices, rankings, superlatives, awards or certifications; NEVER invent "
+          f"a fact."
     )
     try:
         resp, _u = caller(system, user, _StoryResponse, group_name="reel_story")
@@ -322,9 +402,11 @@ def build_brand_story(
         captions = [c for _, c, _ in trios]
         voiceovers = [v for _, _, v in trios]
         character = (getattr(resp, "character", "") or "").strip()
-        return (character or None), scenes, captions, voiceovers
+        hook = (getattr(resp, "hook", "") or "").strip()
+        narrator = (getattr(resp, "narrator", "") or "").strip()
+        return (character or None), scenes, captions, voiceovers, hook, narrator
     except Exception:
-        return None, [], [], []
+        return None, [], [], [], "", ""
 
 
 # Marketing-archetype steering for the reel's GENERATED scene composition (poster parity).

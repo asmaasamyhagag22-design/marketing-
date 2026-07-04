@@ -116,12 +116,23 @@ def build_match_criteria(profile, *,
 
 def _get(obj, name, default=None):
     """Read attr or dict key; unwrap a `.value` wrapper if present (your
-    BusinessProfile uses name.value etc.)."""
+    BusinessProfile uses name.value etc.).
+
+    Handles BOTH profile shapes: the OBJECT profile (EvidencedField with a .value
+    attribute — the CLI path) and the SERIALIZED dict profile (the web-API path,
+    where an EvidencedField arrives as {"value": ..., "evidence": [...]}). The
+    dict shape was NOT unwrapped before, so on the web path the whole evidence
+    dict leaked into the Places text query as its repr — a garbage query that
+    made discovery return 0 usable peers (measured root cause of the always-
+    standalone, no-Threats/no-Opportunities SWOT in the web app)."""
     val = getattr(obj, name, None)
     if val is None and isinstance(obj, dict):
         val = obj.get(name)
     if val is None:
         return default
+    if isinstance(val, dict) and "value" in val:
+        inner = val.get("value")
+        return inner if inner is not None else default
     inner = getattr(val, "value", None)
     return inner if inner is not None else val
 
@@ -129,11 +140,14 @@ def _get(obj, name, default=None):
 def _offering_name(o) -> str:
     """The offering's display name only — never str(o) on a model (which serializes
     the whole Offering object, leaking field names + evidence + URLs into the query).
-    Handles all three offering shapes: plain string, dict, or Offering object."""
+    Handles all three offering shapes: plain string, dict, or Offering object —
+    and BOTH EvidencedField shapes (object .value / serialized {"value": ...})."""
     if isinstance(o, str):
         return o.strip()
     name = o.get("name") if isinstance(o, dict) else getattr(o, "name", None)
-    inner = getattr(name, "value", None)   # tolerate an EvidencedField-wrapped name
+    if isinstance(name, dict) and "value" in name:      # serialized EvidencedField
+        name = name.get("value")
+    inner = getattr(name, "value", None)                # object EvidencedField
     name = inner if inner is not None else name
     return str(name).strip() if name else ""
 
@@ -352,3 +366,57 @@ def _is_self(cand, profile) -> bool:
         if normalize_text(str(own_name)) == normalize_text(cand.name):
             return True
     return False
+
+
+def find_subject_places(profile, client, *, max_results: int = 8):
+    """Find the SUBJECT's own Places listing (rating / review volume / price tier).
+
+    Without it the matrix's Places dimensions have no subject value, every Places gap
+    is "n/a", and the SWOT can never emit a market-position THREAT ("your review volume
+    is below the peer average") — the measured root cause of the always-empty Threats
+    quadrant on the web path.
+
+    Grounded matching only: the candidate must match the subject by WEBSITE registrable
+    domain (strongest signal — it's the subject's own site) or by exact normalized name.
+    No fuzzy guessing: grounding the SWOT in someone ELSE's ratings would be worse than
+    UNKNOWN (rule 4). Returns the matched Candidate or None; never raises.
+    """
+    if client is None or profile is None:
+        return None
+    try:
+        name = _get(profile, "name", default=None)
+        if not name or not str(name).strip():
+            return None
+        address = _get(profile, "physical_address", default=None)
+        query = f"{name} {address}".strip() if address else str(name)
+        candidates = client.search_text(query, max_results=max_results) or []
+
+        from .peer_match import _domain, normalize_text
+        own_site = (_get(profile, "website", default=None)
+                    or _get(profile, "url", default=None)
+                    or _get(profile, "source_url", default=None))
+        own_domain = _domain(own_site) if own_site else None
+        if own_domain:
+            for c in candidates:
+                if c.website and _domain(c.website) == own_domain:
+                    return c
+        norm_name = normalize_text(str(name))
+        for c in candidates:
+            if c.name and normalize_text(c.name) == norm_name:
+                return c
+
+        # Cross-script fallback (measured on Qasr Elkbabgi): the query IS the subject's
+        # exact scraped name, but the Places listings are in another SCRIPT (Latin
+        # profile name vs Arabic «قصر الكبابجي») with no website — so both grounded
+        # matches above miss a true positive. Accept ONLY when >=2 returned candidates
+        # are all the SAME brand (mutual containment of normalized names — branches/
+        # variants of one business); ambiguity (different businesses) -> None, honest.
+        named = [c for c in candidates if c.name and normalize_text(c.name)]
+        if len(named) >= 2:
+            cores = [normalize_text(c.name) for c in named]
+            core = min(cores, key=len)
+            if len(core) >= 4 and all(core in n for n in cores):
+                return max(named, key=lambda c: c.review_count or 0)
+        return None
+    except Exception:  # noqa: BLE001 — a lookup failure must never break the SWOT
+        return None

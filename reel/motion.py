@@ -251,13 +251,23 @@ def _normalize_clip(in_clip: Path, out_clip: Path, width: int, height: int,
     if not keep_audio:
         run_ffmpeg(["-i", str(in_clip), "-vf", vf, "-an"] + enc + [str(out_clip)])
         return
+    # The clip's audio must cover EXACTLY its video length: a Veo clip's AAC track
+    # runs a few ms short of its video (encoder priming) and those deltas ACCUMULATE
+    # across the acrossfade chain — the voiceover drifted then cut out mid-reel
+    # (measured user bug). NOTE: `apad`/`anullsrc` + `-shortest` is NOT the fix — the
+    # muxer interleaves padded audio AHEAD of the video EOF signal and the clip
+    # OVERSHOOTS by seconds (measured: a 4.0s clip came out 5.6-7.9s). Pad to the
+    # PROBED duration explicitly instead.
+    in_dur = _clip_duration(in_clip)
     if _has_audio(in_clip):
-        run_ffmpeg(["-i", str(in_clip), "-vf", vf] + enc
+        run_ffmpeg(["-i", str(in_clip), "-vf", vf,
+                    "-af", f"apad=whole_dur={in_dur:.3f}"] + enc
                    + ["-c:a", "aac", "-ar", "48000", "-ac", "2", "-b:a", "192k", str(out_clip)])
-    else:  # pad a silent stereo track so the audio graph downstream is uniform
+    else:  # pad a silent stereo track (exact length) so the audio graph stays uniform
         run_ffmpeg(["-i", str(in_clip),
-                    "-f", "lavfi", "-i", "anullsrc=channel_layout=stereo:sample_rate=48000",
-                    "-vf", vf, "-map", "0:v", "-map", "1:a", "-shortest"] + enc
+                    "-f", "lavfi", "-t", f"{in_dur:.3f}",
+                    "-i", "anullsrc=channel_layout=stereo:sample_rate=48000",
+                    "-vf", vf, "-map", "0:v", "-map", "1:a"] + enc
                    + ["-c:a", "aac", "-b:a", "192k", str(out_clip)])
 
 
@@ -298,7 +308,11 @@ def build_animated_reel(clips, out_path: Path, *, width: int = 1080, height: int
     else:
         args += ["-map", "0:v"]
     if amap:
-        args += ["-map", amap, "-c:a", "aac", "-b:a", "192k"]
+        # Audio is now always >= video (each clip apad-ded to its probed duration),
+        # and the excess is trailing SILENCE — -shortest trims it to the video length
+        # exactly. Safe here: both streams are FINITE (the apad+infinite-source muxer
+        # overshoot race doesn't apply).
+        args += ["-map", amap, "-c:a", "aac", "-b:a", "192k", "-shortest"]
     args += ["-c:v", "libx264", "-pix_fmt", "yuv420p", "-r", "30",
              "-profile:v", "high", "-preset", "medium", "-crf", "20", str(out_path)]
     run_ffmpeg(args)

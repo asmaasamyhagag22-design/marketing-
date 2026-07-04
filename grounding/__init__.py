@@ -16,6 +16,7 @@ the blocking gate + regenerate loop is a later, separate step.
 """
 from __future__ import annotations
 
+from .compliance import build_compliance_sheet
 from .ledger import (
     AuditReport,
     Claim,
@@ -36,4 +37,5 @@ __all__ = [
     "AuditReport",
     "LedgerEntry",
     "extract_claims",
+    "build_compliance_sheet",
 ]

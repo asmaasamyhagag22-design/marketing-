@@ -1,0 +1,52 @@
+"""Hermetic tests for the ONE-SHOT poster pilot (step ب): the design-brief prompt carries the
+gated copy verbatim with the exact-render + no-extra-text contract, and the FIDELITY GATE's
+pure logic (Arabic-aware normalization + verbatim match + extra-text flagging). The live
+Gemini-image render + OCR are measured by benchmark/measure_oneshot_poster.py (costs money)."""
+from __future__ import annotations
+
+from poster.oneshot import _norm_text, build_oneshot_prompt, text_fidelity
+
+
+def test_norm_text_folds_arabic_variants_for_verbatim_compare():
+    assert _norm_text("بتقرّبنا") == _norm_text("بتقربنا")          # shadda stripped
+    assert _norm_text("مكالمة") == _norm_text("مكالمه")             # ة == ه (renderer variance)
+    assert _norm_text("أهلاً بكم!") == _norm_text("اهلا بكم")       # alef unify + tanween + punct
+    assert _norm_text("على") == _norm_text("علي")                   # ى == ي
+    assert _norm_text("Stay Close.") == _norm_text("stay close")    # case + punctuation
+    assert _norm_text("كلام") != _norm_text("سلام")                 # real word changes DON'T fold
+
+
+def test_oneshot_prompt_carries_copy_verbatim_with_the_contract():
+    copy = {"headline": "المسافات بينا كلام", "subheadline": "خدمات تقرّبك", "cta": "اعرف أكتر"}
+    p = build_oneshot_prompt(copy, brand_name="WE", palette_names="deep purple, magenta",
+                             dna_lines="light streaks over glowing cityscapes", rtl=True,
+                             has_logo=True)
+    for text in copy.values():
+        assert f'"{text}"' in p                                      # verbatim, quoted
+    assert "EXACTLY, character for character" in p                   # the exact-render contract
+    assert "right-to-left" in p and "SHAPED AND CONNECTED" in p      # Arabic clause
+    assert "REAL logo" in p and "do not redraw" in p                 # logo passed as image, unchanged
+    assert "NO other text" in p                                      # no invented labels
+    assert "deep purple" in p and "light streaks" in p               # brand grounding
+
+
+def test_oneshot_prompt_skips_empty_fields_and_optional_clauses():
+    p = build_oneshot_prompt({"headline": "Stay Close", "subheadline": "", "cta": ""})
+    assert 'HEADLINE (dominant, hero typography): "Stay Close"' in p
+    assert "SUBHEADLINE" not in p and "CALL-TO-ACTION" not in p
+    assert "right-to-left" not in p and "REAL logo" not in p
+
+
+def test_text_fidelity_verbatim_pass_garble_fail_extra_flagged():
+    expected = {"headline": "المسافات بينا كلام", "cta": "اعرف أكتر"}
+    ok = text_fidelity(expected, ["المسافات بينا كلام", "اعرف اكتر"])
+    assert ok["fields"] == {"headline": True, "cta": True} and ok["rate"] == 1.0
+    assert ok["extra_lines"] == []
+
+    garbled = text_fidelity(expected, ["المسافات كلام", "اعرف أكتر"])   # dropped word -> FAIL
+    assert garbled["fields"]["headline"] is False and garbled["rate"] == 0.5
+
+    extra = text_fidelity(expected, ["المسافات بينا كلام", "اعرف أكتر", "عرض خاص %50"])
+    assert extra["rate"] == 1.0 and extra["extra_lines"] == ["عرض خاص %50"]  # invented label flagged
+
+    assert text_fidelity({}, ["anything"])["rate"] == 1.0            # nothing to verify

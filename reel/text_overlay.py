@@ -315,12 +315,17 @@ def overlay_timeline_on_video(bg_path: Path, seq_pattern: str, out_path: Path, *
         f"[1:v]format=rgba,fps={fps}[tx];"
         f"[bg][tx]overlay=0:0:format=auto,format=yuv420p[v]"
     )
+    # NO -shortest here: the PNG sequence's frame count comes from a PROBED duration,
+    # so it can run 1-2 frames short of the video — -shortest then truncated the END
+    # of the Veo voiceover (measured user bug: "الصوت بيقطع"). The overlay's default
+    # eof_action=repeat holds the last text frame; the video input governs the length
+    # and the audio is copied through in full.
     run_ffmpeg([
         "-i", str(bg_path),
         "-framerate", str(fps), "-start_number", "0", "-i", seq_pattern,
         "-filter_complex", fc, "-map", "[v]", "-map", "0:a?",
         "-c:v", "libx264", "-pix_fmt", "yuv420p", "-profile:v", "high",
-        "-preset", "medium", "-crf", "20", "-c:a", "copy", "-shortest",
+        "-preset", "medium", "-crf", "20", "-c:a", "copy",
         "-movflags", "+faststart", str(out_path),
     ])
     return out_path
@@ -371,7 +376,8 @@ def add_kinetic_text_to_reel(profile: dict[str, Any], video_path: str | Path, *,
                              fps: int = 30,
                              captions: Optional[list[tuple[str, float, float]]] = None,
                              footage_s: Optional[float] = None,
-                             include_outro: bool = True) -> bool:
+                             include_outro: bool = True,
+                             hook_override: Optional[str] = None) -> bool:
     """Overlay the kinetic caption layer (HOOK + optional per-scene STORY captions + CTA)
     onto a finished motion/generated reel, IN PLACE. When a brand END-CARD was appended,
     pass `footage_s` (the pre-end-card duration) and `include_outro=False`: the beats stay
@@ -385,7 +391,9 @@ def add_kinetic_text_to_reel(profile: dict[str, Any], video_path: str | Path, *,
         if not video_path.is_file():
             return False
         brief = build_reel_brief(profile)
-        headline = (brief.headline or "").strip()
+        # The story's FRESH Ledger-gated opener wins; the verbatim brief headline is
+        # the fallback (it repeated the SAME tagline on every reel of a brand).
+        headline = ((hook_override or "").strip() or (brief.headline or "").strip())
         cta = (brief.cta_text or "").strip()
         name = (brief.business_name or "").strip()
         cap_texts = [str(c[0] or "").strip() for c in (captions or [])]

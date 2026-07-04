@@ -44,6 +44,7 @@ def create_reel_from_profile(request: ReelFromProfileRequest) -> ReelFromProfile
         from reel.generate import build_brand_generated_reel
         res = build_brand_generated_reel(
             profile, caller=None, out_path=out, n_scenes=request.n_scenes, music_path=None,
+            language=request.language,
             log=lambda *_a: None,
         )
         caption_beats = list(getattr(res, "caption_beats", []) or [])
@@ -92,6 +93,7 @@ def create_reel_from_profile(request: ReelFromProfileRequest) -> ReelFromProfile
             profile, out, captions=caption_beats or None,
             footage_s=(footage_s if endcard_ok else None),
             include_outro=not endcard_ok,
+            hook_override=(getattr(res, "hook", "") if mode == "generated" else ""),
         ):
             warnings.append("Rendered without the kinetic text overlay.")
     except Exception:  # noqa: BLE001

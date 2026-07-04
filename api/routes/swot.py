@@ -7,13 +7,20 @@ re-scrape and no job-store changes are needed here).
 Degrades to a STANDALONE (profile-only) SWOT when no competitors are found —
 never empty, never fabricated (matches the CLI behavior).
 
-Note: this path does not re-scrape competitor websites, so the competitor
-*scraped* dimensions stay UNKNOWN and the comparison leans on Places signals.
-A fuller comparison (re-scraping peers via the run's manifest) is a later slice.
+This path does not re-scrape competitor websites (too slow for a sync request),
+so the competitor *scraped* dimensions stay UNKNOWN — the comparison leans on the
+Places dimensions. To make those comparable the route now:
+  1. looks up the SUBJECT's own Places listing (`find_subject_places`) so
+     rating / review-volume gaps get real verdicts -> market-position THREATS;
+  2. extracts grounded review THEMES from the peers' real Places reviews
+     (complaints -> Threats; unmet needs -> Opportunities) — the customer voice;
+  3. synthesizes a TOWS layer (strategies + priority actions) from the cited SWOT.
+Each step degrades safely to today's behavior when its data/key is absent.
 """
 from __future__ import annotations
 
-from typing import Any, List
+import dataclasses
+from typing import Any, List, Optional
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
@@ -29,6 +36,17 @@ class SwotItemModel(BaseModel):
     text: str
     citation: List[str]
     evidence: str
+    claim_strength: str = "internally_supported"
+
+
+class CompetitorBrief(BaseModel):
+    """WHO the compared competitors are — the owner must be able to see them."""
+    name: str
+    website: Optional[str] = None
+    rating: Optional[float] = None
+    review_count: Optional[int] = None
+    source: str = "places"          # "places" | "web"
+    why_selected: str = ""
 
 
 class SwotResponse(BaseModel):
@@ -39,11 +57,16 @@ class SwotResponse(BaseModel):
     threats: List[SwotItemModel]
     notes: List[str]
     competitor_count: int
+    competitors: List[CompetitorBrief] = []
+    # TOWS synthesis (strategies + ranked priority actions + posture), derived
+    # from the cited SWOT items. None only if synthesis itself failed.
+    tows: Optional[dict] = None
 
 
 def _items(items) -> List[dict]:
     return [
-        {"text": i.text, "citation": list(i.citation), "evidence": i.evidence}
+        {"text": i.text, "citation": list(i.citation), "evidence": i.evidence,
+         "claim_strength": getattr(i, "claim_strength", "internally_supported")}
         for i in items
     ]
 
@@ -52,7 +75,8 @@ def _items(items) -> List[dict]:
 def swot_from_profile(req: SwotFromProfileRequest) -> SwotResponse:
     try:
         from competitor import (
-            PlacesClient, route_discovery, build_matrix, synthesize_swot,
+            AnthropicThemeExtractor, PlacesClient, build_matrix, build_tows,
+            find_subject_places, route_discovery, synthesize_swot,
         )
         from competitor.swot import unique_insight_texts
         from competitor.web_discovery import default_web_engine
@@ -70,9 +94,71 @@ def swot_from_profile(req: SwotFromProfileRequest) -> SwotResponse:
         # (SERPER_API_KEY/...); None otherwise -> router uses NullWebDiscoveryEngine.
         result = route_discovery(profile, places_client=client,
                                  web_engine=default_web_engine())
-        matrix = build_matrix(profile, result.competitors, subject_name="You")
-        swot = synthesize_swot(matrix, themes=[],
+
+        # The subject's OWN Places listing: without it every Places gap is "n/a"
+        # and Threats can never fire on this path (the measured root cause of the
+        # always-empty Threats quadrant). Grounded match only; None on no-match.
+        subject_places = find_subject_places(profile, client) if client else None
+
+        # LIGHT peer dimensions: web/SERP peers carry no Places data, and the full
+        # scraper is minutes/peer — so fetch each peer's homepage over plain HTTP
+        # and derive the cheap comparable dims (social/CTA/WhatsApp/booking).
+        # Failures leave that peer's cells UNKNOWN; never fabricated.
+        from competitor.lite_scrape import lite_peer_dims
+
+        matrix = build_matrix(profile, result.competitors, subject_name="You",
+                              subject_places=subject_places,
+                              scrape_fn=lite_peer_dims)
+
+        # Customer voice: grounded review themes from the peers' real Places
+        # reviews (never raises; [] without an Anthropic key or enough reviews).
+        themes = []
+        try:
+            extractor = AnthropicThemeExtractor()
+            themes = extractor(result.competitors)
+        except Exception:
+            themes = []
+
+        swot = synthesize_swot(matrix, themes=themes,
                                unique_insights=unique_insight_texts(profile))
+        if subject_places is not None:
+            swot.notes.append(
+                f"subject Places listing matched: {subject_places.name} "
+                f"(rating={subject_places.rating}, reviews={subject_places.review_count})")
+        # Surface WHY discovery found what it found (was swallowed before — an
+        # empty/standalone result was undiagnosable from the response).
+        swot.notes.extend(f"discovery: {n}" for n in (getattr(result, "notes", None) or []))
+
+        # TOWS synthesis (team BI-platform layer, Ledger-gated). Deterministic
+        # without an LLM; Gemini crafts the strategy text when available.
+        tows_dict = None
+        try:
+            caller = None
+            try:
+                from business_profile.llm import default_caller
+                caller = default_caller(strong=False)
+            except Exception:
+                caller = None
+            tows = build_tows(swot, caller=caller, profile=profile)
+            tows_dict = dataclasses.asdict(tows)
+        except Exception:
+            tows_dict = None
+
+        competitors = []
+        for c in result.competitors:
+            cand = getattr(c, "candidate", None)
+            sel = getattr(c, "selection", None)
+            if cand is None:
+                continue
+            competitors.append(CompetitorBrief(
+                name=str(getattr(cand, "name", "") or "?"),
+                website=getattr(cand, "website", None),
+                rating=getattr(cand, "rating", None),
+                review_count=getattr(cand, "review_count", None),
+                source="web" if getattr(cand, "rating", None) is None
+                              and not getattr(cand, "formatted_address", None) else "places",
+                why_selected=str(getattr(sel, "why_selected", "") or ""),
+            ))
 
         return SwotResponse(
             mode=swot.mode,
@@ -82,6 +168,8 @@ def swot_from_profile(req: SwotFromProfileRequest) -> SwotResponse:
             threats=_items(swot.threats),
             notes=list(swot.notes),
             competitor_count=len(result.competitors),
+            competitors=competitors,
+            tows=tows_dict,
         )
     except HTTPException:
         raise

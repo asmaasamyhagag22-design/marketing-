@@ -41,7 +41,8 @@ def create_poster_from_profile(
         except Exception:
             caller = None
 
-        res = generate_poster(request.profile, caller=caller)
+        res = generate_poster(request.profile, caller=caller, engine=request.engine,
+                              language=request.language)
 
         art_direction = PosterArtDirection(
             provider_prompt=res.prompt,
@@ -62,7 +63,7 @@ def create_poster_from_profile(
             source_fields_used=["business_name", "category", "offerings", "palette", "logo"],
         )
         background = BackgroundImageResult(
-            provider="vertex-imagen",
+            provider="gemini-oneshot" if res.engine == "oneshot" else "vertex-imagen",
             model=res.model_used,
             prompt=res.prompt,
             background_path=res.background_path,
@@ -77,12 +78,25 @@ def create_poster_from_profile(
             poster_path=res.poster_path, filename=res.filename,
             width=res.width, height=res.height,
         )
+        # Brand-safety proof: expose the audit trail + the client-facing Ad
+        # Compliance Sheet (was previously written to disk only). Best-effort —
+        # a sheet failure must never block the poster.
+        compliance_sheet = None
+        try:
+            from grounding.compliance import build_compliance_sheet
+            compliance_sheet = build_compliance_sheet(res.audit)
+        except Exception:  # noqa: BLE001
+            compliance_sheet = None
+
         return PosterFromProfileResponse(
             brief=res.brief,
             art_direction=art_direction,
             background=background,
             render=render,
             image_base64=res.image_base64,
+            audit=res.audit,
+            compliance_sheet=compliance_sheet,
+            engine_used=res.engine,
         )
 
     except HTTPException:

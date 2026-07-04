@@ -23,21 +23,33 @@ class GeneratedReel(NamedTuple):
     """The assembled footage + the story captions timed on ITS timeline (for the overlay layer)."""
     path: Path
     caption_beats: list  # (text, t_in, t_out) tuples, in footage seconds
+    # The story's FRESH Ledger-gated opener ("" -> the overlay falls back to the brief
+    # headline, the old always-the-tagline behavior).
+    hook: str = ""
 
 
 _AR_RE = re.compile(r"[؀-ۿ]")
 
 
-def _voiceover_clause(text: str, profile: dict) -> str:
+def _voiceover_clause(text: str, profile: dict, language: str = "auto",
+                      narrator: str = "") -> str:
     """The spoken-audio instruction for one Veo 3.1 scene (the TrendPulse insight — Veo renders
     NATIVE speech from the prompt, so the reel talks at no extra cost). The dialect is derived
     UNIVERSALLY from the copy language + the brand's ccTLD (no vertical/market hardcoding):
-    Arabic + .eg -> Egyptian Arabic; Arabic elsewhere -> natural conversational Arabic. Empty
-    text -> ambience only."""
+    Arabic + .eg -> Egyptian Arabic; Arabic elsewhere -> natural conversational Arabic. An
+    explicit `language` override ("ar"/"en" — the owner's choice) forces the dialect even when
+    the caption text alone is ambiguous. Empty text -> ambience only."""
     text = (text or "").strip()
     if not text:
         return "Natural ambient sound only, no speech."
-    if _AR_RE.search(text):
+    # ONE consistent narrator across every scene: without this Veo cast a random
+    # voice PER CLIP — a male voice reading feminine-form lines, switching mid-reel
+    # (the owner: "واحد بيتكلم بصيغة أنثى، كلام مش مترابط").
+    voice = (narrator or "a warm, confident voice").strip().rstrip(".")
+    continuity = " The SAME single narrator voice continues across all scenes of this video."
+    if language == "en":
+        return f'Voiceover: {voice}, speaking in English: "{text}".{continuity}'
+    if language == "ar" or _AR_RE.search(text):
         url = ""
         try:
             url = str(profile.get("source_url") or "").lower() if isinstance(profile, dict) else ""
@@ -45,8 +57,8 @@ def _voiceover_clause(text: str, profile: dict) -> str:
             url = ""
         dialect = ("natural Egyptian Arabic (Masri)" if ".eg" in url
                    else "natural, warm conversational Arabic")
-        return f'Voiceover: a warm, confident voice speaking in {dialect}: "{text}".'
-    return f'Voiceover: a warm, confident voice speaking in English: "{text}".'
+        return f'Voiceover: {voice}, speaking in {dialect}: "{text}".{continuity}'
+    return f'Voiceover: {voice}, speaking in English: "{text}".{continuity}'
 
 
 def _caption_windows(durs: list[float], transition_s: float = 0.5) -> list[tuple[float, float]]:
@@ -133,6 +145,7 @@ def _onbrand_context(profile: dict, brief: Any) -> str:
 def build_brand_generated_reel(
     profile: dict, *, caller: Any = None, out_path: str | Path, brand_dna: Any = None,
     n_scenes: int = 5, music_path: Optional[str] = None, width: int = 1080, height: int = 1920,
+    language: str = "auto",
     log=print,
 ) -> GeneratedReel:
     """Generate fresh, on-brand, TEXT-FREE scenes (text-to-image) then motion-animate them.
@@ -171,11 +184,11 @@ def build_brand_generated_reel(
                 log(f"[gen] brand DNA loaded ({len(getattr(brand_dna, 'references_seen', []) or [])} real ads)")
         except Exception:
             brand_dna = None
-    character, story, captions, voiceovers = build_brand_story(brief, profile, caller, n=n_scenes,
-                                                               brand_dna=brand_dna)
-    # Captions AND voiceovers are LLM copy on CUSTOMER-FACING surfaces (displayed / SPOKEN) ->
-    # gate both (drop-to-grounded): a line carrying an unsourced falsifiable claim is BLANKED
-    # (that scene shows no caption / gets ambience instead of speech).
+    character, story, captions, voiceovers, hook, narrator = build_brand_story(
+        brief, profile, caller, n=n_scenes, brand_dna=brand_dna, language=language)
+    # Captions, voiceovers AND the hook are LLM copy on CUSTOMER-FACING surfaces (displayed /
+    # SPOKEN) -> gate all (drop-to-grounded): a line carrying an unsourced falsifiable claim is
+    # BLANKED (no caption / ambience instead of speech / hook falls back to the brief headline).
     from reel.grounding import grounded_captions
     for label, lines in (("caption", captions), ("voiceover", voiceovers)):
         if any(lines):
@@ -184,6 +197,8 @@ def build_brand_generated_reel(
             if blanked:
                 log(f"[gen] {blanked} {label}(s) blanked (unsourced hard claim)")
             lines[:] = kept
+    if hook:
+        hook = (grounded_captions(profile, [hook])[0] or "").strip()
     cont = f" The SAME recurring person appears in this scene: {character}." if character else ""
     if story:
         scene_prompts = [f"{s}{cont}" for s in story][:n_scenes]
@@ -204,10 +219,23 @@ def build_brand_generated_reel(
     work.mkdir(parents=True, exist_ok=True)
     provider = VertexImagenProvider()
     ctx = _onbrand_context(profile, brief)
+    # The brand's learned VISUAL LANGUAGE must reach the IMAGE prompts too — it only
+    # steered the story text before, so the stills came out generically cinematic
+    # (owner: "هوية البراند مش ظاهرة"). THEMES/imagery only, never colour fields —
+    # a colour instruction is what produced the purple-dye people (documented).
+    dna_style = ""
+    if brand_dna is not None:
+        bits = [str(getattr(brand_dna, f, "") or "").strip()
+                for f in ("imagery_style", "motifs")]
+        bits = [b if isinstance(b, str) else ", ".join(map(str, b)) for b in bits if b]
+        if bits:
+            dna_style = ("\nThe brand's visual world (match its themes and imagery, "
+                         "NOT its colours or any text): " + "; ".join(bits)[:400])
     stills: list[tuple[int, str]] = []       # (scene index, still path) — a failed scene must not
     for i, prompt in enumerate(scene_prompts):  # shift the later scenes off their story/caption
         try:
-            p = provider.generate(f"{prompt}\n{ctx}", out_dir=str(work), aspect_ratio="9:16")
+            p = provider.generate(f"{prompt}{dna_style}\n{ctx}", out_dir=str(work),
+                                  aspect_ratio="9:16")
             stills.append((i, str(p)))
             log(f"[gen] scene {i + 1}/{n_scenes} ok")
         except Exception as exc:  # noqa: BLE001 — skip a failed scene, keep the rest
@@ -229,7 +257,8 @@ def build_brand_generated_reel(
         veo_prompt = ((story[si] + " " if (story and si < len(story)) else "")
                       + "Gentle, natural cinematic motion — the person and scene move naturally, "
                       "subtle camera move; photoreal, absolutely NO text, letters or logos. "
-                      + _voiceover_clause(voiceovers[si] if si < len(voiceovers) else "", profile))
+                      + _voiceover_clause(voiceovers[si] if si < len(voiceovers) else "", profile,
+                                          language=language, narrator=narrator))
         try:
             veo.generate(veo_prompt, out_path=clip, duration_s=d, width=width, height=height,
                          reference_image=still)
@@ -258,4 +287,4 @@ def build_brand_generated_reel(
             Path(c).unlink()
         except OSError:
             pass
-    return GeneratedReel(reel, caption_beats)
+    return GeneratedReel(reel, caption_beats, hook)

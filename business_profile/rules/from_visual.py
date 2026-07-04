@@ -164,6 +164,25 @@ def _content_images(manifest: ScrapeManifest, limit: int = 12) -> list[str]:
     return out[:limit]
 
 
+def _homepage_screenshot_path(manifest: ScrapeManifest) -> Optional[str]:
+    """LOCAL path of the homepage full-page screenshot. The page AS DESIGNED is brand
+    identity BY CONSTRUCTION — the always-available visual-identity evidence for the
+    BrandCreativeDNA vision step (content photos may be stock/supplier shots). None
+    when the scrape has no homepage screenshot on disk."""
+    pages = getattr(manifest, "pages", None) or []
+    if not pages:
+        return None
+    p = getattr(pages[0], "screenshot_full_path", None) \
+        or getattr(pages[0], "screenshot_viewport_path", None)
+    try:
+        from pathlib import Path
+        if p and Path(p).is_file():
+            return str(p)
+    except Exception:  # noqa: BLE001
+        pass
+    return None
+
+
 def _hero_image_url(manifest: ScrapeManifest) -> Optional[str]:
     """Best PHOTOGRAPHIC reference image from manifest.images_of_interest.
 
@@ -247,6 +266,7 @@ def extract_visual(manifest: ScrapeManifest) -> VisualIdentitySummary:
         logo_url=logo_url,
         hero_image_url=_hero_image_url(manifest),
         content_images=_content_images(manifest),
+        homepage_screenshot_path=_homepage_screenshot_path(manifest),
 
         # v0.2 logo fields.
         primary_logo=primary_logo,

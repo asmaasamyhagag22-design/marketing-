@@ -1,0 +1,190 @@
+"""One-shot poster ENGINE wiring (poster/pipeline._try_oneshot) — hermetic.
+
+Pins the pilot's promise now that it's a pipeline mode:
+  * a render ships ONLY when the character-exact fidelity gate passes (rate 1.0);
+  * a failing render is retried, then the engine yields None (-> classic fallback);
+  * no multimodal caller / no Vertex project -> engine skipped (None) without a call;
+  * the shipped result carries the audit trail + engine='oneshot' + the gated copy.
+"""
+from __future__ import annotations
+
+from pathlib import Path
+
+import pytest
+
+import poster.oneshot as oneshot
+import poster.pipeline as pipeline
+from poster.concept import CreativeConcept
+from poster.from_profile import build_poster_brief
+
+
+_PROFILE = {
+    "name": {"value": "Daturial", "evidence": [
+        {"block_id": "b", "page_url": "https://daturial.example/", "quote": "Daturial"}]},
+    "languages": ["en"],
+    "tagline": {"value": "Autonomous AI Systems", "evidence": [
+        {"block_id": "b2", "page_url": "https://daturial.example/", "quote": "Autonomous AI Systems"}]},
+    "offerings": [],
+}
+
+
+def _concept() -> CreativeConcept:
+    return CreativeConcept(
+        audience="enterprises", single_message="msg", core_benefit="benefit",
+        emotional_tone="confident", visual_idea="modern tech scene",
+        proof_points=[], headline="Autonomous AI Systems", subheadline="", cta="Book a Meeting")
+
+
+class _VisionCaller:
+    """Caller-protocol fake for the OCR read-back."""
+    def __init__(self, lines):
+        self._lines = lines
+
+    def __call__(self, system, user, response_model, group_name="", images=None):
+        if "lines" in getattr(response_model, "model_fields", {}):
+            return response_model(lines=list(self._lines)), None   # the OCR read-back
+        return response_model(), None                              # permissive QA verdict
+
+
+def _run(monkeypatch, tmp_path, *, seen_lines, gen_fail=False, caller=None):
+    monkeypatch.setenv("GOOGLE_CLOUD_PROJECT", "test-project")
+    calls = {"gen": 0}
+
+    def fake_generate(prompt, out_path, **kw):
+        calls["gen"] += 1
+        if gen_fail:
+            raise RuntimeError("model down")
+        Path(out_path).write_bytes(b"\x89PNG fake")
+        return Path(out_path)
+
+    monkeypatch.setattr(oneshot, "generate_oneshot_poster", fake_generate)
+    # The art-critic step is exercised separately; keep these unit runs OCR-only.
+    import poster.pipeline as _pl
+    monkeypatch.setattr(_pl, "poster_vision_qa",
+                        lambda *a, **k: _pl.PosterQAVerdict(overall_pass=True, checked=True,
+                                                            score=8, reason="stub"))
+    brief = build_poster_brief(_PROFILE, headline_override="Autonomous AI Systems")
+    brief = brief.model_copy(update={"cta_text": "Book a Meeting"})
+    res = pipeline._try_oneshot(
+        _PROFILE, brief, _concept(), None,
+        caller if caller is not None else _VisionCaller(seen_lines),
+        arabic=False, audit={"asset_type": "poster", "final_copy": {"fields": []}},
+        out_dir=str(tmp_path), variation=None, max_retries=1, log=lambda m: None)
+    return res, calls
+
+
+def test_fidelity_pass_ships_with_audit_and_engine_tag(monkeypatch, tmp_path):
+    res, calls = _run(monkeypatch, tmp_path,
+                      seen_lines=["Autonomous AI Systems", "Book a Meeting"])
+    assert res is not None
+    assert res.engine == "oneshot"
+    assert res.qa.overall_pass and res.qa.checked
+    assert res.audit is not None
+    assert calls["gen"] == 1
+    assert Path(res.poster_path).exists()
+
+
+def test_garbled_render_never_ships_and_is_retried(monkeypatch, tmp_path):
+    # OCR sees an ALTERED headline every attempt -> gate fails -> None (classic fallback).
+    res, calls = _run(monkeypatch, tmp_path,
+                      seen_lines=["Autonomous AI System", "Book a Meeting"])  # dropped 's'... altered word
+    assert res is None
+    assert calls["gen"] == 2          # retried max_retries+1 times, none shipped
+
+
+def test_generation_failure_degrades_to_none(monkeypatch, tmp_path):
+    res, calls = _run(monkeypatch, tmp_path, seen_lines=[], gen_fail=True)
+    assert res is None
+    assert calls["gen"] == 2
+
+
+def test_skipped_without_caller_or_project(monkeypatch, tmp_path):
+    brief = build_poster_brief(_PROFILE)
+    res = pipeline._try_oneshot(
+        _PROFILE, brief, _concept(), None, None,   # no caller
+        arabic=False, audit=None, out_dir=str(tmp_path), variation=None,
+        max_retries=1, log=lambda m: None)
+    assert res is None
+
+    monkeypatch.delenv("GOOGLE_CLOUD_PROJECT", raising=False)
+    res2 = pipeline._try_oneshot(
+        _PROFILE, brief, _concept(), None, _VisionCaller([]),
+        arabic=False, audit=None, out_dir=str(tmp_path), variation=None,
+        max_retries=1, log=lambda m: None)
+    assert res2 is None
+
+
+def test_painted_brand_name_on_objects_never_ships(monkeypatch, tmp_path):
+    """The owner caught the model painting the brand onto an invented delivery ROBOT
+    (a false visual claim). The corner logo reads as 1-2 lines; MORE brand-name lines
+    mean painted branding -> that render is rejected and retried."""
+    res, calls = _run(monkeypatch, tmp_path, seen_lines=[
+        "Autonomous AI Systems", "Book a Meeting",
+        "Daturial",              # corner logo (allowed)
+        "DATURIAL",              # painted on a device
+        "daturial delivery",     # painted on a vehicle
+    ])
+    assert res is None
+    assert calls["gen"] == 2
+
+
+def test_garbled_invented_labels_never_ship(monkeypatch, tmp_path):
+    """Invented product packaging shows up as several junk extra lines -> rejected."""
+    res, calls = _run(monkeypatch, tmp_path, seen_lines=[
+        "Autonomous AI Systems", "Book a Meeting",
+        "XKZPro Formula", "Vitamix Plus", "Glow Serum 3000",   # 3 fake product labels
+    ])
+    assert res is None
+    assert calls["gen"] == 2
+
+
+def test_prompt_carries_concept_and_integrity_mandates():
+    from poster.oneshot import build_oneshot_prompt
+    p = build_oneshot_prompt(
+        {"headline": "H", "subheadline": "S", "cta": "C"},
+        brand_name="Daturial", single_message="delegate whole workflows to AI workers",
+        visual_idea="one confident manager and a single glowing AI colleague")
+    assert "THE CONCEPT" in p and "delegate whole workflows" in p
+    assert "THE SCENE" in p and "glowing AI colleague" in p
+    assert "ONE clear focal subject" in p
+    assert "TEXT CONTRAST" in p
+    assert "BRAND INTEGRITY" in p and "NEVER paint" in p
+    assert "UNLABELED" in p
+
+
+def test_real_product_props_allow_their_real_labels_but_not_invented_ones(monkeypatch, tmp_path):
+    """The owner's radical fix: attach the brand's REAL product photos as props — a real
+    label ('بانادول اكسترا') is correct BY CONSTRUCTION and allowed; invented labels stay
+    junk. Also a real bag carrying the brand name correctly is allowed."""
+    import poster.pipeline as _pl
+    monkeypatch.setattr(_pl, "_gather_product_props",
+                        lambda profile, caller, log: ([(b"img", "image/jpeg")],
+                                                      ["Panadol Extra 500mg", "Daturial Bag"]))
+    res, calls = _run(monkeypatch, tmp_path, seen_lines=[
+        "Autonomous AI Systems", "Book a Meeting",
+        "Panadol Extra 500mg",       # the attached product's REAL label -> allowed
+        "Daturial Bag",              # brand on a REAL asset -> allowed (correct writing)
+        "Daturial",                  # corner logo -> allowed (within the 2-line budget)
+    ])
+    assert res is not None and res.engine == "oneshot"
+
+    # Invented labels (not on any attached asset) still reject the render.
+    monkeypatch.setattr(_pl, "_gather_product_props",
+                        lambda profile, caller, log: ([(b"img", "image/jpeg")],
+                                                      ["Panadol Extra 500mg"]))
+    res2, calls2 = _run(monkeypatch, tmp_path, seen_lines=[
+        "Autonomous AI Systems", "Book a Meeting",
+        "XKZ Formula", "GlowMax 3000", "Vitaboost Pro",   # 3 invented labels
+    ])
+    assert res2 is None
+
+
+def test_prompt_product_props_mode_vs_unlabeled_mode():
+    from poster.oneshot import build_oneshot_prompt
+    with_products = build_oneshot_prompt({"headline": "H"}, brand_name="B", n_products=2)
+    assert "REAL PRODUCT PROPS" in with_products
+    assert "COMPLETELY UNLABELED" not in with_products
+    assert "belong to this business's real world" in with_products
+    without = build_oneshot_prompt({"headline": "H"}, brand_name="B", n_products=0)
+    assert "COMPLETELY UNLABELED" in without
+    assert "REAL PRODUCT PROPS" not in without

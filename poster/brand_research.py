@@ -237,15 +237,19 @@ def research_brand(
 
 def _is_reputable_source(url: str) -> bool:
     """A web claim is only acceptable if its source is REPUTABLE — a snippet from a random
-    aggregator/listicle/competitor-data site is SEO junk, not proof. Reuses the discovery
-    aggregator denylist; on any failure it does NOT over-reject (the URL already passed the
-    search-returned + prefer_safe gates)."""
+    aggregator/listicle/competitor-data site is SEO junk, not proof. Checks the discovery
+    JUNK denylist ONLY (_AGGREGATOR_HOSTS) — deliberately NOT the peer filter's media set:
+    reuters/forbes-class outlets are not competitors, but they ARE reputable evidence
+    (splitting the two semantics is what keeps 'الأكبر' kept-from-reuters / dropped-from-g2).
+    On any failure it does NOT over-reject (the URL already passed the search-returned +
+    prefer_safe gates)."""
     if not url or not url.startswith("http"):
         return False
     try:
-        from competitor.web_discovery import _is_aggregator
+        from competitor.web_discovery import _AGGREGATOR_HOSTS, _registrable
         from urllib.parse import urlparse
-        return not _is_aggregator(urlparse(url).hostname)
+        reg = _registrable(urlparse(url).hostname)
+        return not (reg and reg in _AGGREGATOR_HOSTS)
     except Exception:
         return True
 

@@ -32,12 +32,27 @@ def _patch_places(monkeypatch, sentinel):
     return calls
 
 
-def test_unknown_skips_all_engines(monkeypatch):
+def test_unknown_never_touches_places_and_null_web_stays_standalone(monkeypatch):
     calls = _patch_places(monkeypatch, PeerMatchResult([_fake_peer()], False, 1, 1))
     res = route_discovery(_profile(category="other"))
     assert calls["n"] == 0                       # Places not called
-    assert res.competitors == []                 # nothing fabricated
-    assert any("skipped" in n for n in res.notes)
+    assert res.competitors == []                 # Null web engine -> nothing fabricated
+    assert any("standalone" in n for n in res.notes)
+
+
+def test_unknown_routes_to_web_engine(monkeypatch):
+    # A B2B services company (no address, no cart) classifies UNKNOWN — it must
+    # still get grounded SERP peers when a web engine is wired (was: hard skip ->
+    # its SWOT could never have Opportunities/Threats).
+    calls = _patch_places(monkeypatch, PeerMatchResult([_fake_peer()], False, 1, 1))
+    class FakeWeb:
+        name = "fake-web"
+        def discover(self, profile, manifest=None):
+            return [_fake_peer(place_id="w1"), _fake_peer(place_id="w1")]  # dup
+    res = route_discovery(_profile(category="other"), web_engine=FakeWeb())
+    assert calls["n"] == 0                       # still never Places
+    assert len(res.competitors) == 1             # real web peer, deduped
+    assert any("web engine" in n for n in res.notes)
 
 
 def test_local_uses_places(monkeypatch):

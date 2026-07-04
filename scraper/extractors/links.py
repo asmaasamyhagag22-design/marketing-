@@ -119,7 +119,14 @@ def extract_links_from_html(
         else:
             category = LinkCategory.EXTERNAL
 
-        key = (resolved, page_url)
+        # Per-page dedup by (href, ANCHOR): the same href legitimately appears with
+        # DIFFERENT anchors — e.g. a nav "Contact" link AND a "Book a Meeting" CTA
+        # button both pointing at /contact/. Keying on href alone kept only the first
+        # (the nav item) and silently dropped the CTA before classification ever saw
+        # it -> cta_candidates=0 on sites whose CTA shares a nav href (MEASURED on
+        # daturial.com). True duplicates (same href + same text, e.g. a footer repeat)
+        # still collapse.
+        key = (resolved, page_url, anchor_short.lower())
         if key in seen_keys:
             continue
         seen_keys.add(key)

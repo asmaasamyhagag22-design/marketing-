@@ -26,24 +26,30 @@ class _Resp:
     scenes = ["Scene one.", "Scene two.", "Scene three."]
     captions = ["لحظة قرب", "شبكة بتقرّبنا"]      # shorter than scenes -> padded with ""
     voiceovers = ["كل مكالمة بتقرّبنا لبعض"]      # shorter than scenes -> padded with ""
+    hook = "قرب أكتر"                             # the FRESH opener (not the verbatim tagline)
+    narrator = "a warm adult Egyptian woman, reassuring"
 
 
 def _caller(system, user, schema, group_name=""):
     assert "captions" in user                       # the prompt asks for the captions explicitly
     assert "voiceovers" in user                     # ... and the spoken lines
+    assert "hook" in user                           # ... and the fresh opener
+    assert "narrator" in user                       # ... and the ONE consistent voice
     return _Resp(), None
 
 
 def test_build_brand_story_returns_aligned_captions_and_voiceovers():
-    character, scenes, captions, voiceovers = build_brand_story(_Brief(), {}, _caller, n=3)
+    character, scenes, captions, voiceovers, hook, narrator = build_brand_story(_Brief(), {}, _caller, n=3)
     assert character == "a young Egyptian engineer"
     assert len(scenes) == 3 and len(captions) == 3 and len(voiceovers) == 3  # aligned 1:1, padded
     assert captions == ["لحظة قرب", "شبكة بتقرّبنا", ""]
     assert voiceovers == ["كل مكالمة بتقرّبنا لبعض", "", ""]
+    assert hook == "قرب أكتر"
+    assert "Egyptian woman" in narrator
 
 
 def test_build_brand_story_no_caller_returns_empty_captions():
-    assert build_brand_story(_Brief(), {}, None, n=3) == (None, [], [], [])
+    assert build_brand_story(_Brief(), {}, None, n=3) == (None, [], [], [], "", "")
 
 
 def test_voiceover_clause_dialect_is_universal_from_copy_and_cctld():
@@ -87,3 +93,22 @@ def test_caption_windows_sit_inside_each_clip_span():
 def test_generated_reel_carries_caption_beats():
     r = GeneratedReel("x.mp4", [("لحظة قرب", 2.5, 5.9)])
     assert r.path == "x.mp4" and r.caption_beats[0][0] == "لحظة قرب"
+
+
+def test_story_prompt_anchors_identity_and_demotes_sku_offerings():
+    """nahdi's extracted offerings were dominated by COFFEE SKUs, so the reel became a
+    coffee ad ('ريحة القهوة تعدل المزاج') — the pharmacy vanished. The story prompt now
+    anchors the WORLD on the business description and demotes offerings to props."""
+    captured = {}
+
+    def caller(system, user, schema, group_name=""):
+        captured["system"], captured["user"] = system, user
+        return _Resp(), None
+
+    profile = {"description": {"value": "Nahdi is an online pharmacy offering health, "
+                                        "beauty and personal care products"}}
+    build_brand_story(_Brief(), profile, caller, n=3)
+    assert "IDENTITY ANCHOR" in captured["system"]
+    assert "props ONLY" in captured["system"] or "props only" in captured["user"]
+    assert "What the business IS" in captured["user"]
+    assert "online pharmacy" in captured["user"]

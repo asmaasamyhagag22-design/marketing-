@@ -39,6 +39,15 @@ class SWOTItem:
     text: str
     citation: List[str]                 # sources backing this point
     evidence: str                       # the underlying matrix detail / theme
+    # Epistemic honesty ladder (adopted from the team's BI platform, computed
+    # DETERMINISTICALLY here — never by the LLM):
+    #   validated                 — compared against >=2 peers with known values
+    #                               (or a multi-peer review theme)
+    #   directional_not_validated — a thin comparison (single peer / single-peer theme);
+    #                               treat as a signal, not a confirmed verdict
+    #   internally_supported      — grounded in the subject's own site only
+    #                               (standalone mode, unique insights)
+    claim_strength: str = "internally_supported"
 
 
 @dataclass
@@ -87,12 +96,15 @@ def synthesize_swot(
     n_peers = len(matrix.competitors)
 
     for gap in matrix.gaps:
+        strength = _gap_strength(gap)
         if gap.verdict == "ahead":
-            swot.strengths.append(SWOTItem(gap.detail, _cite_ahead(gap), gap.detail))
+            swot.strengths.append(SWOTItem(gap.detail, _cite_ahead(gap), gap.detail,
+                                           claim_strength=strength))
         elif gap.verdict == "behind":
             if gap.dimension.source == "scraped":
                 # Internal lens: you lack/lag on something on your own site.
-                swot.weaknesses.append(SWOTItem(gap.detail, _cite_behind(gap), gap.detail))
+                swot.weaknesses.append(SWOTItem(gap.detail, _cite_behind(gap), gap.detail,
+                                                claim_strength=strength))
                 # External lens: a real competitor outperforming you on a site
                 # dimension is also a THREAT. This is what populates Threats for
                 # ECOMMERCE / web-discovered peers (which carry NO Places dims) —
@@ -103,25 +115,32 @@ def synthesize_swot(
                         text=f"Competitors lead on {gap.dimension.label} where you are behind.",
                         citation=_cite_behind(gap),
                         evidence=gap.detail,
+                        claim_strength=strength,
                     ))
             else:  # places dimension -> market-position threat
-                swot.threats.append(SWOTItem(gap.detail, _cite_places(gap), gap.detail))
+                swot.threats.append(SWOTItem(gap.detail, _cite_places(gap), gap.detail,
+                                             claim_strength=strength))
         elif gap.verdict == "whitespace":
-            swot.opportunities.append(SWOTItem(gap.detail, _cite_whitespace(gap, n_peers), gap.detail))
+            swot.opportunities.append(SWOTItem(gap.detail, _cite_whitespace(gap, n_peers),
+                                               gap.detail, claim_strength=strength))
 
-    # review themes (when provided by the extractor you build next)
+    # review themes (customer voice, grounded in real peer reviews)
     for t in themes:
+        theme_strength = "validated" if len(t.support or []) >= 2 else "directional_not_validated"
         item = SWOTItem(text=t.text, citation=list(t.support) or ["competitor reviews"],
-                        evidence=f"{t.polarity} theme across peers")
+                        evidence=f"{t.polarity} theme across peers",
+                        claim_strength=theme_strength)
         if t.polarity == "complaint" and t.is_unmet_need:
             # peers fail at this -> a differentiation opening for you
             swot.opportunities.append(SWOTItem(
                 text=f"Peers are criticized for {t.text} — an opening to differentiate.",
-                citation=item.citation, evidence=item.evidence))
+                citation=item.citation, evidence=item.evidence,
+                claim_strength=theme_strength))
         elif t.polarity == "complaint":
             swot.threats.append(SWOTItem(
                 text=f"{t.text} is a recurring complaint in the category.",
-                citation=item.citation, evidence=item.evidence))
+                citation=item.citation, evidence=item.evidence,
+                claim_strength=theme_strength))
         # praise themes are kept as notes (context), not forced into a quadrant
         elif t.polarity == "praise":
             swot.notes.append(f"Category strength to match: {t.text} ({_short(item.citation)})")
@@ -145,6 +164,27 @@ def synthesize_swot(
             "Opportunities/Threats need market comparison; supply competitors "
             "(or a review-theme source) to populate them."
         )
+
+    # Own-site S/W floor (competitive mode): on the web path peers' scraped dims are
+    # UNKNOWN, so the competitive pass can yield THEME/PLACES items while a Strengths
+    # or Weaknesses quadrant stays empty — those quadrants are still knowable from
+    # the subject's OWN scraped site. Fill ONLY an empty quadrant with the own-site
+    # items (internally_supported tier), keeping the mode competitive — a quadrant
+    # that already carries real gap-derived items is never diluted.
+    if swot.mode == "competitive" and not competitive_empty \
+            and (not swot.strengths or not swot.weaknesses):
+        s, w = _standalone_from_subject(matrix)
+        added = False
+        if not swot.strengths and s:
+            swot.strengths.extend(s)
+            added = True
+        if not swot.weaknesses and w:
+            swot.weaknesses.extend(w)
+            added = True
+        if added:
+            swot.notes.append(
+                "Own-site items added where the peer comparison had no signal "
+                "(peers' site dimensions are unknown on this path).")
 
     # Unique competitive edges (profile.other_unique_insights) are STRENGTHS by nature —
     # append them grounded to the subject's own profile. Done AFTER the standalone degrade
@@ -197,6 +237,13 @@ def _standalone_from_subject(matrix: ComparativeGapMatrix):
             else:
                 weaknesses.append(SWOTItem(f"{dim.label}: none detected", cite, ev))
     return strengths, weaknesses
+
+
+def _gap_strength(gap: DimensionGap) -> str:
+    """Deterministic claim strength for a gap-driven item: a verdict compared against
+    >=2 peers with KNOWN values is 'validated'; a single-peer comparison is only
+    'directional_not_validated' (a signal, not a confirmed market verdict)."""
+    return "validated" if len(gap.competitor_values) >= 2 else "directional_not_validated"
 
 
 # ---------------------------------------------------------------------------

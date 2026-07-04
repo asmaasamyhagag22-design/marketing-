@@ -43,6 +43,10 @@ MAX_SITEMAP_URLS = 200
 MAX_INDEX_RECURSION_DEPTH = 1  # one level of sitemap-index fan-out
 SITEMAP_FETCH_TIMEOUT_S = 5.0
 MAX_SITEMAP_BYTES = 8 * 1024 * 1024  # 8 MiB hard cap per file
+# Hard ceiling for the WHOLE sitemap stage: sitemaps are a shortcut, never worth
+# starving the actual page crawl (measured on nahdi: a dead sitemap host serially
+# burned the budget before any subpage was fetched).
+SITEMAP_STAGE_MAX_S = 20.0
 
 # Namespaces seen in real sitemaps.
 _NS = {
@@ -88,10 +92,26 @@ def discover_sitemap_urls(
     seen_urls: set[str] = set()
     raw_count = 0
     sitemap_files_processed = 0
+    # STAGE guards (measured on nahdionline.com: robots advertised 10+ sitemap files
+    # on a DEAD host — each burned a full fetch timeout SEQUENTIALLY, eating the crawl
+    # budget before a single subpage was fetched):
+    #  - consecutive-unreachable breaker: 2 dead fetches in a row -> stop trying
+    #    (the host is down; the 3rd..10th file won't differ);
+    #  - stage time cap: the whole sitemap stage may never spend more than
+    #    SITEMAP_STAGE_MAX_S of the crawl's budget.
+    import time as _time
+    stage_started = _time.monotonic()
+    consecutive_unreachable = 0
 
     for sm_url in candidates:
         if sitemap_files_processed >= 10:  # safety: never process more than 10 sitemap files
             result.notes.append("sitemap_file_cap_reached")
+            break
+        if consecutive_unreachable >= 2:
+            result.notes.append("sitemap_unreachable_breaker_open")
+            break
+        if _time.monotonic() - stage_started > SITEMAP_STAGE_MAX_S:
+            result.notes.append("sitemap_stage_time_cap_reached")
             break
 
         # 2026-05: reject cross-host top-level Sitemap directives BEFORE
@@ -109,8 +129,10 @@ def discover_sitemap_urls(
         body = _fetch_sitemap_bytes(sm_url)
         sitemap_files_processed += 1
         if body is None:
+            consecutive_unreachable += 1
             result.notes.append(f"sitemap_unreachable:{sm_url}")
             continue
+        consecutive_unreachable = 0
 
         kind, entries = _parse_sitemap(body)
         if kind == "invalid":
@@ -123,14 +145,22 @@ def discover_sitemap_urls(
                 if sitemap_files_processed >= 10:
                     result.notes.append("sitemap_file_cap_reached")
                     break
+                if consecutive_unreachable >= 2:
+                    result.notes.append("sitemap_unreachable_breaker_open")
+                    break
+                if _time.monotonic() - stage_started > SITEMAP_STAGE_MAX_S:
+                    result.notes.append("sitemap_stage_time_cap_reached")
+                    break
                 if not same_registrable_host(child_sm, input_url):
                     continue
                 result.sitemaps_attempted.append(child_sm)
                 sitemap_files_processed += 1
                 child_body = _fetch_sitemap_bytes(child_sm)
                 if child_body is None:
+                    consecutive_unreachable += 1
                     result.notes.append(f"sitemap_unreachable:{child_sm}")
                     continue
+                consecutive_unreachable = 0
                 child_kind, child_entries = _parse_sitemap(child_body)
                 if child_kind == "urlset":
                     raw_count += len(child_entries)

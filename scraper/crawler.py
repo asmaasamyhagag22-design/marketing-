@@ -30,6 +30,7 @@ from .config import (
     ECOMMERCE_PRODUCT_URL_MIN,
     INTER_PAGE_DELAY_SECONDS,
     MAX_INTERNAL_PAGES,
+    MIN_SUBPAGE_ATTEMPTS,
     TOTAL_BUDGET_SECONDS,
     VIEWPORT_HEIGHT,
     VIEWPORT_WIDTH,
@@ -697,7 +698,12 @@ def scrape(input_url: str, output_root: str = "scrapes") -> tuple[ScrapeManifest
                 # ---- Fetch subpages within budget ----------------
                 for i, (sub_url, pt, tier, anchor) in enumerate(subpages, start=1):
                     elapsed = time.monotonic() - started
-                    if elapsed > budget_secs:
+                    # ALWAYS attempt a minimum number of subpages: pre-crawl stages
+                    # (dead sitemaps, a heavy homepage) can eat the whole budget, and
+                    # a check that fires at i=1 yields a homepage-only scrape of a
+                    # 300-link site (measured on nahdionline: budget_exceeded after
+                    # 0 subpages -> no product pages -> "no prices" downstream).
+                    if elapsed > budget_secs and (i - 1) >= MIN_SUBPAGE_ATTEMPTS:
                         manifest.scrape_meta.budget_exceeded = True
                         manifest.notes.append(
                             f"Budget exceeded after {i-1} subpages (elapsed {elapsed:.1f}s)"

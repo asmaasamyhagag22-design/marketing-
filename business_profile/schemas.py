@@ -278,6 +278,13 @@ class VisualIdentitySummary(BaseModel):
     # invented scene. Empty when the scrape found only a logo. Verbatim URLs.
     content_images: list[str] = Field(default_factory=list)
 
+    # LOCAL path of the homepage FULL-PAGE screenshot from the scrape. The page AS
+    # DESIGNED is brand identity BY CONSTRUCTION (layout, colour application, type
+    # in-situ, imagery treatment) — unlike content photos, which may be stock or a
+    # supplier's product shots. Feeds the BrandCreativeDNA vision step as the
+    # always-available identity evidence. None on old profiles / missing file.
+    homepage_screenshot_path: Optional[str] = None
+
     # v0.2 structured logo fields.
     primary_logo: Optional[LogoCandidateSummary] = None
     logo_candidates: list[LogoCandidateSummary] = Field(default_factory=list)

@@ -158,13 +158,19 @@ def main():
         say("   -> no competitors; continuing in STANDALONE mode (profile-only SWOT).")
 
     say("[4/5] building comparison matrix (scrapes %d benchmark site(s))..." % scrapable)
+    # The subject's OWN Places listing (rating/volume/price) — without it every
+    # Places gap is "n/a" and market-position Threats can never fire. Grounded
+    # match (domain / exact name) only; None on no-match, never raises.
+    from competitor import find_subject_places
+    subject_places = find_subject_places(profile, client)
+    if subject_places is not None:
+        say("      subject Places listing: %s (rating=%s, reviews=%s)" % (
+            subject_places.name, subject_places.rating, subject_places.review_count))
     matrix = build_matrix(
         manifest,                 # reuse the subject's manifest -> no re-scrape of subject
         result.competitors,
         scrape_fn=scrape_fn,
-        subject_places=None,      # discovery doesn't carry the subject's own Places listing
-                                  # yet, so the SUBJECT's rating/volume/price cells stay
-                                  # UNKNOWN. easy follow-up: one Places lookup on the address.
+        subject_places=subject_places,
     )
 
     themes = []
@@ -180,6 +186,13 @@ def main():
 
     swot = synthesize_swot(matrix, themes=themes,
                            unique_insights=unique_insight_texts(profile))
+
+    # TOWS synthesis (strategies + priority actions) from the cited SWOT —
+    # deterministic here (no extra LLM cost on the CLI path); never raises.
+    from competitor import build_tows
+    profile_dict = (profile.model_dump(mode="json")
+                    if hasattr(profile, "model_dump") else None)
+    tows = build_tows(swot, caller=None, profile=profile_dict)
 
     # --- consolidated result -> output file ------------------------------------
     # Everything the run produced, grounded: the subject profile, the discovered
@@ -203,6 +216,7 @@ def main():
         ),
         "competitors": [dataclasses.asdict(c) for c in result.competitors],
         "swot": swot_json,
+        "tows": dataclasses.asdict(tows),
     }
 
     out_path = Path(args.out) if args.out else (Path(scrape_dir) / "result.json")

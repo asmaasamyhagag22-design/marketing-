@@ -122,6 +122,19 @@ app.add_middleware(
 # Route mounts
 # ---------------------------------------------------------------------
 
+@app.get("/", include_in_schema=False)
+def root() -> dict:
+    """Friendly landing for anyone opening the API address in a browser (was a bare
+    404 {"detail":"Not Found"}, which reads like an outage)."""
+    return {
+        "status": "ok",
+        "app": "Marketing Strategist API",
+        "hint": "This is the backend. The web app UI runs at http://localhost:3000",
+        "docs": "/docs",
+        "health": "/api/health",
+    }
+
+
 app.include_router(health.router, prefix="/api", tags=["health"])
 app.include_router(run.router, prefix="/api", tags=["run"])
 app.include_router(jobs.router, prefix="/api", tags=["jobs"])

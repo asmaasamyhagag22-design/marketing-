@@ -428,6 +428,17 @@ _COMPUTED_CSS_JS = r"""
         pushColor(colorSignals, a, 'nav_text', 'color', 1.5);
         pushColor(colorSignals, a, 'nav_bg', 'backgroundColor', 2);
     }
+    // FOOTER: with the header + logo, one of the three places brand colors actually
+    // live (owner's rule) — it was never captured, so a photo-heavy page could
+    // out-vote the real brand chrome.
+    const footer = document.querySelector('footer') || document.querySelector('[class*="footer" i]');
+    pushColor(colorSignals, footer, 'footer', 'backgroundColor', 5);
+    pushColor(colorSignals, footer, 'footer_text', 'color', 1.5);
+    if (footer) {
+        for (const a of Array.from(footer.querySelectorAll('a')).slice(0, 10)) {
+            pushColor(colorSignals, a, 'footer_link', 'color', 1.5);
+        }
+    }
     for (const svg of Array.from(document.querySelectorAll('header svg, nav svg, [class*=logo] svg, [id*=logo] svg')).slice(0, 8)) {
         for (const n of Array.from(svg.querySelectorAll('[fill], [stroke]')).slice(0, 30)) {
             const fill = n.getAttribute('fill');
@@ -580,10 +591,20 @@ def _score_logo_candidates(raw_candidates: list[dict], computed: dict, page_url:
             score += 18; reasons.append("near_nav")
         if raw.get("links_to_home"):
             score += 22; reasons.append("links_to_homepage")
-        if any(k in blob for k in LOGO_KEYWORDS):
+        # Keyword/brand matching must use the HOST-STRIPPED blob (same measured fix
+        # as classification): on nahdionline.com the CDN host `dam.nahdionline.com`
+        # gave EVERY one of 432 product banners a brand_name_match (+18), and the
+        # "Shop_by_brands" carousel path matched the 'brand' keyword (+22) — 432
+        # promo tiles scored 60 = primary_brand_logo while the real logo lost.
+        kw_blob = _classify_blob(raw)
+        if any(re.search(rf"{re.escape(k)}(?!s)", kw_blob) for k in LOGO_KEYWORDS):
             score += 22; reasons.append("logo_keyword")
-        if any(t and t in blob for t in terms):
+        if any(t and t in kw_blob for t in terms):
             score += 18; reasons.append("brand_name_match")
+        # A multi-brand SHOP section ("shop by brands" / "our brands") is a brand
+        # LISTING, not the site's own mark — hard-demote like hero/partner assets.
+        if re.search(r"(shop[\s_-]*by[\s_-]*brand|our[\s_-]*brands|top[\s_-]*brands)", kw_blob):
+            score -= 60; reasons.append("penalty_brand_listing_section")
         if source_type in {"img", "svg_file", "lazy_img", "picture_source", "inline_svg", "css_background", "text_wordmark"}:
             score += 8; reasons.append(source_type)
         if source_type == "text_wordmark":
@@ -680,7 +701,23 @@ def _choose_primary_logo(
         and (c.in_header or c.links_to_home or c.near_nav)
     ]
     if not pool:
-        return None
+        # FOOTER-logo rescue (measured on nahdionline.com): some sites carry the brand
+        # mark ONLY in the footer (the header logo is an uncaptured inline asset), so
+        # after the promo-tile false-positives were fixed the primary came back None
+        # while the REAL `nahdi-logo-footer.png` sat classified footer_logo at the top
+        # of the list. Promote a footer logo ONLY on the strong signature — the file
+        # is a named logo AND carries the brand — never a generic footer badge (VAT /
+        # payment icons lack the pair + the score floor).
+        footer = [
+            c for c in candidates
+            if c.classification == "footer_logo"
+            and c.score >= PRIMARY_LOGO_THRESHOLD - 10
+            and {"logo_keyword", "brand_name_match"} <= set(c.reasons or [])
+        ]
+        if footer:
+            pool = footer
+        else:
+            return None
 
     # Prefer a REAL raster logo image over a text wordmark (a high-scoring wordmark
     # is frequently a nav label like "Home" / "الرئيسية" / "About us").
@@ -706,6 +743,83 @@ def _extract_svg_colors(raw_candidates: list[dict]) -> list[dict[str, Any]]:
         for raw_color in c.get("svg_colors") or []:
             out.append({"color": raw_color, "role": "logo_svg", "weight": 10})
     return out
+
+def _logo_pixel_signals(logo_src: Optional[str], page_url: str) -> list[dict[str, Any]]:
+    """Dominant PIXEL colors of the selected primary logo (raster PNG/JPG/WebP).
+
+    The logo is the single strongest brand-color source (owner's rule: brand colors
+    live in the logo + header + footer, not the page's photos) — but only inline-SVG
+    fills were ever read, so a raster logo (Orange's PNG -> #FF7900) contributed
+    NOTHING and photo colors could win the palette. Downloads ONE small image
+    (SSRF-guarded, bounded, data: URIs decoded directly), samples opaque pixels,
+    drops near-white (background plates / white wordmark ink) and rare colors, and
+    emits up to 3 'logo_raster' signals weighted by pixel share. Never raises."""
+    if not logo_src:
+        return []
+    src = str(logo_src)
+    if src.startswith(("inline-svg:", "text-wordmark:")) or src.lower().endswith(".svg"):
+        return []
+    try:
+        data: Optional[bytes] = None
+        if src.startswith("data:"):
+            import base64 as _b64
+            head, _, b64 = src.partition(",")
+            if "base64" in head:
+                data = _b64.b64decode(b64)
+        else:
+            from urllib.parse import urljoin
+            from urllib.request import Request, urlopen
+            url = urljoin(page_url or "", src)
+            from scraper.url_utils import is_safe_public_url
+            if not is_safe_public_url(url):
+                return []
+            req = Request(url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"})
+            with urlopen(req, timeout=8) as resp:
+                data = resp.read(2_000_000)
+        if not data:
+            return []
+
+        import io
+        from PIL import Image
+        img = Image.open(io.BytesIO(data)).convert("RGBA")
+        img.thumbnail((96, 96))
+        counts: defaultdict[tuple[int, int, int], int] = defaultdict(int)
+        opaque = 0
+        for r, g, b, a in img.getdata():
+            if a < 128:
+                continue
+            opaque += 1
+            if min(r, g, b) >= 232:          # near-white ink/plate — not a brand color
+                continue
+            counts[(r // 24 * 24 + 12, g // 24 * 24 + 12, b // 24 * 24 + 12)] += 1
+        if not opaque or not counts:
+            return []
+        top = sorted(counts.items(), key=lambda kv: kv[1], reverse=True)
+        out: list[dict[str, Any]] = []
+        for (r, g, b), n in top[:6]:
+            share = n / opaque
+            if share < 0.04:                 # anti-aliasing fringes / noise
+                continue
+            out.append({"color": f"#{r:02x}{g:02x}{b:02x}", "role": "logo_raster",
+                        "weight": round(4 + 8 * min(share, 0.75), 2)})
+            if len(out) >= 3:
+                break
+        if not out:
+            # White-ink logo with a small colored mark (measured on daturial: white
+            # wordmark + tiny orange dots -> everything filtered). The most-common
+            # SATURATED bucket IS the brand accent even at a small pixel share.
+            def _sat(rgb):
+                mx, mn = max(rgb), min(rgb)
+                return 0.0 if mx == 0 else (mx - mn) / mx
+            for (r, g, b), n in top:
+                if n / opaque >= 0.01 and _sat((r, g, b)) >= 0.35:
+                    out.append({"color": f"#{r:02x}{g:02x}{b:02x}",
+                                "role": "logo_raster", "weight": 6.0})
+                    break
+        return out
+    except Exception:  # noqa: BLE001 — palette enrichment must never break the scrape
+        return []
+
 
 def _build_brand_palette(raw_palette: list[ColorEntry], computed: dict) -> tuple[list[ColorEntry], dict[str, Any]]:
     color_signals = list(computed.get("color_signals") or [])
@@ -777,14 +891,15 @@ def _build_brand_palette(raw_palette: list[ColorEntry], computed: dict) -> tuple
             scores[hx] -= 12
             continue
 
-        if role in {"body_text", "nav_text", "header_text", "button_text"}:
+        if role in {"body_text", "nav_text", "header_text", "button_text",
+                    "footer_text", "footer_link"}:
             text_colors.append(hx)
             # Text color alone is weak evidence. It can support a color already
             # seen as brand-like, but should not become primary by itself.
             scores[hx] += min(weight, 1.5)
             continue
 
-        if role in {"header", "nav", "nav_bg"}:
+        if role in {"header", "nav", "nav_bg", "footer"}:
             if _is_background_like_color(hx) and not (_is_near_black(hx) or _is_gold_or_brown(hx)):
                 background_colors.append(hx)
                 scores[hx] += weight * 1.2
@@ -798,7 +913,7 @@ def _build_brand_palette(raw_palette: list[ColorEntry], computed: dict) -> tuple
             else:
                 scores[hx] += weight * 5.5
 
-        elif role in {"logo", "logo_svg"}:
+        elif role in {"logo", "logo_svg", "logo_raster"}:
             scores[hx] += weight * 5
 
         else:
@@ -812,10 +927,12 @@ def _build_brand_palette(raw_palette: list[ColorEntry], computed: dict) -> tuple
         if _is_gold_or_brown(hx) and roles_by_color[hx] & {
             "logo",
             "logo_svg",
+            "logo_raster",
             "header",
             "nav",
             "button",
             "nav_bg",
+            "footer",
             "raw_brand_accent",
         }:
             scores[hx] += 14
@@ -823,23 +940,26 @@ def _build_brand_palette(raw_palette: list[ColorEntry], computed: dict) -> tuple
         if _is_near_black(hx) and roles_by_color[hx] & {
             "logo",
             "logo_svg",
+            "logo_raster",
             "header",
             "nav",
             "button",
             "nav_bg",
+            "footer",
             "raw_brand_dark",
         }:
             scores[hx] += 12
 
-        if _is_near_white(hx) and not roles_by_color[hx] & {"logo", "logo_svg"}:
+        if _is_near_white(hx) and not roles_by_color[hx] & {"logo", "logo_svg", "logo_raster"}:
             scores[hx] -= 14
 
-        if _is_low_saturation_gray(hx) and not roles_by_color[hx] & {"logo", "logo_svg"}:
+        if _is_low_saturation_gray(hx) and not roles_by_color[hx] & {"logo", "logo_svg", "logo_raster"}:
             scores[hx] -= 10
 
         if _is_background_like_color(hx) and not roles_by_color[hx] & {
             "logo",
             "logo_svg",
+            "logo_raster",
             "raw_brand_accent",
             "raw_brand_dark",
         }:
@@ -858,10 +978,12 @@ def _build_brand_palette(raw_palette: list[ColorEntry], computed: dict) -> tuple
             & {
                 "logo",
                 "logo_svg",
+                "logo_raster",
                 "header",
                 "nav",
                 "button",
                 "nav_bg",
+                "footer",
                 "raw_brand_accent",
                 "raw_brand_dark",
                 "raw_accent",
@@ -958,6 +1080,15 @@ def build_visual_identity(
     co_branding_detected = bool((primary_logo and (partner_logos or authority_logos)) or len([
         c for c in logo_candidates if c.score >= 45 and c.classification in {"government_logo", "partner_logo", "sponsor_logo", "initiative_logo"}
     ]) >= 2)
+
+    # The SELECTED primary logo's pixel colors are the strongest brand signal —
+    # feed them into the palette scoring (raster logos contributed nothing before;
+    # inline-SVG fills were already captured via 'logo_svg').
+    if primary_logo is not None:
+        pixel_signals = _logo_pixel_signals(primary_logo.src, page_url)
+        if pixel_signals:
+            computed = dict(computed)
+            computed["color_signals"] = list(computed.get("color_signals") or []) + pixel_signals
 
     brand_palette, palette_info = _build_brand_palette(raw_palette, computed)
     visual_warnings: list[str] = []

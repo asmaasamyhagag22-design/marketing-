@@ -25,6 +25,13 @@ ECOMMERCE_MAX_INTERNAL_PAGES = 30
 ECOMMERCE_BUDGET_SECONDS = 330        # ~30 pages at ~11s/page (cap and time bind together)
 ECOMMERCE_PRODUCT_URL_MIN = 15        # >= this many PRODUCTS-type URLs (homepage+sitemap) -> store
 
+# A crawl must NEVER end homepage-only when internal links exist: pre-crawl stages
+# (dead sitemaps, a heavy homepage) can eat the whole time budget, and a budget check
+# firing at subpage #1 produced a 1-page scrape of a 300-link store (measured on
+# nahdionline.com -> no product pages -> "no prices" downstream). The budget guard is
+# for stopping a long tail, not preventing the start.
+MIN_SUBPAGE_ATTEMPTS = 5
+
 PAGE_TIMEOUT_MS = 20_000
 NAV_TIMEOUT_MS = 25_000
 INTER_PAGE_DELAY_SECONDS = 1.0
@@ -98,6 +105,10 @@ PAGE_TYPE_PATTERNS = [
         "catalog", "catalogue", "product-catalog",
         "collections", "collection",
         "best-sellers", "bestsellers", "new-arrivals",
+        # PLP/PDP — the product-list/product-detail URL convention of enterprise
+        # storefronts (measured on nahdionline.com: /ar-sa/plp/... URLs weren't
+        # recognized as products, so the e-commerce crawl budget never triggered).
+        "plp", "pdp",
         "منتجات", "منتجاتنا", "المنتجات", "المتجر", "متجر",
         "مجموعات",
     ]),
@@ -198,6 +209,10 @@ CTA_VERBS = {
     # already match via the startswith rule; these are the non-"shop" phrasings.)
     "catalog", "shop all", "view all", "browse", "explore the collection",
     "view collection", "shop the collection", "shop collection",
+    # "explore *" (added 2026-07-03 from daturial "Explore Solutions"; MEASURED
+    # corpus-wide: fires only on real action anchors — "Explore Now",
+    # "EXPLORE OUR MENU", "Explore More Posts" — zero flooding on 87 scrapes).
+    "explore", "استكشف",
     # English — restaurant/food-ordering CTAs (added 2026-05 from Buffalo Burger benchmark).
     # NOTE: "menu" alone is special-cased in _is_cta_anchor so it only matches
     # as an exact anchor, not as a substring of "menu of the day".

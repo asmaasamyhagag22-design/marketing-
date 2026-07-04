@@ -68,6 +68,7 @@ class PosterGenResult:
     width: int = 1080
     height: int = 1350
     audit: Optional[dict] = None   # brand-safety trail (claim->source + gate remediation)
+    engine: str = "classic"        # "classic" (bg + HTML overlay) | "oneshot" (Gemini-designed)
 
 
 def _fv(profile: dict, key: str) -> str:
@@ -259,6 +260,197 @@ def _dna_wants_lockup(brand_dna) -> bool:
         "bold", "outline", "gradient", "lockup", "graphic art", "3d", "custom", "heavy", "extreme"))
 
 
+def _logo_bytes(logo_url: Optional[str]) -> tuple[Optional[bytes], str]:
+    """brief.logo_url -> (bytes, mime) or (None, 'image/png'). Handles an inlined
+    data: URI directly and http(s) via the renderer's SSRF-guarded fetch."""
+    if not logo_url:
+        return None, "image/png"
+    try:
+        uri = logo_url
+        if not uri.startswith("data:"):
+            from poster.template import _remote_image_data_uri
+            uri = _remote_image_data_uri(uri) or ""
+        if uri.startswith("data:"):
+            head, _, b64 = uri.partition(",")
+            mime = head.split(";")[0][5:] or "image/png"
+            return base64.b64decode(b64), mime
+    except Exception:  # noqa: BLE001
+        pass
+    return None, "image/png"
+
+
+def _image_bytes_from_url(url: Optional[str]) -> tuple[Optional[bytes], str]:
+    """Fetch ONE remote image via the renderer's SSRF-guarded fetch -> (bytes, mime)."""
+    if not url:
+        return None, "image/jpeg"
+    try:
+        from poster.template import _remote_image_data_uri
+        uri = _remote_image_data_uri(url) or ""
+        if uri.startswith("data:"):
+            head, _, b64 = uri.partition(",")
+            mime = head.split(";")[0][5:] or "image/jpeg"
+            return base64.b64decode(b64), mime
+    except Exception:  # noqa: BLE001
+        pass
+    return None, "image/jpeg"
+
+
+def _gather_product_props(profile, caller, log) -> tuple[list, list[str]]:
+    """The brand's REAL product photos as scene props for the one-shot composite (the
+    owner's radical fix: a real product photo carries its REAL, correct label — like
+    the logo, the model composites an attached asset instead of inventing packaging).
+
+    Quality-gated (reel.image_quality), max 2, SSRF-guarded fetch. Each photo's REAL
+    label text is OCR'd once so those lines become ALLOWED extras in the fidelity gate
+    (invented labels stay junk). ([], []) on any failure — never raises."""
+    try:
+        urls = ((profile or {}).get("visual") or {}).get("content_images") or []
+        if not urls:
+            return [], []
+        from reel.image_quality import filter_usable_photos
+        keep = filter_usable_photos(urls, max_keep=2)
+        props: list = []
+        allowed: list[str] = []
+        import poster.oneshot as oneshot
+        for u in keep[:2]:
+            data, mime = _image_bytes_from_url(u)
+            if not data:
+                continue
+            props.append((data, mime))
+            if caller is not None:
+                allowed += oneshot.read_rendered_text(data, caller)
+        if props:
+            log(f"[oneshot] {len(props)} real product prop(s) attached "
+                f"({len(allowed)} real label lines allowed)")
+        return props, allowed
+    except Exception:  # noqa: BLE001
+        return [], []
+
+
+def _try_oneshot(profile, brief, concept, brand_dna, caller, *, arabic, audit,
+                 out_dir, variation, max_retries, log,
+                 qa_caller=None) -> Optional[PosterGenResult]:
+    """ONE-SHOT engine: a Gemini image model composes the ENTIRE creative (layout +
+    typography + graphics) in one call — the measured pilot (poster/oneshot.py:
+    Arabic fidelity 5/5) earned it this pipeline mode; same idea as TrendPulse's
+    static_post but with the REAL logo attached and a BLOCKING verbatim gate.
+
+    The rendered text is the SAME Ledger-gated concept copy. A render that fails the
+    character-exact OCR fidelity gate NEVER ships — bounded retries, then None so the
+    caller falls back to the classic overlay pipeline. Needs a multimodal caller (the
+    gate reads the render back) + a Vertex project; otherwise skipped."""
+    import os
+    if caller is None or not os.environ.get("GOOGLE_CLOUD_PROJECT"):
+        log("[oneshot] needs a vision caller + GOOGLE_CLOUD_PROJECT; skipping")
+        return None
+    try:
+        import poster.oneshot as oneshot
+        from poster.art_director import _palette_names
+        from poster.template import default_design_spec
+        from poster.variation import concept_variation_cue
+
+        copy = {"headline": brief.headline or "", "subheadline": brief.subheadline or "",
+                "cta": brief.cta_text or ""}
+        expected = {k: v for k, v in copy.items() if v.strip()}
+        # The FULL learned design language (was 3 fields / 400 chars — too thin for the
+        # render to read as THIS brand): imagery + composition + typography character +
+        # motifs + signature moves. Colour stays governed by the palette mandate.
+        dna_lines = ""
+        if brand_dna is not None:
+            vals = []
+            for f in ("imagery_style", "mood", "layout_philosophy",
+                      "composition_patterns", "typographic_character",
+                      "motifs", "signature_moves"):
+                v = getattr(brand_dna, f, None)
+                if v:
+                    vals.append(v if isinstance(v, str) else ", ".join(map(str, v)))
+            dna_lines = "; ".join(vals)[:800]
+        # The brand's REAL products as composited props (real, correct labels) —
+        # their OCR'd label lines become ALLOWED extras below.
+        product_imgs, allowed_lines = _gather_product_props(profile, caller, log)
+
+        prompt = oneshot.build_oneshot_prompt(
+            copy, brand_name=brief.business_name or "",
+            palette_names=_palette_names(brief.palette_hex),
+            dna_lines=dna_lines, rtl=arabic, has_logo=bool(brief.logo_url),
+            heading_font=(brief.heading_font or ""), body_font=(brief.body_font or ""),
+            single_message=(concept.single_message or ""),
+            visual_idea=(concept.visual_idea or ""),
+            n_products=len(product_imgs))
+        cue = concept_variation_cue(variation)
+        if cue:
+            prompt += "\n" + cue   # per-run design diversity (mood/lighting/composition)
+
+        logo_bytes, logo_mime = _logo_bytes(brief.logo_url)
+        brand_tokens = [t.lower() for t in re.findall(r"[A-Za-z؀-ۿ]{3,}",
+                                                      brief.business_name or "")]
+        allowed_norm = [oneshot._norm_text(l) for l in allowed_lines if str(l).strip()]
+
+        def _is_asset_text(line: str) -> bool:
+            """True when a rendered line matches the REAL label text of an attached
+            product photo (allowed — correct by construction, the owner's rule:
+            'أهم حاجة الكتابة صح')."""
+            n = oneshot._norm_text(line)
+            return bool(n) and any(n in a or a in n for a in allowed_norm)
+
+        best: Optional[PosterGenResult] = None
+        for attempt in range(1, max(1, max_retries + 1) + 1):
+            out_path = Path(out_dir) / f"poster_{uuid.uuid4().hex[:8]}.png"
+            try:
+                oneshot.generate_oneshot_poster(prompt, out_path, logo_bytes=logo_bytes,
+                                                logo_mime=logo_mime,
+                                                product_images=product_imgs)
+            except Exception as e:  # noqa: BLE001
+                log(f"[oneshot] attempt {attempt} generation failed: {type(e).__name__}: {e}")
+                continue
+            seen = oneshot.read_rendered_text(out_path, caller)
+            verdict = oneshot.text_fidelity(expected, seen)
+            # VISUAL brand fabrication gate (owner caught it: the model painted the
+            # brand name onto an invented delivery ROBOT — a false visual claim).
+            # The corner logo legitimately reads as 1-2 lines; MORE brand-name lines
+            # mean the name was painted onto objects -> that render never ships.
+            # A line matching an attached REAL asset's own text is always allowed
+            # (a real bag/pack CAN carry the brand — correctly, by construction).
+            brand_lines = sum(1 for l in seen
+                              if any(t in l.lower() for t in brand_tokens)
+                              and not _is_asset_text(l)) if brand_tokens else 0
+            # Garbled invented-packaging labels show up as several extra lines; the
+            # REAL labels of the attached products are allowed.
+            junk_extras = [l for l in verdict["extra_lines"]
+                           if brand_tokens and not any(t in l.lower() for t in brand_tokens)
+                           and not _is_asset_text(l)]
+            log(f"[oneshot] attempt {attempt}: fidelity={verdict['rate']} "
+                f"brand_lines={brand_lines} junk_extras={len(junk_extras)}")
+            if verdict["rate"] < 1.0 or brand_lines > 2 or len(junk_extras) >= 3:
+                continue    # hard gates: verbatim copy / no painted branding / no label junk
+
+            # ART-CRITIC pass (was classic-path only): clutter, weak contrast,
+            # competing focal points — retry when the failure is image-fixable,
+            # keep the BEST attempt by score.
+            qa = poster_vision_qa(out_path, caller=qa_caller, brand_dna=brand_dna,
+                                  arabic=arabic)
+            result = PosterGenResult(
+                poster_path=str(out_path), filename=Path(out_path).name,
+                image_base64=base64.b64encode(Path(out_path).read_bytes()).decode("ascii"),
+                brief=brief, spec=default_design_spec(brief), concept=concept,
+                brand_dna=brand_dna, background_path=str(out_path),
+                model_used=oneshot.DEFAULT_ONESHOT_MODEL, prompt=prompt, qa=qa,
+                audit=audit, engine="oneshot",
+            )
+            if best is None or qa.score > best.qa.score:
+                best = result
+            if qa.overall_pass or not qa.checked:
+                return result
+            log(f"[oneshot] attempt {attempt}: art-critic fail (score={qa.score}) "
+                f"{qa.reason[:100]}")
+            if not _qa_image_fixable(qa):
+                return result           # re-rolling the image won't fix it — ship best
+        return best
+    except Exception as e:  # noqa: BLE001 — the engine must never break poster generation
+        log(f"[oneshot] engine error ({type(e).__name__}: {e}); falling back to classic")
+        return None
+
+
 def _qa_image_fixable(v: PosterQAVerdict) -> bool:
     """True when a QA failure is something REGENERATING THE IMAGE can fix (off-brand colour,
     candid look, baked Latin, a cluttered/competing-focal composition). A pure layout clip or
@@ -282,11 +474,23 @@ def generate_poster(
     headline_override: Optional[str] = None,
     max_qa_retries: int = 2,
     out_dir: str = "outputs/posters",
+    engine: str = "classic",
+    language: str = "auto",
     log=_safe_log,
 ) -> PosterGenResult:
-    """The one pipeline. `caller` = a (multimodal) Gemini caller; `qa_caller` defaults to it."""
+    """The one pipeline. `caller` = a (multimodal) Gemini caller; `qa_caller` defaults to it.
+
+    `engine="oneshot"` composes the whole creative with a Gemini image model (per-run
+    layout diversity, designed typography) behind a BLOCKING verbatim-text gate; any
+    gate failure falls back to this classic overlay path — never an error.
+
+    `language`: "ar" | "en" force the OUTPUT copy language (owner's choice);
+    "auto" (default) infers from the brand as before."""
     qa_caller = qa_caller if qa_caller is not None else caller
-    arabic = brand_is_arabic(profile)
+    if language in ("ar", "en"):
+        arabic = language == "ar"
+    else:
+        arabic = brand_is_arabic(profile)
     variation = variation or build_variation()
 
     # 1) Brand's learned visual language (cached per brand).
@@ -294,11 +498,39 @@ def generate_poster(
         brand_dna = load_or_build_dna(profile, caller)
     log(f"[concept] dna={'yes' if getattr(brand_dna,'used_vision',False) else 'no'} arabic={arabic}")
 
+    # 1b) FRESH sourced copy material: live web research about the brand (was CLI-only
+    #     behind --research, so the WEB pipeline recycled the same tagline-derived copy
+    #     every run — the owner's "طريقة الكتابة ثابتة"). Best-effort; its facts join
+    #     the concept prompt AND the grounding ledger (so a research-sourced number in
+    #     the copy resolves instead of being blanked). None -> behavior unchanged.
+    research = None
+    if caller is not None:
+        try:
+            from competitor.search_providers import get_default_search_provider
+            from poster.art_director import _persona_lines
+            from poster.brand_research import research_brand
+            provider = get_default_search_provider()
+            if provider is not None:
+                research = research_brand(
+                    _fv(profile, "name") or "",
+                    homepage_url=str(_fv(profile, "source_url") or ""),
+                    persona=_persona_lines(profile),
+                    provider=provider, caller=caller)
+                if research is not None and not research.used:
+                    research = None
+                if research is not None:
+                    log(f"[research] {len(research.facts)} sourced facts, "
+                        f"{len(research.angles)} angles")
+        except Exception as exc:  # noqa: BLE001 — research must never break the poster
+            log(f"[research] skipped ({type(exc).__name__})")
+            research = None
+
     # 2) ONE creative concept -> the copy is built FROM it (coherent, brand-language).
     #    enforce_grounding=True: the Evidence Ledger gate softens any falsifiable claim
     #    (number/year/certification/ranking) that isn't backed by the brand's real evidence.
     concept = build_creative_concept(profile, caller=caller, brand_dna=brand_dna,
-                                     variation=variation, enforce_grounding=True)
+                                     variation=variation, enforce_grounding=True,
+                                     arabic=arabic, research=research)
     log(f"[concept] msg={concept.single_message!r} headline={concept.headline!r} "
         f"chips={concept.proof_points}")
 
@@ -331,7 +563,28 @@ def generate_poster(
                     json.dumps(r.audit, ensure_ascii=False, indent=2), encoding="utf-8")
             except Exception:
                 pass
+            # Client-facing Ad Compliance Sheet, derived from the same trail (pure
+            # transform — never fabricated; skipped when the trail is unusable).
+            try:
+                from grounding.compliance import build_compliance_sheet
+                sheet = build_compliance_sheet(r.audit)
+                if sheet:
+                    Path(r.poster_path).with_suffix(".compliance.json").write_text(
+                        json.dumps(sheet, ensure_ascii=False, indent=2), encoding="utf-8")
+            except Exception:
+                pass
         return r
+
+    # 3c) ONE-SHOT engine (opt-in): the whole creative composed by the Gemini image
+    #     model — same gated copy, per-run design diversity. Ships ONLY on a verbatim
+    #     OCR gate pass; otherwise falls through to the classic path below.
+    if engine == "oneshot":
+        r = _try_oneshot(profile, brief, concept, brand_dna, caller, arabic=arabic,
+                         audit=audit, out_dir=out_dir, variation=variation,
+                         max_retries=max_qa_retries, log=log, qa_caller=qa_caller)
+        if r is not None:
+            return _emit(r)
+        log("[oneshot] gate not passed / unavailable -> classic overlay pipeline")
 
     # 4) Free-form, DNA-steered composition.
     from poster.art_director import build_design_spec, build_llm_concept_prompt

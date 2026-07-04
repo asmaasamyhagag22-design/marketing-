@@ -113,3 +113,26 @@ def test_ecommerce_shop_links_classify_as_cta():
     assert "تسوق" in ctas
     assert "Earrings" not in ctas     # product category name, not a CTA
     assert "About us" not in ctas
+
+
+def test_cta_sharing_a_nav_href_is_not_swallowed_by_page_dedup():
+    """A nav 'Contact' link and a 'Book a Meeting' CTA button often point at the
+    SAME href. The per-page dedup keyed on href alone kept only the first (the
+    nav item) and dropped the CTA BEFORE classification — MEASURED on daturial.com:
+    cta_candidates 0 -> 1 after keying on (href, anchor). A true duplicate
+    (same href + same text, footer repeat) still collapses."""
+    from scraper.extractors.links import extract_links_from_html
+    site = "https://daturial.example/"
+    html = (
+        '<a href="/contact/">Contact</a>'
+        '<a href="/contact/"><div>Book a Meeting</div></a>'   # distinct anchor -> kept
+        '<a href="/contact/">Contact</a>'                     # true duplicate -> collapsed
+        '<a href="/our-services/">Our Services</a>'
+        '<a href="/our-services/">Explore Solutions</a>'      # 'explore' CTA verb
+    )
+    links = extract_links_from_html(html, site, site)
+    ctas = {l.anchor_text for l in links if l.category == LinkCategory.CTA}
+    assert "Book a Meeting" in ctas
+    assert "Explore Solutions" in ctas
+    contact_records = [l for l in links if l.href.endswith("/contact/")]
+    assert len(contact_records) == 2          # Contact + Book a Meeting (dup collapsed)

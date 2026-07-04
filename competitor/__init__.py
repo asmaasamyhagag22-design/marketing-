@@ -20,18 +20,22 @@ from .models import (
 )
 from .peer_match import select_peers, score_candidate, passes_hard_filters
 from .places_client import PlacesClient, PlacesError
-from .discovery import discover_competitors, build_match_criteria, CATEGORY_TYPE_MAP
+from .discovery import (
+    discover_competitors, build_match_criteria, CATEGORY_TYPE_MAP, find_subject_places,
+)
 from .matrix import (
     build_matrix, ComparativeGapMatrix, DIMENSIONS,
     extract_scraped_dimensions, dimensions_from_manifest,
 )
 from .swot import synthesize_swot, SWOT, SWOTItem, ReviewTheme, format_swot
+from .tows import build_tows, TowsResult, TowsStrategy, PriorityAction
 from .themes import AnthropicThemeExtractor, extract_review_themes
 from .business_type import classify_business_type, BusinessType, BusinessTypeResult
 from .router import route_discovery, WebDiscoveryEngine, NullWebDiscoveryEngine
 
 __all__ = [
     "discover_competitors",
+    "find_subject_places",
     "route_discovery",
     "WebDiscoveryEngine",
     "NullWebDiscoveryEngine",
@@ -55,6 +59,10 @@ __all__ = [
     "SWOTItem",
     "ReviewTheme",
     "format_swot",
+    "build_tows",
+    "TowsResult",
+    "TowsStrategy",
+    "PriorityAction",
     "AnthropicThemeExtractor",
     "extract_review_themes",
     "Candidate",
