@@ -266,9 +266,14 @@ Packages: `scraper/`, `business_profile/`, `grounding/`, `competitor/`, `brand/`
   (`grounding.make_subject_judge(caller)`): the deterministic scaffold detects the ambiguous
   token-disjoint case, a CHEAP Flash call decides same-subject (cached, fires only on
   ambiguous claims), and any error/absence → LENIENT (the project's number-only grounding),
-  so nothing regresses without a judge. Wired into the poster concept gate. ⚠ Live judge
-  ACCURACY on real copy is unverified (needs a paid Flash run); the mechanism is
-  hermetically tested (13 tests, mock judge + mock caller).
+  so nothing regresses without a judge. Wired into the poster concept gate. Mechanism is
+  hermetically tested (13 tests, mock judge + mock caller). **Live ACCURACY VERIFIED
+  2026-07-05** (owner-authorized Flash run, `grounding/measure_subject_judge.py`, 45 labeled
+  bilingual EN+AR pairs): **98% (44/45); 25/25 fabrications CAUGHT (0 missed — incl. subtle
+  adversarial ones: years-vs-awards, Michelin-stars-vs-locations, purity%-vs-count); 19/20 real
+  claims kept** (the 1 error is a SAFE over-block on a borderline AR "largest pharmacy" vs
+  "biggest pharmacy chain"); 0 abstentions. The lenient-when-unsure bias did NOT wave through any
+  fabrication — the moat's strict mode holds. Re-run: `python -m grounding.measure_subject_judge`.
 - **Source tiers**: brand site > web snippet (web must be reputable; media outlets are
   reputable EVIDENCE but are NOT competitors — two separate host-lists). The reputability
   check runs at ledger-BUILD (`is_reputable_web_source` in `from_profile.add`), so a claim
