@@ -572,110 +572,6 @@ class AimlVeoProvider:
         return out_path
 
 
-class RunwayProvider:
-    """Runway Gen-4/Gen-3 image-to-video (https://api.dev.runwayml.com). Animates a STILL (an
-    Imagen scene) into a real cinematic clip — far better than a Ken-Burns zoom. Needs
-    RUNWAY_API_KEY. The seed image may be a LOCAL file (sent as a base64 data URI) or an http(s)
-    URL. Same VideoProvider contract; RAISES on any failure so the caller can fall back to Ken
-    Burns — a scene never silently degrades into a blank."""
-    name = "runway"
-    BASE_URL = "https://api.dev.runwayml.com"
-    RUNWAY_VERSION = "2024-11-06"
-    DEFAULT_MODEL = "gen4_turbo"
-
-    def __init__(self, *, api_key: Optional[str] = None, model: Optional[str] = None,
-                 ratio: str = "720:1280", duration: int = 5,
-                 poll_interval: int = 10, max_polls: int = 90, timeout: int = 60):
-        self.api_key = api_key or os.getenv("RUNWAY_API_KEY")
-        self.model = model or os.getenv("RUNWAY_MODEL") or self.DEFAULT_MODEL
-        self.ratio = os.getenv("RUNWAY_RATIO") or ratio        # vertical 9:16-ish
-        self.duration = int(duration)
-        self.poll_interval = poll_interval
-        self.max_polls = max_polls
-        self.timeout = timeout
-
-    def _headers(self) -> dict:
-        return {"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json",
-                "X-Runway-Version": self.RUNWAY_VERSION}
-
-    def _image_uri(self, ref: str) -> str:
-        if ref.startswith(("http://", "https://")):
-            return ref
-        import base64
-        p = Path(ref)
-        if not p.is_file():
-            raise RuntimeError(f"Runway seed image not found: {ref}")
-        mime = "image/png" if p.suffix.lower() == ".png" else "image/jpeg"
-        return f"data:{mime};base64," + base64.b64encode(p.read_bytes()).decode("ascii")
-
-    def _post_json(self, path: str, payload: dict) -> dict:
-        import json
-        import urllib.request
-        req = urllib.request.Request(
-            f"{self.BASE_URL}{path}", data=json.dumps(payload).encode("utf-8"),
-            headers=self._headers(), method="POST")
-        with urllib.request.urlopen(req, timeout=self.timeout) as r:
-            return json.loads(r.read().decode("utf-8"))
-
-    def _get_json(self, path: str) -> dict:
-        import json
-        import urllib.request
-        req = urllib.request.Request(f"{self.BASE_URL}{path}", headers=self._headers())
-        with urllib.request.urlopen(req, timeout=self.timeout) as r:
-            return json.loads(r.read().decode("utf-8"))
-
-    def _submit(self, prompt: str, image_uri: str) -> str:
-        payload = {"model": self.model, "promptImage": image_uri,
-                   "ratio": self.ratio, "duration": self.duration}
-        if prompt:
-            payload["promptText"] = prompt[:980]
-        data = self._post_json("/v1/image_to_video", payload)
-        tid = data.get("id")
-        if not tid:
-            raise RuntimeError(f"Runway submit returned no id: {str(data)[:160]}")
-        return tid
-
-    def _poll(self, tid: str) -> str:
-        for _ in range(self.max_polls):
-            time.sleep(self.poll_interval)
-            data = self._get_json(f"/v1/tasks/{tid}")
-            status = str(data.get("status") or "").upper()
-            if status == "SUCCEEDED":
-                out = data.get("output")
-                url = (out[0] if isinstance(out, list) and out
-                       else out if isinstance(out, str) else None)
-                if not url:
-                    raise RuntimeError("Runway SUCCEEDED but returned no output url")
-                return url
-            if status in ("FAILED", "CANCELLED", "ERROR"):
-                raise RuntimeError(f"Runway task {status}: {str(data.get('failure') or data)[:160]}")
-        raise RuntimeError(f"Runway timed out after {self.max_polls * self.poll_interval}s")
-
-    def generate(self, prompt: str, *, out_path: Path, duration_s: float, width: int,
-                 height: int, palette: Optional[list[str]] = None,
-                 reference_image: Optional[str] = None) -> Path:
-        if not self.api_key:
-            raise RuntimeError("No RUNWAY_API_KEY set for RunwayProvider.")
-        ref = str(reference_image or "")
-        if not ref:
-            raise RuntimeError("RunwayProvider needs a reference image (the still to animate).")
-        image_uri = self._image_uri(ref)
-        video_url = self._poll(self._submit(prompt, image_uri))
-        import urllib.request
-        if not str(video_url).lower().startswith(("http://", "https://")):
-            raise RuntimeError(f"Runway returned a non-http url: {str(video_url)[:80]}")
-        try:
-            from scraper.url_utils import is_safe_public_url
-            if not is_safe_public_url(video_url):
-                raise RuntimeError("Runway video url failed the SSRF guard (private/loopback)")
-        except ImportError:
-            pass
-        out_path = Path(out_path)
-        out_path.parent.mkdir(parents=True, exist_ok=True)
-        with urllib.request.urlopen(video_url, timeout=300) as r:
-            out_path.write_bytes(r.read(200_000_000))
-        return out_path
-
 
 def default_video_provider() -> VideoProvider:
     """Pick a video provider from the environment.
@@ -683,16 +579,15 @@ def default_video_provider() -> VideoProvider:
     EXPLICIT selection (REEL_VIDEO_BACKEND) always wins:
       REEL_FORCE_STUB=1                 -> offline stub (no creds, no cost)
       REEL_VIDEO_BACKEND=veo|vertex     -> Veo 3.1 on our Vertex project
-      REEL_VIDEO_BACKEND=runway         -> Runway Gen-4 i2v
       REEL_VIDEO_BACKEND=aiml           -> AIML gateway (Veo 3.1 i2v)
       REEL_VIDEO_BACKEND=stub           -> offline stub
 
     AUTO (no REEL_VIDEO_BACKEND): the project's OWN provisioned Veo 3.1 on Vertex is the
     default (owner directive: the GCP credit pool is THE resource for Veo/Imagen). A stale
-    THIRD-PARTY key in .env (RUNWAY_API_KEY / AIML_API_KEY) must NOT hijack the pipeline —
-    those backends are opt-in via REEL_VIDEO_BACKEND. (MEASURED 2026-07-05: a len-132
-    RUNWAY_API_KEY silently overrode Veo and returned HTTP 400 on every scene, so the reel
-    fell back to Ken Burns stills — no real motion. This ordering is that fix.)
+    THIRD-PARTY key in .env (AIML_API_KEY) must NOT hijack the pipeline — it is opt-in via
+    REEL_VIDEO_BACKEND. (Runway was REMOVED 2026-07-05 by owner directive: a stale len-132
+    RUNWAY_API_KEY had silently overridden Veo and returned HTTP 400 on every scene, so the
+    reel fell back to Ken Burns stills — no real motion. Veo 3.1 is the only i2v engine now.)
     """
     if os.getenv("REEL_FORCE_STUB") == "1":
         return StubVideoProvider()
@@ -701,18 +596,14 @@ def default_video_provider() -> VideoProvider:
     # Explicit backend selection wins, whatever keys happen to be present.
     if backend in ("veo", "vertex"):
         return VeoProvider()
-    if backend == "runway":
-        return RunwayProvider()
     if backend == "aiml":
         return AimlVeoProvider()
     if backend == "stub":
         return StubVideoProvider()
 
-    # AUTO: prefer our own Vertex/Veo; only fall to a third-party backend if Vertex is absent.
+    # AUTO: prefer our own Vertex/Veo; only fall to the AIML gateway if Vertex is absent.
     if os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY") or os.getenv("GOOGLE_CLOUD_PROJECT"):
         return VeoProvider()
-    if os.getenv("RUNWAY_API_KEY"):
-        return RunwayProvider()
     if os.getenv("AIML_API_KEY"):
         return AimlVeoProvider()
     return StubVideoProvider()

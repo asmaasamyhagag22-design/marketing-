@@ -424,34 +424,35 @@ def _clear_video_env(monkeypatch):
         monkeypatch.delenv(k, raising=False)
 
 
-def test_auto_prefers_vertex_veo_over_a_present_runway_key(monkeypatch):
-    # THE FIX (measured 2026-07-05): a len-132 RUNWAY_API_KEY in .env silently overrode the
-    # project's provisioned Veo 3.1 and returned HTTP 400 on every scene -> Ken Burns stills.
-    # With a Vertex project present and NO explicit backend, AUTO must pick Veo, not Runway.
+def test_stale_runway_key_is_fully_ignored_veo_wins(monkeypatch):
+    # Runway was REMOVED 2026-07-05 (owner directive) after a len-132 RUNWAY_API_KEY in .env
+    # silently overrode Veo 3.1 and returned HTTP 400 on every scene -> Ken Burns stills. A
+    # leftover RUNWAY_API_KEY must now be COMPLETELY inert: with a Vertex project present, Veo wins.
     from reel.video_provider import default_video_provider
     _clear_video_env(monkeypatch)
     monkeypatch.setenv("GOOGLE_CLOUD_PROJECT", "some-project")
     monkeypatch.setenv("RUNWAY_API_KEY", "x" * 132)
-    monkeypatch.setenv("AIML_API_KEY", "y" * 32)
     assert default_video_provider().name == "veo"
 
 
-def test_explicit_backend_still_selects_runway(monkeypatch):
-    # Runway stays available as an OPT-IN — explicit REEL_VIDEO_BACKEND wins over the Veo default.
-    from reel.video_provider import default_video_provider
+def test_runway_backend_is_gone_and_falls_through_to_veo(monkeypatch):
+    # REEL_VIDEO_BACKEND=runway is no longer a selectable backend; it falls through to AUTO,
+    # which picks our Vertex Veo. (No RunwayProvider exists to construct.)
+    import reel.video_provider as vp
+    assert not hasattr(vp, "RunwayProvider")
     _clear_video_env(monkeypatch)
     monkeypatch.setenv("GOOGLE_CLOUD_PROJECT", "some-project")
-    monkeypatch.setenv("RUNWAY_API_KEY", "x" * 132)
     monkeypatch.setenv("REEL_VIDEO_BACKEND", "runway")
-    assert default_video_provider().name == "runway"
+    assert vp.default_video_provider().name == "veo"
 
 
-def test_runway_is_the_fallback_only_when_no_vertex(monkeypatch):
-    # When there is NO Vertex/Gemini credential, a present RUNWAY_API_KEY is still used.
+def test_only_a_runway_key_and_no_vertex_is_stub_not_runway(monkeypatch):
+    # With NO Vertex/Gemini/AIML credential, a lone RUNWAY_API_KEY is NOT a fallback anymore
+    # (Runway removed) — the pipeline degrades to the offline stub, never to Runway.
     from reel.video_provider import default_video_provider
     _clear_video_env(monkeypatch)
     monkeypatch.setenv("RUNWAY_API_KEY", "x" * 132)
-    assert default_video_provider().name == "runway"
+    assert default_video_provider().name == "stub"
 
 
 def test_explicit_veo_alias_selects_vertex(monkeypatch):
@@ -459,3 +460,11 @@ def test_explicit_veo_alias_selects_vertex(monkeypatch):
     _clear_video_env(monkeypatch)
     monkeypatch.setenv("REEL_VIDEO_BACKEND", "veo")
     assert default_video_provider().name == "veo"
+
+
+def test_aiml_remains_an_opt_in_backend(monkeypatch):
+    # AIML (the other Veo-3.1 gateway) is untouched by the Runway removal — still opt-in.
+    from reel.video_provider import default_video_provider
+    _clear_video_env(monkeypatch)
+    monkeypatch.setenv("REEL_VIDEO_BACKEND", "aiml")
+    assert default_video_provider().name == "aiml-veo"

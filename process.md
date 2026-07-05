@@ -2,7 +2,7 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1005 passed, 0 failed** (2026-07-05; grew from 880 as each audit fix
+Test suite: **1010 passed, 0 failed** (2026-07-05; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
 
 **Active work — adversarial audit (2026-07-05):** a deep verified audit found 1 CRITICAL
@@ -375,12 +375,15 @@ Packages: `scraper/`, `business_profile/`, `grounding/`, `competitor/`, `brand/`
 - **Pipeline**: brand story (Pro) → Imagen stills (DNA imagery themes, natural skin,
   no colour dye — the "purple people" lesson) → **Veo 3.1 image-to-video** per scene
   (real motion) → xfade assembly → brand end-card → kinetic caption overlay.
-- **Video provider = Veo 3.1 by DEFAULT** (`veo-3.1-generate-001` on our Vertex project).
-  `default_video_provider()` AUTO-selects our provisioned Veo; a third-party key present in
-  `.env` (RUNWAY_API_KEY / AIML_API_KEY) no longer hijacks it — Runway/AIML are OPT-IN via
-  `REEL_VIDEO_BACKEND`. (MEASURED 2026-07-05 end-to-end demo: a stale len-132 RUNWAY_API_KEY
-  had silently overridden Veo and returned HTTP 400 on every scene → the reel degraded to
-  Ken-Burns stills with no real motion. Fixed the precedence + 4 hermetic tests.)
+- **Video provider = Veo 3.1, the ONLY i2v engine** (`veo-3.1-generate-001` on our Vertex
+  project). `default_video_provider()` AUTO-selects our provisioned Veo. **Runway was REMOVED
+  2026-07-05** (owner directive): a stale len-132 `RUNWAY_API_KEY` in `.env` had silently
+  overridden Veo (the factory preferred Runway whenever the key was present) and Runway returned
+  HTTP 400 on every scene → the reel degraded to Ken-Burns stills, no real motion (seen in the
+  end-to-end demo; the Veo re-run produced real cinematic motion). The `RunwayProvider` class and
+  all `RUNWAY_API_KEY` branches are gone; AIML remains an opt-in Veo-3.1 gateway via
+  `REEL_VIDEO_BACKEND=aiml`. NOTE: the leftover `RUNWAY_API_KEY` in `.env` is now inert — safe to
+  delete (owner action; `.env` is never touched by code). 6 hermetic precedence tests.
 - **Story**: IDENTITY ANCHOR (the world must be unmistakably what the business IS;
   first/last scenes especially; offerings are a SAMPLE = props only — the "pharmacy
   became a coffee ad" lesson) + **diverse offering sample** (dedup by family, from the
@@ -472,6 +475,22 @@ Packages: `scraper/`, `business_profile/`, `grounding/`, `competitor/`, `brand/`
   (`url_utils.site_root_if_deep`: iti deep→`iti.gov.eg/`), so the homepage drives identity and
   the miss can't recur. NO scoring change made (don't change what measured-correct). Pinned with
   a regression test (`test_saturated_brand_color_beats_a_pale_high_dominance_button`).
+- **End-to-end live demo (2026-07-05, eg.azzafahmy.com) — remaining problems surfaced** (the
+  pipeline ran all 7 stages; the moat + QA gates behaved honestly; these are the open weaknesses):
+  1. **Poster one-shot bakes a GARBLED Arabic logo lockup.** The one-shot Imagen engine paints the
+     brand lockup and produces broken Arabic ("ةفهمص" for "عزة فهمي"). The vision-QA critic CAUGHT
+     it (pass=False across 3 retries) rather than shipping it — correct — but the one-shot can't
+     render clean Arabic. The reliable path for an Arabic-logo brand is the CLASSIC engine's real
+     logo-PLATE overlay (what the reel does: overlaid asset, crisp). Consider routing AR-logo
+     brands to classic, or always overlay the real logo asset instead of letting Imagen paint it.
+  2. **`creative_dna` vision fails 400 `INVALID_ARGUMENT: Provided image is not valid`** on some of
+     the brand's real ad images → degrades gracefully to `dna=no` (no crash) but LOSES the DNA
+     signal for that run. Needs a pre-validate/transcode (or skip-bad-image) before the Pro vision call.
+  3. **Trends SOURCES are tech-centric** (Hacker News / dev.to / Reddit). The engine works
+     (keywords/dedup/scoring/graceful source-failure), but for a consumer/fashion/jewelry brand the
+     items are off-domain + low-relevance (buttons/AI/compilers for a jeweller). This is a SOURCE-
+     COVERAGE gap, not a code bug — needs consumer/fashion/social trend feeds (e.g. Google Trends)
+     to be useful for non-tech brands. The grounding gate still prevents a forced irrelevant trend.
 - **Reel is still officially UNGATED in the coverage block**: captions/voiceover/hook
   ARE gated, but Veo extends speech beyond the provided lines (ungated model speech)
   and there is no per-reel audit trail yet. → closing items in §7 Phase 1.
