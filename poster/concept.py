@@ -216,14 +216,25 @@ def build_creative_concept(
     ledger = None
     if enforce_grounding:
         try:
-            from grounding import EvidenceLedger
+            from grounding import EvidenceLedger, make_subject_judge
             # When web RESEARCH is supplied its sourced facts join the evidence, so
             # a research-derived claim in the copy RESOLVES instead of being blanked.
             research_dump = None
             if research is not None:
                 research_dump = (research.model_dump()
                                  if hasattr(research, "model_dump") else research)
-            ledger = EvidenceLedger.from_profile(profile, research=research_dump)
+            # C2 residual: a CHEAP (Flash) semantic judge for the ambiguous "same number/
+            # superlative, different SUBJECT" case ("100 gifts" vs "100 stores"). Fires only
+            # on token-disjoint subjects and is cached, so it costs a few Flash calls at most;
+            # any failure -> the gate stays lenient (never blocks a real claim).
+            judge = None
+            try:
+                from business_profile.llm import default_caller
+                judge = make_subject_judge(default_caller(strong=False))
+            except Exception:  # noqa: BLE001 — no judge -> deterministic/lenient gate
+                judge = None
+            ledger = EvidenceLedger.from_profile(profile, research=research_dump,
+                                                 subject_judge=judge)
         except Exception:  # noqa: BLE001 — grounding must never break copy generation
             ledger = None
     if caller is None:

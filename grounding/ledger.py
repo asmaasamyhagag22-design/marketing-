@@ -267,6 +267,64 @@ def _digit_classes(norm_text: str, digit: str) -> set[str]:
     return classes
 
 
+# --- Number SUBJECT context (C2 residual) ----------------------------------------------
+# The deterministic scaffold: read the noun a number counts (the content word right after
+# it) so the gate can tell whether two "100"s count the SAME thing. Used only to detect the
+# AMBIGUOUS case (token-disjoint subjects) that a semantic judge then resolves; on its own it
+# never rejects (that over-tightens synonyms/inflection — measured).
+_SUBJECT_STOP = {
+    "the", "a", "an", "of", "our", "your", "their", "its", "his", "her", "my", "this",
+    "that", "these", "those", "and", "or", "for", "to", "in", "on", "at", "with", "by",
+    "from", "as", "is", "are", "was", "were", "be", "been", "every", "all", "more", "most",
+    "than", "per", "up", "over", "under", "new", "only", "just", "get", "got",
+    "من", "في", "على", "الى", "و", "او", "كل", "لكل", "هذا", "هذه", "التي", "الذي", "عن",
+    "مع", "ال", "دي", "ده",
+}
+_NUM_UNIT_WORDS = {
+    "percent", "years", "year", "yrs", "yr", "months", "month", "days", "day", "hours",
+    "hour", "weeks", "week", "k", "m", "million", "billion", "thousand",
+    "سنة", "سنوات", "عام", "اعوام", "شهر", "شهور", "يوم", "ايام", "ساعة", "ساعات",
+    "الف", "الاف", "مليون", "مليار",
+}
+
+
+def _subject_stems_after(norm_text: str, digit: str, window: int = 2) -> set[str]:
+    """Stems of the content words a `digit` counts (the noun right after it) across every
+    occurrence: '100 free gifts' -> {free, gift-stem}. Skips stopwords + unit words; empty
+    when there is no clear subject (caller then stays lenient)."""
+    stems: set[str] = set()
+    for m in re.finditer(r"(?<!\d)" + re.escape(digit) + r"(?!\d)", norm_text):
+        taken = 0
+        for w in _words(norm_text[m.end():m.end() + 48]):
+            if taken >= window:
+                break
+            if w.isdigit() or len(w) < 2 or w in _SUBJECT_STOP or w in _NUM_UNIT_WORDS:
+                continue
+            stems.add(_ar_stem(w))
+            taken += 1
+    return stems
+
+
+# The ranking/superlative groups whose SUBJECT matters ("best COFFEE", "largest NETWORK",
+# "الرواد الرقميون"). award/certification/guarantee/free assert the credential/offer itself,
+# not a subject, so they are NOT subject-gated.
+_SUBJECT_GROUPS = frozenset({"first", "only", "best", "largest", "superlative"})
+
+
+def _content_stems(norm_text: str, exclude: frozenset = frozenset()) -> set[str]:
+    """Content-word stems of a line minus stopwords and the group's own member words — the
+    SUBJECT a superlative/ranking is about ('best coffee in town' -> {coffee, town})."""
+    out: set[str] = set()
+    for w in _words(norm_text):
+        if w.isdigit() or len(w) < 2 or w in _SUBJECT_STOP:
+            continue
+        s = _ar_stem(w)
+        if w in exclude or s in exclude:
+            continue
+        out.add(s)
+    return out
+
+
 # ---------------------------------------------------------------------
 # Public claim / resolution / verdict types
 # ---------------------------------------------------------------------
@@ -362,11 +420,18 @@ def _as_text(v: Any) -> str:
 class EvidenceLedger:
     """All of a brand's real evidence, indexed for `resolve_claim`."""
 
-    def __init__(self, entries: list[LedgerEntry]) -> None:
+    def __init__(self, entries: list[LedgerEntry], subject_judge: Optional[Any] = None) -> None:
         # Brand-tier evidence first so resolution prefers the brand's OWN site over a web
         # snippet when both could support a claim (stable sort preserves within-tier order).
         self.entries = sorted((e for e in entries if e.norm),
                               key=lambda e: 0 if e.tier == "brand" else 1)
+        # Optional SUBJECT judge (C2 residual): a callable (claim_text, evidence_text, token)
+        # -> True (same subject) / False (different) / None (unknown). Consulted ONLY when a
+        # claim's number/superlative SUBJECT is token-disjoint from the evidence's (the
+        # genuinely ambiguous synonym/inflection-vs-fabrication case). None -> the gate stays
+        # deterministic + lenient (the project's designed number-only grounding), no regression.
+        self._subject_judge = subject_judge
+        self._judge_cache: dict = {}
         # Precomputed blobs for fast checks.
         self._digit_blob = " ".join(e.norm for e in self.entries)
         self._word_set: set[str] = set()
@@ -386,9 +451,13 @@ class EvidenceLedger:
         swot: Optional[dict] = None,
         research: Optional[dict] = None,
         deep_search: Optional[dict] = None,
+        subject_judge: Optional[Any] = None,
     ) -> "EvidenceLedger":
         """Build the ledger from a serialized BusinessProfile dict (+ optional
-        web-sourced evidence). Robust to a full-run wrapper ({'profile': {...}})."""
+        web-sourced evidence). Robust to a full-run wrapper ({'profile': {...}}).
+
+        `subject_judge` (optional): a semantic same-subject judge for the C2 residual — see
+        `EvidenceLedger.__init__`. Omit for the deterministic, offline (lenient) behavior."""
         if isinstance(profile, dict) and "value_propositions" not in profile \
                 and isinstance(profile.get("profile"), dict):
             profile = profile["profile"]
@@ -487,7 +556,7 @@ class EvidenceLedger:
                 if isinstance(src, dict):
                     add(src.get("snippet") or src.get("title"), src.get("url") or "", "deep_search")
 
-        return cls(entries)
+        return cls(entries, subject_judge=subject_judge)
 
     # ---- resolution ----
 
@@ -511,6 +580,36 @@ class EvidenceLedger:
         return Resolution(chosen.source_url, chosen.confidence, chosen.source_type, chosen.raw,
                           tier=chosen.tier, matched_lang=_lang(chosen.raw), copy_lang=copy_lang)
 
+    def _ask_subject_judge(self, claim_text: str, ev_text: str, token: str) -> Optional[bool]:
+        """Consult the optional semantic judge (cached). True/False/None; any error -> None
+        (lenient). Only called on the token-disjoint-subject ambiguous case."""
+        key = (claim_text, ev_text, token)
+        if key in self._judge_cache:
+            return self._judge_cache[key]
+        try:
+            res = self._subject_judge(claim_text, ev_text, token)
+        except Exception:  # noqa: BLE001 — a judge error must never fabricate a rejection
+            res = None
+        if res is not None and not isinstance(res, bool):
+            res = None
+        self._judge_cache[key] = res
+        return res
+
+    def _number_subject_ok(self, claim_text: str, entry: "LedgerEntry", token: str) -> bool:
+        """C2 residual — does this evidence count the SAME thing as the claim's number?
+        Fast path: a shared subject stem -> yes. Token-disjoint subjects are AMBIGUOUS
+        (synonym/inflection vs fabrication); defer to the semantic judge, and REJECT only on
+        a confident 'different'. No judge -> lenient (the project's number-only grounding)."""
+        claim_subj = _subject_stems_after(claim_text, token)
+        if not claim_subj:
+            return True                                  # no clear claim subject -> lenient
+        ev_subj = _subject_stems_after(entry.norm, token)
+        if not ev_subj or not claim_subj.isdisjoint(ev_subj):
+            return True                                  # plain evidence / shared stem -> ok
+        if self._subject_judge is None:
+            return True                                  # no judge -> lenient (no regression)
+        return self._ask_subject_judge(claim_text, entry.raw, token) is not False
+
     def _resolve_number(self, claim: "Claim", copy_lang: str = "") -> Optional[Resolution]:
         token = claim.token
         # The claim's OWN strong unit class(es) (from its copy context). If the copy uses a
@@ -519,7 +618,8 @@ class EvidenceLedger:
         # SET (a copy can use the digit in two classes, e.g. "50% today, valid 50 days") and
         # accept evidence matching ANY of them: deterministic (a single arbitrary pick over a
         # set is PYTHONHASHSEED-dependent) and never regresses a value the evidence supports.
-        # A plain number carries no strong class -> prior lenient rule (value appears anywhere).
+        # A plain number carries no strong class -> prior lenient rule + the optional SUBJECT
+        # judge for the "100 gifts" vs "100 stores" residual.
         claim_strong = {c for c in _digit_classes(claim.text, token) if c in _STRONG_CLASSES}
         matches = []
         for e in self.entries:
@@ -528,24 +628,41 @@ class EvidenceLedger:
                 continue
             if claim_strong and claim_strong.isdisjoint(ev_classes):
                 continue
+            if not claim_strong and not self._number_subject_ok(claim.text, e, token):
+                continue
             matches.append(e)
         return self._pick(matches, copy_lang)
 
-    def _resolve_group(self, group: str, copy_lang: str = "") -> Optional[Resolution]:
+    def _resolve_group(self, claim: "Claim", copy_lang: str = "") -> Optional[Resolution]:
+        group = claim.kind
         members = _GROUPS.get(group, set())
+        # For a ranking/superlative group the SUBJECT matters: "best coffee" is NOT sourced by
+        # "best regards". Fast path (shared subject stem) accepts; a token-disjoint subject is
+        # ambiguous (inflection رقمي/رقميون vs fabrication coffee/regards) -> defer to the
+        # judge, rejecting only on a confident 'different'. No judge -> lenient (unchanged).
+        subj_gate = group in _SUBJECT_GROUPS
+        member_stems = frozenset(_ar_stem(m) for m in members if " " not in m) if subj_gate else frozenset()
+        claim_subj = _content_stems(claim.text, member_stems) if subj_gate else set()
         matches = []
         for e in self.entries:
             ws = set(_words(e.norm))
             stems = {_ar_stem(w) for w in ws}
-            if _member_present(e.norm, ws, stems, members):
-                matches.append(e)
+            if not _member_present(e.norm, ws, stems, members):
+                continue
+            if subj_gate and claim_subj:
+                ev_subj = _content_stems(e.norm, member_stems)
+                if ev_subj and claim_subj.isdisjoint(ev_subj):
+                    if (self._subject_judge is not None
+                            and self._ask_subject_judge(claim.text, e.raw, group) is False):
+                        continue
+            matches.append(e)
         return self._pick(matches, copy_lang)
 
     def _resolve_one(self, claim: Claim) -> Optional[Resolution]:
         copy_lang = _lang(claim.text)      # prefer evidence in the audited copy's language
         if claim.kind == "number":
             return self._resolve_number(claim, copy_lang)
-        return self._resolve_group(claim.kind, copy_lang)
+        return self._resolve_group(claim, copy_lang)
 
     def resolve_claim(self, text: str) -> Optional[Resolution]:
         """The doc-named gate: return a Resolution iff EVERY hard claim in `text` is

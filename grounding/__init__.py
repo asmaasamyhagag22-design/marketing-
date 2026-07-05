@@ -27,6 +27,7 @@ from .ledger import (
     Resolution,
     extract_claims,
 )
+from .subject_judge import make_subject_judge
 
 __all__ = [
     "EvidenceLedger",
@@ -38,4 +39,5 @@ __all__ = [
     "LedgerEntry",
     "extract_claims",
     "build_compliance_sheet",
+    "make_subject_judge",
 ]

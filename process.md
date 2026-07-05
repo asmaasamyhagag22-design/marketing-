@@ -242,9 +242,18 @@ Packages: `scraper/`, `business_profile/`, `grounding/`, `competitor/`, `brand/`
   certified fabrications — "Save 50%" resolved against "50 years", "99% pure" against a
   "99 EGP" price — producing FALSE 'verified' rows in the client-facing Compliance Sheet
   AND passing the poster/reel/strategy/TOWS gates. Safe by default: only a positively-
-  identified strong unit tightens, so no legitimate claim regressed (99 grounding tests
-  green). ⚠ RESIDUAL still context-blind: bare-number vs bare-number ("100 gifts" ← "100
-  stores") and superlative SUBJECT ("best coffee" ← "best regards") — harder, tracked.
+  identified strong unit tightens, so no legitimate claim regressed.
+- **Subject-context judge (C2 residual)**: the remaining hole was bare-number-vs-bare-number
+  ("100 gifts" ← "100 stores") and superlative SUBJECT ("best coffee" ← "best regards"). A
+  token/stem heuristic can't fix this — it can't tell an acceptable synonym/inflection
+  ("5000 experts"↔"5000 youth", رقمي↔رقميون) from a fabrication (both are token-disjoint;
+  MEASURED: a heuristic broke 4 legit tests). So the ledger takes an OPTIONAL `subject_judge`
+  (`grounding.make_subject_judge(caller)`): the deterministic scaffold detects the ambiguous
+  token-disjoint case, a CHEAP Flash call decides same-subject (cached, fires only on
+  ambiguous claims), and any error/absence → LENIENT (the project's number-only grounding),
+  so nothing regresses without a judge. Wired into the poster concept gate. ⚠ Live judge
+  ACCURACY on real copy is unverified (needs a paid Flash run); the mechanism is
+  hermetically tested (13 tests, mock judge + mock caller).
 - **Source tiers**: brand site > web snippet (web must be reputable; media outlets are
   reputable EVIDENCE but are NOT competitors — two separate host-lists).
 - Language-aware resolution (Arabic claim cites Arabic quote; mismatch labeled).
@@ -497,6 +506,13 @@ Packages: `scraper/`, `business_profile/`, `grounding/`, `competitor/`, `brand/`
   same store rendered 2 vs 164 product links across runs). A signal that gates crawl
   depth (or any budget) must be RE-EVALUATED over accumulated evidence during the crawl,
   not frozen at page 1 — build the frontier wide and raise the cap live when it flips.
+- A token/stem heuristic cannot judge SUBJECT identity — it can't separate an acceptable
+  synonym/inflection ("experts"↔"youth", رقمي↔رقميون) from a fabrication ("gifts"↔"stores");
+  both are token-disjoint (MEASURED: a subject-overlap heuristic broke 4 legit grounding
+  tests + the Arabic-inflection match). This is the "heuristics hit ceilings" lesson — the
+  fix is deterministic scaffold + ONE cheap LLM judge on the ambiguous case, with a LENIENT
+  fallback so it never regresses without the judge. (Measure-first caught the bad heuristic
+  before it shipped.)
 - Selecting ONE element from a `set` via `next()` is PYTHONHASHSEED-dependent — it made the
   C2 number-class verdict nondeterministic across processes (a pre-commit review caught it).
   When a gate decision depends on a set, use the WHOLE set (accept if evidence matches ANY
