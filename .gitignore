@@ -52,8 +52,8 @@ output.txt
 candidate_check.txt
 phone_diagnostic.txt
 
-# Local assistant/editor settings (personal/machine-specific; shared settings.json stays tracked)
-.claude/settings.local.json
+# Local assistant/editor tooling folder (machine-specific; keep out of the repo)
+.claude/
 
 # IDE
 .vscode/
