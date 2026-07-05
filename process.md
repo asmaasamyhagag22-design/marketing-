@@ -375,6 +375,12 @@ Packages: `scraper/`, `business_profile/`, `grounding/`, `competitor/`, `brand/`
 - **Pipeline**: brand story (Pro) → Imagen stills (DNA imagery themes, natural skin,
   no colour dye — the "purple people" lesson) → **Veo 3.1 image-to-video** per scene
   (real motion) → xfade assembly → brand end-card → kinetic caption overlay.
+- **Video provider = Veo 3.1 by DEFAULT** (`veo-3.1-generate-001` on our Vertex project).
+  `default_video_provider()` AUTO-selects our provisioned Veo; a third-party key present in
+  `.env` (RUNWAY_API_KEY / AIML_API_KEY) no longer hijacks it — Runway/AIML are OPT-IN via
+  `REEL_VIDEO_BACKEND`. (MEASURED 2026-07-05 end-to-end demo: a stale len-132 RUNWAY_API_KEY
+  had silently overridden Veo and returned HTTP 400 on every scene → the reel degraded to
+  Ken-Burns stills with no real motion. Fixed the precedence + 4 hermetic tests.)
 - **Story**: IDENTITY ANCHOR (the world must be unmistakably what the business IS;
   first/last scenes especially; offerings are a SAMPLE = props only — the "pharmacy
   became a coffee ad" lesson) + **diverse offering sample** (dedup by family, from the

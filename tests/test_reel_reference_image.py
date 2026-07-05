@@ -411,3 +411,51 @@ def test_aiml_download_rejects_non_http_and_ssrf_url(tmp_path: Path, monkeypatch
     monkeypatch.setattr(p, "_poll", lambda gid: "file:///C:/Windows/win.ini")
     with pytest.raises(RuntimeError):
         p.generate("x", out_path=tmp_path / "s.mp4", duration_s=6.0, width=1080, height=1920)
+
+
+# --- default_video_provider precedence (a stale 3rd-party key must not hijack Veo) -------
+
+_VIDEO_ENV = ("REEL_FORCE_STUB", "REEL_VIDEO_BACKEND", "RUNWAY_API_KEY", "AIML_API_KEY",
+              "GEMINI_API_KEY", "GOOGLE_API_KEY", "GOOGLE_CLOUD_PROJECT")
+
+
+def _clear_video_env(monkeypatch):
+    for k in _VIDEO_ENV:
+        monkeypatch.delenv(k, raising=False)
+
+
+def test_auto_prefers_vertex_veo_over_a_present_runway_key(monkeypatch):
+    # THE FIX (measured 2026-07-05): a len-132 RUNWAY_API_KEY in .env silently overrode the
+    # project's provisioned Veo 3.1 and returned HTTP 400 on every scene -> Ken Burns stills.
+    # With a Vertex project present and NO explicit backend, AUTO must pick Veo, not Runway.
+    from reel.video_provider import default_video_provider
+    _clear_video_env(monkeypatch)
+    monkeypatch.setenv("GOOGLE_CLOUD_PROJECT", "some-project")
+    monkeypatch.setenv("RUNWAY_API_KEY", "x" * 132)
+    monkeypatch.setenv("AIML_API_KEY", "y" * 32)
+    assert default_video_provider().name == "veo"
+
+
+def test_explicit_backend_still_selects_runway(monkeypatch):
+    # Runway stays available as an OPT-IN — explicit REEL_VIDEO_BACKEND wins over the Veo default.
+    from reel.video_provider import default_video_provider
+    _clear_video_env(monkeypatch)
+    monkeypatch.setenv("GOOGLE_CLOUD_PROJECT", "some-project")
+    monkeypatch.setenv("RUNWAY_API_KEY", "x" * 132)
+    monkeypatch.setenv("REEL_VIDEO_BACKEND", "runway")
+    assert default_video_provider().name == "runway"
+
+
+def test_runway_is_the_fallback_only_when_no_vertex(monkeypatch):
+    # When there is NO Vertex/Gemini credential, a present RUNWAY_API_KEY is still used.
+    from reel.video_provider import default_video_provider
+    _clear_video_env(monkeypatch)
+    monkeypatch.setenv("RUNWAY_API_KEY", "x" * 132)
+    assert default_video_provider().name == "runway"
+
+
+def test_explicit_veo_alias_selects_vertex(monkeypatch):
+    from reel.video_provider import default_video_provider
+    _clear_video_env(monkeypatch)
+    monkeypatch.setenv("REEL_VIDEO_BACKEND", "veo")
+    assert default_video_provider().name == "veo"

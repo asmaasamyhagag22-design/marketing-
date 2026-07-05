@@ -678,23 +678,41 @@ class RunwayProvider:
 
 
 def default_video_provider() -> VideoProvider:
-    """Pick a video provider from the environment:
-      REEL_FORCE_STUB=1            -> offline stub (no creds, no cost)
-      REEL_VIDEO_BACKEND=runway    -> Runway Gen-4 i2v (best animation)
-      RUNWAY_API_KEY present        -> Runway (unless REEL_VIDEO_BACKEND says otherwise)
-      REEL_VIDEO_BACKEND=aiml      -> AIML gateway (Veo 3.1 i2v + native voiceover)
-      AIML_API_KEY present         -> AIML
-      Gemini key / Vertex project  -> VeoProvider (Veo 3.0 on our Vertex)
-      else                         -> offline stub
+    """Pick a video provider from the environment.
+
+    EXPLICIT selection (REEL_VIDEO_BACKEND) always wins:
+      REEL_FORCE_STUB=1                 -> offline stub (no creds, no cost)
+      REEL_VIDEO_BACKEND=veo|vertex     -> Veo 3.1 on our Vertex project
+      REEL_VIDEO_BACKEND=runway         -> Runway Gen-4 i2v
+      REEL_VIDEO_BACKEND=aiml           -> AIML gateway (Veo 3.1 i2v)
+      REEL_VIDEO_BACKEND=stub           -> offline stub
+
+    AUTO (no REEL_VIDEO_BACKEND): the project's OWN provisioned Veo 3.1 on Vertex is the
+    default (owner directive: the GCP credit pool is THE resource for Veo/Imagen). A stale
+    THIRD-PARTY key in .env (RUNWAY_API_KEY / AIML_API_KEY) must NOT hijack the pipeline —
+    those backends are opt-in via REEL_VIDEO_BACKEND. (MEASURED 2026-07-05: a len-132
+    RUNWAY_API_KEY silently overrode Veo and returned HTTP 400 on every scene, so the reel
+    fell back to Ken Burns stills — no real motion. This ordering is that fix.)
     """
     if os.getenv("REEL_FORCE_STUB") == "1":
         return StubVideoProvider()
     backend = (os.getenv("REEL_VIDEO_BACKEND") or "").lower()
-    if backend == "runway" or (backend == "" and os.getenv("RUNWAY_API_KEY")):
-        return RunwayProvider()
-    if backend == "aiml" or (backend == "" and os.getenv("AIML_API_KEY")):
-        return AimlVeoProvider()
-    if backend == "vertex" or os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY") \
-            or os.getenv("GOOGLE_CLOUD_PROJECT"):
+
+    # Explicit backend selection wins, whatever keys happen to be present.
+    if backend in ("veo", "vertex"):
         return VeoProvider()
+    if backend == "runway":
+        return RunwayProvider()
+    if backend == "aiml":
+        return AimlVeoProvider()
+    if backend == "stub":
+        return StubVideoProvider()
+
+    # AUTO: prefer our own Vertex/Veo; only fall to a third-party backend if Vertex is absent.
+    if os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY") or os.getenv("GOOGLE_CLOUD_PROJECT"):
+        return VeoProvider()
+    if os.getenv("RUNWAY_API_KEY"):
+        return RunwayProvider()
+    if os.getenv("AIML_API_KEY"):
+        return AimlVeoProvider()
     return StubVideoProvider()
