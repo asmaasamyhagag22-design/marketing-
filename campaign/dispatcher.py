@@ -36,10 +36,15 @@ class CreativeJob:
 
 
 def plan_creatives(calendar: dict[str, Any], *, out_dir: str | Path = "outputs/campaign") -> list[CreativeJob]:
-    """Map a content-calendar dict (from `strategy`) to one render job per item."""
+    """Map a content-calendar dict (from `strategy`) to one render job per item. Tolerant of
+    a hand-edited/malformed plan: a non-dict calendar, a missing/None `items`, or a non-dict
+    item yields no job for it rather than raising."""
     out_dir = Path(out_dir)
     jobs: list[CreativeJob] = []
-    for i, it in enumerate(calendar.get("items") or []):
+    items = calendar.get("items") if isinstance(calendar, dict) else None
+    for i, it in enumerate(items or []):
+        if not isinstance(it, dict):
+            continue
         ctype = _creative_type(it.get("content_type"))
         ext = "mp4" if ctype == "reel" else "png"
         headline = (str(it.get("hook") or "").strip() or str(it.get("topic") or "").strip())
@@ -86,6 +91,11 @@ def run_all(
         if dry_run:
             results.append((job, None))
             continue
-        rc = runner(job, profile_path, plan_path, extra_args=extra_args)
+        try:
+            rc = runner(job, profile_path, plan_path, extra_args=extra_args)
+        except Exception as exc:  # noqa: BLE001 — one failed job must NOT abort the fan-out
+            print(f"[campaign] item #{job.index} failed to launch: "
+                  f"{type(exc).__name__}: {exc}", file=sys.stderr)
+            rc = 1
         results.append((job, rc))
     return results

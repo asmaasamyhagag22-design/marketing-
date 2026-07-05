@@ -368,6 +368,11 @@ Packages: `scraper/`, `business_profile/`, `grounding/`, `competitor/`, `brand/`
     (True topical VARIETY on a single-offering brand still needs the LLM path — the
     deterministic degrade cycles format/platform.)
 - `campaign/`: calendar → poster/reel jobs fan-out (`--from-plan`, `--dry-run`).
+  - **Robustness (2026-07-05)**: `plan_creatives` tolerates a hand-edited/malformed plan
+    (non-dict calendar / missing `items` / non-dict item → skipped, no traceback); `run_all`
+    catches a per-job launch failure so ONE bad job no longer aborts the whole fan-out
+    (records it rc=1, continues); the CLI now returns NON-ZERO when any creative failed (a
+    silent exit 0 hid failed renders from automation) and rejects an out-of-range `--only`.
 - `trends/`: free keyless sources (HN/Reddit/Dev.to), normalized ranking, profile
   keyword matching; feeds poster `--trend` and strategy `--trends`.
 

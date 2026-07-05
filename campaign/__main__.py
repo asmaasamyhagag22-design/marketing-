@@ -37,11 +37,20 @@ def main() -> int:
 
     from campaign import plan_creatives, run_all, run_creative
 
-    calendar = json.loads(plan_path.read_text(encoding="utf-8"))
+    try:
+        calendar = json.loads(plan_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError, ValueError) as exc:
+        print(f"!! could not parse the plan {plan_path.name}: {exc}", file=sys.stderr)
+        return 2
     jobs = plan_creatives(calendar, out_dir=args.out_dir)
     if not jobs:
-        print("(no calendar items)", file=sys.stderr)
-        return 0
+        print("(no calendar items — is this a strategy plan with an 'items' list?)",
+              file=sys.stderr)
+        return 2
+    if args.only is not None and not any(job.index == args.only for job in jobs):
+        print(f"!! --only {args.only} is out of range (valid: 0..{len(jobs) - 1})",
+              file=sys.stderr)
+        return 2
 
     print(f"[campaign] {len(jobs)} item(s) from {plan_path.name}"
           + (f" — rendering only #{args.only}" if args.only is not None else "")
@@ -63,8 +72,12 @@ def main() -> int:
                       dry_run=args.dry_run, only_index=args.only)
     if not args.dry_run:
         ok = sum(1 for _job, rc in results if rc == 0)
-        print(f"[campaign] {ok}/{len(results)} creative(s) rendered "
-              f"(out: {args.out_dir})")
+        total = len(results)
+        print(f"[campaign] {ok}/{total} creative(s) rendered (out: {args.out_dir})")
+        if ok < total:
+            # Surface failures to any caller/automation — a silent exit 0 hid failed renders.
+            print(f"[campaign] {total - ok} creative(s) FAILED", file=sys.stderr)
+            return 1
     return 0
 
 
