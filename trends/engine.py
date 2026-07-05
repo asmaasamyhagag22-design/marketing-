@@ -14,29 +14,52 @@ Pure: sources are injected (defaults are keyless), nothing here mutates global s
 """
 from __future__ import annotations
 
+import logging
 import time
 from collections import defaultdict
 from typing import Any, Optional
 
 from .sources import TrendItem, TrendSource, default_trend_sources
 
-# Generic words that must never count as a topical match (they match everything).
+logger = logging.getLogger(__name__)
+
+# Generic words that must never count as a topical match (they match everything). The
+# default trend sources (HN / Reddit / Dev.to) are TECH-skewed, so a plain word shared with
+# a tech headline is almost always a coincidence — hence the extra cross-domain + tech-
+# ambiguous terms below. (Pure-numeric tokens like years are dropped separately.)
 _STOPWORDS = {
     "the", "and", "for", "with", "you", "your", "our", "are", "from", "this", "that",
     "new", "best", "top", "how", "why", "what", "online", "service", "services",
     "business", "company", "egypt", "near", "home", "more", "get", "all",
+    # generic
+    "free", "day", "days", "time", "way", "ways", "make", "made", "use", "using", "world",
+    "life", "people", "year", "years", "week", "month", "thing", "things", "good", "great",
+    "here", "into", "out", "about", "over", "just", "like", "one", "two", "now", "today",
+    # tech-ambiguous (match tech news for ANY business)
+    "app", "apps", "tech", "data", "web", "api", "code", "dev", "software", "startup",
+    "startups", "digital", "tool", "tools", "update", "updates", "release", "launch",
+    "review", "reviews", "guide", "tips", "news", "app",
 }
 
 
 def fetch_trends(sources: Optional[list[TrendSource]] = None, *, limit_per_source: int = 30) -> list[TrendItem]:
-    """Aggregate items from all sources. A source that fails contributes nothing."""
+    """Aggregate items from all sources. A source that fails (down / schema-drifted) is
+    logged as a WARNING and contributes nothing — so a silently-empty trend list is
+    traceable to which source(s) failed, not mistaken for 'no trends'."""
     sources = sources if sources is not None else default_trend_sources()
     items: list[TrendItem] = []
+    failed = 0
     for s in sources:
         try:
-            items.extend(s.fetch(limit_per_source) or [])
-        except Exception:
-            continue
+            got = s.fetch(limit_per_source) or []
+            items.extend(got)
+            if not got:
+                logger.warning("trend source %r returned no items", getattr(s, "name", s))
+        except Exception as exc:  # noqa: BLE001 — one bad source must not break the rest
+            failed += 1
+            logger.warning("trend source %r failed: %s", getattr(s, "name", s), exc)
+    if failed and not items:
+        logger.warning("ALL %d trend source(s) failed — trend list is empty", failed)
     return items
 
 
@@ -62,7 +85,9 @@ def match_to_keywords(items: list[TrendItem], keywords: list[str]) -> list[Trend
     Mutates `matched_terms` in place and returns the list."""
     import re
     kws = sorted({k.lower().strip() for k in keywords
-                  if k and len(k.strip()) >= 3 and k.lower().strip() not in _STOPWORDS},
+                  if k and len(k.strip()) >= 3
+                  and not k.strip().isdigit()          # a bare year/number is not a topic
+                  and k.lower().strip() not in _STOPWORDS},
                  key=len, reverse=True)
     for it in items:
         title = it.title.lower()
@@ -98,8 +123,8 @@ def keywords_from_profile(profile: dict[str, Any]) -> list[str]:
     cleaned: list[str] = []
     for w in out:
         w = "".join(ch for ch in w if ch.isalnum() or ch in "-&").strip("-&").lower()
-        if len(w) >= 3 and w not in _STOPWORDS and w not in seen:
-            seen.add(w)
+        if len(w) >= 3 and not w.isdigit() and w not in _STOPWORDS and w not in seen:
+            seen.add(w)                                 # drop bare years/numbers too
             cleaned.append(w)
     return cleaned
 

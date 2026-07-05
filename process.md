@@ -375,6 +375,12 @@ Packages: `scraper/`, `business_profile/`, `grounding/`, `competitor/`, `brand/`
     silent exit 0 hid failed renders from automation) and rejects an out-of-range `--only`.
 - `trends/`: free keyless sources (HN/Reddit/Dev.to), normalized ranking, profile
   keyword matching; feeds poster `--trend` and strategy `--trends`.
+  - **Relevance + resilience (2026-07-05)**: the sources are TECH-skewed, so keyword matching
+    dropped bare years/numbers + a broader generic/tech-ambiguous stopword set — a non-tech
+    brand no longer false-matches an irrelevant tech trend into its copy (MEASURED: 24/45
+    corpus profiles false-matched a sample tech title before, 0/45 after). `fetch_trends`
+    now LOGS a down/schema-drifted source instead of silently swallowing it. (Deeper
+    relevance — the "apple" ambiguity — still wants an LLM judge or better sources: follow-up.)
 
 ### 5.H Web app
 - Scrape pipeline with SSE live progress; tabs: Profile / Evidence (citations) /
