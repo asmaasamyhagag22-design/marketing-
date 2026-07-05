@@ -12,6 +12,7 @@ cycles the brand's real offerings across the calendar — never empty, never fab
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import asdict, dataclass, field
 from datetime import date, datetime, timedelta
 from pathlib import Path
@@ -79,6 +80,22 @@ def _profile_name(profile: dict[str, Any]) -> str:
     return str(n) if n else "The brand"
 
 
+_AR_RE = re.compile(r"[؀-ۿ]")
+# Language-matched generic themes for the LAST-RESORT fallback — an Arabic brand must not get
+# hardcoded ENGLISH topics that then render as English poster headlines (the language lock).
+_FILLER_EN = ["Brand highlight", "Customer story", "Behind the scenes", "Offer spotlight"]
+_FILLER_AR = ["أبرز ما نقدّمه", "قصة عميل", "من وراء الكواليس", "عرض مميز"]
+
+
+def _brand_is_arabic(profile: dict[str, Any]) -> bool:
+    """True when the brand's REAL text is Arabic — so the calendar's copy and its last-resort
+    filler match the brand's language instead of defaulting to English."""
+    blob = " ".join(str(_val(profile.get(k)) or "") for k in ("name", "description", "tagline"))
+    for o in (profile.get("offerings") or [])[:6]:
+        blob += " " + str(_val(o.get("name") if isinstance(o, dict) else o) or "")
+    return len(_AR_RE.findall(blob)) >= 3
+
+
 def _profile_topics(profile: dict[str, Any]) -> list[str]:
     topics: list[str] = []
     for o in (profile.get("offerings") or []):
@@ -90,7 +107,15 @@ def _profile_topics(profile: dict[str, Any]) -> list[str]:
         v = _val(vp)
         if isinstance(v, str) and v.strip():
             topics.append(v.strip())
-    return topics or ["Brand highlight", "Customer story", "Behind the scenes", "Offer spotlight"]
+    tag = _val(profile.get("tagline"))          # real brand copy — one more grounded topic
+    if isinstance(tag, str) and tag.strip():
+        topics.append(tag.strip())
+    # Dedup, order-preserving.
+    seen: set[str] = set()
+    uniq = [t for t in topics if not (t in seen or seen.add(t))]
+    if uniq:
+        return uniq
+    return _FILLER_AR if _brand_is_arabic(profile) else _FILLER_EN
 
 
 def _coerce_date(value) -> date:
@@ -126,19 +151,23 @@ def _llm_plan(profile, caller, *, days, platforms, trends, target) -> list[_Plan
         if titles:
             trend_block = ("\nRIDE THESE CURRENT TRENDS where they fit the brand "
                            "(tie an item to one, don't force it):\n- " + "\n- ".join(titles))
+    lang = ("Egyptian Arabic — write EVERY topic, angle and hook in Arabic, no Latin letters"
+            if _brand_is_arabic(profile) else "English")
     system = (
         "You are a senior social-media strategist. Produce a concrete, varied content "
         "calendar for the brand below — a realistic mix of formats, angles, and platforms. "
         "Ground every item in the brand's real persona/offerings; do NOT invent facts, "
-        "prices, or claims. Vary content_type and angle so the feed isn't repetitive."
+        "prices, or claims. Vary content_type and angle so the feed isn't repetitive. "
+        f"LANGUAGE: {lang}."
     )
     user = (
         f"{persona}\n{trend_block}\n\n"
-        f"Plan {target} items spread across a {days}-day window (day_offset 0..{days-1}). "
+        f"Plan {target} items EVENLY spread across a {days}-day window (use the FULL range of "
+        f"day_offset 0..{days-1}, not just the first days). "
         f"Platforms to use: {', '.join(platforms)}. "
         f"content_type ∈ {{reel, post, story, carousel}}. "
         f"Each item: day_offset, platform, content_type, topic, a one-line angle, and a "
-        f"scroll-stopping hook."
+        f"scroll-stopping hook. Write the topic/angle/hook in {lang}."
     )
     resp, _usage = caller(system, user, _PlanResponse, group_name="content_strategy")
     return list(resp.items)
@@ -146,11 +175,15 @@ def _llm_plan(profile, caller, *, days, platforms, trends, target) -> list[_Plan
 
 def _fallback_plan(profile, *, days, platforms, target) -> list[_PlanItem]:
     topics = _profile_topics(profile)
-    spacing = max(1, days // max(1, target))
     items: list[_PlanItem] = []
     for i in range(target):
+        # Spread items EVENLY across the whole window. The old `i * (days // target)` floored
+        # the spacing to 1 whenever target > days/2, front-loading every item into the first
+        # third and leaving the tail empty (MEASURED: a 30-day/17-item plan filled only days
+        # 0-16). Interpolating over [0, days-1] uses the full window.
+        off = round(i * (days - 1) / (target - 1)) if target > 1 else 0
         items.append(_PlanItem(
-            day_offset=min(days - 1, i * spacing),
+            day_offset=max(0, min(days - 1, off)),
             platform=platforms[i % len(platforms)],
             content_type=_CONTENT_TYPES[i % len(_CONTENT_TYPES)],
             topic=topics[i % len(topics)],

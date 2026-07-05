@@ -360,6 +360,13 @@ Packages: `scraper/`, `business_profile/`, `grounding/`, `competitor/`, `brand/`
 ### 5.G Strategy, Campaign, Trends
 - `strategy/`: N-day content calendar (Gemini or deterministic), hooks/angles
   Ledger-gated (blank-to-topic), `.audit.json` sidecar. CLI-only for now.
+  - **Fallback quality (2026-07-05)**: items spread EVENLY over the whole window (was
+    front-loaded — a 30-day/17-item plan filled only days 0-16, tail empty); the last-resort
+    filler is LANGUAGE-matched (an Arabic brand no longer gets hardcoded English topics that
+    render as English poster headlines — the language lock); the real `tagline` is used as
+    one more grounded topic; the LLM prompt carries a language directive + "spread evenly".
+    (True topical VARIETY on a single-offering brand still needs the LLM path — the
+    deterministic degrade cycles format/platform.)
 - `campaign/`: calendar → poster/reel jobs fan-out (`--from-plan`, `--dry-run`).
 - `trends/`: free keyless sources (HN/Reddit/Dev.to), normalized ranking, profile
   keyword matching; feeds poster `--trend` and strategy `--trends`.
