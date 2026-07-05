@@ -13,8 +13,10 @@ CHEAP dimensions the matrix can honestly compare:
 
 Everything the lite fetch can NOT honestly tell (offerings/trust — LLM-stage;
 shows_reviews; bilingual) stays None = UNKNOWN (rule 4 — never inferred). A JS-only
-site that serves an empty shell yields low-but-real counts from its server HTML;
-fetch/parse failures yield None (the peer's cells stay UNKNOWN, never fabricated).
+site that serves an empty shell (no anchors in the server HTML) yields NO dims — its
+social/CTA/WhatsApp are JS-injected, so reporting "0 social / no WhatsApp" would be
+evidence-of-ABSENCE dressed as knowledge; we return None (UNKNOWN) instead. Fetch/parse
+failures also yield None (the peer's cells stay UNKNOWN, never fabricated).
 
 Returns a plain dims dict — `matrix.extract_scraped_dimensions` passes it through.
 Never raises.
@@ -52,6 +54,11 @@ def lite_peer_dims(url: str, *, fetch: Optional[Callable[[str], Optional[str]]] 
         from scraper.extractors.links import extract_links_from_html
         from scraper.schemas import LinkCategory
         records = extract_links_from_html(html, url, url)
+        if not records:
+            # No anchors in the server HTML — a client-rendered (JS-only) shell or an empty
+            # page. Its social/CTA/WhatsApp load via JS, so we CANNOT honestly assess them:
+            # return UNKNOWN rather than report false zeros ("0 social / no WhatsApp") as fact.
+            return None
 
         social = {r.href.rstrip("/") for r in records
                   if r.category == LinkCategory.SOCIAL}

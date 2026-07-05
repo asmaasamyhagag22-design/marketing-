@@ -295,7 +295,10 @@ Packages: `scraper/`, `business_profile/`, `grounding/`, `competitor/`, `brand/`
      and a drop-all is logged for traceability.
   Measured: nahdi 0 → 4 real Saudi pharmacies; El Ezaby math-test peers eliminated.
 - **Lite peer scrape** on the sync web path: plain-HTTP homepage → cheap comparable
-  dims (social/CTA/WhatsApp/booking); unknown stays UNKNOWN.
+  dims (social/CTA/WhatsApp/booking); unknown stays UNKNOWN. A JS-only shell (no anchors in
+  the server HTML) now returns None (UNKNOWN) instead of "0 social / no WhatsApp" — that
+  absence is JS-hidden, and evidence-of-absence must not read as knowledge (rule 4). A REAL
+  page with genuine zeros still reports them.
 - **SWOT**: mechanical synthesis from the gap matrix (every item cited);
   `claim_strength` ladder (validated / directional_not_validated /
   internally_supported); own-site S/W floor in competitive mode; review-theme
