@@ -319,6 +319,39 @@ def test_elkbabgi_real_palette_does_not_choose_beige_background_as_primary():
     assert info["background_dominance"] >= 0.65
 
 
+def test_saturated_brand_color_beats_a_pale_high_dominance_button():
+    # Pins the behaviour verified by a live re-scrape (te.eg / iti.gov.eg homepages): a
+    # WASHED light color (a pale button/background tint) with high pixel dominance must NOT
+    # win primary over a genuinely saturated brand color present in strong roles (header/nav).
+    # An OLD-code snapshot mislabeled te's purple #54249c and iti's maroon as pale blue — that
+    # was stale-manifest artifact; current code prefers the saturated mark, and this guards it.
+    from scraper.extractors.visual import _build_brand_palette
+    from scraper.schemas import ColorEntry
+
+    raw_palette = [
+        ColorEntry(hex="#c5d6e9", dominance=0.61),   # pale blue-gray, dominates the screenshot
+        ColorEntry(hex="#ffffff", dominance=0.24),
+        ColorEntry(hex="#54249c", dominance=0.06),   # the real (saturated purple) brand mark
+    ]
+    brand_palette, info = _build_brand_palette(
+        raw_palette,
+        {
+            "color_signals": [
+                {"color": "#54249c", "role": "header", "weight": 6},
+                {"color": "#54249c", "role": "nav", "weight": 6},
+                {"color": "#c5d6e9", "role": "button", "weight": 8},   # pale, high weight
+                {"color": "#c5d6e9", "role": "body_bg", "weight": 1},
+            ]
+        },
+    )
+    prim = info["primary_brand_color"]
+    assert prim is not None
+    # The saturated purple wins; the pale near-background blue is not the primary.
+    assert prim.lower() != "#c5d6e9"
+    from scraper.extractors.visual import _saturation
+    assert _saturation(prim) >= 0.30
+
+
 # ---------------------------------------------------------------------
 # Structural-independent logo floor (opaque-DOM SaaS-builder false-negative)
 # ---------------------------------------------------------------------

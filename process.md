@@ -2,7 +2,7 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1004 passed, 0 failed** (2026-07-05; grew from 880 as each audit fix
+Test suite: **1005 passed, 0 failed** (2026-07-05; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
 
 **Active work — adversarial audit (2026-07-05):** a deep verified audit found 1 CRITICAL
@@ -448,6 +448,19 @@ Packages: `scraper/`, `business_profile/`, `grounding/`, `competitor/`, `brand/`
   WATCH-ITEM: the floor rests on the ambient `logo_keyword`; if a HOSTED client-strip FP is ever
   seen, add "client"/"clients"/"our-clients" to `PARTNER_KEYWORDS` (auto-voids via
   `classified_partner_logo`) — NOT by lowering `_FLOOR_MIN_REPEAT`.
+- **Palette calibration (INVESTIGATED 2026-07-05 — NOT a current bug; measure-first)**: the
+  audit flagged pale-blue primaries on iti.gov.eg (#c5d6e9) and te.eg (#91a8bc) beating the
+  real maroon/purple. An OWNER-AUTHORIZED live re-scrape (8 sites; the palette's `color_signals`
+  input is NOT persisted, so offline re-score was impossible) proved these DON'T reproduce on
+  current code + homepage: te→#54249c purple ✓, orange→#fc6c0c ✓ (stale said #000000), iti
+  homepage→#203947 navy (maroon also in-palette) — a defensible two-color brand — and
+  vodafone/kfc/mcdonalds unchanged-correct. The stale misses were ARTIFACTS: te = old-code
+  staleness (same URL now correct); iti = identity taken from a DEEP track page whose only strong
+  signal was a pale button (`button_bg rgb(197,214,233)`, `palette_dominated_by_background`).
+  Current crawler already anchors deep seeds to the site root for identity
+  (`url_utils.site_root_if_deep`: iti deep→`iti.gov.eg/`), so the homepage drives identity and
+  the miss can't recur. NO scoring change made (don't change what measured-correct). Pinned with
+  a regression test (`test_saturated_brand_color_beats_a_pale_high_dominance_button`).
 - **Reel is still officially UNGATED in the coverage block**: captions/voiceover/hook
   ARE gated, but Veo extends speech beyond the provided lines (ungated model speech)
   and there is no per-reel audit trail yet. → closing items in §7 Phase 1.
