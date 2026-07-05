@@ -219,6 +219,11 @@ Packages: `scraper/`, `business_profile/`, `grounding/`, `competitor/`, `brand/`
   evidence. Same substring strictness across all blocks + a length floor so a stop-word
   can't be laundered; a quote in NO block is still rejected (fabrication). (Real recovery
   rate needs a live extraction run — rejected citations aren't persisted to measure offline.)
+- **Evidence-pack cookie filter is banner-specific** (2026-07-05): the boilerplate filter's
+  `\bcookie` pattern deleted the FOOD "cookie" as if it were a consent banner — losing real
+  dessert menu blocks from the pack (MEASURED: 186 blocks over 8 sites — buffaloburger "Cookie
+  Dough"/"SPOON ME COOKIE", mcdonalds "Chocolate Chip Cookie"). Now only cookie-CONSENT
+  phrasing (accept/reject/manage/use/policy/settings/…) is boilerplate; the food is kept.
 - **RAG (Pillar 2)**: full uncapped evidence pack + per-group semantic retrieval
   (Gemini embeddings, cosine top-K in-process — **no vector DB by design** at this
   scale); validator sees the full pack. Measured: te.eg 153→265 blocks seen.

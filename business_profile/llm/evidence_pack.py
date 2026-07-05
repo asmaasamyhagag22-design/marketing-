@@ -201,8 +201,15 @@ _BOILERPLATE_PATTERNS = [
     # Privacy / terms
     re.compile(r"\bprivacy (policy|notice)\b", re.IGNORECASE),
     re.compile(r"\bterms (of (service|use)|&\s*conditions)\b", re.IGNORECASE),
-    # Cookie banners
-    re.compile(r"\bcookie", re.IGNORECASE),
+    # Cookie CONSENT banners — but NOT the food "cookie" (a bare `\bcookie` deleted real
+    # dessert menu items: buffaloburger "Cookie Dough"/"SPOON ME COOKIE", mcdonalds
+    # "Chocolate Chip Cookie" — MEASURED 186 blocks over 8 sites). Match only banner phrasing.
+    re.compile(r"\b(accept|reject|manage|allow|decline|enable|disable|we\s+use|uses?|using|"
+               r"about|control)\s+(all\s+|the\s+|our\s+)?cookies?\b", re.IGNORECASE),
+    re.compile(r"\bcookies?\s+(policy|consent|settings|preferences?|notice|banner|choices|"
+               r"management|and\s+(personal\s+data|privacy)|to\s+(improve|enhance|personali|"
+               r"give|provide|ensure|analy))", re.IGNORECASE),
+    re.compile(r"\bcookie\s+use\b", re.IGNORECASE),
     re.compile(r"\bgdpr\b", re.IGNORECASE),
     # Standalone "Read more" / "Learn more" / "Click here"
     re.compile(r"^(read|learn|see|find out|discover) more\.?$", re.IGNORECASE),
