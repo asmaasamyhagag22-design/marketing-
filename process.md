@@ -284,7 +284,10 @@ Packages: `scraper/`, `business_profile/`, `grounding/`, `competitor/`, `brand/`
   2. Aggregator/marketplace/directory denylist + media/listicle host list.
   3. Relevance gate (identity-term overlap on title/snippet/URL).
   4. **Reject-only LLM judge** ("when unsure, DROP — a wrong competitor is worse than
-     a missing one"); judge failure keeps all (never breaks discovery).
+     a missing one"); judge failure keeps all (never breaks discovery). Its keep-list is
+     REQUIRED (2026-07-05) so an OMITTED judgment can't be read as pydantic's default `[]`
+     and silently drop every real peer; an explicit `[]` is still a genuine "keep none",
+     and a drop-all is logged for traceability.
   Measured: nahdi 0 → 4 real Saudi pharmacies; El Ezaby math-test peers eliminated.
 - **Lite peer scrape** on the sync web path: plain-HTTP homepage → cheap comparable
   dims (social/CTA/WhatsApp/booking); unknown stays UNKNOWN.
@@ -292,6 +295,11 @@ Packages: `scraper/`, `business_profile/`, `grounding/`, `competitor/`, `brand/`
   `claim_strength` ladder (validated / directional_not_validated /
   internally_supported); own-site S/W floor in competitive mode; review-theme
   complaints → Threats, unmet needs → Opportunities; standalone degrade never empty.
+- **TOWS grounding gate fails CLOSED** (2026-07-05): a ledger error on a strategy's text
+  now returns not-grounded → the pairing keeps its GROUNDED deterministic template instead
+  of shipping the LLM's unverified text (was fail-open — an error let unverified strategy
+  copy through the moat; the pairing is kept either way, so failing closed loses only LLM
+  phrasing, never a fabricated claim).
 - **TOWS layer** (adopted from teammate Rawda's BI platform — HER synthesis thinking,
   OUR grounding; her prompt-only trust model was explicitly not taken): SO/ST/WO/WT
   strategies with anchors validated against real SWOT ids, Ledger-gated text

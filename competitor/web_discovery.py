@@ -17,8 +17,11 @@ result yields [] and the SWOT layer degrades to a grounded standalone analysis.
 """
 from __future__ import annotations
 
+import logging
 from typing import List, Optional
 from urllib.parse import urlparse
+
+logger = logging.getLogger(__name__)
 
 from .discovery import _get, _is_scrapable_site, _offering_name
 from .models import (
@@ -411,7 +414,11 @@ class SerpWebDiscoveryEngine:
             from pydantic import BaseModel
 
             class _Kept(BaseModel):
-                keep_indices: list[int] = []
+                # REQUIRED (no default): if the model OMITS the field, validation fails and
+                # the `except` keeps all candidates — so an omitted judgment is not silently
+                # read as pydantic's default [] and used to drop EVERY real peer. An explicit
+                # empty list is still a genuine "keep none" (reject-only, drop-when-unsure).
+                keep_indices: list[int]
 
             name = _field_text(profile, "name")
             category = _field_text(profile, "category")
@@ -431,7 +438,12 @@ class SerpWebDiscoveryEngine:
                     f"Candidates:\n{lines}\n\nReturn keep_indices (subset of the shown indices).")
             resp, _u = self.judge_caller(system, user, _Kept, group_name="peer_relevance")
             keep = {i for i in (resp.keep_indices or []) if 0 <= i < len(peers)}
-            return [p for i, p in enumerate(peers) if i in keep]
+            kept = [p for i, p in enumerate(peers) if i in keep]
+            if peers and not kept:
+                # A genuine "keep none" is valid (reject-only), but surface it so an empty
+                # competitor set is traceable to the judge, not mistaken for "found nothing".
+                logger.warning("peer-relevance judge dropped ALL %d candidate(s)", len(peers))
+            return kept
         except Exception:  # noqa: BLE001 — the judge must never break discovery
             return peers
 

@@ -181,13 +181,19 @@ def _llm_strategies(swot: SWOT, ids: Dict[str, SWOTItem], caller) -> List[_LLMSt
 
 def _text_is_grounded(text: str, ledger: Any) -> bool:
     """True iff the text carries NO unsourced falsifiable claim (same predicate as the
-    strategy-calendar gate). Pure recommendation language passes untouched."""
+    strategy-calendar gate). Pure recommendation language passes untouched.
+
+    Fails CLOSED: a ledger error returns False so the caller swaps in the grounded
+    deterministic template (which cites real SWOT item texts) rather than shipping the
+    LLM's UNVERIFIED strategy text. The pairing is kept either way — no strategy is lost —
+    so failing closed costs only some LLM phrasing, never a fabricated claim through the moat.
+    (When no ledger is supplied at all, gating is off by design and the text passes.)"""
     if ledger is None:
         return True
     try:
         return all(v.sourced for v in ledger.audit_text(text or ""))
-    except Exception:  # noqa: BLE001 — a gate error must never fabricate a failure
-        return True
+    except Exception:  # noqa: BLE001 — on a gate error, fall back to the grounded template
+        return False
 
 
 # ---------------------------------------------------------------------------
