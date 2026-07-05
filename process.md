@@ -2,7 +2,7 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1016 passed, 0 failed** (2026-07-05; grew from 880 as each audit fix
+Test suite: **1018 passed, 0 failed** (2026-07-05; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
 
 **Active work — adversarial audit (2026-07-05):** a deep verified audit found 1 CRITICAL
@@ -487,12 +487,13 @@ Packages: `scraper/`, `business_profile/`, `grounding/`, `competitor/`, `brand/`
   a regression test (`test_saturated_brand_color_beats_a_pale_high_dominance_button`).
 - **End-to-end live demo (2026-07-05, eg.azzafahmy.com) — remaining problems surfaced** (the
   pipeline ran all 7 stages; the moat + QA gates behaved honestly; these are the open weaknesses):
-  1. **Poster one-shot bakes a GARBLED Arabic logo lockup.** The one-shot Imagen engine paints the
-     brand lockup and produces broken Arabic ("ةفهمص" for "عزة فهمي"). The vision-QA critic CAUGHT
-     it (pass=False across 3 retries) rather than shipping it — correct — but the one-shot can't
-     render clean Arabic. The reliable path for an Arabic-logo brand is the CLASSIC engine's real
-     logo-PLATE overlay (what the reel does: overlaid asset, crisp). Consider routing AR-logo
-     brands to classic, or always overlay the real logo asset instead of letting Imagen paint it.
+  1. **Poster one-shot garbled Arabic logo — FIXED 2026-07-05.** The one-shot Imagen engine
+     re-drew the brand lockup and produced broken Arabic ("ةفهمص" for "عزة فهمي"). Fix: the prompt
+     now tells the model to RESERVE a clean corner and NOT draw the logo at all; the logo is no
+     longer attached to generation; `poster.pipeline._overlay_real_logo` COMPOSITES the real logo
+     asset onto that corner deterministically (PIL, luminance-adaptive frosted plate + soft
+     shadow) — pixel-exact, so Arabic is never garbled. Runs before the vision-QA read, so QA sees
+     the crisp logo. Verified by compositing onto the demo poster (crisp "عزة فهمي"). 1 hermetic test.
   2. **`creative_dna` vision fails 400 `INVALID_ARGUMENT: Provided image is not valid`** on some of
      the brand's real ad images → degrades gracefully to `dna=no` (no crash) but LOSES the DNA
      signal for that run. Needs a pre-validate/transcode (or skip-bad-image) before the Pro vision call.

@@ -279,6 +279,64 @@ def _logo_bytes(logo_url: Optional[str]) -> tuple[Optional[bytes], str]:
     return None, "image/png"
 
 
+def _overlay_real_logo(poster_path: Path, logo_bytes: bytes, *, rtl: bool) -> bool:
+    """Composite the brand's REAL logo asset onto the finished one-shot poster's top corner —
+    deterministic and pixel-exact, so an Arabic logo is NEVER garbled by the image model (which
+    re-draws attached logos: "عزة فهمي" → "ةفهمص"). The one-shot prompt reserves this corner clean.
+    A luminance-adaptive frosted plate + soft shadow keep the mark legible on any background.
+    Best-effort: returns False (leaving the poster untouched) on any error. Never raises."""
+    try:
+        import io as _io
+
+        from PIL import Image, ImageDraw, ImageFilter
+
+        poster = Image.open(poster_path).convert("RGBA")
+        W, H = poster.size
+        logo = Image.open(_io.BytesIO(logo_bytes)).convert("RGBA")
+        # Trim fully-transparent margins so the plate hugs the real mark.
+        bbox = logo.split()[3].getbbox()
+        if bbox:
+            logo = logo.crop(bbox)
+        tw = int(W * 0.24)
+        scale = tw / max(1, logo.width)
+        th = int(logo.height * scale)
+        cap = int(H * 0.085)
+        if th > cap:
+            scale = cap / max(1, logo.height)
+            tw, th = max(1, int(logo.width * scale)), cap
+        logo = logo.resize((max(1, tw), max(1, th)), Image.LANCZOS)
+
+        margin = int(W * 0.05)
+        padx, pady = int(th * 0.75), int(th * 0.55)
+        pw, ph = tw + 2 * padx, th + 2 * pady
+        px = (W - margin - pw) if rtl else margin
+        py = margin
+
+        region = poster.crop((max(0, px), max(0, py),
+                              min(W, px + pw), min(H, py + ph))).convert("L")
+        mean = sum(region.getdata()) / max(1, region.width * region.height)
+        dark_bg = mean < 122
+        plate_rgb = (255, 255, 255) if dark_bg else (24, 19, 16)
+
+        radius = int(ph * 0.32)
+        shadow = Image.new("RGBA", (pw + 48, ph + 48), (0, 0, 0, 0))
+        ImageDraw.Draw(shadow).rounded_rectangle(
+            [24, 28, 24 + pw - 1, 28 + ph - 1], radius=radius, fill=(0, 0, 0, 115))
+        shadow = shadow.filter(ImageFilter.GaussianBlur(13))
+        poster.alpha_composite(shadow, (px - 24, py - 24))
+
+        plate = Image.new("RGBA", (pw, ph), (0, 0, 0, 0))
+        ImageDraw.Draw(plate).rounded_rectangle(
+            [0, 0, pw - 1, ph - 1], radius=radius, fill=plate_rgb + (200,))
+        poster.alpha_composite(plate, (px, py))
+        poster.alpha_composite(logo, (px + padx, py + pady))
+
+        poster.convert("RGB").save(poster_path)
+        return True
+    except Exception:  # noqa: BLE001 — the poster ships fine without the overlay
+        return False
+
+
 def _image_bytes_from_url(url: Optional[str]) -> tuple[Optional[bytes], str]:
     """Fetch ONE remote image via the renderer's SSRF-guarded fetch -> (bytes, mime)."""
     if not url:
@@ -397,12 +455,15 @@ def _try_oneshot(profile, brief, concept, brand_dna, caller, *, arabic, audit,
         for attempt in range(1, max(1, max_retries + 1) + 1):
             out_path = Path(out_dir) / f"poster_{uuid.uuid4().hex[:8]}.png"
             try:
-                oneshot.generate_oneshot_poster(prompt, out_path, logo_bytes=logo_bytes,
-                                                logo_mime=logo_mime,
+                # Do NOT attach the logo to generation — the model garbles it (esp. Arabic).
+                # The prompt reserves a clean corner; we composite the REAL logo in below.
+                oneshot.generate_oneshot_poster(prompt, out_path, logo_bytes=None,
                                                 product_images=product_imgs)
             except Exception as e:  # noqa: BLE001
                 log(f"[oneshot] attempt {attempt} generation failed: {type(e).__name__}: {e}")
                 continue
+            if logo_bytes and _overlay_real_logo(out_path, logo_bytes, rtl=arabic):
+                log("[oneshot] real logo composited (deterministic, crisp)")
             seen = oneshot.read_rendered_text(out_path, caller)
             verdict = oneshot.text_fidelity(expected, seen)
             # VISUAL brand fabrication gate (owner caught it: the model painted the

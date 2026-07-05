@@ -40,6 +40,14 @@ _FONTS_LINK = (
     'family=Inter:wght@400;600&display=swap" rel="stylesheet">'
 )
 
+# A luxury/premium/fashion tone renders captions in a refined display SERIF instead of the
+# chunky Oswald uppercase (owner: the jewelry reel's text read "سخيفة").
+_ELEGANT_TONES = ("luxury", "premium", "elegant", "refined", "sophisticat", "boutique", "couture")
+
+
+def _is_elegant_tone(tone: Optional[str]) -> bool:
+    return any(k in (tone or "").lower() for k in _ELEGANT_TONES)
+
 
 def _logo_data_uri(url: Optional[str]) -> Optional[str]:
     """SSRF-guarded fetch of the brand logo -> data URI for inlining. None on any
@@ -191,13 +199,19 @@ def _scene_html(scene: ReelScene, storyboard: Storyboard, width: int, height: in
              if c and str(c).startswith("#") and str(c).lower() != accent.lower()]
     accent2 = _pal2[0] if _pal2 else accent
 
+    elegant = _is_elegant_tone(storyboard.tone)
     lockup = scene.kind in ("intro", "outro")          # the hero scenes get a designed lockup
     if lockup and scene.headline:                      # size the HERO by its word count (huge)
         _nh = hero_word_count(scene.headline)
-        head_px = round(width * (0.205 if _nh <= 1 else 0.165 if _nh == 2 else 0.13))
+        _b = 0.205 if _nh <= 1 else 0.165 if _nh == 2 else 0.13
+        head_px = round(width * (_b * 0.86 if elegant else _b))  # a serif is wider than Oswald
     else:
         short = len((scene.headline or "").split()) <= 3
-        head_px = round(width * (0.112 if short else 0.088))
+        head_px = round(width * ((0.112 if short else 0.088) * (0.94 if elegant else 1.0)))
+    if scene.headline:                                 # cap by the LONGEST word so it never overflows
+        _lw = max((len(w) for w in scene.headline.split()), default=1)
+        _cw = 0.74 if elegant else 0.60
+        head_px = max(round(width * 0.06), min(head_px, int(width * 0.80 / max(1, _lw) / _cw)))
     item_px = round(width * 0.046)
     cta_px = round(width * 0.048)
     logo_h = round(width * 0.12)
@@ -210,6 +224,22 @@ def _scene_html(scene: ReelScene, storyboard: Storyboard, width: int, height: in
     # LTR display type gets the tight tracking the brief asks for.
     head_track = "0" if rtl else "-0.5px"
     lock_track = "0" if rtl else "-1px"
+    # Elegant (luxury) vs bold (default) type treatment — see _is_elegant_tone.
+    head_family = "'Fraunces','Amiri','Cairo',serif" if elegant else "'Oswald','Cairo',system-ui,sans-serif"
+    head_transform = "none" if elegant else "uppercase"
+    head_weight = "600" if elegant else "700"
+    head_style = "italic" if elegant else "normal"
+    if elegant:
+        head_track = "0.2px"
+        lock_track = "0.3px" if rtl else "0.5px"
+    lw_grad = ("linear-gradient(180deg,#fffdf6 0%,#efe4cf 100%)" if elegant
+               else "linear-gradient(180deg,#ffffff 0%,#d7dee7 100%)")
+    lw_stroke = "0.5px rgba(6,9,14,.30)" if elegant else "1.4px rgba(6,9,14,.72)"
+    lw_shadow = ("drop-shadow(0 2px 10px rgba(0,0,0,.7)) drop-shadow(0 10px 28px rgba(0,0,0,.42))"
+                 if elegant else
+                 "drop-shadow(0 3px 8px rgba(0,0,0,.92)) drop-shadow(0 12px 26px rgba(0,0,0,.6))")
+    acc_stroke = "0.4px rgba(6,9,14,.22)" if elegant else "1.2px rgba(6,9,14,.42)"
+    acc_style = "italic" if elegant else "normal"
 
     show_logo = bool(logo_uri) and scene.kind in ("intro", "outro", "contact")
     logo_pos = "right:64px" if rtl else "left:64px"
@@ -249,23 +279,23 @@ def _scene_html(scene: ReelScene, storyboard: Storyboard, width: int, height: in
     display:flex;flex-direction:column;align-items:{edge};}}
   .cluster{{text-align:{align};max-width:86%;}}
   .cluster>*{{unicode-bidi:plaintext;}}
-  .headline{{font-family:'Oswald','Cairo',system-ui,sans-serif;font-weight:700;
-    font-size:{head_px}px;line-height:1.0;letter-spacing:{head_track};text-transform:uppercase;
+  .headline{{font-family:{head_family};font-weight:{head_weight};
+    font-size:{head_px}px;line-height:1.04;letter-spacing:{head_track};text-transform:{head_transform};
     text-wrap:balance;text-shadow:{shadow};-webkit-text-stroke:0.4px rgba(0,0,0,.3);}}
-  .headline .hl{{color:var(--accent);}}
+  .headline .hl{{color:var(--accent);font-style:{head_style};}}
   /* designed LOCKUP (poster parity) for the hero scenes: stacked words, gradient fill +
-     heavy outline, the last word in the brand-accent gradient. */
-  .headline.lockup{{display:flex;flex-direction:column;gap:2px;line-height:.92;
+     outline, the last word in the brand-accent gradient. */
+  .headline.lockup{{display:flex;flex-direction:column;gap:2px;line-height:.98;
     letter-spacing:{lock_track};text-shadow:none;-webkit-text-stroke:0;}}
   .lockup .lw{{display:block;
-    background:linear-gradient(180deg,#ffffff 0%,#d7dee7 100%);
+    background:{lw_grad};
     -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;
-    -webkit-text-stroke:1.4px rgba(6,9,14,.72);
-    filter:drop-shadow(0 3px 8px rgba(0,0,0,.92)) drop-shadow(0 12px 26px rgba(0,0,0,.6));}}
-  .lockup .lw.acc{{
+    -webkit-text-stroke:{lw_stroke};
+    filter:{lw_shadow};}}
+  .lockup .lw.acc{{font-style:{acc_style};
     background:linear-gradient(180deg,{accent} 0%,{accent2} 100%);
     -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;
-    -webkit-text-stroke:1.2px rgba(6,9,14,.42);
+    -webkit-text-stroke:{acc_stroke};
     filter:drop-shadow(0 3px 8px rgba(0,0,0,.9));}}
   /* small SUPPORT line under the hero (hierarchy): readable, not uppercase, no gradient. */
   .lockup .hsub{{display:block;font-size:0.30em;font-family:'Inter','Cairo',system-ui,sans-serif;

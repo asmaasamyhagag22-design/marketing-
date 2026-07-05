@@ -57,3 +57,39 @@ def test_brief_detects_arabic_and_asks_for_egyptian():
     assert "EGYPTIAN" in ar or "المصرية" in ar
     en = _instructions_for(["An enduring symbol"], tone="luxury")
     assert "EGYPTIAN" not in en
+
+
+# --- the CLI reel path (textlayer._scene_html) must ALSO honour the theme ------------
+
+def test_cli_scene_html_uses_serif_for_luxury_and_oswald_otherwise():
+    from reel.schemas import ReelScene, Storyboard
+    from reel.textlayer import _scene_html
+
+    def html(tone: str) -> str:
+        sb = Storyboard(business_name="B", primary_dir="ltr", tone=tone, palette_hex=["#ccb454"])
+        scene = ReelScene(kind="intro", duration_s=3.0, visual_prompt="x",
+                          headline="An Enduring Symbol")
+        return _scene_html(scene, sb, 1080, 1920, None)
+
+    assert "font-family:'Fraunces'" in html("luxury")     # refined serif for luxury
+    assert "font-family:'Oswald'" in html("ecommerce")    # punchy default otherwise
+
+
+# --- poster: the real logo is composited deterministically (never garbled) ----------
+
+def test_overlay_real_logo_composites_and_changes_the_poster(tmp_path):
+    import io
+
+    from PIL import Image
+
+    from poster.pipeline import _overlay_real_logo
+
+    poster = tmp_path / "poster.png"
+    Image.new("RGB", (1080, 1350), (18, 14, 12)).save(poster)   # dark poster
+    before = poster.read_bytes()
+    buf = io.BytesIO()
+    Image.new("RGBA", (400, 160), (204, 180, 84, 255)).save(buf, "PNG")  # a gold "logo"
+    assert _overlay_real_logo(poster, buf.getvalue(), rtl=False) is True
+    after = poster.read_bytes()
+    assert after != before                                  # the poster was modified (logo placed)
+    assert Image.open(poster).size == (1080, 1350)          # still a valid same-size PNG

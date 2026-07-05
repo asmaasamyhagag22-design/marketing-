@@ -99,9 +99,10 @@ def build_oneshot_prompt(copy: dict, *, brand_name: str = "", palette_names: str
             "packaging may appear in the scene."
         )
     parts.append(
-        "BRAND INTEGRITY (mandatory): the brand's logo/name may appear ONLY as the "
-        "attached real logo asset placed in a corner"
-        + (" and on the attached real products exactly as photographed" if n_products else "")
+        "BRAND INTEGRITY (mandatory): do NOT draw the brand's logo or name yourself — the real "
+        "logo asset is composited onto the poster afterward"
+        + (". The brand name may appear on the attached real products exactly as photographed"
+           if n_products else "")
         + ". NEVER paint or print the brand name onto other objects, devices, robots, "
         "vehicles, bags, screens or signage — do NOT invent branded objects or services "
         "the brand may not have."
@@ -147,9 +148,14 @@ def build_oneshot_prompt(copy: dict, *, brand_name: str = "", palette_names: str
             "typography."
         )
     if has_logo:
+        # The image model re-draws an attached logo (garbling Arabic script — measured on Azza
+        # Fahmy: "عزة فهمي" came out "ةفهمص"). So we do NOT ask it to render the logo at all: it
+        # leaves a CLEAN corner and the REAL logo asset is composited in deterministically after.
+        corner = "top-left" if not rtl else "top-right"
         parts.append(
-            "The attached image is the brand's REAL logo: place it cleanly in a top corner, "
-            "UNCHANGED — do not redraw, restyle, recolor or retype it."
+            f"Leave the {corner} area CLEAN and uncluttered — no logo, no brand mark, no text, "
+            f"no busy detail there: the brand's real logo is placed into that space afterward. "
+            f"Do NOT draw the brand's logo or wordmark anywhere in the image."
         )
     parts.append(
         "ABSOLUTELY NO other text, words, letters, numbers, watermarks or invented labels "
