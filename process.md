@@ -2,7 +2,7 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **997 passed, 0 failed** (2026-07-05; grew from 880 as each audit fix
+Test suite: **1004 passed, 0 failed** (2026-07-05; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
 
 **Active work — adversarial audit (2026-07-05):** a deep verified audit found 1 CRITICAL
@@ -177,8 +177,10 @@ Packages: `scraper/`, `business_profile/`, `grounding/`, `competitor/`, `brand/`
   Logo pipeline: host-stripped keyword/brand matching (a CDN named after the brand
   granted 432 promo tiles `brand_name_match` — nahdi lesson), "shop by brands"
   listing penalty, footer-logo rescue (signature = logo_keyword + brand_name_match +
-  score≥45), inline-SVG rasterization with visibility gate + dark-chip for white
-  logos, contact-icon penalty, raster-over-wordmark preference.
+  score≥45), structural-independent floor (a UNIQUE, hosted, site-wide-repeated content-only
+  mark for opaque-DOM SaaS-builder sites — §6 elkbabgi), inline-SVG rasterization with
+  visibility gate + dark-chip for white logos, contact-icon penalty, raster-over-wordmark
+  preference.
 - **Content images**: real photos from `<img>`/lazy/CSS-bg collected (`CONTENT` role);
   homepage full screenshot saved + surfaced on the profile
   (`visual.homepage_screenshot_path`).
@@ -423,16 +425,29 @@ Packages: `scraper/`, `business_profile/`, `grounding/`, `competitor/`, `brand/`
 
 ## 6. Honest gaps & known limitations (current)
 
-- **Logo threshold calibration (finder lead, NOT yet fixed — needs owner live QA)**:
-  `PRIMARY_LOGO_THRESHOLD=55`; elkbabgi.com + diplomatic-lark (Strikingly sites) have a
-  real logo that scores **54** — `logo_keyword`+`suitable_logo_shape`+`repeated_candidate`
-  — missed by 1 point because the `repeated_candidate` bonus is capped at 12 and ignores
-  how site-wide the image is (repeated on 5/6 pages). A `+4` bonus for keyword-matched
-  site-wide-repeated marks fixes both, but a crude corpus sim showed 6 possible selection
-  changes on has-logo sites (mostly sim artifacts, not the real classification-aware
-  selector) — so it's left for the owner's live-QA loop rather than an unvetted scoring
-  change. The other 7/8 no-logo corpus sites are FAILED/BLOCKED scrapes (bot wall, robots,
-  HTTP error, timeout), not logo-pipeline bugs.
+- **Logo threshold calibration (RESOLVED 2026-07-05 — structural-independent floor)**:
+  elkbabgi.com (= its diplomatic-lark Strikingly subdomain; ONE site captured 8×) has a real
+  header logo that scored **54** — `logo_keyword`+raster+`suitable_logo_shape`+`repeated` — and
+  missed the 55 gate by 1 because a SaaS site-builder's opaque DOM denies EVERY structural
+  signal (in_header/near_nav/links_to_home). Visually confirmed genuine (gold crowned-lion mark).
+  Fix: a last-resort `_floor_ok` conjunction in `_choose_primary_logo` (`scraper/extractors/
+  visual.py`) — promote a content-only mark ONLY when it's a HOSTED raster (not `data:`),
+  logo-named, logo-shaped, repeated site-wide (≥4), penalty-free, AND the UNIQUE such image on
+  the page. Threshold/weights UNCHANGED (a conjunction adds no points — cannot regress a passer
+  or shift a score). Two guards, both adversarially found & closed: (1) the uniqueness check
+  refuses a third-party logo-WALL (press/client/payment tiles named `*-logo.png` — the multi-
+  tile ambiguity we can't disambiguate without structure → honest UNKNOWN); (2) the floor runs
+  AFTER footer-rescue so a real footer logo is never suppressed. The `data:` guard refuses the
+  measured marasim "Client Five logo" placeholder twin (byte-identical reason set to elkbabgi).
+  MEASURED (real patched selector, floor on-vs-off over 110 manifests): **+8 gained / -0 lost /
+  0 changed** — the elkbabgi cluster and nothing else; re-score harness validated 8080/8080
+  candidate scores. 7 hermetic tests in `tests/test_visual_identity_v02.py`. Chosen over a
+  threshold-nudge (promotes a bare near-nav wordmark at 54) and a repeated-cap bump (promotes
+  the marasim twin) via a design panel + 3 adversarial verifiers. The 16 no-logo corpus sites
+  are FAILED/BLOCKED scrapes (bot wall, robots, HTTP error, timeout), not logo-pipeline bugs.
+  WATCH-ITEM: the floor rests on the ambient `logo_keyword`; if a HOSTED client-strip FP is ever
+  seen, add "client"/"clients"/"our-clients" to `PARTNER_KEYWORDS` (auto-voids via
+  `classified_partner_logo`) — NOT by lowering `_FLOOR_MIN_REPEAT`.
 - **Reel is still officially UNGATED in the coverage block**: captions/voiceover/hook
   ARE gated, but Veo extends speech beyond the provided lines (ungated model speech)
   and there is no per-reel audit trail yet. → closing items in §7 Phase 1.

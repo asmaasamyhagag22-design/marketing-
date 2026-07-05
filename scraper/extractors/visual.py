@@ -683,6 +683,42 @@ def _brand_in_filename(c: LogoCandidate, brand_terms: Optional[list[str]]) -> bo
     return any(t in base for t in (brand_terms or []) if t and len(t) > 3)
 
 
+# --- Structural-independent logo floor (measured: elkbabgi / Strikingly false-negative) ---
+# A SaaS site-builder (Strikingly/Wix/...) can render the header in an opaque DOM that denies
+# EVERY structural signal (in_header/near_nav/links_to_home), leaving a REAL raster logo one
+# point short at 54 (logo_keyword 22 + raster 8 + suitable_logo_shape 12 + repeated 12). The
+# missing point is not doubt — it's the extractor's blindness to a non-standard DOM. The floor
+# recovers exactly that profile WITHOUT touching any threshold or weight, so it cannot regress
+# a single existing passer or shift any score. Two guards keep it honest against the profile's
+# twin — a hosted third-party logo-WALL (press/client/payment tiles named `*-logo.png`):
+#   1. UNIQUENESS: promote only when the whole page has ONE floor-eligible image. A wall has
+#      many distinct tiles -> we cannot tell the brand's own from a third party's without
+#      structure -> return UNKNOWN honestly rather than guess a `techcrunch-logo.png`.
+#   2. It runs LAST — after the footer-rescue — so a genuine footer logo is never suppressed.
+_FLOOR_MIN_REPEAT = 4          # site-wide chrome, not a one-off tile
+_FLOOR_VOID_REASONS = frozenset({  # any of these on the candidate voids the floor
+    "penalty_social_icon", "penalty_hero_or_gallery", "og_image_not_primary_logo",
+    "fallback_icon_only", "penalty_brand_listing_section",
+    "classified_government_logo", "classified_partner_logo",
+    "classified_sponsor_logo", "classified_initiative_logo",
+})
+
+
+def _floor_ok(c: LogoCandidate) -> bool:
+    """The content-only logo signature: logo-named, logo-shaped, HOSTED raster, repeated
+    site-wide, with no disqualifying penalty. A conjunction (all-or-nothing) — it adds no
+    points, so a partial or penalized candidate can never satisfy it."""
+    r = set(c.reasons or [])
+    return (
+        "logo_keyword" in r
+        and "suitable_logo_shape" in r
+        and c.source_type in _RASTER_LOGO_TYPES            # a real raster image, not a text wordmark
+        and not str(c.src or "").startswith("data:")       # a hosted asset, not an inline placeholder blob
+        and (c.repeated_count or 1) >= _FLOOR_MIN_REPEAT
+        and not (r & _FLOOR_VOID_REASONS)
+    )
+
+
 def _choose_primary_logo(
     candidates: list[LogoCandidate],
     brand_terms: Optional[list[str]] = None,
@@ -717,7 +753,15 @@ def _choose_primary_logo(
         if footer:
             pool = footer
         else:
-            return None
+            # Last resort: the structural-independent floor. Promote a content-only logo
+            # ONLY when it is the UNIQUE such image on the page (all floor-eligible entries
+            # share one src — the site's own site-wide mark). Two or more distinct
+            # floor-eligible images = an ambiguous third-party logo-wall we refuse to guess.
+            floored = [c for c in candidates if _floor_ok(c)]
+            if floored and len({c.src for c in floored}) == 1:
+                pool = [max(floored, key=lambda c: c.score)]
+            else:
+                return None
 
     # Prefer a REAL raster logo image over a text wordmark (a high-scoring wordmark
     # is frequently a nav label like "Home" / "الرئيسية" / "About us").

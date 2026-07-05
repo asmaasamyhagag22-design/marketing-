@@ -317,3 +317,98 @@ def test_elkbabgi_real_palette_does_not_choose_beige_background_as_primary():
     assert "#7e4d34" in brand_hex
     assert "#171818" in brand_hex
     assert info["background_dominance"] >= 0.65
+
+
+# ---------------------------------------------------------------------
+# Structural-independent logo floor (opaque-DOM SaaS-builder false-negative)
+# ---------------------------------------------------------------------
+# A SaaS site-builder (Strikingly/Wix) can render the header in a DOM the extractor doesn't
+# recognize, denying every structural signal — so the REAL raster logo scores only 54
+# (logo_keyword + raster + suitable_shape + repeated) and misses the 55 gate by one point.
+# The floor recovers exactly that UNIQUE, site-wide-repeated content-only mark, while refusing
+# its twin (a third-party press/client/payment logo-WALL) via a uniqueness guard, and running
+# AFTER the footer-rescue so a real footer logo is never suppressed.
+
+def _floor_logo(src, *, context="brand logo", alt="logo", source_type="img",
+                width=50, height=60, in_footer=False):
+    """An opaque-DOM logo candidate: logo-named/shaped raster with NO structural signals."""
+    return _candidate(src, alt=alt, source_type=source_type, in_header=False, near_nav=False,
+                      links_to_home=False, width=width, height=height, context=context,
+                      in_footer=in_footer)
+
+
+def test_opaque_dom_unique_repeated_logo_is_selected_via_floor():
+    # elkbabgi profile: one logo, no structure, repeated x4 -> 54 -> now selected by the floor.
+    candidates = [_floor_logo("https://cdn.example.com/13987186/961198_854390.png")
+                  for _ in range(4)]
+    v = build_visual_identity(_png(), _computed(candidates, site_name="Kbabgi"),
+                              "https://kbabgi.example/")
+    assert v.primary_logo is not None
+    assert v.primary_logo.src.endswith("961198_854390.png")
+    assert "no_confident_primary_logo" not in v.visual_warnings
+
+
+def test_floor_refuses_third_party_logo_wall():
+    # A press/client/payment WALL: 3 DISTINCT hosted *-logo tiles, each repeated x4. All score
+    # 54 and are floor-eligible, but there is no way to tell the brand's own from a third
+    # party's without structure -> the uniqueness guard returns UNKNOWN honestly (no FP).
+    wall = []
+    for name in ("press/techcrunch-logo.png", "press/forbes-logo.png", "pay/visa-logo.png"):
+        wall += [_floor_logo(f"https://cdn.example.com/{name}", context="", alt="")
+                 for _ in range(4)]
+    v = build_visual_identity(_png(), _computed(wall, site_name="Kbabgi"),
+                              "https://kbabgi.example/")
+    assert v.primary_logo is None
+    assert "no_confident_primary_logo" in v.visual_warnings
+
+
+def test_floor_does_not_suppress_a_real_footer_logo():
+    # A genuine footer logo (rescue-eligible) coexisting with a floor-eligible tile: the
+    # footer-rescue runs FIRST, so the real footer mark wins — the floor never steals it.
+    footer = [_candidate("https://acme.example/acme-logo.png", alt="Acme logo",
+                         context="acme brand logo footer", in_header=False, near_nav=False,
+                         links_to_home=False, in_footer=True, width=160, height=60)]
+    tile = [_floor_logo("https://cdn.example.com/feature-badge.png") for _ in range(4)]
+    v = build_visual_identity(_png(), _computed(footer + tile, site_name="Acme"),
+                              "https://acme.example/")
+    assert v.primary_logo is not None
+    assert v.primary_logo.src.endswith("acme-logo.png")
+
+
+def test_floor_refuses_data_uri_placeholder_twin():
+    # marasim's "Client Five logo" case: a data: placeholder with elkbabgi's EXACT reason set.
+    # The hosted-asset guard refuses it (a brand logo is a real file, not an inline blob).
+    twin = [_floor_logo("data:image/png;base64,AAAA", context="brand logo", alt="Client logo")
+            for _ in range(4)]
+    v = build_visual_identity(_png(), _computed(twin, site_name="Kbabgi"),
+                              "https://kbabgi.example/")
+    assert v.primary_logo is None
+
+
+def test_floor_requires_site_wide_repetition():
+    # A single-emit logo (repeated x2 < 4) is not confidently site chrome -> floor declines.
+    candidates = [_floor_logo("https://cdn.example.com/logo.png") for _ in range(2)]
+    v = build_visual_identity(_png(), _computed(candidates, site_name="Kbabgi"),
+                              "https://kbabgi.example/")
+    assert v.primary_logo is None
+
+
+def test_floor_is_voided_by_a_penalty_signal():
+    # A hero/gallery-penalized image with an otherwise-matching signature is refused.
+    candidates = [_floor_logo("https://cdn.example.com/logo.png") for _ in range(4)]
+    for c in candidates:
+        c["is_hero_gallery"] = True
+    v = build_visual_identity(_png(), _computed(candidates, site_name="Kbabgi"),
+                              "https://kbabgi.example/")
+    assert v.primary_logo is None
+
+
+def test_floor_does_not_alter_a_structurally_placed_passer():
+    # No regression: a fully-structural logo still wins normally (the floor path is untouched).
+    candidates = [_candidate("https://brand.example/brand-logo.png", alt="Brand logo",
+                             context="header brand logo", in_header=True, near_nav=True,
+                             links_to_home=True)]
+    v = build_visual_identity(_png(), _computed(candidates, site_name="Brand"),
+                              "https://brand.example/")
+    assert v.primary_logo is not None
+    assert v.primary_logo.src.endswith("brand-logo.png")
