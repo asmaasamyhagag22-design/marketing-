@@ -32,6 +32,11 @@ _FONTS_LINK = (
     'family=Cairo:wght@400;600;700;900&'
     'family=Oswald:wght@500;600;700&'
     'family=Space+Grotesk:wght@500;700&'
+    # Elegant display faces for the luxury/premium tone theme (Latin serif + an Arabic
+    # display serif so RTL brands read refined too, not a chunky Oswald condensed).
+    'family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&'
+    'family=Cormorant+Garamond:wght@500;600;700&'
+    'family=Amiri:wght@400;700&'
     'family=Inter:wght@400;600&display=swap" rel="stylesheet">'
 )
 

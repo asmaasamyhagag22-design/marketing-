@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 from poster.schemas import PosterBrief
 
@@ -28,6 +28,19 @@ from .video_provider import VideoProvider
 from .voiceover import synth_voiceover
 
 logger = logging.getLogger(__name__)
+
+
+def _brand_tone(profile: Any) -> str:
+    """The brand's tone-of-voice value (e.g. 'luxury') from the profile, so the voice-over
+    delivery fits the brand instead of a hardcoded read. Robust to the {'profile': {...}} wrapper."""
+    try:
+        p = profile.get("profile", profile) if isinstance(profile, dict) else {}
+        t = p.get("tone_of_voice")
+        if isinstance(t, dict):
+            t = t.get("value")
+        return str(t or "").lower()
+    except Exception:
+        return ""
 
 
 def build_creative_storyboard(reel: CreativeReel, brief: PosterBrief) -> Storyboard:
@@ -92,7 +105,7 @@ def render_creative_reel(
         vo_durs = [s.duration_s for s in storyboard.scenes]
         vo_deliveries = [s.voiceover_delivery for s in creative.scenes]
         vo_path = synth_voiceover(vo_lines, vo_durs, Path(out_path).with_suffix(".vo.m4a"),
-                                  deliveries=vo_deliveries)
+                                  deliveries=vo_deliveries, tone=_brand_tone(profile))
         if vo_path:
             logger.info("voice-over track ready: %s", vo_path)
 

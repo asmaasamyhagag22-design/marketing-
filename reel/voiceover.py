@@ -10,10 +10,11 @@ from __future__ import annotations
 import logging
 import os
 import re
+import subprocess
 from pathlib import Path
 from typing import Optional
 
-from .ffmpeg_tools import run_ffmpeg
+from .ffmpeg_tools import ffmpeg_exe, run_ffmpeg
 
 logger = logging.getLogger(__name__)
 
@@ -36,27 +37,38 @@ _SPEECH_VOICE = "onyx"          # valid /audio/speech voice for the fallback pat
 _AR_RE = re.compile(r"[؀-ۿݐ-ݿﭐ-﷿ﹰ-﻿]")
 
 
-def _instructions_for(lines: list[str], delivery: str = "") -> str:
-    """Performance brief for one line. Pushes hard for EMOTION (the default read came
-    out flat) and optionally folds in a per-line delivery note from the director."""
+def _instructions_for(lines: list[str], delivery: str = "", tone: str = "") -> str:
+    """Performance brief for the narration. ONE consistent narrator, warm and expressive but
+    controlled — never flat/robotic and never a news reader. Adapts to the brand TONE (a
+    luxury brand reads refined & unhurried; a playful one reads bright & energetic) so the
+    voice fits the brand instead of a hardcoded 'appetizing food ad' (that was a vertical
+    leak — wrong for jewelry, clinics, telecom …). `tone` comes from the brand profile."""
     env = os.environ.get("REEL_TTS_INSTRUCTIONS")
-    base = env if env else (
-        _AR_RE.search(" ".join(lines or [])) and (
-            "You are a passionate, EXPRESSIVE human voice-over artist performing a premium "
-            "food-brand ad. Perform with REAL EMOTION and energy — sound genuinely excited, "
-            "proud and warm; let your pitch rise and fall, lean into the appetizing words, "
-            "add a smile you can hear and natural enthusiasm. Authentic EGYPTIAN ARABIC "
-            "(Cairo dialect / اللهجة المصرية) — NOT flat, NOT a news reader, NOT robotic. "
-            "Vary your pace and build energy."
-        ) or (
-            "You are a passionate, EXPRESSIVE human voice-over artist for a premium brand ad. "
-            "Perform with real emotion and energy — excited, warm, dynamic; vary pace and pitch, "
-            "lean into the key words. Sound human and alive, never flat or robotic."
+    if env:
+        base = env
+    else:
+        t = (tone or "").lower()
+        if any(k in t for k in ("luxury", "premium", "elegant", "refined", "sophisticat")):
+            mood = ("refined, warm and UNHURRIED — the poised confidence of a luxury house; "
+                    "let each phrase breathe, intimate and aspirational, never rushed or salesy")
+        elif any(k in t for k in ("playful", "fun", "bold", "energetic", "youth", "vibrant")):
+            mood = ("bright, upbeat and full of energy — genuinely excited and friendly; "
+                    "let your pitch rise, smile through the words")
+        else:
+            mood = ("warm, confident and human — real emotion and gentle energy; "
+                    "vary pace and pitch, lean into the key words, sound alive not flat")
+        is_ar = bool(_AR_RE.search(" ".join(lines or [])))
+        dialect = ("Authentic EGYPTIAN ARABIC (Cairo dialect / اللهجة المصرية). "
+                   if is_ar else "")
+        base = (
+            "You are ONE consistent, professional human voice-over artist narrating a premium "
+            f"brand film. Keep the SAME voice, character and energy from the first word to the "
+            f"last — do NOT change persona between lines. {dialect}Perform it {mood}. "
+            "Never flat, never robotic, never a news anchor."
         )
-    )
     if delivery:
-        base += f" For THIS line, the emotion/delivery is: {delivery}."
-    return base + " Speak ONLY the line you are given, no extra words."
+        base += f" Emotional direction for this passage: {delivery}."
+    return base
 
 
 def _synth_one(client, text: str, out: Path, *, model: str, voice: str,
@@ -235,6 +247,20 @@ def _resolve_backend(backend: Optional[str]) -> str:
     return "edge"
 
 
+def _audio_dur(path: Path) -> Optional[float]:
+    """Seconds of an audio file, parsed from ffmpeg's stderr (no ffprobe needed)."""
+    try:
+        out = subprocess.run([ffmpeg_exe(), "-hide_banner", "-i", str(path)],
+                             capture_output=True, text=True, timeout=60).stderr or ""
+        m = re.search(r"Duration:\s*(\d+):(\d+):(\d+(?:\.\d+)?)", out)
+        if m:
+            h, mn, s = m.groups()
+            return int(h) * 3600 + int(mn) * 60 + float(s)
+    except Exception:
+        pass
+    return None
+
+
 def synth_voiceover(
     lines: list[str],
     durations: list[float],
@@ -245,11 +271,21 @@ def synth_voiceover(
     deliveries: Optional[list[str]] = None,
     api_key: Optional[str] = None,
     backend: Optional[str] = None,
+    tone: str = "",
 ) -> Optional[Path]:
-    """Build a single narration track aligned to `durations` (one entry per scene).
-    `deliveries` (optional, one per line) is a per-line emotion/performance note from
-    the director, folded into that line's instruction so each scene is performed with
-    its own feeling. `backend` selects the TTS engine (gemini | openai; default auto).
+    """Build ONE continuous narration track for the reel and TIME-FIT it to the footage.
+
+    Two bugs this fixes (measured on the Azza Fahmy demo — owner: "الصوت الكنه بتتغير وبيقطع"):
+      * CHANGING voice — the old path synthesized each scene line as a SEPARATE call, so the
+        model gave a different intonation/energy every scene. We now join the lines into ONE
+        script and synthesize it in a SINGLE call: one voice, one performance, start to end.
+      * CUTTING — the old path hard-trimmed every segment to its scene length, chopping any
+        line that ran long mid-word. We now lay the whole read over the footage and, only if it
+        runs long, gently speed it (atempo, capped) to fit; otherwise pad trailing silence — the
+        speech itself is never cut.
+
+    `tone` (from the brand profile) steers the delivery brief; `deliveries[0]` seeds the overall
+    emotional direction. `backend` selects the engine (gemini | openai | edge; default auto).
     Returns the audio path, or None if TTS is unavailable."""
     if not lines:
         return None
@@ -280,48 +316,51 @@ def synth_voiceover(
     else:
         default_voice = _DEFAULT_VOICE
     voice = voice or os.environ.get("REEL_TTS_VOICE") or default_voice
-    deliveries = deliveries or []
+
+    # ONE continuous script, scene order preserved, joined with a natural pause. Trailing
+    # end-punctuation is stripped per line so the joiner sets one consistent cadence.
+    parts = [str(l).strip() for l in lines if l and str(l).strip()]
+    if not parts:
+        return None
+    is_ar = bool(_AR_RE.search(" ".join(parts)))
+    joiner = "،  " if is_ar else ".  "
+    script = joiner.join(p.rstrip(" ،.!؟?") for p in parts)
+    total = sum(max(0.5, float(d)) for d in durations) or 10.0
+    seed_delivery = next((d for d in (deliveries or []) if d), "")
+    instructions = _instructions_for(lines, seed_delivery, tone)
+
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
 
     import tempfile
     with tempfile.TemporaryDirectory(prefix="vo_") as tmp:
         tmpd = Path(tmp)
-        seg_paths: list[Path] = []
-        for i, (line, dur) in enumerate(zip(lines, durations)):
-            scene_aud = tmpd / f"scene{i}.wav"
-            ext = "wav" if chosen == "gemini" else "mp3"
-            raw = tmpd / f"raw{i}.{ext}"
-            instructions = _instructions_for(lines, deliveries[i] if i < len(deliveries) else "")
-            if chosen == "gemini":
-                ok = _gemini_segment(gem_client, line, raw, voice=voice, model=model,
-                                     instructions=instructions)
-            elif chosen == "edge":
-                ok = _edge_segment(line, raw, voice=voice)
-            else:
-                ok = _tts_segment(oa_client, line, raw, model=model, voice=voice,
-                                  instructions=instructions)
-            if ok:
-                # Pad with trailing silence (or trim) so the line exactly fills the
-                # scene; a short lead-in delay keeps it off the hard cut.
-                run_ffmpeg([
-                    "-i", str(raw),
-                    "-af", f"adelay=200|200,apad",
-                    "-t", f"{max(0.5, dur):.2f}", "-ar", "44100", "-ac", "2",
-                    str(scene_aud),
-                ])
-            else:
-                # silent filler so the track stays aligned to the visuals
-                run_ffmpeg([
-                    "-f", "lavfi", "-i", "anullsrc=r=44100:cl=stereo",
-                    "-t", f"{max(0.5, dur):.2f}", str(scene_aud),
-                ])
-            seg_paths.append(scene_aud)
-
-        if not seg_paths:
+        ext = "wav" if chosen == "gemini" else "mp3"
+        raw = tmpd / f"vo_full.{ext}"
+        if chosen == "gemini":
+            ok = _gemini_segment(gem_client, script, raw, voice=voice, model=model,
+                                 instructions=instructions)
+        elif chosen == "edge":
+            ok = _edge_segment(script, raw, voice=voice)
+        else:
+            ok = _tts_segment(oa_client, script, raw, model=model, voice=voice,
+                              instructions=instructions)
+        if not ok:
             return None
-        listfile = tmpd / "vo_concat.txt"
-        listfile.write_text("".join(f"file '{p.as_posix()}'\n" for p in seg_paths), encoding="utf-8")
-        run_ffmpeg(["-f", "concat", "-safe", "0", "-i", str(listfile),
-                    "-c:a", "aac", "-b:a", "192k", str(out_path.resolve())])
+
+        # Time-fit to the footage. 0.25s lead-in keeps the read off the hard cut; if the read
+        # runs long, speed it JUST enough to fit (capped so it never sounds sped-up); then pad
+        # trailing silence to the full length. `-t total` trims only that trailing silence.
+        raw_dur = _audio_dur(raw) or total
+        speak = max(0.5, total - 0.25)
+        af = "adelay=250|250"
+        speed = raw_dur / speak
+        if speed > 1.02:
+            af += f",atempo={min(1.35, speed):.3f}"
+        af += ",apad"
+        run_ffmpeg([
+            "-i", str(raw), "-af", af,
+            "-t", f"{total:.2f}", "-ar", "44100", "-ac", "2",
+            "-c:a", "aac", "-b:a", "192k", str(out_path.resolve()),
+        ])
     return out_path if out_path.is_file() else None

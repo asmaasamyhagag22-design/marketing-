@@ -103,15 +103,28 @@ def plan_beats(headline: str, business_name: str, cta_text: str, total_s: float,
 # --------------------------------------------------------------------------- #
 # Timeline HTML (one full-duration layer; __seektl drives every beat)          #
 # --------------------------------------------------------------------------- #
-def _beat_inner(scene: ReelScene, rtl: bool, width: int, logo_uri: Optional[str]) -> str:
+def _beat_inner(scene: ReelScene, rtl: bool, width: int, logo_uri: Optional[str],
+                theme: str = "bold") -> str:
     """Logo + scrim + the text cluster for one beat (same structure as a CLI scene)."""
+    elegant = theme == "elegant"
     lockup = scene.kind in ("intro", "outro")
     if lockup and scene.headline:                      # size the HERO by its word count (huge)
         _nh = hero_word_count(scene.headline)
-        head_px = round(width * (0.205 if _nh <= 1 else 0.165 if _nh == 2 else 0.13))
+        base = 0.205 if _nh <= 1 else 0.165 if _nh == 2 else 0.13
+        if elegant:
+            base *= 0.86                               # a display serif is wider than Oswald condensed
+        head_px = round(width * base)
     else:
         short = len((scene.headline or "").split()) <= 3
-        head_px = round(width * (0.112 if short else 0.088))
+        head_px = round(width * ((0.112 if short else 0.088) * (0.94 if elegant else 1.0)))
+    # Cap by the LONGEST word so a wide serif word (e.g. "ENDURING") never runs off the frame —
+    # the old sizing used word COUNT only and overflowed on long single words.
+    if scene.headline:
+        longest = max((len(w) for w in scene.headline.split()), default=1)
+        char_w = 0.74 if elegant else 0.60            # approx uppercase advance ÷ font-px
+        avail = width * 0.80
+        head_px = min(head_px, int(avail / max(1, longest) / char_w))
+        head_px = max(head_px, round(width * 0.06))   # a sane floor
     logo_pos = "right:64px" if rtl else "left:64px"
     logo_html = (f'<div class="logo" {_LOGO_ANIM} style="{logo_pos}"><img src="{logo_uri}"></div>'
                  if logo_uri else "")
@@ -137,7 +150,7 @@ def _beat_inner(scene: ReelScene, rtl: bool, width: int, logo_uri: Optional[str]
 
 def _timeline_html(beats: list[tuple[ReelScene, float, float]], sb: Storyboard,
                    width: int, height: int, logo_uri: Optional[str],
-                   logo_until: Optional[float] = None) -> str:
+                   logo_until: Optional[float] = None, theme: str = "bold") -> str:
     rtl = sb.primary_dir == "rtl"
     dir_attr = "rtl" if rtl else "ltr"
     accent = _accent(sb)
@@ -159,9 +172,30 @@ def _timeline_html(beats: list[tuple[ReelScene, float, float]], sb: Storyboard,
     lock_track = "0" if rtl else "-1px"
     shadow = "0 2px 10px rgba(0,0,0,.9), 0 1px 3px rgba(0,0,0,.95)"
 
+    # THEME — an "elegant" tone (luxury/premium/fashion/beauty) swaps the chunky uppercase Oswald
+    # for a refined display SERIF (Fraunces / Amiri for Arabic), title-case, with a softer ivory
+    # treatment and an italic accent word. Everything else (layout/animation) is unchanged, so a
+    # non-elegant brand keeps the punchy "bold" look. (Owner: "الكتابة سخيفة" on a jewelry reel.)
+    elegant = theme == "elegant"
+    head_family = "'Fraunces','Amiri','Cairo',serif" if elegant else "'Oswald','Cairo',system-ui,sans-serif"
+    head_transform = "none" if elegant else "uppercase"
+    head_weight = "600" if elegant else "700"
+    head_style = "italic" if elegant else "normal"        # the highlighted caption word
+    if elegant:
+        head_track = "0.2px"
+        lock_track = "0.3px" if rtl else "0.5px"
+    lw_grad = ("linear-gradient(180deg,#fffdf6 0%,#efe4cf 100%)" if elegant
+               else "linear-gradient(180deg,#ffffff 0%,#d7dee7 100%)")
+    lw_stroke = "0.5px rgba(6,9,14,.30)" if elegant else "1.4px rgba(6,9,14,.72)"
+    lw_shadow = ("drop-shadow(0 2px 10px rgba(0,0,0,.7)) drop-shadow(0 10px 28px rgba(0,0,0,.42))"
+                 if elegant else
+                 "drop-shadow(0 3px 8px rgba(0,0,0,.92)) drop-shadow(0 12px 26px rgba(0,0,0,.6))")
+    acc_stroke = "0.4px rgba(6,9,14,.22)" if elegant else "1.2px rgba(6,9,14,.42)"
+    acc_style = "italic" if elegant else "normal"
+
     beat_divs = "".join(
         f'<div class="beat" data-tin="{tin:.2f}" data-tout="{tout:.2f}">'
-        f'{_beat_inner(scene, rtl, width, None)}</div>'          # logo is persistent, not per-beat
+        f'{_beat_inner(scene, rtl, width, None, theme)}</div>'   # logo is persistent, not per-beat
         for scene, tin, tout in beats
     )
     # Persistent brand logo — top corner, visible the WHOLE reel (owner: "اللوجو لازم يبقا معايا
@@ -187,21 +221,21 @@ def _timeline_html(beats: list[tuple[ReelScene, float, float]], sb: Storyboard,
     display:flex;flex-direction:column;align-items:{edge};}}
   .cluster{{text-align:{align};max-width:86%;}}
   .cluster>*{{unicode-bidi:plaintext;}}
-  .headline{{font-family:'Oswald','Cairo',system-ui,sans-serif;font-weight:700;
-    line-height:1.0;letter-spacing:{head_track};text-transform:uppercase;
+  .headline{{font-family:{head_family};font-weight:{head_weight};
+    line-height:1.04;letter-spacing:{head_track};text-transform:{head_transform};
     text-wrap:balance;text-shadow:{shadow};-webkit-text-stroke:0.4px rgba(0,0,0,.3);}}
-  .headline .hl{{color:var(--accent);}}
-  .headline.lockup{{display:flex;flex-direction:column;gap:2px;line-height:.92;
+  .headline .hl{{color:var(--accent);font-style:{head_style};}}
+  .headline.lockup{{display:flex;flex-direction:column;gap:2px;line-height:.98;
     letter-spacing:{lock_track};text-shadow:none;-webkit-text-stroke:0;}}
   .lockup .lw{{display:block;
-    background:linear-gradient(180deg,#ffffff 0%,#d7dee7 100%);
+    background:{lw_grad};
     -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;
-    -webkit-text-stroke:1.4px rgba(6,9,14,.72);
-    filter:drop-shadow(0 3px 8px rgba(0,0,0,.92)) drop-shadow(0 12px 26px rgba(0,0,0,.6));}}
-  .lockup .lw.acc{{
+    -webkit-text-stroke:{lw_stroke};
+    filter:{lw_shadow};}}
+  .lockup .lw.acc{{font-style:{acc_style};
     background:linear-gradient(180deg,{accent} 0%,{accent2} 100%);
     -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;
-    -webkit-text-stroke:1.2px rgba(6,9,14,.42);
+    -webkit-text-stroke:{acc_stroke};
     filter:drop-shadow(0 3px 8px rgba(0,0,0,.9));}}
   /* small SUPPORT line under the hero (hierarchy): readable, not uppercase, no gradient. */
   .lockup .hsub{{display:block;font-size:0.30em;font-family:'Inter','Cairo',system-ui,sans-serif;
@@ -270,7 +304,7 @@ def _timeline_html(beats: list[tuple[ReelScene, float, float]], sb: Storyboard,
 def render_timeline_overlay(
     sb: Storyboard, beats: list[tuple[ReelScene, float, float]], *,
     width: int, height: int, fps: int, total_s: float, out_dir: Path,
-    include_logo: bool = True, logo_until: Optional[float] = None,
+    include_logo: bool = True, logo_until: Optional[float] = None, theme: str = "bold",
 ) -> str:
     """Render the FULL-DURATION transparent kinetic overlay as an image2 PNG sequence
     (`f0000.png` ... at `fps`). Returns the ffmpeg image2 pattern. Each frame is captured
@@ -281,7 +315,7 @@ def render_timeline_overlay(
     seq_dir = out_dir / "tl"
     seq_dir.mkdir(parents=True, exist_ok=True)
     logo_uri = _logo_data_uri(sb.logo_url) if include_logo else None
-    html = _timeline_html(beats, sb, width, height, logo_uri, logo_until=logo_until)
+    html = _timeline_html(beats, sb, width, height, logo_uri, logo_until=logo_until, theme=theme)
     n = max(1, round(float(total_s) * fps))
     clip = {"x": 0, "y": 0, "width": width, "height": height}
 
@@ -360,6 +394,29 @@ def _category_value(profile: dict) -> str:
         return ""
 
 
+_ELEGANT_TONES = ("luxury", "premium", "elegant", "refined", "sophisticat", "boutique")
+_ELEGANT_CATS = ("jewelry", "jewellery", "fashion", "beauty", "cosmetic", "perfume", "couture")
+
+
+def _reel_theme(profile: dict) -> str:
+    """Pick the caption TYPE theme from the brand's tone/category: 'elegant' (refined serif) for
+    a luxury/fashion/beauty brand, else 'bold' (the punchy Oswald default). Universal signal —
+    driven by the profile's own tone_of_voice + category, never a per-brand hack."""
+    try:
+        tone = ""
+        t = profile.get("tone_of_voice") if isinstance(profile, dict) else None
+        if isinstance(t, dict):
+            t = t.get("value")
+        tone = str(t or "").lower()
+        cat = _category_value(profile)
+        blob = f"{tone} {cat}"
+        if any(k in blob for k in _ELEGANT_TONES) or any(k in cat for k in _ELEGANT_CATS):
+            return "elegant"
+    except Exception:
+        pass
+    return "bold"
+
+
 def _appropriate_cta(cta: str, profile: dict, rtl: bool) -> str:
     """A telecom / non-ecommerce brand shouldn't say «تسوق»/Shop. Swap a shopping verb for a
     neutral action CTA when the category isn't ecommerce/retail. CTA is design copy (a call to
@@ -423,7 +480,7 @@ def add_kinetic_text_to_reel(profile: dict[str, Any], video_path: str | Path, *,
             tmpd = Path(tmp)
             pattern = render_timeline_overlay(
                 sb, beats, width=REEL_W, height=REEL_H, fps=fps, total_s=total_s, out_dir=tmpd,
-                logo_until=(window_s if footage_s else None),
+                logo_until=(window_s if footage_s else None), theme=_reel_theme(profile),
             )
             tmp_out = tmpd / "with_text.mp4"
             overlay_timeline_on_video(video_path, pattern, tmp_out, fps=fps)

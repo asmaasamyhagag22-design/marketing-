@@ -2,7 +2,7 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1010 passed, 0 failed** (2026-07-05; grew from 880 as each audit fix
+Test suite: **1016 passed, 0 failed** (2026-07-05; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
 
 **Active work — adversarial audit (2026-07-05):** a deep verified audit found 1 CRITICAL
@@ -400,6 +400,16 @@ Packages: `scraper/`, `business_profile/`, `grounding/`, `competitor/`, `brand/`
   safe margins), persistent corner logo fading into the end-card, calm pacing
   (~4s shots), image-quality gate on any real photos, Ken-Burns per-scene fallback,
   free edge-tts backend for the CLI voiceover path, language option (auto/ar/en).
+- **Caption TYPE is tone-aware (2026-07-05 polish)**: a luxury/fashion/beauty brand
+  (`_reel_theme` off tone_of_voice + category) renders the hero in a refined display SERIF
+  (Fraunces / Amiri for Arabic), title-case, ivory-warm, italic accent word — instead of the
+  chunky Oswald uppercase that read "سخيف" on a jewelry reel. Hero size now caps by the LONGEST
+  word so a wide serif word never overflows the frame. Non-elegant brands keep the punchy bold.
+- **Voice-over rebuilt (2026-07-05 polish)**: was per-scene (a SEPARATE synth call each scene →
+  the voice/energy CHANGED every scene) and hard-trimmed to the scene length (chopped long lines
+  mid-word → "بيقطع"). Now ONE continuous script → ONE call → ONE voice/performance, TIME-FIT to
+  the footage (gentle `atempo` only if it runs long, else pad — never a mid-word cut). The
+  delivery brief is tone-aware and no longer hardcodes an "appetizing food ad" (a vertical leak).
 
 ### 5.G Strategy, Campaign, Trends
 - `strategy/`: N-day content calendar (Gemini or deterministic), hooks/angles
