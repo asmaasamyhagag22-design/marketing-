@@ -26,6 +26,7 @@ from .ledger import (
     LedgerEntry,
     Resolution,
     extract_claims,
+    is_reputable_web_source,
 )
 from .subject_judge import make_subject_judge
 
@@ -40,4 +41,5 @@ __all__ = [
     "extract_claims",
     "build_compliance_sheet",
     "make_subject_judge",
+    "is_reputable_web_source",
 ]

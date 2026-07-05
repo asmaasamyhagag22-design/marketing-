@@ -2,8 +2,8 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **887 passed, 0 failed** (2026-07-05; the earlier "913" was stale — the
-tree collects 880 + 7 new from the C1 phone-region gate below).
+Test suite: **997 passed, 0 failed** (2026-07-05; grew from 880 as each audit fix
+below shipped with its hermetic regression tests).
 
 **Active work — adversarial audit (2026-07-05):** a deep verified audit found 1 CRITICAL
 + 8 HIGH + a medium/low tail + finder-flagged leads (full list in the session +
@@ -17,11 +17,14 @@ subject context are still context-blind (documented follow-up). **ALL CRITICAL+H
 re-evaluation), H2 (redirect/duplicate-final dedup), H3 (frontier scheme/slash dedup),
 H4 (social-domain exact/subdomain match, no substring), H5 (multilingual CTA verbs),
 H6 (poster external-headline grounding gate), H7 (`--trend` now feeds the concept copy),
-H8 (salvaged-homepage readiness) — details in §5 + §8. **Next: the medium/low tail** (site
-classes: iframe/cookie-consent/bot-salvage; strategy variety + language; trends ranking;
-validator substring; grounding reputable-web; dead-code/doc-drift) + the finder-flagged
-leads needing re-verification (compliance false-verified rows, RSC payloads, validator
-evidence discard) and the un-audited logo/palette pipeline.
+H8 (salvaged-homepage readiness) — details in §5 + §8. **Medium/low tail — landed:** cookie
+false-drop (banner-specific patterns, not `\bcookie`), RSC/code-payload gate, validator
+wrong-block_id quote-recovery + word-boundary blacklist, strategy variety + Arabic filler +
+even day-distribution, trends stopwords/numeric filter, campaign dispatcher robustness, and
+**grounding reputable-web now enforced at ledger-BUILD** (`is_reputable_web_source` in
+`from_profile.add` — a web claim sourced only by an aggregator/junk host is dropped for
+EVERY gate, not just `pick_angle`; poster keeps a thin alias). **Remaining tail:** the
+finder-flagged leads needing re-verification and the un-audited logo/palette pipeline.
 
 ---
 
@@ -265,7 +268,11 @@ Packages: `scraper/`, `business_profile/`, `grounding/`, `competitor/`, `brand/`
   ACCURACY on real copy is unverified (needs a paid Flash run); the mechanism is
   hermetically tested (13 tests, mock judge + mock caller).
 - **Source tiers**: brand site > web snippet (web must be reputable; media outlets are
-  reputable EVIDENCE but are NOT competitors — two separate host-lists).
+  reputable EVIDENCE but are NOT competitors — two separate host-lists). The reputability
+  check runs at ledger-BUILD (`is_reputable_web_source` in `from_profile.add`), so a claim
+  sourced only by an aggregator/junk host is unsourced for EVERY gate — not just
+  `pick_angle`, which was the only enforcer before. `poster._is_reputable_source` is now a
+  thin alias delegating to the shared `grounding` predicate (single source of policy).
 - Language-aware resolution (Arabic claim cites Arabic quote; mismatch labeled).
 - **Blocking gates live on**: poster concept copy (soften/drop/regenerate + remediation
   log), research angles (`pick_angle`), calendar hooks/angles (blank-to-topic), reel

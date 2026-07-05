@@ -409,6 +409,24 @@ def extract_claims(text: str) -> list[Claim]:
 # Evidence Ledger
 # ---------------------------------------------------------------------
 
+def is_reputable_web_source(url: str) -> bool:
+    """A WEB-tier claim is proof only if its source is REPUTABLE — a snippet from an
+    aggregator / listicle / junk-SEO host is not (the POLICY the ledger states). Brand-tier
+    evidence (the brand's OWN site) is always trusted and is never routed here. Lazy-imports
+    the competitor-discovery denylist to avoid a load-time import cycle; on any error it does
+    NOT over-reject (the url already passed upstream search/prefer_safe gates)."""
+    if not url or not str(url).startswith("http"):
+        return False
+    try:
+        from urllib.parse import urlparse
+
+        from competitor.web_discovery import _AGGREGATOR_HOSTS, _registrable
+        reg = _registrable(urlparse(url).hostname)
+        return not (reg and reg in _AGGREGATOR_HOSTS)
+    except Exception:  # noqa: BLE001 — never over-reject on a lookup failure
+        return True
+
+
 def _as_text(v: Any) -> str:
     if v is None:
         return ""
@@ -466,6 +484,13 @@ class EvidenceLedger:
 
         def add(raw: str, url: str, stype: str, conf: str = "unknown") -> None:
             if raw and str(raw).strip():
+                # Web-tier evidence with a KNOWN non-reputable source (an aggregator/junk host)
+                # is not proof — drop it so a claim can't be "verified" by SEO junk in ANY
+                # gate (concept/calendar/TOWS/reel), not just pick_angle. Brand-tier (profile*)
+                # is always kept; a web entry with no url is kept (can't judge, don't over-drop).
+                is_web = not str(stype).startswith("profile")
+                if is_web and url and not is_reputable_web_source(url):
+                    return
                 entries.append(LedgerEntry(raw=str(raw), source_url=url or "",
                                            source_type=stype, confidence=conf))
 
