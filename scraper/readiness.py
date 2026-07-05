@@ -10,10 +10,27 @@ from __future__ import annotations
 from .schemas import PageType, ReadinessReport, ScrapeManifest
 
 
+def _homepage_is_usable(p) -> bool:
+    """H8: a homepage counts for readiness if it carries real content — even if its ONLY
+    failure is the benign timeout-partial-content salvage.
+
+    The salvage exists precisely to KEEP a homepage whose useful DOM loaded before a late
+    asset timed out; the old `not p.failures` test threw that content away and aborted the
+    whole pipeline (MEASURED: nahdi with 226 homepage text blocks and te.eg with 87 were
+    marked not-ready and discarded). A HARD-failed homepage (bot wall / empty DOM /
+    network) never becomes a HOMEPAGE PageRecord — it is recorded as a manifest failure
+    and the crawl returns early upstream — so the ONLY failure that can sit on a HOMEPAGE
+    record is the salvage TIMEOUT. Requiring real content here still correctly rejects an
+    empty salvage (buffaloburger: 0 blocks -> stays not-ready)."""
+    if p.page_type != PageType.HOMEPAGE:
+        return False
+    return bool(getattr(p, "text_blocks", None)) or bool(getattr(p, "cleaned_main_text", None))
+
+
 def compute_readiness(m: ScrapeManifest) -> ReadinessReport:
     pages = m.pages or []
 
-    has_homepage = any(p.page_type == PageType.HOMEPAGE and not p.failures for p in pages)
+    has_homepage = any(_homepage_is_usable(p) for p in pages)
 
     has_internal_pages = any(
         p.page_type != PageType.HOMEPAGE and not p.failures for p in pages

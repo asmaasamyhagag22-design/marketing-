@@ -121,17 +121,29 @@ def main() -> int:
     # Optional EXPLICIT copy override: --research deep-searches for a fresh sourced headline
     # (else the Creative Concept layer writes the copy). An explicit --headline / --from-plan
     # hook always wins.
+    # Trends (--trend): fetch ONCE, up front. Previously trends were read ONLY inside the
+    # `--research and not headline_override` block, so `--trend` was a silent no-op whenever
+    # research was off or a headline was planned — exactly the campaign dispatch path (H7).
+    # Now the trend titles feed BOTH the research angle path AND the concept copy, so a
+    # dispatched poster genuinely rides a trend (its subheadline/angle); the grounding gate
+    # still protects every claim, and the planned headline is not overridden.
+    trend_context = ""
+    if args.trend and caller is not None:
+        try:
+            from trends import top_trends, keywords_from_profile
+            hot = top_trends(keywords_from_profile(profile), top_k=5, require_match=True)
+            trend_context = "\n".join(f"- {t.title}" for t in hot if getattr(t, "title", ""))
+            if trend_context:
+                print(f"[trend] {len(hot)} on-topic trend(s) will inform the concept copy")
+            else:
+                print("[trend] no on-topic trend matched the brand — skipping", file=sys.stderr)
+        except Exception as exc:
+            print(f"[trend] skipped ({type(exc).__name__})", file=sys.stderr)
+            trend_context = ""
+
     if caller is not None and args.research and not headline_override:
         from poster.brand_research import research_brand, pick_angle
         from poster.art_director import _persona_lines
-        trend_context = ""
-        if args.trend:
-            try:
-                from trends import top_trends, keywords_from_profile
-                hot = top_trends(keywords_from_profile(profile), top_k=5, require_match=True)
-                trend_context = "\n".join(f"- {t.title}" for t in hot)
-            except Exception:
-                trend_context = ""
         print("[research] deep search for fresh, sourced brand facts...")
         research = research_brand(
             (profile.get("name") or {}).get("value") if isinstance(profile.get("name"), dict)
@@ -172,6 +184,7 @@ def main() -> int:
     res = generate_poster(
         profile, caller=caller, variation=variation, brand_dna=brand_dna,
         no_image=args.no_image, headline_override=headline_override,
+        trend_context=trend_context or None,
         out_dir=str(Path(args.out).parent or "."),
     )
 

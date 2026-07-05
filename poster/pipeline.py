@@ -460,6 +460,40 @@ def _qa_image_fixable(v: PosterQAVerdict) -> bool:
             or (not v.single_focal))
 
 
+def _verified_external_headline(headline_override, concept_headline, ledger):
+    """H6 grounding gate for an EXTERNAL headline.
+
+    A ``headline_override`` — from ``--headline``, a content-calendar hook OR **topic**
+    (the calendar's `topic` field is not gated in the strategy layer), or a trend — would
+    otherwise replace the concept's Ledger-gated headline and render VERBATIM, bypassing
+    the poster's own grounding gate (a calendar topic like "Egypt's #1 pharmacy" would
+    ship unverified). Verify the override against the Evidence Ledger; an UNSOURCED
+    falsifiable claim falls back to the grounded concept headline (or drops), never the
+    fabricated line. Pure/testable; offline (no LLM).
+
+    Returns ``(headline_to_use, remediation | None)``.
+    """
+    ho = (headline_override or "").strip()
+    concept_h = (concept_headline or "").strip() or None
+    if not ho:
+        return concept_h, None                       # no override -> concept headline (unchanged)
+    if ledger is None:
+        return ho, None                              # can't verify -> preserve prior behavior
+    try:
+        unsourced = [v for v in ledger.audit_text(ho) if not v.sourced]
+    except Exception:  # noqa: BLE001 — a gate error must never break rendering
+        return ho, None
+    if not unsourced:
+        return ho, None                              # override is grounded -> use it
+    rem = {
+        "field": "headline_override",
+        "original_text": ho,
+        "unsourced_claims": sorted({v.claim.kind for v in unsourced}),
+        "action": "replaced_with_grounded_concept" if concept_h else "dropped",
+    }
+    return concept_h, rem
+
+
 def generate_poster(
     profile: dict[str, Any],
     *,
@@ -472,6 +506,7 @@ def generate_poster(
     upscale: bool = True,
     no_image: bool = False,
     headline_override: Optional[str] = None,
+    trend_context: Optional[str] = None,
     max_qa_retries: int = 2,
     out_dir: str = "outputs/posters",
     engine: str = "classic",
@@ -530,12 +565,28 @@ def generate_poster(
     #    (number/year/certification/ranking) that isn't backed by the brand's real evidence.
     concept = build_creative_concept(profile, caller=caller, brand_dna=brand_dna,
                                      variation=variation, enforce_grounding=True,
-                                     arabic=arabic, research=research)
+                                     arabic=arabic, research=research,
+                                     trend_context=trend_context)
     log(f"[concept] msg={concept.single_message!r} headline={concept.headline!r} "
         f"chips={concept.proof_points}")
 
     # 3) Brief, with copy OVERRIDDEN by the concept (headline/sub/cta/chips all one idea).
-    headline = (headline_override or concept.headline or "").strip() or None
+    # H6: an external headline_override (--headline / calendar hook OR topic / trend) must
+    # pass the SAME grounding gate as the concept copy — otherwise a calendar `topic` that
+    # is ungated in the strategy layer prints verbatim. Verify it; on an unsourced claim
+    # fall back to the grounded concept headline.
+    _hl_ledger = None
+    try:
+        from grounding import EvidenceLedger
+        _research_dump = (research.model_dump()
+                          if (research is not None and hasattr(research, "model_dump")) else None)
+        _hl_ledger = EvidenceLedger.from_profile(profile, research=_research_dump)
+    except Exception:  # noqa: BLE001 — grounding must never break the poster
+        _hl_ledger = None
+    headline, _hl_rem = _verified_external_headline(headline_override, concept.headline, _hl_ledger)
+    if _hl_rem is not None:
+        log(f"[grounding] external headline carried unsourced claim(s) "
+            f"{_hl_rem['unsourced_claims']} -> {_hl_rem['action']}")
     brief = build_poster_brief(profile, headline_override=headline)
     updates: dict = {}
     if concept.subheadline:

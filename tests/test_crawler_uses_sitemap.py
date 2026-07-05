@@ -80,17 +80,20 @@ def test_homepage_link_wins_anchor_text_on_collision():
     assert menu_rows[0][3] == "View Our Menu"
 
 
-def test_sitemap_dedupes_against_homepage_after_normalization():
-    """Trailing slash differences are NOT collapsed by normalize_url
-    (the crawler's existing rule). So /menu and /menu/ remain two
-    distinct queue entries. Confirm we don't accidentally over-dedupe."""
+def test_sitemap_trailing_slash_variant_collapses_to_homepage_entry():
+    """H3 (changed 2026-07-05): a trailing-slash variant of a page already discovered
+    via homepage links is the SAME logical page and must NOT get its own frontier slot.
+    Previously /menu and /menu/ were kept as two distinct queue entries and each burned
+    a budget fetch (MEASURED: orange.eg fetched http+https and slash variants of the same
+    page). The frontier now dedups on the scheme/slash-insensitive `dedup_key`, keeping
+    ONE entry (the homepage form + its richer anchor); the fetch url stays faithful."""
     home_links = [_link("https://example.com/menu", "Menu")]
-    extra = ["https://example.com/menu/"]  # different normalized form
+    extra = ["https://example.com/menu/"]  # trailing-slash variant of the same page
     out = _select_subpages_to_fetch(home_links, SITE, HOME, extra_urls=extra)
-    urls = {row[0] for row in out}
-    # Both remain present
-    assert "https://example.com/menu" in urls
-    assert "https://example.com/menu/" in urls
+    menu_rows = [r for r in out if r[0].rstrip("/") == "https://example.com/menu"]
+    assert len(menu_rows) == 1                 # collapsed, not two slots
+    assert menu_rows[0][0] == "https://example.com/menu"   # homepage form kept as fetch url
+    assert menu_rows[0][3] == "Menu"           # homepage anchor preserved on the collision
 
 
 # ---------------------------------------------------------------------

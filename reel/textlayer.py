@@ -201,7 +201,7 @@ def _scene_html(scene: ReelScene, storyboard: Storyboard, width: int, height: in
     spine = "border-right" if rtl else "border-left"   # accent spine on the leading edge
     spine_pad = "padding-right" if rtl else "padding-left"
     shadow = "0 2px 10px rgba(0,0,0,.9), 0 1px 3px rgba(0,0,0,.95)"
-    # Negative letter-spacing BREAKS Arabic glyph joining (CLAUDE.md) -> 0 for RTL.
+    # Negative letter-spacing BREAKS Arabic glyph joining (process.md) -> 0 for RTL.
     # LTR display type gets the tight tracking the brief asks for.
     head_track = "0" if rtl else "-0.5px"
     lock_track = "0" if rtl else "-1px"

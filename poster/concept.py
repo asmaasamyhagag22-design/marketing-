@@ -197,6 +197,7 @@ def build_creative_concept(
     enforce_grounding: bool = False,
     arabic: Optional[bool] = None,
     research: Any = None,
+    trend_context: Optional[str] = None,
 ) -> CreativeConcept:
     """One coherent campaign concept + brand-language copy. Arabic brands -> Arabic copy with
     ZERO Latin (validated + regenerated). Never raises.
@@ -264,6 +265,16 @@ def build_creative_concept(
             research_block = ("\nFRESH SOURCED FACTS from live web research (REAL — you may "
                               "build the message on any of them):\n" + "\n".join(lines) + "\n")
 
+    # Current cultural/market TRENDS to optionally RIDE (H7). Inspiration only — NOT facts:
+    # a trend can shape the ANGLE, but every claim in the copy still passes the grounding
+    # gate below, so riding a trend can never license a fabricated number/superlative.
+    trend_block = ""
+    if trend_context and str(trend_context).strip():
+        trend_block = ("\nCURRENT TRENDS you MAY tie the concept to WHERE IT GENUINELY FITS the "
+                       "brand (inspiration only — do NOT force it, and do NOT invent any fact, "
+                       "price or claim to match a trend; the proof must stay REAL):\n"
+                       + str(trend_context).strip() + "\n")
+
     lang_rule = (
         "EVERY customer-facing field (headline, subheadline, cta, proof_points) MUST be in "
         f"{lang_name}, in the brand's voice. ABSOLUTELY NO Latin letters/words in those fields "
@@ -308,6 +319,7 @@ def build_creative_concept(
         + (f"Real offerings (raw, may be internal jargon): {', '.join(offers)}\n" if offers else "")
         + (f"Brand tone/style (from its real creatives): {tone_block}\n" if tone_block else "")
         + research_block
+        + trend_block
         + vary
         + "\nReturn the structured concept."
     )

@@ -29,6 +29,7 @@ Design rules:
 from __future__ import annotations
 
 import logging
+import re
 from typing import Optional
 
 logger = logging.getLogger(__name__)
@@ -40,6 +41,31 @@ logger = logging.getLogger(__name__)
 _MIN_CHARS = 120          # roughly 2-3 short sentences
 _MIN_WORDS = 24           # filters out "Home / Menu / Contact" lists
 _MIN_AVG_WORD_LEN = 3.0   # filters out one-letter menu link explosions
+
+
+# Next.js / React Server Components 'flight' payloads and inlined JS bundles are NOT prose:
+#   1:"$Sreact.fragment" 2:I[56700,[],"default"] 4:I[...,"LoadingBoundaryProvider"] ...
+# trafilatura's density gate passes them (long + token-dense), so they were counted as
+# "meaningful" content AND surfaced as cleaned_main_text — junk that inflated the
+# pages-with-text diagnostic and can feed a readiness / pricing signal (MEASURED 2026-07-05:
+# 31 nahdi product pages flagged meaningful with ZERO real text blocks). Detect and reject.
+_CODE_PAYLOAD_MARKERS_RE = re.compile(
+    r"\$sreact|react\.fragment|self\.__next_f|__next_data__|"
+    r"loadingboundary|outletboundary|viewportboundary|metadataboundary|"
+    r"suspenseboundary",
+    re.IGNORECASE,
+)
+# Serialized RSC 'flight' rows like `I[56700,[],...` / `[44201,[`.
+_CODE_PAYLOAD_TOKEN_RE = re.compile(r"[A-Za-z]?\[\d{2,},\[")
+
+
+def _looks_like_code_payload(text: str) -> bool:
+    """True when `text` is a serialized RSC/JS payload rather than human prose."""
+    if not text:
+        return False
+    if _CODE_PAYLOAD_MARKERS_RE.search(text):
+        return True
+    return len(_CODE_PAYLOAD_TOKEN_RE.findall(text)) >= 5
 
 
 def extract_content_quality(html: str, page_url: str) -> tuple[Optional[str], bool]:
@@ -86,6 +112,11 @@ def extract_content_quality(html: str, page_url: str) -> tuple[Optional[str], bo
 
     cleaned = text.strip()
     if not cleaned:
+        return (None, False)
+
+    # An RSC/JS payload is not usable main text — treat it as no content, so it neither
+    # counts toward the pages-with-text diagnostic nor is surfaced as cleaned_main_text.
+    if _looks_like_code_payload(cleaned):
         return (None, False)
 
     return (cleaned, _is_meaningful(cleaned))

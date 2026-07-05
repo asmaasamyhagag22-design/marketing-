@@ -46,7 +46,7 @@ _HITS = [
 def test_no_provider_returns_unused(monkeypatch):
     # Force the "no provider configured" path deterministically — do NOT rely on the
     # environment (a real SERPER_API_KEY would resolve a live provider and hit the
-    # network). Same isolation gotcha noted in CLAUDE.md for web-discovery.
+    # network). Same isolation gotcha noted in process.md for web-discovery.
     import competitor.search_providers as sp
     monkeypatch.setattr(sp, "get_default_search_provider", lambda: None)
     r = research_brand("Digilians", provider=None, caller=None)

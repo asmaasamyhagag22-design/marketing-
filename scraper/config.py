@@ -230,6 +230,31 @@ CTA_VERBS = {
     "توصيل", "ديليفري",
     # Arabic — ecommerce shop entry-points (added 2026-06-14)
     "تسوق", "تسوّق", "تسوق الآن", "تصفح", "الكتالوج", "عرض الكل", "تسوق الكل",
+    # H5 (2026-07-05) — major expansion-market languages (product is "any language, any
+    # country"; a French store previously scored cta_candidates=0 on 310 internal links).
+    # Grounded in elietop.com's real CTAs + common conversion verbs; MEASURED corpus-wide:
+    # +CTAs only on the French site, ZERO inflation on the 100+ EN/AR scrapes. Italian
+    # "registrati" was DROPPED — it is a prefix of English "Registration" (false match).
+    # French
+    "nous contacter", "contactez-nous", "contacter", "en savoir plus", "voir plus",
+    "panier", "connectez-vous", "connexion", "continuer les achats", "acheter",
+    "commander", "réserver", "découvrir", "s'inscrire", "ajouter au panier",
+    # Spanish
+    "contáctanos", "contactar", "comprar", "comprar ahora", "añadir al carrito",
+    "carrito", "reservar", "saber más", "más información", "iniciar sesión",
+    "regístrate", "descubrir", "ver más",
+    # German
+    "kontakt", "kontaktieren", "jetzt kaufen", "kaufen", "mehr erfahren", "anmelden",
+    "warenkorb", "buchen", "bestellen", "entdecken", "registrieren",
+    # Italian
+    "contattaci", "acquista", "acquista ora", "scopri", "scopri di più", "scopri di piu",
+    "prenota", "carrello", "iscriviti",
+    # Portuguese
+    "saiba mais", "fale conosco", "contato", "carrinho", "cadastre-se",
+    "adicionar ao carrinho", "descubra",
+    # Turkish
+    "satın al", "iletişim", "bize ulaşın", "keşfet", "sepet", "sepete ekle",
+    "rezervasyon", "kayıt ol", "üye ol",
 }
 
 # --- Social platforms -----------------------------------------------

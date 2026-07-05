@@ -32,7 +32,13 @@ def _social_platform(href: str) -> Optional[str]:
     if not host:
         return None
     for dom, name in SOCIAL_DOMAINS.items():
-        if host == dom or host.endswith("." + dom) or dom in host:
+        # Exact host or a subdomain of it. The old `dom in host` SUBSTRING test
+        # misclassified any host merely CONTAINING a short social domain — `x.com` is a
+        # substring of xerox.com/box.com/netflix.com/fedex.com (-> "twitter"), `t.me` of
+        # content.medium.* (-> "telegram") — which mislabels external links and can strip
+        # a subject's OWN links from the crawl frontier. Subdomains (l.facebook.com,
+        # m.youtube.com) are still matched via the endswith clause.
+        if host == dom or host.endswith("." + dom):
             return name
     return None
 

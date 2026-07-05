@@ -56,6 +56,10 @@ class FetchResult:
     # on PageRecord.failures instead of dropping the page completely.
     partial_content: bool = False
     partial_reason: Optional[str] = None
+    # True when the (non-critical) full-page screenshot failed. The page still succeeds —
+    # visual identity degrades gracefully to logo pixels + header/footer colors — so this
+    # is surfaced as a manifest note, NOT an error_code that would discard the page.
+    screenshot_failed: bool = False
     # Marker for the caller — used by extractors that need a live Page
     # for computed-CSS reads. We attach the Page only when requested.
     _page: Optional[Page] = field(default=None, repr=False)
@@ -128,6 +132,27 @@ def make_browser_context(browser: Browser) -> BrowserContext:
         locale="en-US",
         extra_http_headers={"Accept-Language": ACCEPT_LANGUAGE},
     )
+
+
+def _capture_screenshots(page: Page, result: FetchResult) -> None:
+    """Capture the full-page + viewport screenshots for a FULL homepage fetch.
+
+    A screenshot failure is NON-FATAL: the page's html/text/links/offerings are already
+    captured and ARE the core of the profile, and visual identity degrades gracefully to
+    logo pixels + header/footer colors when no screenshot exists. Setting an error_code
+    here made result.ok False and DISCARDED the whole fully-scraped page (MEASURED:
+    azzafahmy.com -> 0 pages on a SCREENSHOT_FAILED, losing all its text/offerings). We flag
+    the degradation (surfaced as a manifest note) instead of failing the page."""
+    try:
+        result.full_screenshot_bytes = page.screenshot(full_page=True, type="png")
+    except PWError as e:
+        result.screenshot_failed = True
+        result.error_message = f"full_page screenshot failed (non-fatal): {str(e)[:180]}"
+    try:
+        result.viewport_screenshot_bytes = page.screenshot(full_page=False, type="png")
+    except PWError:
+        # Viewport screenshot is non-critical; skip silently.
+        pass
 
 
 def _detect_bot_protection(text: str, title: str) -> Optional[ErrorCode]:
@@ -303,17 +328,7 @@ def _fetch_page_once(context: BrowserContext, url: str, keep_page: bool = False,
             # Screenshots — only when content is real, and only for FULL fetches. The homepage
             # needs them for visual identity; LIGHT sub-pages skip them (pixels aren't used, and
             # the full-page screenshot is the slowest step + can hang on font loads).
-            try:
-                result.full_screenshot_bytes = page.screenshot(full_page=True, type="png")
-            except PWError as e:
-                result.error_code = ErrorCode.SCREENSHOT_FAILED
-                result.error_message = f"full_page screenshot failed: {e}"
-
-            try:
-                result.viewport_screenshot_bytes = page.screenshot(full_page=False, type="png")
-            except PWError:
-                # Viewport screenshot is non-critical; skip silently
-                pass
+            _capture_screenshots(page, result)
 
         # HTTP status flag (don't fail hard on 4xx — record but continue)
         if result.http_status and result.http_status >= 400 and result.error_code is None:

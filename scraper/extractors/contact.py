@@ -22,6 +22,7 @@ import phonenumbers
 from bs4 import BeautifulSoup
 
 from ..config import EMAIL_REGEX
+from ..url_utils import region_from_site
 from ..schemas import (
     AddressRecord,
     ContactInfo,
@@ -34,6 +35,16 @@ from ..schemas import (
 
 
 _EMAIL_RE = re.compile(EMAIL_REGEX)
+
+# Home-market fallback region for phone parsing when a site gives NO reliable country
+# signal (no /xx-yy locale path, generic TLD). The product is Egypt-first (its whole
+# corpus + the business_profile phone layer default to EG), so a signal-less national
+# number is most likely Egyptian. Reliable per-site signals ALWAYS override this (see
+# region_from_site), which is what stops the wrong-country fabrication that a blanket
+# "EG" caused on the Saudi site nahdionline.com (/ar-sa -> SA, not EG). LIMITATION: a
+# non-Egyptian site on a generic TLD with no locale path can still get EG here — the
+# honest edge of what a universal signal can prove (tracked in process.md §6).
+_HOME_MARKET_REGION = "EG"
 
 
 def _e164(raw: str, region: str = "EG") -> Optional[str]:
@@ -79,9 +90,24 @@ def _extract_whatsapp(href: str) -> Optional[str]:
 def extract_contact(
     html_by_page: dict[str, str],
     text_blocks_by_page: dict[str, list[TextBlock]],
-    default_region: str = "EG",
+    default_region: Optional[str] = None,
+    *,
+    site_url: Optional[str] = None,
 ) -> ContactInfo:
+    """Extract phones/emails/whatsapp/maps/addresses from crawled pages.
+
+    Phone region: numbers WITHOUT an international ``+`` prefix are ambiguous — the same
+    digits are a different real number in every country. We parse them against the
+    SITE's own region, derived from a RELIABLE universal signal (URL locale path /
+    ccTLD) via ``region_from_site``; only when the site gives no such signal do we fall
+    back to the home market (``_HOME_MARKET_REGION``). This is what stopped the blanket
+    "EG" from turning the Saudi hotline 920024673 into a valid-looking WRONG
+    +20920024673 (its /ar-sa locale now resolves to SA -> +966...). An explicit
+    ``default_region`` overrides everything (used by tests); ``+``-prefixed and
+    short-code numbers are region-independent.
+    """
     info = ContactInfo()
+    region = default_region or region_from_site(site_url) or _HOME_MARKET_REGION
 
     seen_phones: set[str] = set()
     seen_emails: set[str] = set()
@@ -100,7 +126,7 @@ def extract_contact(
                         address=m, evidence_block_id=b.block_id, page_url=page_url
                     ))
             # Phones in text
-            for e164 in _extract_phones_from_text(b.text, default_region):
+            for e164 in _extract_phones_from_text(b.text, region):
                 if e164 not in seen_phones:
                     seen_phones.add(e164)
                     info.phones.append(PhoneRecord(
@@ -121,7 +147,7 @@ def extract_contact(
 
             if lower.startswith("tel:"):
                 raw = unquote(href[4:])
-                e164 = _e164(raw, default_region)
+                e164 = _e164(raw, region)
                 if e164 and e164 not in seen_phones:
                     seen_phones.add(e164)
                     info.phones.append(PhoneRecord(

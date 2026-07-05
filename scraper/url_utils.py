@@ -143,6 +143,25 @@ def normalize_url(url: str) -> str:
     return urlunparse((scheme, netloc, path, parts.params, query, ""))
 
 
+def dedup_key(url: str) -> str:
+    """A scheme- and trailing-slash-INSENSITIVE key for treating URLs that point at the
+    SAME logical page as ONE crawl-frontier entry.
+
+    Distinct from ``normalize_url``: that function's output is the URL we actually FETCH,
+    so it must stay faithful to the scheme (forcing https there would break an http-only
+    site). This key is for DEDUP ONLY — it folds ``http://x/a``, ``https://x/a`` and
+    ``https://x/a/`` onto one value so the frontier does not spend two budget slots
+    fetching the same page (MEASURED: orange.eg fetched http+https and trailing-slash
+    variants of /contact-us). The caller keeps the first-seen faithful ``normalize_url``
+    form as the fetch target. Root ``/`` is preserved (never stripped to empty)."""
+    n = normalize_url(url)
+    p = urlparse(n)
+    path = p.path or "/"
+    if len(path) > 1 and path.endswith("/"):
+        path = path.rstrip("/") or "/"
+    return urlunparse(("https", p.netloc, path, p.params, p.query, ""))
+
+
 def _registrable_domain(url: str) -> Optional[str]:
     """The eTLD+1 (registrable domain) for a URL via the public-suffix list:
     'web.vodafone.com.eg' -> 'vodafone.com.eg'. Returns None when the host has no
@@ -226,6 +245,65 @@ def site_root_if_deep(url: str) -> Optional[str]:
     if not segs:
         return None                                      # already a homepage
     return f"{p.scheme}://{p.netloc}/"
+
+
+# ccTLD -> ISO-3166 region. GENERIC TLDs (.com/.net/.org/.io/...) are deliberately
+# ABSENT: they carry NO country signal, so a .com site must never be assigned a
+# region from its TLD (that is exactly what produced the fabricated +20 phone on the
+# Saudi .com site nahdionline.com — see region_from_site).
+_CCTLD_REGION = {
+    "eg": "EG", "sa": "SA", "ae": "AE", "kw": "KW", "qa": "QA", "bh": "BH",
+    "om": "OM", "jo": "JO", "lb": "LB", "ps": "PS", "iq": "IQ", "sy": "SY",
+    "ye": "YE", "ma": "MA", "tn": "TN", "dz": "DZ", "ly": "LY", "sd": "SD",
+    "uk": "GB", "gb": "GB", "ie": "IE", "de": "DE", "fr": "FR", "it": "IT",
+    "es": "ES", "pt": "PT", "nl": "NL", "be": "BE", "ch": "CH", "at": "AT",
+    "se": "SE", "no": "NO", "dk": "DK", "fi": "FI", "pl": "PL", "gr": "GR",
+    "ru": "RU", "ua": "UA", "tr": "TR", "in": "IN", "pk": "PK", "bd": "BD",
+    "cn": "CN", "jp": "JP", "kr": "KR", "id": "ID", "my": "MY", "sg": "SG",
+    "th": "TH", "vn": "VN", "ph": "PH", "us": "US", "ca": "CA", "mx": "MX",
+    "br": "BR", "ar": "AR", "cl": "CL", "co": "CO", "au": "AU", "nz": "NZ",
+    "za": "ZA", "ng": "NG", "ke": "KE",
+}
+
+# A leading locale path segment of the LANGUAGE-REGION form: 'ar-sa', 'en_gb'.
+# The SECOND subtag is the country (region). A language-only segment ('/ar', '/en')
+# has no region and is intentionally NOT matched here.
+_LOCALE_REGION_RE = re.compile(r"^[a-z]{2}[-_]([a-z]{2})$", re.IGNORECASE)
+
+
+def region_from_site(url: Optional[str]) -> Optional[str]:
+    """Best-effort ISO-3166 region (alpha-2) for a site, from RELIABLE universal signals.
+
+    Order, strongest first:
+      1. URL locale path segment of the language-region form (``/ar-sa`` -> ``SA``,
+         ``/en-gb`` -> ``GB``) — the market signal process.md already trusts (§5.D).
+      2. ccTLD of the registrable domain (``.eg`` -> ``EG``, ``vodafone.com.eg`` ->
+         ``EG``). Generic TLDs (.com/.net/...) carry no country signal -> skipped.
+
+    Returns ``None`` when neither reliable signal is present. The ``html lang`` region
+    subtag is DELIBERATELY NOT used: ``lang="en-US"`` is a common template default that
+    mislabels non-US sites (measured: the Egyptian sites daturial/laserhairremovalcairo/
+    thehairaddict all carry en-US boilerplate). The point of this signal is to know when a
+    site is NOT in the home market so a bare national phone number isn't parsed under the
+    wrong country (nahdi: Saudi 920024673 parsed as EG -> a valid-looking WRONG
+    +20920024673). Universal — no vertical or single-country assumption baked in here.
+    """
+    # 1. URL locale path (e.g. /ar-sa). Only the language-region form yields a region.
+    try:
+        segs = [s for s in (urlparse(ensure_scheme(url or "")).path or "").split("/") if s]
+    except Exception:
+        segs = []
+    if segs:
+        m = _LOCALE_REGION_RE.match(segs[0])
+        if m:
+            return m.group(1).upper()
+    # 2. ccTLD of the registrable domain (handles multi-label suffixes like .com.eg).
+    reg = _registrable_domain(url or "")
+    if reg:
+        last = reg.rsplit(".", 1)[-1].lower()
+        if last in _CCTLD_REGION:
+            return _CCTLD_REGION[last]
+    return None
 
 
 def get_domain_slug(url: str) -> str:

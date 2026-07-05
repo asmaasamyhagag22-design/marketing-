@@ -543,7 +543,7 @@ _NON_BRAND_LOGO_CLASSES = {
 # ONLY banner-as-logo disaster (Vodafone's wide "Rateplans.jpg" promo) scored 0.38.
 # So below this floor, reject an unknown_candidate and fall back to a clean text
 # wordmark instead of rendering a product banner as the brand logo. Defense-in-depth:
-# the deeper fix is the scraper classifier + inline-SVG capture (see CLAUDE.md).
+# the deeper fix is the scraper classifier + inline-SVG capture (see process.md).
 _UNKNOWN_LOGO_MIN_CONF = 0.5
 
 

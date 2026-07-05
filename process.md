@@ -1,8 +1,27 @@
 # process.md — Universal AI Marketing Strategist
 
-**The single source of truth for this project.** Replaces CLAUDE.md (the historical
-change-log). Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite at revision time: **913 passed, 0 failed**.
+**The single source of truth for this project.** Replaces the historical
+change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
+Test suite: **887 passed, 0 failed** (2026-07-05; the earlier "913" was stale — the
+tree collects 880 + 7 new from the C1 phone-region gate below).
+
+**Active work — adversarial audit (2026-07-05):** a deep verified audit found 1 CRITICAL
++ 8 HIGH + a medium/low tail + finder-flagged leads (full list in the session +
+`memory/audit-2026-07-05-findings`). Fixed in priority order, one at a time, suite green
+between fixes. **C2 (2nd CRITICAL, from a finder lead): the Evidence Ledger falsely
+'verified' fabricated numbers** — bare-digit resolution certified "Save 50%" against
+"50 years" in the client-facing Compliance Sheet (and passed it through every gate). Fixed
+with unit-class resolution (§5.C + §8). Residual: bare-number-vs-bare-number and superlative
+subject context are still context-blind (documented follow-up). **ALL CRITICAL+HIGH DONE
+(suite 880 → 926):** C1 (phone-region fabrication), H1 (mid-crawl e-commerce budget
+re-evaluation), H2 (redirect/duplicate-final dedup), H3 (frontier scheme/slash dedup),
+H4 (social-domain exact/subdomain match, no substring), H5 (multilingual CTA verbs),
+H6 (poster external-headline grounding gate), H7 (`--trend` now feeds the concept copy),
+H8 (salvaged-homepage readiness) — details in §5 + §8. **Next: the medium/low tail** (site
+classes: iframe/cookie-consent/bot-salvage; strategy variety + language; trends ranking;
+validator substring; grounding reputable-web; dead-code/doc-drift) + the finder-flagged
+leads needing re-verification (compliance false-verified rows, RSC payloads, validator
+evidence discard) and the un-audited logo/palette pipeline.
 
 ---
 
@@ -47,7 +66,7 @@ built yet.
 6. Don't build architecture before knowing real failure modes (benchmark first).
 7. Be honest about limitations; never over-claim (in code, docs, or to clients).
 8. **Keep this file updated** as part of every landed change — feature state, gaps,
-   and measured lessons. (This file replaced CLAUDE.md's per-change log; keep entries
+   and measured lessons. (This file replaced the old per-change log; keep entries
    CONDENSED here: state + the lesson, not the full narrative.)
 9. Every bug the owner catches becomes a **gate + a test**. The gates are the product.
 
@@ -114,6 +133,14 @@ Packages: `scraper/`, `business_profile/`, `grounding/`, `competitor/`, `brand/`
 - **Adaptive crawl budget**: default 12 pages/150s; e-commerce detected by product-URL
   density (incl. `/plp/`,`/pdp/`) → 30 pages/330s. Light sub-page fetches (block
   images/fonts/media, skip screenshots) ≈20% faster.
+  - **H1 mid-crawl re-evaluation**: the store signal is no longer a one-shot read of the
+    homepage snapshot (a JS store can under-render it — MEASURED: nahdi flipped 6-vs-24
+    pages on the same store, same morning, with a dead sitemap). The frontier is built at
+    the ecommerce max cap and the signal is re-run over ACCUMULATED links after each
+    subpage; crossing the product-URL threshold upgrades page-cap + time budget once
+    (`E-commerce detected mid-crawl` note). Offline-validated: nahdi's failing 6-page run
+    had 15 product URLs across the pages it did fetch. ⚠ live re-scrape confirmation of
+    the end-to-end page-count recovery is still pending (a paid run).
 - **Never homepage-only**: `MIN_SUBPAGE_ATTEMPTS=5` — the budget guard stops the tail,
   never prevents the start (nahdi lesson: dead sitemaps ate the whole budget → 1-page
   scrape of a 300-link store → "no prices").
@@ -125,7 +152,23 @@ Packages: `scraper/`, `business_profile/`, `grounding/`, `competitor/`, `brand/`
   crawl correctly; `.com.eg`-class hosts don't collapse into one key.
 - **Links**: per-page dedup by `(href, page, anchor)` — a CTA sharing a nav href is
   never swallowed (daturial "Book a Meeting" lesson; measured corpus-wide, zero junk).
-  CTA verbs cover ecommerce/restaurant/Arabic + `explore/استكشف`.
+  CTA verbs cover ecommerce/restaurant/Arabic + `explore/استكشف`, and **(H5)** the major
+  expansion-market languages (FR/ES/DE/IT/PT/TR) — a French store scored 0 CTAs on 310
+  links before; MEASURED +CTAs only on the French site, zero EN/AR inflation (Italian
+  "registrati" dropped: it prefixes English "Registration"). CTA detection is still
+  verb-list-bound (a truly language-agnostic structural/LLM detector is a follow-up).
+  **(H4)** social-platform classification matches a host EXACTLY or as a subdomain, never
+  as a substring — the old `dom in host` mislabeled xerox/box/netflix/fedex.com (contain
+  `x.com`) as twitter and could strip a subject's own links from the frontier.
+- **Frontier dedup (H2/H3 gates)**: the crawl budget is the binding constraint on ~45%
+  of scrapes, so a page fetched twice is a real page lost. **H3** collapses http/https +
+  trailing-slash variants PRE-fetch via a scheme/slash-insensitive `url_utils.dedup_key`
+  (the fetch url stays the faithful `normalize_url` form — forcing https would break
+  http-only sites). **H2** dedups POST-fetch on the normalized FINAL (post-redirect) url
+  (`_register_fetched_or_skip`), catching different URLs that redirect to one page
+  (WordPress internals, empty collections). MEASURED: 9/110 manifests had duplicate
+  pages (daturial fetched its homepage 5×; orange.eg http+https+slash) = 22 wasted
+  fetches now skipped, with a `redirect_duplicate_skipped` note.
 - **Visual identity**: brand palette from **logo pixels + header + footer** (owner's
   rule — page screenshots alone vote photo colors; measured: Orange #000000→#fc6c0c).
   Logo pipeline: host-stripped keyword/brand matching (a CDN named after the brand
@@ -136,15 +179,46 @@ Packages: `scraper/`, `business_profile/`, `grounding/`, `competitor/`, `brand/`
 - **Content images**: real photos from `<img>`/lazy/CSS-bg collected (`CONTENT` role);
   homepage full screenshot saved + surfaced on the profile
   (`visual.homepage_screenshot_path`).
+- **RSC/JS-payload gate** (`content_quality._looks_like_code_payload`): a Next.js React
+  Server Components 'flight' payload (`1:"$Sreact.fragment" 2:I[56700,[],"default"]…`) is
+  NOT prose. trafilatura's density gate passed it, so pages with ZERO real text blocks were
+  flagged `has_meaningful_content=True` and their junk stored as `cleaned_main_text` —
+  inflating the pages-with-text diagnostic and feeding the readiness/pricing signals
+  (MEASURED: 31 nahdi product pages; detector flags exactly those, 0 false positives on the
+  other 514 meaningful pages). Now returns `(None, False)`.
+- **Phone region (C1 gate)**: a bare national number (no `+`) is parsed against the
+  SITE's own region from a RELIABLE universal signal — URL locale path (`/ar-sa`→SA) then
+  ccTLD (`.com.eg`→EG) via `url_utils.region_from_site` — before falling back to the
+  home market (`_HOME_MARKET_REGION=EG`). A blanket "EG" had turned the Saudi hotline
+  920024673 into a valid-looking WRONG +20920024673 on the flagship demo. `html lang` is
+  deliberately NOT a signal (`en-US` boilerplate mislabels EG sites). Measured: nahdi ×3
+  → +966…, zero corpus regression on the tel: path.
 - **Resilience**: real-UA + transient retry, HTTP/2 fallback, robots respected,
   malformed hrefs never crash, Deep-Search fallback (Serper `site:` recovery) for
   blocked sites, `scraper/net.py` breaker+retry for keyless JSON fetchers.
+- **Screenshot failure is non-fatal**: the full-page screenshot runs AFTER html/text/links
+  are captured, so its failure must not discard the page. It no longer sets an error_code
+  (`_capture_screenshots` flags `screenshot_failed` + a manifest note); visual identity
+  degrades gracefully to logo pixels + header/footer colors. MEASURED: azzafahmy.com was
+  getting 0 pages (all text/offerings lost) on a SCREENSHOT_FAILED — the same class as H8.
+- **Readiness (H8)**: a timeout-SALVAGED homepage that carries real content counts as a
+  homepage — `compute_readiness` gates on content (`_homepage_is_usable`), not `not
+  p.failures`. The salvage attaches a benign TIMEOUT failure; the old test discarded the
+  whole scrape (MEASURED: nahdi 226 blocks + te.eg 87 blocks were marked not-ready). A
+  hard-failed homepage never becomes a HOMEPAGE record (early return), so requiring
+  content still correctly rejects an empty salvage (buffaloburger 0 blocks).
 - **SSRF guard** (`is_safe_public_url`) at API entry + every remote image fetch.
 
 ### 5.B Business Profile (grounded extraction)
 - Rules layer (deterministic) + 4 grouped Gemini Flash calls; **every field carries
   verbatim evidence** (`block_id` + `page_url` + quote); the validator rejects any
   citation not literally present (quote-glyph folding for Arabic).
+- **Validator quote-recovery**: a citation whose `block_id` is wrong (or points at the
+  wrong block) but whose quote is VERBATIM in another real block is RECOVERED with the
+  corrected block_id, not discarded — a mis-attribution used to throw away real, citable
+  evidence. Same substring strictness across all blocks + a length floor so a stop-word
+  can't be laundered; a quote in NO block is still rejected (fabrication). (Real recovery
+  rate needs a live extraction run — rejected citations aren't persisted to measure offline.)
 - **RAG (Pillar 2)**: full uncapped evidence pack + per-group semantic retrieval
   (Gemini embeddings, cosine top-K in-process — **no vector DB by design** at this
   scale); validator sees the full pack. Measured: te.eg 153→265 blocks seen.
@@ -163,6 +237,14 @@ Packages: `scraper/`, `business_profile/`, `grounding/`, `competitor/`, `brand/`
   numbers/years, superlatives incl. the `-est` class + `#1/no.1`, first/only,
   credentials **split** award/certification/guarantee (evidence of one never sources
   another), free-offers. Canary test suite guards coverage regressions.
+- **Number resolution is unit-class-aware (C2)**: a %/price/duration/scale number is
+  'verified' only by evidence carrying the SAME kind of number. The old bare-digit match
+  certified fabrications — "Save 50%" resolved against "50 years", "99% pure" against a
+  "99 EGP" price — producing FALSE 'verified' rows in the client-facing Compliance Sheet
+  AND passing the poster/reel/strategy/TOWS gates. Safe by default: only a positively-
+  identified strong unit tightens, so no legitimate claim regressed (99 grounding tests
+  green). ⚠ RESIDUAL still context-blind: bare-number vs bare-number ("100 gifts" ← "100
+  stores") and superlative SUBJECT ("best coffee" ← "best regards") — harder, tracked.
 - **Source tiers**: brand site > web snippet (web must be reputable; media outlets are
   reputable EVIDENCE but are NOT competitors — two separate host-lists).
 - Language-aware resolution (Arabic claim cites Arabic quote; mismatch labeled).
@@ -216,6 +298,17 @@ Packages: `scraper/`, `business_profile/`, `grounding/`, `competitor/`, `brand/`
 - **Copy variation engine**: per-run rhetorical FORM (question/statement/command/
   benefit/contrast/number-lead/story) × VOICE (direct/playful/premium/urgent/warm/
   expert) — kills the fixed hook+proof formula; facts stay gated regardless of form.
+- **External-headline grounding (H6)**: an override headline — `--headline`, a content
+  calendar hook OR **topic** (the calendar `topic` is ungated in the strategy layer), or a
+  trend — is verified against the Evidence Ledger before it replaces the gated concept
+  headline (`_verified_external_headline`); an unsourced claim falls back to the grounded
+  concept headline. Previously a calendar topic like "Egypt's #1 pharmacy" rendered
+  verbatim, bypassing the moat.
+- **Trend-aware concept (H7)**: `--trend` fetches on-topic trends and threads them into the
+  concept prompt as INSPIRATION (`trend_context`), so a trend shapes the copy's angle while
+  the grounding gate still blocks any fabricated claim. Was a silent no-op on every
+  campaign-dispatched poster (trends were read only inside the `--research and no headline`
+  branch).
 - **Design variation**: mood/lighting/composition/energy + per-run font pairing.
 - **ONE-SHOT engine (default web engine)** — Gemini image model composes the whole
   creative; hard gates:
@@ -275,6 +368,16 @@ Packages: `scraper/`, `business_profile/`, `grounding/`, `competitor/`, `brand/`
 
 ## 6. Honest gaps & known limitations (current)
 
+- **Logo threshold calibration (finder lead, NOT yet fixed — needs owner live QA)**:
+  `PRIMARY_LOGO_THRESHOLD=55`; elkbabgi.com + diplomatic-lark (Strikingly sites) have a
+  real logo that scores **54** — `logo_keyword`+`suitable_logo_shape`+`repeated_candidate`
+  — missed by 1 point because the `repeated_candidate` bonus is capped at 12 and ignores
+  how site-wide the image is (repeated on 5/6 pages). A `+4` bonus for keyword-matched
+  site-wide-repeated marks fixes both, but a crude corpus sim showed 6 possible selection
+  changes on has-logo sites (mostly sim artifacts, not the real classification-aware
+  selector) — so it's left for the owner's live-QA loop rather than an unvetted scoring
+  change. The other 7/8 no-logo corpus sites are FAILED/BLOCKED scrapes (bot wall, robots,
+  HTTP error, timeout), not logo-pipeline bugs.
 - **Reel is still officially UNGATED in the coverage block**: captions/voiceover/hook
   ARE gated, but Veo extends speech beyond the provided lines (ungated model speech)
   and there is no per-reel audit trail yet. → closing items in §7 Phase 1.
@@ -291,6 +394,12 @@ Packages: `scraper/`, `business_profile/`, `grounding/`, `competitor/`, `brand/`
 - SSRF: DNS-resolve-time check (TOCTOU/rebinding + crawler-followed links deeper gate
   pending). Serper free tier throttles bursts.
 - Old scrapes/profiles don't carry the new fixes — **re-Analyze before judging**.
+- **Phone region residual (C1)**: a non-Egyptian business on a GENERIC TLD (.com/.net)
+  with NO locale path can still fall back to EG and mis-parse a bare national number —
+  the honest edge of what a universal signal can prove. Sites with a ccTLD or `/xx-yy`
+  locale are correct. (Reliable-signal-else-EG chosen over drop-if-unknown to avoid
+  regressing the many Egyptian .com sites; drop-if-unknown is a one-line change if the
+  zero-fabrication bar must be absolute.)
 
 ---
 
@@ -328,7 +437,7 @@ Packages: `scraper/`, `business_profile/`, `grounding/`, `competitor/`, `brand/`
 12. Auth + per-key rate limiting; cost tracking + per-run caps (a reel ≈ 10 paid
     calls); job persistence; Docker/Linux; CI (GitHub Actions: pytest + tsc).
 
-### 💡 Claude's suggested additions (NOT previously requested — clearly marked)
+### 💡 Suggested additions (NOT previously requested — clearly marked)
 - **(💡) Brand Kit export**: one JSON/PDF per brand (logo assets, palette, fonts, DNA,
   voice) — reusable across campaigns and a nice client deliverable.
 - **(💡) Multi-format renders**: same creative → 1:1 post, 9:16 story, 16:9 banner
@@ -347,7 +456,7 @@ Packages: `scraper/`, `business_profile/`, `grounding/`, `competitor/`, `brand/`
 
 ---
 
-## 8. Measured lessons (never re-learn these — condensed from the old CLAUDE.md)
+## 8. Measured lessons (never re-learn these — condensed from the old change-log)
 
 **Generation:**
 - Imagen/image models BAKE raw hex codes and any quoted text into pixels → palettes by
@@ -379,6 +488,30 @@ Packages: `scraper/`, `business_profile/`, `grounding/`, `competitor/`, `brand/`
   infinite variety (query planning, relevance judging), with reject-only/fallback
   contracts so the LLM can never fabricate.
 - `same_registrable_host` must be real eTLD+1; naive last-two-labels breaks .com.eg.
+- `normalize_url`'s output is the FETCH url, not just a dedup key — forcing a scheme
+  there would break http-only sites. For dedup that must fold http/https + trailing
+  slash, use a SEPARATE key (`dedup_key`) and keep fetching the faithful form. And a
+  page can be fetched twice via a redirect the frontier can't see pre-fetch — dedup
+  again POST-fetch on the normalized final url.
+- A one-shot signal read from the homepage SNAPSHOT is nondeterministic on JS sites (the
+  same store rendered 2 vs 164 product links across runs). A signal that gates crawl
+  depth (or any budget) must be RE-EVALUATED over accumulated evidence during the crawl,
+  not frozen at page 1 — build the frontier wide and raise the cap live when it flips.
+- Selecting ONE element from a `set` via `next()` is PYTHONHASHSEED-dependent — it made the
+  C2 number-class verdict nondeterministic across processes (a pre-commit review caught it).
+  When a gate decision depends on a set, use the WHOLE set (accept if evidence matches ANY
+  class) or a deterministic order, never an arbitrary pick.
+- A verifier that matches a claim's VALUE without its CONTEXT certifies fabrications: a
+  bare-digit ledger match "sourced" "Save 50%" from "50 years" and "best coffee" from
+  "best regards", printing a FALSE 'verified' row in the compliance sheet (the moat's
+  proof) — worse than an ungated surface. Number resolution now requires unit-class
+  agreement (%/price/duration/scale); tighten only on a POSITIVE strong-unit signal so no
+  real claim regresses. (Superlative + bare-number SUBJECT context remain open.)
+- A bare phone number (no `+`) is a DIFFERENT real number in every country — parsing it
+  under a hardcoded region fabricates a valid-looking WRONG number (nahdi Saudi
+  920024673 → +20920024673 under blanket "EG"). Derive region from a RELIABLE per-site
+  signal (locale path, ccTLD) first; `html lang` is NOT reliable (`en-US` is a common
+  template default on non-US sites). Home-market fallback only when no signal exists.
 
 **Process:**
 - Restart uvicorn after every backend change; restart cleanly when adding route files.
@@ -404,5 +537,4 @@ Packages: `scraper/`, `business_profile/`, `grounding/`, `competitor/`, `brand/`
 
 ---
 
-*This file supersedes CLAUDE.md. Keep a thin CLAUDE.md that says "Read process.md
-first" — the assistant auto-loads CLAUDE.md by name, not process.md.*
+*This file is the single source of truth for the project — read it before acting here.*

@@ -10,7 +10,7 @@ What's covered (per the user's required test list):
   7. Does not use fallback when __NEXT_DATA__ is absent
   8. Existing tests stay green (handled by full-suite run)
 
-Plus the 3 Claude-recommended additional cases:
+Plus the 3 recommended additional cases:
   9. Whitelist positive: hotline/call_us/order_now keys ARE extracted
  10. Whitelist negative: footer_legal_terms/field_email_placeholder NOT extracted
  11. next_data_likely_dominant fires when payload >> DOM text

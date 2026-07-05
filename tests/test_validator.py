@@ -201,13 +201,28 @@ def test_empty_block_id_rejected():
     assert rej.code == RejectionCode.EMPTY_BLOCK_ID
 
 
-def test_hallucinated_block_id_rejected():
+def test_wrong_block_id_with_real_quote_is_recovered():
+    # The LLM cited a block_id that doesn't exist, but the quote IS verbatim in a real
+    # block — the evidence is real, just mis-attributed, so it is RECOVERED (block_id
+    # corrected) instead of discarded (2026-07-05: a wrong block_id used to throw away
+    # recoverable real evidence).
     pack = _pack_with_blocks()
     lookup = _build_lookup(pack)
     ref = LLMEvidenceRef(
-        block_id="home_h1_9999",  # doesn't exist in pack
-        quote="Premium Foot Care in Cairo",
+        block_id="home_h1_9999",             # doesn't exist in pack
+        quote="Premium Foot Care in Cairo",  # but this IS block home_h1_0001's text
     )
+    item, rej = _validate_evidence_item(ref, lookup)
+    assert rej is None and item is not None
+    assert item.block_id == "home_h1_0001"   # corrected to the block that holds the quote
+    assert item.quote == "Premium Foot Care in Cairo"
+
+
+def test_wrong_block_id_with_absent_quote_is_rejected():
+    # Wrong block_id AND the quote is nowhere in the pack -> genuinely unrecoverable.
+    pack = _pack_with_blocks()
+    lookup = _build_lookup(pack)
+    ref = LLMEvidenceRef(block_id="home_h1_9999", quote="a claim no block ever made")
     item, rej = _validate_evidence_item(ref, lookup)
     assert item is None and rej is not None
     assert rej.code == RejectionCode.HALLUCINATED_BLOCK_ID
@@ -386,7 +401,11 @@ def test_identity_invalid_evidence_drops_value():
         tagline_value="Premium Foot Care in Cairo",
         tagline_evidence=[LLMEvidenceRef(
             block_id="HALLUCINATED_ID",
-            quote="Premium Foot Care in Cairo",
+            # A GENUINELY invalid quote — not verbatim in ANY block, so it is neither
+            # matched nor recoverable and the field is correctly dropped. (A wrong
+            # block_id whose quote IS real elsewhere is recovered, not dropped — see
+            # test_wrong_block_id_with_real_quote_is_recovered.)
+            quote="Award-winning care since 1972",
         )],
         tagline_confidence=Confidence.HIGH,
         description_value=None,

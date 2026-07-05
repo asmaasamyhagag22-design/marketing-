@@ -227,6 +227,46 @@ def _number_tokens(norm_text: str) -> list[str]:
     return tokens
 
 
+# --- Number UNIT CLASS (context-aware resolution) --------------------------------------
+# A %/price/duration/scale number claim must be sourced by evidence carrying the SAME kind
+# of number. The bare-digit match certified fabrications: "Save 50%" resolved against
+# "50 years", "The best coffee" against "best regards" (MEASURED 2026-07-05 — a FALSE
+# 'verified' row in the client-facing compliance sheet, the moat's core artifact).
+# SAFE BY DEFAULT: only a POSITIVELY-identified strong unit tightens; anything unrecognized
+# (incl. Arabic forms this misses) degrades to the prior lenient "digit present" match, so
+# this can never turn a legitimate claim UNSOURCED — only stop a cross-unit false match.
+_PCT_AFTER_RE = re.compile(r"^\s*(?:%|percent|بالما)")
+_SCALE_AFTER_RE = re.compile(r"^\s*(?:\+|k\b|m\b|bn\b|million|billion|thousand|الف|الاف|مليون|مليار)")
+_DUR_AFTER_RE = re.compile(
+    r"^\s*(?:years?|yrs?|months?|weeks?|days?|hours?|"
+    r"عام|اعوام|سن|شهر|اشهر|يوم|ايام|ساع|اسبوع|اسابيع)")
+_CUR_AFTER_RE = re.compile(r"^\s*(?:جنيه|egp|le\b|usd|دولار|ريال|sar|aed|درهم|يورو|eur)")
+_CUR_BEFORE_RE = re.compile(r"(?:\$|€|£|جنيه|egp|usd|دولار|ريال|sar|aed|درهم|يورو|eur)\s*$")
+_STRONG_CLASSES = ("pct", "scale", "dur", "cur")
+
+
+def _number_class_at(norm_text: str, start: int, end: int) -> str:
+    """Classify the unit of the digit at [start:end] in a normalized string."""
+    after = norm_text[end:end + 14]
+    if _PCT_AFTER_RE.match(after):
+        return "pct"
+    if _SCALE_AFTER_RE.match(after):
+        return "scale"
+    if _DUR_AFTER_RE.match(after):
+        return "dur"
+    if _CUR_AFTER_RE.match(after) or _CUR_BEFORE_RE.search(norm_text[max(0, start - 8):start]):
+        return "cur"
+    return "bare"
+
+
+def _digit_classes(norm_text: str, digit: str) -> set[str]:
+    """The set of unit classes the exact `digit` token appears with in `norm_text`."""
+    classes: set[str] = set()
+    for m in re.finditer(r"(?<!\d)" + re.escape(digit) + r"(?!\d)", norm_text):
+        classes.add(_number_class_at(norm_text, m.start(), m.end()))
+    return classes
+
+
 # ---------------------------------------------------------------------
 # Public claim / resolution / verdict types
 # ---------------------------------------------------------------------
@@ -471,9 +511,25 @@ class EvidenceLedger:
         return Resolution(chosen.source_url, chosen.confidence, chosen.source_type, chosen.raw,
                           tier=chosen.tier, matched_lang=_lang(chosen.raw), copy_lang=copy_lang)
 
-    def _resolve_number(self, token: str, copy_lang: str = "") -> Optional[Resolution]:
-        pat = re.compile(r"(?<!\d)" + re.escape(token) + r"(?!\d)")
-        return self._pick([e for e in self.entries if pat.search(e.norm)], copy_lang)
+    def _resolve_number(self, claim: "Claim", copy_lang: str = "") -> Optional[Resolution]:
+        token = claim.token
+        # The claim's OWN strong unit class(es) (from its copy context). If the copy uses a
+        # strong unit (%, price, duration, scale), the evidence must carry the same number in
+        # a compatible class — a "50%" claim is NOT sourced by "50 years". We keep the FULL
+        # SET (a copy can use the digit in two classes, e.g. "50% today, valid 50 days") and
+        # accept evidence matching ANY of them: deterministic (a single arbitrary pick over a
+        # set is PYTHONHASHSEED-dependent) and never regresses a value the evidence supports.
+        # A plain number carries no strong class -> prior lenient rule (value appears anywhere).
+        claim_strong = {c for c in _digit_classes(claim.text, token) if c in _STRONG_CLASSES}
+        matches = []
+        for e in self.entries:
+            ev_classes = _digit_classes(e.norm, token)
+            if not ev_classes:
+                continue
+            if claim_strong and claim_strong.isdisjoint(ev_classes):
+                continue
+            matches.append(e)
+        return self._pick(matches, copy_lang)
 
     def _resolve_group(self, group: str, copy_lang: str = "") -> Optional[Resolution]:
         members = _GROUPS.get(group, set())
@@ -488,7 +544,7 @@ class EvidenceLedger:
     def _resolve_one(self, claim: Claim) -> Optional[Resolution]:
         copy_lang = _lang(claim.text)      # prefer evidence in the audited copy's language
         if claim.kind == "number":
-            return self._resolve_number(claim.token, copy_lang)
+            return self._resolve_number(claim, copy_lang)
         return self._resolve_group(claim.kind, copy_lang)
 
     def resolve_claim(self, text: str) -> Optional[Resolution]:

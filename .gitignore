@@ -21,7 +21,7 @@ benchmark/runs/
 
 # Poster outputs (~140 MB of generated PNGs; regeneratable from profiles).
 # Force-add specific keepers with `git add -f` — e.g. the reusable Imagen
-# backgrounds in outputs/posters/backgrounds/ that CLAUDE.md says to reuse.
+# backgrounds in outputs/posters/backgrounds/ that process.md marks reusable.
 outputs/
 
 # Cloud-sync and OS artifacts (Google Drive / OneDrive / macOS)
@@ -52,7 +52,7 @@ output.txt
 candidate_check.txt
 phone_diagnostic.txt
 
-# Claude Code local settings (personal/machine-specific; shared settings.json stays tracked)
+# Local assistant/editor settings (personal/machine-specific; shared settings.json stays tracked)
 .claude/settings.local.json
 
 # IDE

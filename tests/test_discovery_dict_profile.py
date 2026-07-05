@@ -6,7 +6,7 @@ Regression for the measured root cause of the web app's always-standalone SWOT:
 Places text query as its repr — a garbage query -> 0 usable peers -> standalone
 -> Threats/Opportunities permanently empty on the web path.
 
-(The earlier fix recorded in CLAUDE.md covered the OBJECT path — str(enum) —
+(The earlier fix recorded in process.md covered the OBJECT path — str(enum) —
 this covers the serialized-dict path the API actually sends.)
 """
 from __future__ import annotations

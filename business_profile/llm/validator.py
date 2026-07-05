@@ -79,12 +79,33 @@ def _normalize(text: str) -> str:
     return _QUOTE_RE.sub("'", _WS_RE.sub(" ", text).strip().lower())
 
 
+# A recovered quote (cited with a wrong block_id) must be at least this many normalized
+# chars, so a stop-word ("the", "and") can't be laundered into a coincidental block match.
+_MIN_RECOVER_QUOTE_LEN = 6
+
+
 @dataclass
 class _BlockLookup:
     """Cached lookups from the pack."""
     text_by_id: dict[str, str]
     page_url_by_id: dict[str, str]
     normalized_text_by_id: dict[str, str]
+
+
+def _recover_by_quote(quote: str, lookup: "_BlockLookup"):
+    """Find a block that VERBATIM contains `quote` — the LLM cited a wrong/absent block_id
+    for a REAL quote. Returns (block_id, page_url, clean_quote) or None. Same substring
+    strictness as the per-block check, searched across ALL blocks, with a length floor."""
+    stripped = quote.strip(" \t\n\r\"'“”‘’«».,;:!?(){}[]<>—–-")
+    for cand in (quote, stripped):
+        cand = (cand or "")[:MAX_QUOTE_LEN]
+        nq = _normalize(cand)
+        if len(nq) < _MIN_RECOVER_QUOTE_LEN:
+            continue
+        for bid, nblock in lookup.normalized_text_by_id.items():
+            if nq in nblock:
+                return bid, lookup.page_url_by_id[bid], cand
+    return None
 
 
 def _build_lookup(pack: EvidencePack) -> _BlockLookup:
@@ -133,78 +154,58 @@ def _validate_evidence_item(
     Returns (EvidenceItem, None) on success, or (None, RejectionRecord)
     on failure. We never return both.
     """
-    # block_id checks
+    # block_id null/empty -> HARD reject (nothing to recover from).
     if ref.block_id is None:
         return None, RejectionRecord(
-            code=RejectionCode.NULL_BLOCK_ID,
-            block_id=None,
-            quote=ref.quote,
-        )
+            code=RejectionCode.NULL_BLOCK_ID, block_id=None, quote=ref.quote)
     if not isinstance(ref.block_id, str) or not ref.block_id.strip():
         return None, RejectionRecord(
-            code=RejectionCode.EMPTY_BLOCK_ID,
-            block_id=ref.block_id,
-            quote=ref.quote,
-        )
-    if ref.block_id not in lookup.text_by_id:
-        return None, RejectionRecord(
-            code=RejectionCode.HALLUCINATED_BLOCK_ID,
-            block_id=ref.block_id,
-            quote=ref.quote,
-            note="block_id not in evidence pack",
-        )
+            code=RejectionCode.EMPTY_BLOCK_ID, block_id=ref.block_id, quote=ref.quote)
 
-    # quote checks
+    # quote null/empty -> HARD reject (nothing to match/recover).
     if ref.quote is None:
         return None, RejectionRecord(
-            code=RejectionCode.NULL_QUOTE,
-            block_id=ref.block_id,
-            quote=None,
-        )
+            code=RejectionCode.NULL_QUOTE, block_id=ref.block_id, quote=None)
     if not isinstance(ref.quote, str) or not ref.quote.strip():
         return None, RejectionRecord(
-            code=RejectionCode.EMPTY_QUOTE,
-            block_id=ref.block_id,
-            quote=ref.quote,
-        )
+            code=RejectionCode.EMPTY_QUOTE, block_id=ref.block_id, quote=ref.quote)
 
-    # Truncate long quotes — the prompt rule was <=200 chars. We try the
-    # first 200 chars as a substring match before rejecting.
-    candidate = ref.quote
-    if len(candidate) > MAX_QUOTE_LEN:
-        candidate = candidate[:MAX_QUOTE_LEN]
+    # Truncate long quotes — the prompt rule was <=200 chars.
+    candidate = ref.quote[:MAX_QUOTE_LEN]
+    stripped = candidate.strip(" \t\n\r\"'“”‘’«».,;:!?(){}[]<>—–-")
 
-    norm_quote = _normalize(candidate)
-    norm_block = lookup.normalized_text_by_id[ref.block_id]
-    if norm_quote not in norm_block:
-        # One more chance: the LLM occasionally wraps the quote in
-        # punctuation/quotes. Strip leading/trailing non-alphanumerics
-        # and retry.
-        stripped = candidate.strip(" \t\n\r\"'“”‘’«».,;:!?(){}[]<>—–-")
-        if stripped and stripped != candidate:
-            if _normalize(stripped) in norm_block:
-                # Accept — store the cleaner version
-                page_url = lookup.page_url_by_id[ref.block_id]
-                return EvidenceItem(
-                    block_id=ref.block_id,
-                    page_url=page_url,
-                    quote=stripped[:MAX_QUOTE_LEN],
-                    extractor=extractor_tag,
-                ), None
+    # FAST PATH: the CITED block exists and verbatim-contains the quote (exact, or after a
+    # punctuation strip — the LLM sometimes wraps the quote in quotes).
+    if ref.block_id in lookup.normalized_text_by_id:
+        norm_block = lookup.normalized_text_by_id[ref.block_id]
+        if _normalize(candidate) in norm_block:
+            return EvidenceItem(block_id=ref.block_id,
+                                page_url=lookup.page_url_by_id[ref.block_id],
+                                quote=candidate[:MAX_QUOTE_LEN], extractor=extractor_tag), None
+        if stripped and stripped != candidate and _normalize(stripped) in norm_block:
+            return EvidenceItem(block_id=ref.block_id,
+                                page_url=lookup.page_url_by_id[ref.block_id],
+                                quote=stripped[:MAX_QUOTE_LEN], extractor=extractor_tag), None
+
+    # RECOVERY: the LLM cited a WRONG/absent block_id (or the wrong block) for a REAL quote.
+    # A wrong block_id used to DISCARD the evidence outright even though the quote is verbatim
+    # in another block — throwing away real, citable evidence. Search ALL blocks and accept
+    # with the CORRECTED block_id/page_url. Same substring strictness as the per-block check,
+    # plus a length floor so a stop-word can't be laundered into a coincidental match.
+    rec = _recover_by_quote(candidate, lookup)
+    if rec is not None:
+        bid, page_url, clean_quote = rec
+        return EvidenceItem(block_id=bid, page_url=page_url,
+                            quote=clean_quote, extractor=extractor_tag), None
+
+    # Unrecoverable -> reject with the most specific diagnostic code.
+    if ref.block_id not in lookup.normalized_text_by_id:
         return None, RejectionRecord(
-            code=RejectionCode.QUOTE_NOT_IN_BLOCK,
-            block_id=ref.block_id,
-            quote=ref.quote[:200],
-            note=f"quote not found in block text after normalization",
-        )
-
-    page_url = lookup.page_url_by_id[ref.block_id]
-    return EvidenceItem(
-        block_id=ref.block_id,
-        page_url=page_url,
-        quote=candidate[:MAX_QUOTE_LEN],
-        extractor=extractor_tag,
-    ), None
+            code=RejectionCode.HALLUCINATED_BLOCK_ID, block_id=ref.block_id, quote=ref.quote,
+            note="block_id not in evidence pack and quote not found in any block")
+    return None, RejectionRecord(
+        code=RejectionCode.QUOTE_NOT_IN_BLOCK, block_id=ref.block_id, quote=ref.quote[:200],
+        note="quote not found in block text after normalization")
 
 
 def _validate_evidence_list(

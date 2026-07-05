@@ -61,6 +61,7 @@ from .schemas import (
     TextBlock,
 )
 from .url_utils import (
+    dedup_key,
     get_domain_slug,
     normalize_url,
     resolve,
@@ -145,7 +146,10 @@ def _select_subpages_to_fetch(
     keeps its homepage anchor text (which carries more signal than
     a sitemap entry).
     """
-    homepage_norm = normalize_url(homepage_url)
+    # Dedup by the scheme/slash-insensitive frontier key (H3) so http/https and
+    # trailing-slash variants of one page don't each consume a budget slot; the stored
+    # tuple keeps the faithful normalize_url form as the FETCH target.
+    homepage_key = dedup_key(homepage_url)
     by_norm: dict[str, tuple[str, PageType, PageTier, str]] = {}
 
     tier_rank = {PageTier.HIGH: 0, PageTier.MEDIUM: 1, PageTier.LOW: 2, PageTier.SKIP: 99}
@@ -156,15 +160,16 @@ def _select_subpages_to_fetch(
         if not same_registrable_host(link.href, site_url):
             continue
         norm = normalize_url(link.href)
-        if norm == homepage_norm:
+        key = dedup_key(link.href)
+        if key == homepage_key:
             continue
         pt, tier = classify_url(link.href, link.anchor_text)
         if tier == PageTier.SKIP:
             continue
         # Prefer the higher-tier classification if we've seen this URL before
-        existing = by_norm.get(norm)
+        existing = by_norm.get(key)
         if existing is None or tier_rank[tier] < tier_rank[existing[2]]:
-            by_norm[norm] = (norm, pt, tier, link.anchor_text)
+            by_norm[key] = (norm, pt, tier, link.anchor_text)
 
     # PR-1: merge in extra URLs (typically from sitemap.xml). Classify by
     # URL only (no anchor text). Homepage anchor text wins on collisions
@@ -173,15 +178,16 @@ def _select_subpages_to_fetch(
         if not same_registrable_host(raw_url, site_url):
             continue
         norm = normalize_url(raw_url)
-        if norm == homepage_norm:
+        key = dedup_key(raw_url)
+        if key == homepage_key:
             continue
-        if norm in by_norm:
+        if key in by_norm:
             # Already discovered via homepage links; keep that entry's anchor text.
             continue
         pt, tier = classify_url(raw_url, anchor_text="")
         if tier == PageTier.SKIP:
             continue
-        by_norm[norm] = (norm, pt, tier, "")
+        by_norm[key] = (norm, pt, tier, "")
 
     # Sort by tier rank, then by page-type priority within tier.
     # Lower number = higher priority. Ordering reflects what's most useful
@@ -250,6 +256,23 @@ def _looks_like_ecommerce(home_links: list, sitemap_urls: list[str]) -> tuple[bo
             if n_products >= ECOMMERCE_PRODUCT_URL_MIN:
                 return True, n_products
     return False, n_products
+
+
+def _register_fetched_or_skip(final_url: str, fetched_final_norms: set[str]) -> bool:
+    """H2 redirect-dedup decision for ONE fetched page.
+
+    Returns True if this page's FINAL (post-redirect) url normalizes to one we already
+    fetched — the caller then skips it WITHOUT counting it as a kept page (it is
+    duplicate content that would waste a budget slot and double-count in the evidence
+    pack). Otherwise records it and returns False. Normalizing via `normalize_url`
+    collapses http/https, trailing-slash and redirect variants onto one key. Pure so the
+    crawl-loop guard is hermetically testable (MEASURED: daturial fetched its homepage
+    5x; 12/110 corpus manifests carried duplicate final urls)."""
+    key = normalize_url(final_url or "")
+    if key in fetched_final_norms:
+        return True
+    fetched_final_norms.add(key)
+    return False
 
 
 # ---------------------------------------------------------------------
@@ -667,10 +690,21 @@ def scrape(input_url: str, output_root: str = "scrapes") -> tuple[ScrapeManifest
                     html_lang_hints.append(home_meta.html_lang)
                 site_metadata = merge_metadata(home_meta, site_metadata)
                 manifest.images_of_interest.extend(home_images)
+                # A non-fatal homepage screenshot failure: the scrape is kept (its
+                # text/links/offerings are intact); only the screenshot-derived visual
+                # identity degrades. Surfaced honestly rather than discarding the page.
+                if getattr(home_result, "screenshot_failed", False):
+                    manifest.notes.append("homepage_screenshot_failed (non-fatal; visual "
+                                          "identity degraded to logo pixels + header/footer)")
 
                 # ---- Adaptive budget: detect e-commerce UNIVERSALLY (product-URL density) so a
                 # store (100-300+ pages) is crawled deeper than the default 12/150s. Raises BOTH
                 # the page cap AND the time budget (raising the cap alone is a no-op — MEASURED).
+                # NOTE (H1): this initial detection reads ONLY the homepage snapshot's links,
+                # which a JS store can under-render nondeterministically (MEASURED: nahdi flipped
+                # 6-vs-24 pages on the same store, same morning, when the sitemap host was dead —
+                # homepage had 2 product links one run, 164 another). The signal is therefore
+                # RE-EVALUATED over accumulated links inside the fetch loop below.
                 is_store, n_prod = _looks_like_ecommerce(home_links, sitemap_result.urls)
                 page_cap = ECOMMERCE_MAX_INTERNAL_PAGES if is_store else MAX_INTERNAL_PAGES
                 budget_secs = ECOMMERCE_BUDGET_SECONDS if is_store else TOTAL_BUDGET_SECONDS
@@ -681,9 +715,12 @@ def scrape(input_url: str, output_root: str = "scrapes") -> tuple[ScrapeManifest
                     )
 
                 # ---- Select subpages -----------------------------
+                # Build the frontier at the ECOMMERCE max cap so a mid-crawl store upgrade
+                # (H1) has candidates to fetch; `page_cap` (below) bounds how many we
+                # actually consume and stays at the small default until the signal flips.
                 subpages = _select_subpages_to_fetch(
                     home_links, normalized, home_result.final_url,
-                    extra_urls=sitemap_result.urls, cap=page_cap,
+                    extra_urls=sitemap_result.urls, cap=ECOMMERCE_MAX_INTERNAL_PAGES,
                 )
                 # Re-anchored to the root -> ensure the ORIGINAL deep seed is fetched
                 # FIRST (its content — offerings / menu / track — is why the user gave
@@ -695,8 +732,20 @@ def scrape(input_url: str, output_root: str = "scrapes") -> tuple[ScrapeManifest
                         if normalize_url(s[0]) != normalize_url(normalized)
                     ]
 
+                # H2 redirect-dedup: a selected subpage URL can redirect to (or serve) a
+                # page we ALREADY fetched (the homepage, or another subpage). Seed the
+                # set with the homepage's final url; each fetched subpage is checked via
+                # _register_fetched_or_skip below.
+                fetched_final_norms: set[str] = set()
+                _register_fetched_or_skip(home_result.final_url, fetched_final_norms)
+
                 # ---- Fetch subpages within budget ----------------
                 for i, (sub_url, pt, tier, anchor) in enumerate(subpages, start=1):
+                    # Effective page cap — bounds how many frontier candidates we consume.
+                    # It CAN rise mid-crawl when the store signal flips (H1), so it is
+                    # checked live here rather than baked into the frontier length.
+                    if (i - 1) >= page_cap:
+                        break
                     elapsed = time.monotonic() - started
                     # ALWAYS attempt a minimum number of subpages: pre-crawl stages
                     # (dead sitemaps, a heavy homepage) can eat the whole budget, and
@@ -749,6 +798,21 @@ def scrape(input_url: str, output_root: str = "scrapes") -> tuple[ScrapeManifest
                                     pass
                             continue
 
+                        # H2: skip a page whose FINAL (post-redirect) url we already
+                        # fetched — duplicate content that would waste this slot and
+                        # double-count in the evidence pack. It counts as an attempt
+                        # (we did fetch it) but not as a succeeded/kept page.
+                        if _register_fetched_or_skip(sub_result.final_url, fetched_final_norms):
+                            manifest.notes.append(
+                                f"redirect_duplicate_skipped: {sub_url} -> {sub_result.final_url}"
+                            )
+                            if sub_result._page is not None:
+                                try:
+                                    sub_result._page.close()
+                                except Exception:
+                                    pass
+                            continue
+
                         manifest.scrape_meta.pages_succeeded += 1
 
                         sub_record, sub_links, sub_meta, sub_images, sub_nd_phones = _process_fetched_page(
@@ -761,6 +825,21 @@ def scrape(input_url: str, output_root: str = "scrapes") -> tuple[ScrapeManifest
 
                         manifest.pages.append(sub_record)
                         all_links.extend(sub_links)
+                        # H1: re-evaluate the store signal over the ACCUMULATED links as
+                        # subpages reveal more product URLs, and upgrade the budget ONCE if
+                        # it crosses the threshold — the one-shot homepage detection above
+                        # under-counts when a JS store renders few links on the snapshot
+                        # (offline-validated: nahdi's failing 6-page run had 15 product
+                        # URLs across the pages it DID fetch — enough to flip).
+                        if not is_store:
+                            is_store, n_prod = _looks_like_ecommerce(all_links, sitemap_result.urls)
+                            if is_store:
+                                page_cap = ECOMMERCE_MAX_INTERNAL_PAGES
+                                budget_secs = ECOMMERCE_BUDGET_SECONDS
+                                manifest.notes.append(
+                                    f"E-commerce detected mid-crawl ({n_prod}+ product URLs) "
+                                    f"-> budget upgraded (cap={page_cap}, {budget_secs}s)"
+                                )
                         all_html_by_page[sub_result.final_url] = sub_result.html
                         all_text_blocks_by_page[sub_result.final_url] = sub_record.text_blocks
                         all_page_texts.append(sub_result.rendered_text)
@@ -790,7 +869,14 @@ def scrape(input_url: str, output_root: str = "scrapes") -> tuple[ScrapeManifest
 
     # ---- Site-wide aggregations -----------------------------------
     manifest.site_metadata = site_metadata
-    manifest.contact = extract_contact(all_html_by_page, all_text_blocks_by_page)
+    # Phone region comes from the SITE's own reliable signal (locale path / ccTLD)
+    # before the home-market fallback — never a blanket country: a national number
+    # parsed under the wrong region is a valid-looking WRONG number (nahdi Saudi
+    # 920024673 -> +20920024673; its /ar-sa now correctly resolves to SA).
+    manifest.contact = extract_contact(
+        all_html_by_page, all_text_blocks_by_page,
+        site_url=(manifest.scrape_meta.final_url or normalized),
+    )
     # 2026-05 PR-next-data: merge Next.js-derived phones (whitelisted
     # i18n hotline keys) into manifest.contact.phones. Dedupe against
     # the DOM/href-derived phones already there by digit-string.
