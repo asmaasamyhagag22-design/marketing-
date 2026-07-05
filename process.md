@@ -228,6 +228,11 @@ Packages: `scraper/`, `business_profile/`, `grounding/`, `competitor/`, `brand/`
   nahdi flipped from "22 coffee-dominated SKUs" to 24 pharmacy departments.
   ⚠ Guidance is keyed by the **rules** category which can be None → the hard rules
   ALSO live in `_generic` as a conditional block (the fix that actually landed).
+- **Unsubstantiated-claim blacklist is WORD-BOUNDARY** (2026-07-05): the tokens (halal/iso/
+  organic/certified/…) are matched with `\b…\b`, not raw substring. Substring both
+  false-rejected real offerings ("iso" inside poison/comparison, "healthy" inside unhealthy)
+  and LAUNDERED a claim through a quote that merely contained the substring ("comparison"
+  grounding "iso"). Multi-word/hyphenated tokens ("gluten-free", "fda approved") still match.
 - Name chrome stripping at the source (Website/E-Shop/الموقع الرسمي), restaurant-gate
   (2+ identity tokens or a menu page), `other_unique_insights` catch-all (consumed by
   SWOT strengths + poster headline pool).

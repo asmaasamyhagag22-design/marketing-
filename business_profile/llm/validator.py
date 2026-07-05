@@ -441,7 +441,14 @@ def _contains_blacklisted_claim(
         (e.quote or "").lower() for e in evidence_items if e.quote
     )
     for token in UNSUBSTANTIATED_CLAIM_TOKENS:
-        if token in text_lc and token not in quotes_lc:
+        # WORD-BOUNDARY match, not raw substring. The substring test flagged "iso" inside
+        # poison / comparison / revision / decision (false-rejecting a real offering) AND let
+        # an "ISO"/"organic" claim LAUNDER through a quote that merely contained the substring
+        # (e.g. "comparison" grounds "iso"). \b anchors the token as a whole word/phrase; the
+        # hyphens/spaces of multi-word tokens ("gluten-free", "fda approved") match literally
+        # between the boundaries.
+        pat = r"\b" + re.escape(token) + r"\b"
+        if re.search(pat, text_lc) and not re.search(pat, quotes_lc):
             return token
     return None
 
