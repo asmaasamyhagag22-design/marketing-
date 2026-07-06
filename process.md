@@ -2,8 +2,30 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1086 passed, 0 failed** (2026-07-05/06; grew from 880 as each audit fix
+Test suite: **1091 passed, 0 failed** (2026-07-05/06; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**Reel creative-director upgraded to the agency PERFORMANCE-AD playbook (2026-07-06):** owner supplied a
+detailed Senior-Creative-Director brief (Hook→Body→CTA spine; the SUBJECT+STYLE+CAMERA+LIGHTING+MOTION
+prompt formula; explicit camera/lighting terms; a banned-words list "slow zoom"/"refined"/"dreamy"; a
+physics Logic-Check). `reel/creative_director.py::_system_prompt` now encodes all of it: a 15-yr
+performance-marketer persona obsessed with realism; a HOOK that opens on a proven hook TYPE (the mistake
+/ 3 reasons / before-after / provocative question) with a reacting FACE + a DELIBERATE macro detail; a
+BENEFIT shown mid-use (never at-rest on a shelf/in a bag); a PROOF beat that uses real social proof only
+if grounded (never fabricated); a CTA whose on-screen caption and voiceover say the SAME written action
+line; the per-`veo_prompt` formula with explicit CAMERA (macro/tracking/hand-held/dolly-in) + LIGHTING
+(soft natural/diffused/high-contrast); a BANNED-WORDS list; and a SELF/LOGIC-CHECK for impossible
+physics. The draft was then ADVERSARIALLY AUDITED by a 3-critic + synthesis workflow (coverage /
+contradiction / craft) against the owner's spec → 10 findings, all applied: chief among them the
+close-up-vs-"nothing cropped" contradiction (now: intentional macro on the hook, product WHOLE on the
+establishing/CTA scenes), the at-rest-context collision, the "CTA verbatim from brand" vs "invent no
+facts" bind (CTA is written COPY, only its claims are grounded), and product-identity-stays-while-pose-
+changes. TWO findings ("Shop Now button", "render the logo") were applied Veo-SAFELY — on-screen text
+and the brand logo are composited in POST (caption overlay + auto end-card), so the footage renders
+NEITHER (Veo would garble fake UI/wordmarks). A re-verify pass confirmed all 10 resolved + caught one
+residual (non-featured image_index still said "a DIFFERENT photo per scene" → reworded to "a different
+SHOT/angle of the ONE hero"). +5 tests. Fully live on the FEATURED single-product reel (see below); a
+final proof render on the upgraded director is pending owner go.
 
 **Single-product REEL — one item, realistic, framed-for-9:16 (2026-07-06):** owner: "أنا هعملّ ريل
 على منتج بعينه مش ميت منتج ... يكون منطقي مش يضغط والغطا مقفول ... الصورة كأنها مقصوصة ... صمم الفريم

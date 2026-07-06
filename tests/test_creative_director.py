@@ -107,8 +107,9 @@ def test_prompt_composes_vertical_first_so_the_product_is_not_cropped():
     # composed for the 9:16 frame from the start so the product is never cut off.
     p = _system_prompt(5, "en", "generic")
     assert "1080x1920" in p and "vertical-first" in p.lower()
-    assert "NOTHING is cut off" in p
-    assert "NEVER a wide/landscape shot that gets cropped" in p
+    assert "keep the product WHOLE" in p and "ACCIDENTALLY crop" in p
+    # an INTENTIONAL macro crop for the hook is distinguished from an accidental one (audit fix)
+    assert "DELIBERATE macro crop" in p
 
 
 def test_prompt_demands_physically_logical_use_not_impossible_actions():
@@ -116,6 +117,61 @@ def test_prompt_demands_physically_logical_use_not_impossible_actions():
     p = _system_prompt(5, "en", "beauty")
     assert "REMOVES or FLIPS" in p                            # opens the cap/lid BEFORE dispensing
     assert "sealed pump" in p or "closed bottle" in p         # the forbidden impossible action
+
+
+def test_prompt_uses_the_senior_director_persona_and_agency_formula():
+    # Owner's agency playbook: the director is a senior performance-marketer obsessed with realism,
+    # and each veo_prompt is engineered with the SUBJECT+STYLE+CAMERA+LIGHTING+MOTION formula using
+    # explicit directorial terms (not lazy generic prompts).
+    p = _system_prompt(5, "en", "generic")
+    assert "SENIOR CREATIVE DIRECTOR" in p and "15 years" in p
+    assert "OBSESSED with realism" in p
+    assert "SUBJECT + STYLE + CAMERA + LIGHTING + MOTION" in p
+    assert "Macro close-up" in p or "tracking shot" in p        # explicit camera moves
+    assert "soft natural light" in p or "diffused" in p          # explicit lighting
+    # a concrete-subject example, not "a person"
+    assert "never just 'a person'" in p
+
+
+def test_prompt_bans_the_dead_agency_words():
+    # Owner: replace "Slow zoom"/"Refined"/"Dreamy" with dynamic, real-usage language.
+    p = _system_prompt(5, "en", "beauty")
+    assert "BANNED WORDS" in p
+    for dead in ("slow zoom", "refined", "dreamy"):
+        assert dead in p                                         # named so the model avoids them
+    assert "dynamic motion" in p or "real-life usage" in p
+
+
+def test_prompt_engineers_the_hook_and_unifies_the_cta():
+    # Hook = first 2s on a proven hook TYPE + a reacting FACE + an intentional MACRO detail (audit
+    # resolved the close-up-vs-fully-visible contradiction). CTA = caption AND voiceover say the SAME
+    # short action line; product shown mid-use, not at-rest.
+    p = _system_prompt(5, "en", "generic")
+    assert "FIRST 2 SECONDS" in p and "hook TYPE" in p          # a proven hook type, not just a label
+    assert "FACE reacting" in p and "MACRO detail" in p         # face + deliberate macro, not a vague close-up
+    assert "SAME short action line" in p                        # caption == voiceover CTA line
+    assert "mid-use in a real routine" in p                     # product-in-action, not resting on a shelf
+
+
+def test_prompt_is_veo_safe_and_grounds_social_proof_and_cta_copy():
+    # Audit fixes applied in a Veo-safe way: on-screen text + the brand logo are composited in POST
+    # (caption overlay + auto end-card), so the veo_prompt must render NEITHER; social proof only if
+    # grounded; the CTA line is written copy but its factual claims stay grounded; and the product's
+    # identity survives even while a hand operates it.
+    p = _system_prompt(5, "en", "generic")
+    assert "AUTO-APPENDS a branded end-card" in p and "Veo renders none" in p
+    assert "social proof" in p and "NEVER fabricate ratings" in p
+    assert "CTA line is COPY you WRITE" in p and "without inventing fake scarcity" in p
+    assert "only its position/pose may change" in p            # identity preserved as the hand operates it
+
+
+def test_prompt_has_a_physics_logic_check_and_fast_cut_pacing():
+    # Owner's "Logic Check": the director must verify every scene is physically possible before
+    # returning, and cut at a TikTok pace (2-4s), not linger.
+    p = _system_prompt(5, "en", "generic")
+    assert "PHYSICALLY POSSIBLE" in p
+    assert "do NOT cram" in p                                    # one clear action per scene
+    assert "2-4" in p and "FAST TikTok cut" in p
 
 
 def test_featured_product_makes_the_whole_reel_one_product():
