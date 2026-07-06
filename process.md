@@ -2,7 +2,7 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1055 passed, 0 failed** (2026-07-05/06; grew from 880 as each audit fix
+Test suite: **1058 passed, 0 failed** (2026-07-05/06; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
 
 **Active work — adversarial audit (2026-07-05):** a deep verified audit found 1 CRITICAL
@@ -361,7 +361,19 @@ Packages: `scraper/`, `business_profile/`, `grounding/`, `competitor/`, `brand/`
   fetch `top_trends(keywords_from_profile(profile), require_match=True, top_k=6)` best-effort
   (any failure → [], never blocks). MEASURED: Raw African O/T 0/0 → 2 opps + 1 threat from
   synthetic trends (regulation → threat; junk host + off-topic dropped). +3 hermetic tests.
-  REMAINING: readiness-gap Weaknesses (S4).
+- **Readiness-gap Weaknesses (2026-07-06, SWOT-quality Slice 4 — DONE, all 4 slices shipped)**:
+  `brand_signals.weaknesses_from_readiness(profile, ledger)` adds brand-foundation Weaknesses from
+  the grounded `readiness.swot_quality_signals`, but ONLY for a WHITELISTED signal explicitly False
+  (tagline / value_propositions_3plus / trust_signals_2plus / offerings_3plus / pricing_posture_known
+  / multi_page_evidence). `locations_with_geo` / `hours_known` are deliberately EXCLUDED — False for
+  every online brand and not a weakness there (rule #4: never a weakness for something irrelevant).
+  Phrased without numbers (pure paraphrase → passes the gate), cites the readiness audit,
+  `internally_supported`, APPENDED after the concrete weaknesses (`_append_unique`). MEASURED:
+  well-scraped Azza/Raw African add 0 (correct); a thin profile surfaces 3 real gaps (no tagline,
+  thin value prop, single-page) and NOT hours/geo. +3 hermetic tests. **SWOT-quality program
+  COMPLETE** — the SWOT now LEADS with brand-level strengths (S1), reads like a strategist (S2),
+  has market-shift O/T (S3), and flags real foundation gaps (S4); the mechanical matrix is a
+  cited secondary signal, all Ledger-gated. profile=None/trends=None stay byte-identical.
 - **TOWS grounding gate fails CLOSED** (2026-07-05): a ledger error on a strategy's text
   now returns not-grounded → the pairing keeps its GROUNDED deterministic template instead
   of shipping the LLM's unverified text (was fail-open — an error let unverified strategy

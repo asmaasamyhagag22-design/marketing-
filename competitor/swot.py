@@ -99,6 +99,16 @@ def _prepend_unique(dst: List[SWOTItem], items: List[SWOTItem]) -> None:
     dst[:0] = fresh
 
 
+def _append_unique(dst: List[SWOTItem], items: List[SWOTItem]) -> None:
+    """Append `items` to `dst` (supplementary, after the concrete lines), skipping text dupes."""
+    existing = {s.text.strip().lower() for s in dst}
+    for it in items:
+        k = it.text.strip().lower()
+        if k and k not in existing:
+            existing.add(k)
+            dst.append(it)
+
+
 def synthesize_swot(
     matrix: ComparativeGapMatrix,
     themes: Optional[List[ReviewTheme]] = None,
@@ -222,11 +232,14 @@ def synthesize_swot(
         try:
             from grounding import EvidenceLedger
 
-            from competitor.brand_signals import strengths_from_profile
-            brand = strengths_from_profile(profile, EvidenceLedger.from_profile(profile))
+            from competitor.brand_signals import strengths_from_profile, weaknesses_from_readiness
+            _ledger = EvidenceLedger.from_profile(profile)
+            brand = strengths_from_profile(profile, _ledger)
+            rweak = weaknesses_from_readiness(profile, _ledger)
         except Exception:  # noqa: BLE001 — a signal-mining error must never break the SWOT
-            brand = []
+            brand, rweak = [], []
         _prepend_unique(swot.strengths, brand)   # brand-level strengths lead
+        _append_unique(swot.weaknesses, rweak)   # readiness-gap weaknesses are supplementary
 
     # Market-shift Opportunities/Threats from on-topic TRENDS — the signal the SWOT never had, so
     # an ecommerce brand with no Places peers and no reachable reviews still gets real O/T (not an

@@ -120,6 +120,37 @@ def strengths_from_profile(profile: Any, ledger: Any = None) -> list[SWOTItem]:
     return out
 
 
+# Readiness signals that are a GENUINE, UNIVERSAL brand-foundation gap when False. Deliberately a
+# WHITELIST — `locations_with_geo` / `hours_known` are False for every online brand and are NOT
+# weaknesses there (rule #4: never a weakness for something simply irrelevant/unknown). Phrased
+# WITHOUT numbers so the line is a pure paraphrase that passes the Ledger gate.
+_READINESS_WEAKNESS = {
+    "tagline": "No clear brand tagline established on-site",
+    "value_propositions_3plus": "Thin value proposition — few distinct benefits stated",
+    "trust_signals_2plus": "Few trust signals shown on-site",
+    "offerings_3plus": "Narrow offering range surfaced on-site",
+    "pricing_posture_known": "Pricing posture unclear on-site",
+    "multi_page_evidence": "Shallow site presence — evidence from a single page",
+}
+
+
+def weaknesses_from_readiness(profile: Any, ledger: Any = None) -> list[SWOTItem]:
+    """Brand-foundation Weaknesses from the grounded readiness audit — ONLY for a whitelisted signal
+    that is explicitly False (never inferred from a missing/irrelevant field). Each cites the
+    readiness audit; Ledger-gated; `internally_supported`. [] when the audit is absent or all
+    whitelisted signals hold."""
+    p = _unwrap(profile)
+    rd = p.get("readiness") or {}
+    sq = rd.get("swot_quality_signals") or {}
+    out: list[SWOTItem] = []
+    for key, text in _READINESS_WEAKNESS.items():
+        if sq.get(key) is False and _gated(ledger, text):     # explicit False only, gated
+            out.append(SWOTItem(text=text, citation=["your profile", "readiness audit"],
+                                evidence=f"readiness.swot_quality_signals.{key}=false",
+                                claim_strength="internally_supported"))
+    return out
+
+
 # A trend title signalling a category HEADWIND (a Threat) rather than an opening (Opportunity).
 _TREND_THREAT_KEYS = (
     "ban", "banned", "decline", "declining", "shortage", "regulation", "regulat", "lawsuit",
