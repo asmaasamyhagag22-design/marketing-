@@ -204,9 +204,10 @@ def _studio_section(slug: str, has_poster: bool, has_reel: bool) -> str:
       </div></div></div>"""
 
 
-def _studio_js(slug: str) -> str:
+def _studio_js(slug: str, auto_poster: bool, auto_reel: bool) -> str:
     return f"""<script>
 const SLUG={json.dumps(slug)};
+const AUTO={{poster:{str(auto_poster).lower()},reel:{str(auto_reel).lower()}}};
 function gen(kind){{
   const btn=document.getElementById(kind+'-btn'),log=document.getElementById(kind+'-log'),
         stage=document.getElementById(kind+'-stage');
@@ -225,6 +226,11 @@ function gen(kind){{
     line('[X] '+(d.msg||'generation failed'),'l-bad');}});
   es.onerror=()=>{{if(es.readyState===EventSource.CLOSED)btn.disabled=false;}};
 }}
+// Auto-RUN what isn't made yet, right after Analyze — the studio fills itself in; Regenerate stays.
+window.addEventListener('load',()=>{{
+  if(AUTO.poster)gen('poster');
+  if(AUTO.reel)setTimeout(()=>gen('reel'),500);   // stagger so both logs start clean
+}});
 </script>"""
 
 
@@ -238,7 +244,8 @@ def _studio_page(slug: str, out_dir: str) -> str | None:
         plan_path=str(P["plan"]) if P["plan"].is_file() else None,
         standalone=False,           # body + CSS only — we wrap it ourselves
     )
-    section = _studio_section(slug, P["poster"].is_file(), P["reel"].is_file())
+    has_poster, has_reel = P["poster"].is_file(), P["reel"].is_file()
+    section = _studio_section(slug, has_poster, has_reel)
     # inject the Creative Studio just before the report's footer (where the static creative was)
     marker = '<div class="foot"'
     i = report.rfind(marker)
@@ -246,10 +253,11 @@ def _studio_page(slug: str, out_dir: str) -> str | None:
             if i >= 0 else report + section)
     bar = ('<div class="cst-bar"><a href="/dashboard?slug=' + slug +
            '" target="_blank">⤓ Download the full dashboard</a></div>')
+    # Auto-run whatever isn't generated yet (missing asset -> auto-start); existing assets stay put.
     return (f'<!doctype html><html lang="en"><head><meta charset="utf-8">'
             f'<meta name="viewport" content="width=device-width,initial-scale=1">'
             f'<title>Baseera Studio · {slug}</title>{_studio_css()}</head><body>'
-            f'{bar}{body}{_studio_js(slug)}</body></html>')
+            f'{bar}{body}{_studio_js(slug, not has_poster, not has_reel)}</body></html>')
 
 
 # ------------------------------------------------------------------------------------------------

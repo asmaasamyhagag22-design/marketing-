@@ -2,7 +2,7 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1045 passed, 0 failed** (2026-07-05/06; grew from 880 as each audit fix
+Test suite: **1046 passed, 0 failed** (2026-07-05/06; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
 
 **Active work — adversarial audit (2026-07-05):** a deep verified audit found 1 CRITICAL
@@ -506,7 +506,9 @@ Packages: `scraper/`, `business_profile/`, `grounding/`, `competitor/`, `brand/`
   `analyze` / `generate_poster` / `generate_reel` / `build_dashboard_file` (composed by the CLI
   `run_pipeline`). Stdlib-only (`http.server` + threads). 8 hermetic tests (pipeline FAKED —
   analyze→studio→generate→asset flow, slug guard, SSE framing). VISUALLY VERIFIED (studio renders
-  report + poster/reel panels with Regenerate).
+  report + poster/reel panels with Regenerate). The studio **auto-runs** whatever isn't generated
+  yet on load (missing poster/reel → auto-start, streaming into its panel; existing assets stay put
+  with Regenerate) so they don't sit idle after Analyze (owner: "شغّلهم").
 
 ---
 

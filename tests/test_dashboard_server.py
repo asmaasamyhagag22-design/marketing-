@@ -106,6 +106,18 @@ def test_studio_renders_report_plus_creative_studio(live):
     assert "Creative Studio" in h                                      # the interactive block
     assert "gen('poster')" in h and "gen('reel')" in h                 # both generate buttons
     assert "Generate poster" in h and "Generate reel" in h            # empty -> "Generate"
+    # nothing generated yet -> the studio AUTO-runs both so they don't sit idle (owner: "شغّلهم")
+    assert "AUTO={poster:true,reel:true}" in h
+
+
+def test_studio_does_not_rerun_existing_assets(live):
+    _get(live + "/analyze?url=https://brand.example/")
+    _get(live + "/generate/poster?slug=brand_example")                 # poster now exists (fake)
+    _s, body = _get(live + "/studio?slug=brand_example")
+    h = body.decode("utf-8")
+    # poster exists -> don't auto-rerun it (shows Regenerate); reel still missing -> auto-run it
+    assert "AUTO={poster:false,reel:true}" in h
+    assert "Regenerate" in h
 
 
 def test_generate_poster_then_serve_the_asset(live):
