@@ -2,7 +2,7 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1031 passed, 0 failed** (2026-07-05/06; grew from 880 as each audit fix
+Test suite: **1033 passed, 0 failed** (2026-07-05/06; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
 
 **Active work — adversarial audit (2026-07-05):** a deep verified audit found 1 CRITICAL
@@ -246,6 +246,15 @@ Packages: `scraper/`, `business_profile/`, `grounding/`, `competitor/`, `brand/`
 - Name chrome stripping at the source (Website/E-Shop/الموقع الرسمي), restaurant-gate
   (2+ identity tokens or a menu page), `other_unique_insights` catch-all (consumed by
   SWOT strengths + poster headline pool).
+- **Brand name = the BRAND, not a marketing sentence (2026-07-06)**: og:site_name / `<title>`
+  is often "Brand - Tagline" or "Brand | categories"; taking it verbatim made the NAME a whole
+  sentence (MEASURED: rawafrican.net = "Raw African's Beauty Hub - Get the Raw Experience!"). The
+  name is the identity anchor on the poster/reel/dashboard/SWOT, so `_pick_brand_segment` now
+  splits on separators and keeps the segment that ECHOES the DOMAIN (rawafrican -> "Raw African"),
+  falling back to first-segment (og, brand-first) / shortest (title, legacy). A possessive
+  descriptor is trimmed only when a real descriptor trails it AND the head reconstructs the domain
+  exactly, so possessive brands that END at "'s" (Levi's, McDonald's) and qualifiers ("Orange
+  Egypt") are never touched. Verbatim source stays the cited quote. (`from_metadata.py`; +2 tests.)
 
 ### 5.C Evidence Ledger — the moat (`grounding/`)
 - **Claim extraction** (AR-aware normalize; tashkeel/alef/ya/digits): significant

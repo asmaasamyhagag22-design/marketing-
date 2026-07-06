@@ -345,6 +345,48 @@ def test_strip_chrome_is_conservative():
     assert _strip_chrome("Website") == "Website"
 
 
+def test_name_drops_glued_tagline_from_og_site_name():
+    """og:site_name is often a whole marketing sentence — 'Brand - Tagline'. Taking it verbatim
+    made the brand NAME a sentence (MEASURED: rawafrican.net =
+    "Raw African's Beauty Hub - Get the Raw Experience!"). The name is the identity anchor on the
+    poster/reel/dashboard/SWOT, so it must be the BRAND, picked by the segment that echoes the
+    domain. The verbatim og:site_name stays the cited quote."""
+    m = _rich_manifest()
+    m.scrape_meta.final_url = "https://rawafrican.net/"
+    m.scrape_meta.normalized_url = "https://rawafrican.net/"
+    raw = "Raw African's Beauty Hub - Get the Raw Experience!"
+    m.site_metadata.og_site_name = raw
+    n = extract_name_from_metadata(m)
+    assert n.value == "Raw African"
+    assert n.evidence[0].quote == raw            # provenance: the full string is still cited
+    assert n.evidence[0].extractor == "rule:og:site_name"
+
+
+def test_brand_segment_is_domain_aware_and_possessive_safe():
+    """The segment picker: brand echoes the domain; a glued tagline/qualifier is dropped; a
+    possessive brand whose name ENDS at the "'s" (Levi's, McDonald's) is never trimmed."""
+    from business_profile.rules.from_metadata import _pick_brand_segment, _registrable_label
+
+    def og(raw, url):
+        return _pick_brand_segment(raw, _registrable_label(url), legacy_shortest=False)
+
+    def title(raw, url):
+        return _pick_brand_segment(raw, _registrable_label(url), legacy_shortest=True)
+
+    # Brand + tagline: keep the domain-echoing segment, strip a possessive descriptor.
+    assert og("Raw African's Beauty Hub - Get the Raw Experience!", "https://rawafrican.net/") == "Raw African"
+    # Title 'Brand | categories...' keeps the brand (domain hit beats the category list).
+    assert title("Orange Egypt | Mobiles, Internet, DSL, Offers.", "https://www.orange.eg/en/") == "Orange Egypt"
+    # No separator -> untouched (a qualifier like 'Egypt' is NOT a tagline).
+    assert og("Vodafone Egypt", "https://web.vodafone.com.eg/") == "Vodafone Egypt"
+    assert og("As-Salam International Hospital", "https://as-salamhospital.com/") == "As-Salam International Hospital"
+    # Possessive brands that end at "'s" are preserved (nothing trails the possessive).
+    assert og("Levi's", "https://levi.com/") == "Levi's"
+    assert og("McDonald's", "https://mcdonalds.com/") == "McDonald's"
+    # No domain signal -> brand-first for og (first segment), then chrome/possessive rules.
+    assert og("Acme - Your Trusted Partner", "https://xyzholdings.com/") == "Acme"
+
+
 # ---------------------------------------------------------------------
 # Schema.org
 # ---------------------------------------------------------------------
