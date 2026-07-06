@@ -24,7 +24,33 @@ from ..schemas import LinkCategory, LinkInventory, LinkRecord, TextBlock
 from ..url_utils import is_http_url, normalize_url, resolve, same_registrable_host
 
 
+# A SHARE / intent button lives on a social host but is NOT the brand's own account — it's an
+# action that shares the CURRENT page. Counting them inflated "social links" absurdly (measured:
+# Azza Fahmy 20 -> 5 real accounts; the extras were facebook/sharer.php, twitter/intent/tweet,
+# pinterest/pin/create/button on every product page).
+_SHARE_MARKERS = (
+    "/sharer", "/share.php", "/share?", "/sharing/", "/intent/", "/pin/create", "sharearticle",
+    "share-offsite", "/dialog/share", "/dialog/feed", "/submit", "shareurl", "/share/url",
+)
+
+
+def _is_share_url(href: str) -> bool:
+    low = (href or "").lower()
+    if any(m in low for m in _SHARE_MARKERS):
+        return True
+    try:                                    # a share intent carries the page as ?u=/?url=/text=
+        from urllib.parse import parse_qs
+        q = parse_qs(urlparse(low).query)
+        if any(k in q for k in ("u", "url", "text", "title", "media")) and "http" in (low.split("?", 1)[-1]):
+            return True
+    except Exception:
+        pass
+    return False
+
+
 def _social_platform(href: str) -> Optional[str]:
+    if _is_share_url(href):                 # a share/intent button is not the brand's account
+        return None
     try:
         host = urlparse(href).netloc.lower()
     except Exception:

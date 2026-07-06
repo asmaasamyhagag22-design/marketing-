@@ -281,72 +281,50 @@ def _logo_bytes(logo_url: Optional[str]) -> tuple[Optional[bytes], str]:
 
 def _overlay_real_logo(poster_path: Path, logo_bytes: bytes, *, rtl: bool,
                        xy: Optional[list] = None) -> bool:
-    """Composite the brand's REAL logo asset onto the finished poster — deterministic and
-    pixel-exact, so an Arabic logo is NEVER garbled by the image model (which re-draws / bakes
-    logos: "عزة فهمي" → "ةفهمص"). Used by BOTH engines: the one-shot reserves a clean corner, and
-    on the classic path the OPAQUE plate here sits over the design's logo spot (`xy`) — the same
-    place the Imagen STYLE background tends to bake a garbled logo — hiding it under the real mark
-    (the adaptive HTML plate skips a plate on good contrast, letting the baked garble show through).
-    `xy` = the design's fractional [x,y] logo position (0..1); falls back to a reading-side corner.
+    """Composite the brand's REAL logo asset onto the finished poster's top corner — deterministic
+    and pixel-exact, so an Arabic logo is NEVER garbled by the image model (which re-draws it:
+    "عزة فهمي" → "ةفهمص"). The one-shot engine reserves this corner clean, so the mark is placed
+    DIRECTLY — NO plate/box behind it (owner: "شيل الخلفية البيضة") — with only a soft drop-shadow
+    for legibility. `xy` (optional design [x,y]) only picks which side; else the reading side.
     Best-effort; never raises."""
     try:
         import io as _io
 
-        from PIL import Image, ImageDraw, ImageFilter
+        from PIL import Image, ImageFilter
 
         poster = Image.open(poster_path).convert("RGBA")
         W, H = poster.size
         logo = Image.open(_io.BytesIO(logo_bytes)).convert("RGBA")
-        bbox = logo.split()[3].getbbox()            # trim transparent margins -> plate hugs the mark
+        bbox = logo.split()[3].getbbox()            # trim transparent margins
         if bbox:
             logo = logo.crop(bbox)
-        tw = int(W * 0.24)
+        tw = int(W * 0.22)
         scale = tw / max(1, logo.width)
         th = int(logo.height * scale)
-        cap = int(H * 0.085)
+        cap = int(H * 0.075)
         if th > cap:
             scale = cap / max(1, logo.height)
             tw, th = max(1, int(logo.width * scale)), cap
         logo = logo.resize((max(1, tw), max(1, th)), Image.LANCZOS)
 
-        pady = int(th * 0.60)
-        padx = int(th * 0.9)
-        pw = min(int(W * 0.52), tw + int(W * 0.30))       # generous width to cover a baked logo
-        ph = th + 2 * pady
-        edge = int(W * 0.02)
-        # Anchor the plate over the design's logo spot (where a baked garble co-locates); clamp
-        # on-canvas. Fall back to a reading-side top corner when there is no position hint.
+        margin = int(W * 0.045)
         try:
-            fx = float(xy[0]) if xy and len(xy) >= 2 else (0.85 if rtl else 0.15)
-            fy = float(xy[1]) if xy and len(xy) >= 2 else 0.06
+            fx = float(xy[0]) if xy and len(xy) >= 2 else None
         except Exception:
-            fx, fy = (0.85 if rtl else 0.15), 0.06
-        px = int(fx * W - pw / 2)
-        py = int(fy * H - ph / 2)
-        px = max(edge, min(W - pw - edge, px))
-        py = max(edge, min(H - ph - edge, py))
-        lx = px + padx if fx < 0.5 else (px + pw - padx - logo.width)   # mark hugs the outer side
-        ly = py + pady
+            fx = None
+        left = (not rtl) if fx is None else (fx < 0.5)
+        px = margin if left else (W - margin - logo.width)
+        py = margin
 
-        region = poster.crop((max(0, px), max(0, py),
-                              min(W, px + pw), min(H, py + ph))).convert("L")
-        mean = sum(region.getdata()) / max(1, region.width * region.height)
-        dark_bg = mean < 122
-        plate_rgb = (255, 255, 255) if dark_bg else (24, 19, 16)
-
-        radius = int(ph * 0.32)
-        shadow = Image.new("RGBA", (pw + 48, ph + 48), (0, 0, 0, 0))
-        ImageDraw.Draw(shadow).rounded_rectangle(
-            [24, 28, 24 + pw - 1, 28 + ph - 1], radius=radius, fill=(0, 0, 0, 115))
-        shadow = shadow.filter(ImageFilter.GaussianBlur(13))
-        poster.alpha_composite(shadow, (px - 24, py - 24))
-
-        plate = Image.new("RGBA", (pw, ph), (0, 0, 0, 0))
-        # Fully OPAQUE plate — it must HIDE any baked brand text underneath, not blend with it.
-        ImageDraw.Draw(plate).rounded_rectangle(
-            [0, 0, pw - 1, ph - 1], radius=radius, fill=plate_rgb + (255,))
-        poster.alpha_composite(plate, (px, py))
-        poster.alpha_composite(logo, (lx, ly))
+        # Soft drop-shadow ONLY (no plate): a blurred dark copy of the logo's OWN shape, so the
+        # mark reads on a light corner without a box around it.
+        alpha = logo.split()[3]
+        shadow = Image.new("RGBA", (logo.width + 44, logo.height + 44), (0, 0, 0, 0))
+        tint = Image.new("RGBA", logo.size, (0, 0, 0, 165))
+        shadow.paste(tint, (22, 26), mask=alpha)
+        shadow = shadow.filter(ImageFilter.GaussianBlur(9))
+        poster.alpha_composite(shadow, (px - 22, py - 22))
+        poster.alpha_composite(logo, (px, py))
 
         poster.convert("RGB").save(poster_path)
         return True

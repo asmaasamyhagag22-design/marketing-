@@ -2,7 +2,7 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1024 passed, 0 failed** (2026-07-05/06; grew from 880 as each audit fix
+Test suite: **1025 passed, 0 failed** (2026-07-05/06; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
 
 **Active work — adversarial audit (2026-07-05):** a deep verified audit found 1 CRITICAL
@@ -525,6 +525,15 @@ Packages: `scraper/`, `business_profile/`, `grounding/`, `competitor/`, `brand/`
      largely blocked now); the TECH feeds (HN, Dev.to) are added ONLY for a brand with a WHOLE
      tech keyword (word-level match, so "techniques"/"keychains" don't drag them in — the measured
      bug). `python -m trends` now loads `.env` for the SERP key. 3 hermetic tests.
+  4. **Social links absurdly over-counted — FIXED 2026-07-06.** `social_presence` counted SHARE
+     buttons as accounts (Azza Fahmy: 20 "social links" = facebook/sharer.php, twitter/intent/tweet,
+     pinterest/pin/create/button on every product page — only 5 real accounts). `_social_platform`
+     now returns None for a share/intent URL (`scraper.extractors.links._is_share_url`: path markers
+     + a `?u=/url=/text=http` query), so a share button is never a social account. Fixes the bogus
+     "23 social links above peer average" SWOT strength. 1 hermetic test.
+  5. **Poster logo had an ugly white PLATE — FIXED 2026-07-06.** `_overlay_real_logo` drew an opaque
+     box behind the mark (needed once for the reverted classic-cover attempt). The one-shot reserves
+     a clean corner, so the real logo is now placed DIRECTLY with only a soft drop-shadow — no plate.
 - **Reel is still officially UNGATED in the coverage block**: captions/voiceover/hook
   ARE gated, but Veo extends speech beyond the provided lines (ungated model speech)
   and there is no per-reel audit trail yet. → closing items in §7 Phase 1.

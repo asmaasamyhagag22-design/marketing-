@@ -32,3 +32,20 @@ def test_exact_and_subdomain_hosts_are_social():
 def test_non_social_host_is_none():
     assert _social_platform("https://example.com/") is None
     assert _social_platform("https://shop.mybrand.eg/products") is None
+
+
+def test_share_and_intent_buttons_are_not_the_brands_account():
+    # SHARE / intent buttons live on a social host but are NOT the brand's account — counting
+    # them inflated "social links" absurdly (Azza Fahmy: 20 -> 5 real accounts). They must be None.
+    for u in [
+        "https://www.facebook.com/sharer.php?u=https://brand.eg/products/x",
+        "https://twitter.com/intent/tweet?text=X&url=https://brand.eg/y",
+        "https://pinterest.com/pin/create/button/?url=https://brand.eg/z&media=https://brand.eg/i.jpg",
+        "https://www.linkedin.com/sharing/share-offsite/?url=https://brand.eg/a",
+        "https://api.whatsapp.com/send?text=Look%20https://brand.eg/b",
+    ]:
+        assert _social_platform(u) is None, u
+    # …but the brand's OWN accounts on the same hosts are kept.
+    assert _social_platform("https://www.facebook.com/AzzaFahmy") == "facebook"
+    assert _social_platform("https://twitter.com/azzafahmy") == "twitter"
+    assert _social_platform("https://www.pinterest.com/azzafahmy/") == "pinterest"
