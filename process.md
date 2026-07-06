@@ -2,8 +2,24 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1080 passed, 0 failed** (2026-07-05/06; grew from 880 as each audit fix
+Test suite: **1083 passed, 0 failed** (2026-07-05/06; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**Single-product REEL — one item, realistic, framed-for-9:16 (2026-07-06):** owner: "أنا هعملّ ريل
+على منتج بعينه مش ميت منتج ... يكون منطقي مش يضغط والغطا مقفول ... الصورة كأنها مقصوصة ... صمم الفريم
+في الأصل على ريل". Three faults fixed together in the creative path (studio picks the product; §5.G):
+**(1) ONE product, not a montage** — `reel/__main__.py` `--product-image` is now EXCLUSIVE (`selected =
+[img]`, was "picked + 2 supporting"), and `featured_product` threads picked-name → `render_creative_reel`
+→ `design_creative_reel` → `_system_prompt(featured=…)`, so EVERY scene is the SAME product (real photo
+index 0), varied only by SHOT/ACTION (macro → in-hand → in-use → result), never a different item.
+**(2) REALISM** — `_MOTION_TAIL` now forbids impossible actions: "if the product has a cap/lid/pump/
+dropper, the person REMOVES or FLIPS it BEFORE dispensing … NEVER pressing a sealed pump / pouring from
+a closed bottle" (owner: "مش يضغط والغطا مقفول"). **(3) FRAMING** — a FRAMING block makes the director
+compose vertical-first for the 1080x1920 frame ("product FULLY visible … NEVER a wide/landscape shot
+that gets cropped … NOTHING is cut off"), and when a product is featured the seed defaults to
+`REEL_SEED_FILL=blur` (CONTAIN the whole photo over a blurred copy) instead of the cropping 'cover' —
+so the source Veo builds its scene from is complete, not pre-cut (owner: "الصورة مقصوصة"). +3 tests.
+Live single-product OUTPUT render still pending (paid Veo run).
 
 **Crawl reaches INDIVIDUAL products, not just categories (2026-07-06):** owner: azza/rawafrican came
 out with category-level offerings only (RINGS/EARRINGS; Face/Hair Care). A multi-agent analysis found
@@ -32,9 +48,9 @@ incoherent. Fixed by `_content_rank`: demote location/stockist/banner tokens (ma
 kiosk/banner/…), promote real products (from `/products|/collections` URLs or a product alt), stable
 sort. MEASURED: rawafrican content_images flipped from 8-9 store photos → all 12 real products (Floral
 Blast Hair Mist, Follicle Booster Oil, Face Cleanser…). One-file fix, benefits reel default + `--real`
-+ poster. +3 tests. (Remaining reel-coherence slices designed: thread the picked product NAME+details
-into the creative director; require an ad-arc/single-product system prompt; identifying caption + product
-on the end-card.)
++ poster. +3 tests. (Reel-coherence slices since DONE: the picked product NAME+details now thread into
+the creative director as a single-product ad-arc system prompt — see the single-product REEL entry at
+the top. Remaining: an identifying caption + the product on the end-card.)
 
 **Studio product-picker (2026-07-06, engineer suggestion #1):** the studio now lets the user CHOOSE
 which product to advertise, grounded in the RAW scrape. `dashboard/products.py::products_for_slug`

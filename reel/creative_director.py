@@ -158,8 +158,11 @@ def _vertical_mode(profile: dict) -> str:
 # made Veo only move the camera over a still, which read as a static zoom (owner: "الصورة متزومة
 # مبتهزش"). The PRODUCT stays exactly as shown (it's the i2v seed); only the person/action is generated.
 _MOTION_TAIL = (" The PRODUCT in the photo must stay exactly as shown (same shape, label, colour); ADD "
-                "the person and the action AROUND it. Real, energetic movement in every second — NOT a "
-                "slow zoom, NOT a static pan. Add no fake text, logos, or signage.")
+                "the person and the action AROUND it. Show only PHYSICALLY LOGICAL use — if the product "
+                "has a cap / lid / pump / dropper, the person REMOVES or FLIPS it BEFORE dispensing, and "
+                "operates it the way it really works; NEVER an impossible action (pressing a sealed pump, "
+                "pouring from a closed bottle). Real, energetic movement in every second — NOT a slow "
+                "zoom, NOT a static pan. Add no fake text, logos, or signage.")
 _MOTION_GUIDANCE = {
     "beauty": (
         "- veo_prompt: a vivid, TikTok-native Veo 3.1 IMAGE-TO-VIDEO prompt where a real PERSON uses "
@@ -193,14 +196,36 @@ _DELIVERY_EG = {
 }
 
 
-def _system_prompt(n_scenes: int, language: str, mode: str = "generic") -> str:
+def _system_prompt(n_scenes: int, language: str, mode: str = "generic",
+                   featured: Optional[str] = None) -> str:
     motion = _MOTION_GUIDANCE.get(mode, _MOTION_GUIDANCE["generic"])
     deliveries = _DELIVERY_EG.get(mode, _DELIVERY_EG["generic"])
+    if featured:                     # ONE picked product: several SHOTS of the SAME item
+        featured_line = (
+            f"FEATURED PRODUCT: {featured}. This reel advertises ONLY this product — EVERY scene is "
+            "the SAME product (REAL PHOTO index 0), varied by SHOT and ACTION (macro detail, in-hand "
+            "pickup, real in-use application, satisfied result), NEVER a different product.\n\n")
+        image_rule = "- image_index: ALWAYS 0 — the SAME featured product; vary the shot/action, not the product.\n"
+        seq_rule = ("Anchor EVERY scene on the ONE featured product (index 0); vary the SHOT and the "
+                    "ACTION, not the item — a fast sequence of different angles/uses of the SAME product.")
+        check_seq = "on the SAME featured product with varied shots"
+    else:                            # whole-brand: a distinct product per scene
+        featured_line = ""
+        image_rule = "- image_index: which REAL photo to bring to life (a DIFFERENT one per scene).\n"
+        seq_rule = ("Use a DISTINCT photo for each scene (different image_index) so it's a fast SEQUENCE "
+                    "of shots, not one image lingering.")
+        check_seq = "on DISTINCT photos"
+    framing = (
+        "FRAMING: you compose for a 1080x1920 VERTICAL (9:16) frame. Compose vertical-first — the "
+        "product FULLY visible with headroom and safe margins, centered or in the lower two-thirds "
+        "with negative space above for motion/text. NEVER a wide/landscape shot that gets cropped; "
+        "the seed photo is often square/portrait, so place it so NOTHING is cut off.\n\n")
     return (
         "You are a world-class short-form video CREATIVE DIRECTOR (think top TikTok/Reels "
         "ad agency). You design vertical 9:16 marketing reels that stop the scroll, earn "
         "likes and shares, and make viewers want to BUY / book / enrol.\n\n"
-        "You are given a business's identity and its REAL photos (you can see them). Design a "
+        + featured_line
+        + "You are given a business's identity and its REAL photos (you can see them). Design a "
         f"{n_scenes}-scene reel that ADVERTISES this brand with a clear AD SPINE the scenes MUST "
         "follow in order: (1) HOOK — scene 0 shows the product/brand and stops the scroll; (2) WHAT "
         "IT IS — name the brand and the hero product/offering; (3) BENEFIT — the core reason to buy, "
@@ -211,12 +236,12 @@ def _system_prompt(n_scenes: int, language: str, mode: str = "generic") -> str:
         "offering (the product in REAL PHOTO index 0 when one is featured); do NOT narrate store "
         "locations, kiosks, branches, or a vague brand montage. If the identity signals HERITAGE, "
         "weave that in — never invent history.\n\n"
-        "MOTION & PEOPLE (this is a TikTok-style ad, not a slideshow): EVERY scene must have real,"
+        + framing
+        + "MOTION & PEOPLE (this is a TikTok-style ad, not a slideshow): EVERY scene must have real,"
         " energetic MOTION and — wherever the product is used or worn — a real PERSON in frame using"
-        " or reacting to it. NEVER a slow zoom or a static pan over a still. Use a DISTINCT photo for"
-        " each scene (different image_index) so it's a fast SEQUENCE of shots, not one image lingering.\n\n"
+        " or reacting to it. NEVER a slow zoom or a static pan over a still. " + seq_rule + "\n\n"
         "For EACH scene:\n"
-        "- image_index: which REAL photo to bring to life (use the indices shown; a DIFFERENT one per scene).\n"
+        + image_rule
         + motion + "\n"
         f"- voiceover: one short, natural narration line in {language} that carries the story and "
         "sells the moment.\n"
@@ -232,8 +257,8 @@ def _system_prompt(n_scenes: int, language: str, mode: str = "generic") -> str:
         "The reel must feel premium, human, and authentic to THIS brand's vertical.\n"
         "SELF-CHECK before returning: the reel NAMES the brand, NAMES/SHOWS one hero product, states "
         ">=1 real benefit, ends on the CTA — using ONLY identity facts — AND most scenes show a real "
-        "PERSON using/reacting to the product with visible motion (not a camera move over a still) on "
-        "DISTINCT photos. If any is missing, rewrite it.\n\n"
+        "PERSON using/reacting to the product with visible motion (not a camera move over a still) "
+        + check_seq + ". If any is missing, rewrite it.\n\n"
         "Return ONLY a JSON object, no prose, no markdown fences:\n"
         '{"concept":"...","hook":"...","music_mood":"...","cta":"...","language":"' + language + '",'
         '"scenes":[{"image_index":0,"veo_prompt":"...","voiceover":"...","voiceover_delivery":"...",'
@@ -247,12 +272,14 @@ def design_creative_reel(
     *,
     n_scenes: int = 6,
     language: Optional[str] = None,
+    featured_product: Optional[str] = None,
     api_key: Optional[str] = None,
     model: str = _DEFAULT_MODEL,
     max_tokens: int = 2500,
 ) -> Optional[CreativeReel]:
-    """Opus designs the full creative reel from the identity + real photos. Returns
-    None on any failure (no key/SDK/images/parse)."""
+    """Opus designs the full creative reel from the identity + real photos. When `featured_product`
+    is set, the WHOLE reel is about that ONE product (several shots of the same item). Returns None
+    on any failure (no key/SDK/images/parse)."""
     urls = [u for u in (image_urls or []) if isinstance(u, str) and u.startswith(("http://", "https://"))]
     if not urls:
         logger.info("creative_director: no real photos; skipping")
@@ -275,8 +302,10 @@ def design_creative_reel(
         logger.warning("creative_director: could not fetch any real photo")
         return None
 
+    feat = (f"\n\nFEATURED PRODUCT (advertise ONLY this): {featured_product}. Every scene is the SAME "
+            "product below — vary the shot/action, not the item." if featured_product else "")
     content = [{"type": "text", "text":
-                "BUSINESS IDENTITY:\n" + _identity_block(profile) +
+                "BUSINESS IDENTITY:\n" + _identity_block(profile) + feat +
                 f"\n\nYou have {len(used)} real photos below. Design the reel."}]
     content.extend(blocks)
 
@@ -284,7 +313,7 @@ def design_creative_reel(
         client = anthropic.Anthropic(api_key=key)
         resp = client.messages.create(
             model=model, max_tokens=max_tokens,
-            system=_system_prompt(n_scenes, lang, _vertical_mode(profile)),
+            system=_system_prompt(n_scenes, lang, _vertical_mode(profile), featured=featured_product),
             messages=[{"role": "user", "content": content}],
         )
         raw = "".join(b.text for b in resp.content if getattr(b, "type", None) == "text")

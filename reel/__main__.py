@@ -160,14 +160,20 @@ def main() -> int:
             )
             print(f"   [curate] {len(selected)}/{len(usable)} are on-brand photos", file=sys.stderr)
 
-    # FEATURE the user-picked product: put its REAL image first (+ a little supporting b-roll) so the
-    # reel is ABOUT that product, not a generic brand montage (engineer's suggestion #1). Bypasses
-    # the quality gate — the user chose it — and works even when the brand's other photos were junk.
+    # FEATURE the user-picked product: the reel is about ONE product — EXCLUSIVELY that image, so
+    # every scene is the SAME product (several shots/uses), not a mixed montage (owner: "ريل عن منتج
+    # واحد مش ميت منتج"). Bypasses the quality gate — the user chose it.
     if args.product_image:
-        supporting = [p for p in (selected or []) if p != args.product_image][:2]
-        selected = [args.product_image] + supporting
+        selected = [args.product_image]
+        # FRAMING: a single product photo is usually landscape/square; the default 'cover' seed
+        # CROPS it to 9:16 (owner: "الصورة كأنها مقصوصة"). CONTAIN it over a blurred copy so the
+        # WHOLE product stays in frame — the seed Veo builds its vertical scene around is complete,
+        # not pre-cut. (User may still override with an explicit REEL_SEED_FILL.)
+        import os as _os
+        _os.environ.setdefault("REEL_SEED_FILL", "blur")
         if args.product_name:
-            print(f"   [product] featuring '{args.product_name}'", file=sys.stderr)
+            print(f"   [product] featuring ONLY '{args.product_name}' "
+                  f"(seed fill={_os.environ['REEL_SEED_FILL']})", file=sys.stderr)
 
     out = Path(args.out) if args.out else Path("outputs/reels") / f"{profile_path.stem}.mp4"
 
@@ -185,6 +191,7 @@ def main() -> int:
             n_scenes=max(3, args.frames), scale=args.scale,
             include_logo=not args.no_logo, music_path=args.music,
             with_voiceover=not args.no_voiceover,
+            featured_product=args.product_name,
         )
         if result is not None:
             _append_brand_endcard(profile, result.reel_path, enabled=not args.no_logo)

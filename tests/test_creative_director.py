@@ -100,3 +100,31 @@ def test_prompt_requires_an_ad_arc_so_the_reel_says_what_it_advertises():
     assert "by scene 2" in p                                  # self-explanatory in the first seconds
     assert "do NOT narrate store" in p and "kiosks" in p      # no vague brand/location montage
     assert "SELF-CHECK" in p and "NAMES the brand" in p       # closing verification
+
+
+def test_prompt_composes_vertical_first_so_the_product_is_not_cropped():
+    # Owner: "الصورة كأنها مقصوصة ... صمم الفريم في الأصل على ريل مش تصغرها". Every reel must be
+    # composed for the 9:16 frame from the start so the product is never cut off.
+    p = _system_prompt(5, "en", "generic")
+    assert "1080x1920" in p and "vertical-first" in p.lower()
+    assert "NOTHING is cut off" in p
+    assert "NEVER a wide/landscape shot that gets cropped" in p
+
+
+def test_prompt_demands_physically_logical_use_not_impossible_actions():
+    # Owner: "يكون منطقي مش يضغط والغطا مقفول". Never an impossible action (pressing a sealed pump).
+    p = _system_prompt(5, "en", "beauty")
+    assert "REMOVES or FLIPS" in p                            # opens the cap/lid BEFORE dispensing
+    assert "sealed pump" in p or "closed bottle" in p         # the forbidden impossible action
+
+
+def test_featured_product_makes_the_whole_reel_one_product():
+    # Owner: "أنا هعملّ ريل على منتج بعينه مش ميت منتج". When one product is featured, EVERY scene is
+    # the SAME product (real photo index 0), varied by shot/action — not a mixed montage.
+    p = _system_prompt(5, "en", "generic", featured="Rosemary Hair Oil")
+    assert "Rosemary Hair Oil" in p
+    assert "SAME product" in p
+    assert "ALWAYS 0" in p                                    # every scene reuses the one seed photo
+    # the whole-brand default still varies the photo per scene
+    montage = _system_prompt(5, "en", "generic")
+    assert "DISTINCT photo" in montage and "ALWAYS 0" not in montage

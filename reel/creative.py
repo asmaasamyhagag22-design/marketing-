@@ -90,10 +90,13 @@ def render_creative_reel(
     include_logo: bool = True,
     music_path: Optional[str | Path] = None,
     with_voiceover: bool = True,
+    featured_product: Optional[str] = None,
 ):
     """Full creative pipeline. Returns (render_result, creative_reel) or (None, None)
-    when Opus could not design a reel (caller falls back to the normal storyboard)."""
-    creative = design_creative_reel(profile, photos, n_scenes=n_scenes, language=language)
+    when Opus could not design a reel (caller falls back to the normal storyboard).
+    `featured_product` (set when the user picked one) makes the WHOLE reel about that item."""
+    creative = design_creative_reel(profile, photos, n_scenes=n_scenes, language=language,
+                                    featured_product=featured_product)
     if not creative or not creative.scenes:
         return None, None
 
