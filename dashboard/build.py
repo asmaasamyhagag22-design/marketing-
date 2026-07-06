@@ -257,17 +257,17 @@ def _css() -> str:
     </style>"""
 
 
-def build_dashboard(
+def build_dashboard_html(
     competitor_path: Optional[str] = None,
     *,
     profile_path: Optional[str] = None,
     plan_path: Optional[str] = None,
     poster_path: Optional[str] = None,
     reel_path: Optional[str] = None,
-    out_path: str = "outputs/dashboard.html",
     standalone: bool = True,
     generated_at: Optional[str] = None,
-) -> Path:
+) -> str:
+    """Render the dashboard to an HTML string (the interactive studio embeds this body directly)."""
     comp = _load(competitor_path)
     profile = _load(profile_path)
     prof = profile.get("profile", profile) if profile else (comp.get("profile") or {})
@@ -385,6 +385,26 @@ def build_dashboard(
         content = (f"<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\">"
                    f"<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">"
                    f"<title>Baseera · {_esc(name)}</title></head><body>{content}</body></html>")
+    return content
+
+
+def build_dashboard(
+    competitor_path: Optional[str] = None,
+    *,
+    profile_path: Optional[str] = None,
+    plan_path: Optional[str] = None,
+    poster_path: Optional[str] = None,
+    reel_path: Optional[str] = None,
+    out_path: str = "outputs/dashboard.html",
+    standalone: bool = True,
+    generated_at: Optional[str] = None,
+) -> Path:
+    """Build the dashboard and write it to out_path (returns the Path)."""
+    content = build_dashboard_html(
+        competitor_path, profile_path=profile_path, plan_path=plan_path,
+        poster_path=poster_path, reel_path=reel_path, standalone=standalone,
+        generated_at=generated_at,
+    )
     out = Path(out_path)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(content, encoding="utf-8")

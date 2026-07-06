@@ -67,70 +67,107 @@ def _run(cmd: list[str], *, timeout: int, label: str, on_progress=None) -> tuple
     return False, tail
 
 
-def run_pipeline(url: str, *, fast: bool = False, out_dir: str = "outputs",
-                 open_when_done: bool = False, on_progress=None) -> Path | None:
-    py = sys.executable
+def paths(slug: str, out_dir: str = "outputs") -> dict:
+    """Every artifact path for a brand slug — shared by analyze / generate_* / build so the
+    interactive studio and the one-shot CLI address the exact same files."""
     out = Path(out_dir)
-    out.mkdir(parents=True, exist_ok=True)
+    return {
+        "out": out, "slug": slug,
+        "result": out / f"{slug}_result.json",
+        "profile": out / f"{slug}_profile.json",
+        "plan": out / f"{slug}_plan.json",
+        "poster": out / "posters" / f"{slug}_poster.png",
+        "reel": out / "reels" / f"{slug}_reel.mp4",
+        "dash": out / f"{slug}_dashboard.html",
+    }
+
+
+def analyze(url: str, *, out_dir: str = "outputs", on_progress=None) -> str | None:
+    """The FAST core: scrape -> profile -> competitors -> SWOT -> TOWS -> content calendar. No
+    poster/reel (those are generated on demand from the studio). Returns the brand slug, or None
+    if the core analysis failed. Writes <slug>_result/profile/plan.json into out_dir."""
+    py = sys.executable
     slug = _slug(url)
-    result_json = out / f"{slug}_result.json"
-    profile_json = out / f"{slug}_profile.json"
-    plan_json = out / f"{slug}_plan.json"
-    poster_png = out / "posters" / f"{slug}_poster.png"
-    reel_mp4 = out / "reels" / f"{slug}_reel.mp4"
-    dash_html = out / f"{slug}_dashboard.html"
+    P = paths(slug, out_dir)
+    P["out"].mkdir(parents=True, exist_ok=True)
+    _emit(on_progress, "run_start", "Analyze", f"\n* Baseera - analyzing {url}\n")
 
-    print(f"\n* Baseera - analyzing {url}\n")
-
-    # 1) Scrape -> profile -> competitors -> SWOT -> TOWS (one command; --no-themes = faster).
-    ok, _ = _run([py, "competitor/full_run.py", url, "--out", str(result_json), "--no-themes"],
-                 timeout=900, label="Scrape + Profile + Competitors + SWOT")
-    if not ok or not result_json.is_file():
-        print("\n[X] analysis failed - cannot build a dashboard without the core result.")
+    ok, _ = _run([py, "competitor/full_run.py", url, "--out", str(P["result"]), "--no-themes"],
+                 timeout=900, label="Scrape + Profile + Competitors + SWOT", on_progress=on_progress)
+    if not ok or not P["result"].is_file():
         return None
 
-    # 2) Pull the business profile out of the result so strategy/poster can reuse it (no re-scrape).
     try:
-        prof = (json.loads(result_json.read_text(encoding="utf-8")).get("profile") or {})
-        profile_json.write_text(json.dumps(prof, ensure_ascii=False), encoding="utf-8")
+        prof = (json.loads(P["result"].read_text(encoding="utf-8")).get("profile") or {})
+        P["profile"].write_text(json.dumps(prof, ensure_ascii=False), encoding="utf-8")
         have_profile = bool(prof)
     except Exception:
         have_profile = False
 
-    # 3) Content calendar (14 days).
     if have_profile:
-        _run([py, "-m", "strategy", str(profile_json), "--days", "14", "--out", str(plan_json)],
-             timeout=300, label="Content calendar")
+        _run([py, "-m", "strategy", str(P["profile"]), "--days", "14", "--out", str(P["plan"])],
+             timeout=300, label="Content calendar", on_progress=on_progress)
+    return slug
 
-    # 4) Poster (one-shot = crisp logo). Skipped in --fast for a snappy live demo.
-    poster_arg: list[str] = []
-    if not fast and have_profile:
-        ok, _ = _run([py, "-m", "poster", str(profile_json), "--engine", "oneshot",
-                      "--out", str(poster_png), "--research"],
-                     timeout=420, label="Poster (one-shot)")
-        if ok and poster_png.is_file():
-            poster_arg = ["--poster", str(poster_png)]
 
-    # 5) Reel (Opus-directed, Veo 3.1). Heavy, so --fast skips it — but a full run shows the reel
-    #    right in the dashboard (owner: "كل حاجة تظهر في الداش بورد").
-    reel_arg: list[str] = []
-    if not fast and have_profile:
-        ok, _ = _run([py, "-m", "reel", str(profile_json), "--creative", "--out", str(reel_mp4)],
-                     timeout=1500, label="Reel (Veo 3.1, Opus-directed)")
-        if ok and reel_mp4.is_file():
-            reel_arg = ["--reel", str(reel_mp4)]
-
-    # 6) Build the dashboard from whatever succeeded.
-    cmd = [py, "-m", "dashboard", str(result_json), "--out", str(dash_html)]
-    if profile_json.is_file():
-        cmd += ["--profile", str(profile_json)]
-    if plan_json.is_file():
-        cmd += ["--plan", str(plan_json)]
-    cmd += poster_arg + reel_arg
-    ok, _ = _run(cmd, timeout=120, label="Dashboard")
-    if not ok or not dash_html.is_file():
+def generate_poster(slug: str, *, out_dir: str = "outputs", on_progress=None) -> Path | None:
+    """On-demand: (re)generate the one-shot poster from the saved profile. Returns its path."""
+    py = sys.executable
+    P = paths(slug, out_dir)
+    if not P["profile"].is_file():
         return None
+    P["poster"].parent.mkdir(parents=True, exist_ok=True)
+    ok, _ = _run([py, "-m", "poster", str(P["profile"]), "--engine", "oneshot",
+                  "--out", str(P["poster"]), "--research"],
+                 timeout=420, label="Poster (one-shot)", on_progress=on_progress)
+    return P["poster"] if (ok and P["poster"].is_file()) else None
 
+
+def generate_reel(slug: str, *, out_dir: str = "outputs", on_progress=None) -> Path | None:
+    """On-demand: (re)generate the Opus-directed Veo 3.1 reel from the saved profile."""
+    py = sys.executable
+    P = paths(slug, out_dir)
+    if not P["profile"].is_file():
+        return None
+    P["reel"].parent.mkdir(parents=True, exist_ok=True)
+    ok, _ = _run([py, "-m", "reel", str(P["profile"]), "--creative", "--out", str(P["reel"])],
+                 timeout=1500, label="Reel (Veo 3.1, Opus-directed)", on_progress=on_progress)
+    return P["reel"] if (ok and P["reel"].is_file()) else None
+
+
+def build_dashboard_file(slug: str, *, out_dir: str = "outputs", poster: Path | None = None,
+                         reel: Path | None = None, on_progress=None) -> Path | None:
+    """Build the self-contained dashboard HTML from whatever artifacts exist for this slug."""
+    py = sys.executable
+    P = paths(slug, out_dir)
+    if not P["result"].is_file():
+        return None
+    cmd = [py, "-m", "dashboard", str(P["result"]), "--out", str(P["dash"])]
+    if P["profile"].is_file():
+        cmd += ["--profile", str(P["profile"])]
+    if P["plan"].is_file():
+        cmd += ["--plan", str(P["plan"])]
+    if poster and Path(poster).is_file():
+        cmd += ["--poster", str(poster)]
+    if reel and Path(reel).is_file():
+        cmd += ["--reel", str(reel)]
+    ok, _ = _run(cmd, timeout=120, label="Dashboard", on_progress=on_progress)
+    return P["dash"] if (ok and P["dash"].is_file()) else None
+
+
+def run_pipeline(url: str, *, fast: bool = False, out_dir: str = "outputs",
+                 open_when_done: bool = False, on_progress=None) -> Path | None:
+    """One-shot CLI: URL in, a finished dashboard out (analyze -> poster -> reel -> build)."""
+    slug = analyze(url, out_dir=out_dir, on_progress=on_progress)
+    if not slug:
+        print("\n[X] analysis failed - cannot build a dashboard without the core result.")
+        return None
+    poster = None if fast else generate_poster(slug, out_dir=out_dir, on_progress=on_progress)
+    reel = None if fast else generate_reel(slug, out_dir=out_dir, on_progress=on_progress)
+    dash_html = build_dashboard_file(slug, out_dir=out_dir, poster=poster, reel=reel,
+                                     on_progress=on_progress)
+    if not dash_html:
+        return None
     print(f"\n[OK] DONE -> {dash_html.resolve()}")
     if open_when_done:
         try:
