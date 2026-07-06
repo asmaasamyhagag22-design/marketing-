@@ -112,9 +112,31 @@ def render_creative_reel(
         if vo_path:
             logger.info("voice-over track ready: %s", vo_path)
 
+    # SCENE QA (featured single product): a Gemini vision caller inspects each generated clip and
+    # rejects Veo hallucinations — the product redrawn/unfaithful, VANISHING mid-scene, or an
+    # IMPOSSIBLE action (a sealed pump pressed) — regenerating once, then falling back to the
+    # faithful real photo. Only when a product is featured (that's the item that must stay true).
+    qa_caller = None
+    qa_ref = None
+    if featured_product:
+        try:
+            from business_profile.llm import default_caller
+            qa_caller = default_caller(strong=True)
+        except Exception:
+            qa_caller = None
+        seed_url = storyboard.content_images[0] if storyboard.content_images else None
+        if qa_caller is not None and seed_url:
+            try:
+                from reel.video_provider import _load_reference_image
+                loaded = _load_reference_image(seed_url)
+                qa_ref = loaded[0] if loaded else None
+            except Exception:
+                qa_ref = None
+
     result = render_reel(
         storyboard, provider=provider, out_path=out_path,
         scale=scale, include_logo=include_logo,
         music_path=music_path, voiceover_path=vo_path,
+        qa_caller=qa_caller, qa_product_hint=featured_product, qa_reference_image=qa_ref,
     )
     return result, creative

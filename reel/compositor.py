@@ -20,7 +20,7 @@ from __future__ import annotations
 import sys
 import tempfile
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 from .ffmpeg_tools import run_ffmpeg
 from .schemas import REEL_H, REEL_W, ReelRenderResult, Storyboard
@@ -43,6 +43,9 @@ def render_reel(
     voiceover_path: Optional[str | Path] = None,
     include_logo: bool = True,
     fallback_provider: Optional[VideoProvider] = None,
+    qa_caller: Any = None,
+    qa_product_hint: Optional[str] = None,
+    qa_reference_image: Optional[bytes] = None,
 ) -> ReelRenderResult:
     """Render the storyboard to `out_path`. `scale` (<1) renders a faster, smaller
     preview; the text PNGs are rendered at the same scaled size so overlay is 1:1.
@@ -53,6 +56,13 @@ def render_reel(
     Default = a KenBurns pass over the brand's REAL scraped photos (degrade to the
     actual place, not a blank gradient), which itself degrades to a palette gradient
     when there are no usable photos. So a render NEVER hard-fails on a provider error.
+
+    `qa_caller` (a multimodal caller) turns on the SCENE QA gate: each generated clip is
+    inspected against `qa_reference_image` (the real product photo) + `qa_product_hint`
+    (its name); a clip where the product is unfaithful, vanishes, or does an impossible
+    action is regenerated ONCE, then falls back to the faithful real-photo KenBurns — so a
+    Veo hallucination never ships (the owner: 'it presses a sealed pump and then vanishes').
+    QA is off (identical old behaviour) when qa_caller is None.
     """
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -103,6 +113,30 @@ def render_reel(
                 )
                 fallback_used = True
                 raw = fb.generate(scene.visual_prompt, **gen_kwargs)
+            else:
+                # SCENE QA GATE (opt-in via qa_caller): reject a Veo clip where the product is
+                # unfaithful / vanishes / does an impossible action — regenerate ONCE, then fall
+                # back to the FAITHFUL real-photo KenBurns so a hallucination never ships.
+                if qa_caller is not None and ref:
+                    from .scene_qa import check_scene
+                    v = check_scene(raw, product_hint=qa_product_hint,
+                                    reference_image=qa_reference_image, caller=qa_caller)
+                    if v.checked and not v.overall_pass:
+                        print(f"[reel] scene {i} QA fail ({v.reason}); regenerating once",
+                              file=sys.stderr)
+                        good = False
+                        try:
+                            raw = provider.generate(scene.visual_prompt, **gen_kwargs)
+                            v2 = check_scene(raw, product_hint=qa_product_hint,
+                                             reference_image=qa_reference_image, caller=qa_caller)
+                            good = (not v2.checked) or v2.overall_pass
+                        except Exception:  # noqa: BLE001 — a failed retry drops to the fallback
+                            good = False
+                        if not good:
+                            print(f"[reel] scene {i} still failed QA; faithful real-photo fallback",
+                                  file=sys.stderr)
+                            fallback_used = True
+                            raw = fb.generate(scene.visual_prompt, **gen_kwargs)
             norm = tmpd / f"norm{i}.mp4"
             d = scene.duration_s
             fout = max(0.0, d - fade)

@@ -2,8 +2,27 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1092 passed, 0 failed** (2026-07-05/06; grew from 880 as each audit fix
+Test suite: **1100 passed, 0 failed** (2026-07-05/06; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**Reel SCENE QA gate — reject Veo hallucinations, don't just prompt against them (2026-07-06):**
+owner watched a real render and caught three failures the prompt CANNOT stop (Veo i2v drifts from the
+seed over a few seconds): the product is not faithful to the real photo, it 'magically' VANISHES
+mid-scene, and it presses a SEALED pump ("هو سحر؟"). The system prompt asks Veo not to; it does anyway.
+Honest fix = inspect the actual clip, not trust the prompt. New `reel/scene_qa.py::check_scene`:
+extracts 3 frames (start/mid/end) from the generated clip, hands them + the REAL product photo (as the
+reference) + the product name to a vision caller, and returns a structured verdict
+(product_faithful / product_persists / action_plausible / overall_pass). Wired into
+`compositor.render_reel(qa_caller=…, qa_product_hint=…, qa_reference_image=…)`: a clip that fails QA is
+regenerated ONCE, then falls back to the FAITHFUL real-photo KenBurns — so a hallucination NEVER ships
+(worst case = the true product with simple motion, not a vanished/redrawn one). `render_creative_reel`
+turns the gate on for a FEATURED product (builds a Gemini caller, fetches the seed bytes via
+`_load_reference_image`). QA is OFF (identical old behaviour, all prior tests green) when qa_caller is
+None. This complements the creative-director playbook (prompt-level realism) with an OUTPUT-level gate —
+the prompt reduces bad scenes, the gate removes the ones that slip through. +8 hermetic tests (verdict
+logic + compositor reject→regen→faithful-fallback + pass-keeps + qa-off back-compat). Live proof render
+pending owner go. NOTE the deferred `--product-image`/reel already seeds every scene from the real
+photo; the remaining drift is a Veo-model limit the gate now catches.
 
 **Picked product now drives the POSTER's IMAGE too, not just its name (2026-07-06):** owner: "عملت حوار
 الراج وظبطت أنا أختار المنتج اللي عايزة أعمله الإعلان أو البوستر" — the studio RAG product-picker feeds
