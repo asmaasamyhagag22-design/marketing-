@@ -2,8 +2,24 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1109 passed, 0 failed** (2026-07-05/06; grew from 880 as each audit fix
+Test suite: **1113 passed, 0 failed** (2026-07-05/06; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**URL-less 'modal' details (NTI) — resolve the URLs JS builds from a data-attribute (2026-07-06, slice
+1):** owner: NTI's course catalogue shows each course as a card; clicking opens a modal with the real
+details (Overview/Prerequisites/Hours) but the modal has NO URL, so the crawler (which follows hrefs)
+can't reach it ("شال الزايدات واسكراب nti نفسها"). DIAGNOSED live: `text_blocks.py` skips
+`display:none` content, AND — the real cause — NTI's `js/popupCourse.js` does
+`$('#popover-cont').load("pages/modules/" + link.getAttribute('data-target') + ".html")`, so each
+course's detail page lives at `pages/modules/<data-target>.html` — a URL ASSEMBLED IN JS that never
+appears in the HTML. New `scraper/ajax_details.py::extract_ajax_detail_urls(html, base_url, js_texts)`:
+learns the `.load(PREFIX + el.attr + SUFFIX)` template from the page's JS (getAttribute / .attr / .data
+/ dataset.x variants; drops the cache-buster query; skips `data-target="0"` sentinels) and applies it to
+every trigger element → real absolute detail URLs. VALIDATED live on NTI: resolved all 6 course module
+URLs (pages/modules/2631.html …) from the actual rendered page. Universal for the very common jQuery
+`.load()` reveal pattern. +4 tests. Slice 2 (pending): wire into the crawler frontier — gather the
+page's inline+external JS during the render, run the extractor, and fetch the resolved detail URLs as
+sub-pages so their text is scraped like any other page.
 
 **Scrape a product by its URL — for an item the crawl never reached (2026-07-06, slice 1):** owner:
 "لو اليوزر عايز يعمل [إعلان/بوستر] لمنتج مش موجود في الاسكرابر، يدّي لينك المنتج وأروح أسكرابه — صورته
