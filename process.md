@@ -2,7 +2,7 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1018 passed, 0 failed** (2026-07-05; grew from 880 as each audit fix
+Test suite: **1021 passed, 0 failed** (2026-07-05/06; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
 
 **Active work — adversarial audit (2026-07-05):** a deep verified audit found 1 CRITICAL
@@ -444,6 +444,12 @@ Packages: `scraper/`, `business_profile/`, `grounding/`, `competitor/`, `brand/`
   mode label, download).
 - API: `/api/run` (async job + SSE), `/api/swot/from-profile`,
   `/api/poster/from-profile`, `/api/reel/from-profile`, `/api/health`, `/` hint page.
+- **Baseera dashboard** (`dashboard/build.py`, `python -m dashboard <competitor.json> --profile
+  --plan --poster --out`): ONE self-contained HTML page (inline CSS + base64 images + system
+  fonts, NO external CDN/web-fonts — opens & publishes anywhere) that "prints everything" from a
+  run in the Baseera design language — brand + KPIs, the CITED SWOT (citations + claim-strength
+  badges on screen = the moat visible), discovered competitors (peer-fit + why-selected), the
+  TOWS strategies + posture, the content calendar, and the embedded poster. 3 hermetic tests.
 
 ---
 
