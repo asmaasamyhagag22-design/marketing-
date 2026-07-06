@@ -2,7 +2,7 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1033 passed, 0 failed** (2026-07-05/06; grew from 880 as each audit fix
+Test suite: **1037 passed, 0 failed** (2026-07-05/06; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
 
 **Active work — adversarial audit (2026-07-05):** a deep verified audit found 1 CRITICAL
@@ -419,6 +419,17 @@ Packages: `scraper/`, `business_profile/`, `grounding/`, `competitor/`, `brand/`
   mid-word → "بيقطع"). Now ONE continuous script → ONE call → ONE voice/performance, TIME-FIT to
   the footage (gentle `atempo` only if it runs long, else pad — never a mid-word cut). The
   delivery brief is tone-aware and no longer hardcodes an "appetizing food ad" (a vertical leak).
+- **Creative-director is tone/vertical-aware (2026-07-06)**: the Opus reel director's system
+  prompt hard-coded FOOD dynamics into EVERY reel ("steam/smoke, flames, mouth-watering") — wrong
+  for a jewelry house. `_vertical_mode(profile)` now swaps the motion + delivery vocabulary:
+  **elegant** (luxury tone OR jewelry/fashion/accessories) directs the product WORN / admired on
+  skin, light glancing off metal & stones, refined slow moves, grace — no food dynamics; **food**
+  keeps the appetising motion; **generic** stays neutral. Every mode now asks for ONE coherent
+  STORY arc (heritage-aware: tell the REAL founding story, never invent) and enforces a
+  MINIMAL-TEXT policy — a caption on AT MOST the hook + CTA scene, empty for all others (owner:
+  "الكلام مكتوب بشوع… يبقا قليل"). LIVE-VERIFIED on Azza Fahmy (luxury→elegant): a celestial
+  heritage story, jewelry "resting on skin / worn on an elegant hand", captions on only 2/5 scenes.
+  (`creative_director.py`; +4 hermetic tests.)
 
 ### 5.G Strategy, Campaign, Trends
 - `strategy/`: N-day content calendar (Gemini or deterministic), hooks/angles

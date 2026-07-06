@@ -120,23 +120,73 @@ def _image_blocks(image_urls: list[str], *, max_images: int, max_side: int = 640
     return blocks, used
 
 
-def _system_prompt(n_scenes: int, language: str) -> str:
+# Vertical/tone modes. The old single prompt hard-coded FOOD dynamics ("steam/smoke, flames,
+# mouth-watering excitement") into every reel — wrong for a jewelry house or a clinic. The motion
+# vocabulary, delivery examples, and imagery now swap by mode so each reel is true to its brand.
+_ELEGANT_CATS = {"jewelry", "jewellery", "fashion", "accessories", "watches", "couture"}
+_FOOD_CATS = {"restaurant", "cafe", "bakery", "food", "fast_food", "patisserie", "coffee_shop"}
+
+
+def _vertical_mode(profile: dict) -> str:
+    """'elegant' for luxury/jewelry/fashion (tone or category), 'food' for restaurants/cafes,
+    else 'generic'. Drives the motion + delivery vocabulary so the reel fits the brand."""
+    cat = _v(profile, "category").lower()
+    tone = _v(profile, "tone_of_voice").lower()
+    if tone == "luxury" or cat in _ELEGANT_CATS:
+        return "elegant"
+    if cat in _FOOD_CATS:
+        return "food"
+    return "generic"
+
+
+_MOTION_GUIDANCE = {
+    "elegant": (
+        "- veo_prompt: a vivid Veo 3.1 IMAGE-TO-VIDEO prompt with REFINED, ELEGANT motion true to "
+        "that exact photo. Show the product WORN or admired in real life — a piece catching the "
+        "light on skin, a hand slowly turning, a poised model, fabric and light shifting, light "
+        "glancing off metal and stones, a slow refined dolly or rack focus. Human grace and "
+        "craftsmanship, never spectacle. NOT a flat zoom. Add no fake text, logos, or signage."
+    ),
+    "food": (
+        "- veo_prompt: a vivid Veo 3.1 IMAGE-TO-VIDEO prompt with appetising motion true to that "
+        "exact photo — rising steam, a sizzling grill, hands plating, sauce glistening, a slow "
+        "push-in on the dish. NOT a flat zoom. Add no fake text, logos, or signage."
+    ),
+    "generic": (
+        "- veo_prompt: a vivid Veo 3.1 IMAGE-TO-VIDEO prompt describing cinematic MOTION and LIFE "
+        "true to that exact photo — people moving, hands working, ambient life, fabric and light "
+        "shifting, a slow dolly/crane move or rack focus. NOT a flat zoom. Keep it TRUE to what is "
+        "really in the photo; add no fake text, logos, or signage."
+    ),
+}
+_DELIVERY_EG = {
+    "elegant": "'hushed reverence', 'quiet confidence', 'warm elegant invitation', 'proud heritage'",
+    "food": "'intrigued, slow build', 'mouth-watering excitement', 'warm proud invitation'",
+    "generic": "'intrigued, slow build', 'confident and bold', 'warm proud invitation'",
+}
+
+
+def _system_prompt(n_scenes: int, language: str, mode: str = "generic") -> str:
+    motion = _MOTION_GUIDANCE.get(mode, _MOTION_GUIDANCE["generic"])
+    deliveries = _DELIVERY_EG.get(mode, _DELIVERY_EG["generic"])
     return (
         "You are a world-class short-form video CREATIVE DIRECTOR (think top TikTok/Reels "
         "ad agency). You design vertical 9:16 marketing reels that stop the scroll, earn "
         "likes and shares, and make viewers want to BUY / book / enrol.\n\n"
         "You are given a business's identity and its REAL photos (you can see them). Design a "
-        f"{n_scenes}-scene reel. Open with a scroll-stopping HOOK. For EACH scene:\n"
+        f"{n_scenes}-scene reel that tells ONE coherent STORY — a beginning, a feeling, and a turn "
+        "— not disconnected shots. Open with a scroll-stopping HOOK. If the identity signals "
+        "HERITAGE or a founding story, let the arc tell THAT real story; never invent history.\n\n"
+        "For EACH scene:\n"
         "- image_index: which REAL photo to bring to life (use the indices shown).\n"
-        "- veo_prompt: a vivid Veo 3.1 IMAGE-TO-VIDEO prompt. Describe cinematic MOTION and "
-        "LIFE happening INSIDE that exact photo — people moving, hands working, steam/smoke, "
-        "flames, fabric and light shifting, a slow dolly or crane move, rack focus. NOT a flat "
-        "zoom. Keep it TRUE to what is really in the photo; add no fake text, logos, or signage.\n"
-        f"- voiceover: one short, punchy narration line in {language} that sells the moment.\n"
+        + motion + "\n"
+        f"- voiceover: one short, natural narration line in {language} that carries the story and "
+        "sells the moment.\n"
         "- voiceover_delivery: the EMOTION/performance for that line in a few words "
-        "(e.g. 'intrigued, slow build', 'mouth-watering excitement', 'warm proud invitation', "
-        "'confident and bold') — vary it across scenes so the read has real feeling.\n"
-        "- on_screen_text: a 2-5 word kinetic caption (or empty).\n"
+        f"(e.g. {deliveries}) — vary it across scenes so the read has real feeling.\n"
+        "- on_screen_text: keep the reel almost TEXT-FREE — the visuals and the voice-over carry "
+        "it. Give a short 2-4 word caption on AT MOST the hook (first) and the CTA (last) scene, "
+        'and leave on_screen_text EMPTY ("") for EVERY other scene. Never caption every scene.\n'
         "- duration_s: 3-6.\n\n"
         "DISCIPLINE: be creative and persuasive, but invent NO facts — no fake awards, ratings, "
         "numbers, or certifications. Every factual claim must come from the identity provided. "
@@ -191,7 +241,7 @@ def design_creative_reel(
         client = anthropic.Anthropic(api_key=key)
         resp = client.messages.create(
             model=model, max_tokens=max_tokens,
-            system=_system_prompt(n_scenes, lang),
+            system=_system_prompt(n_scenes, lang, _vertical_mode(profile)),
             messages=[{"role": "user", "content": content}],
         )
         raw = "".join(b.text for b in resp.content if getattr(b, "type", None) == "text")
