@@ -161,7 +161,7 @@ def _panel(kind: str, icon: str, title: str, sub: str, has_asset: bool, slug: st
         inner = f'<video src="{asset_url}" controls playsinline preload="metadata"></video>'
     else:
         stage_cls = f"cst-stage{reel_cls}"
-        hint = ("generates automatically" if kind == "poster"
+        hint = ("press Generate — a few minutes" if kind == "poster"
                 else "press Generate — Veo takes ~10–20 min")
         inner = (f'<div class="cst-empty">{icon}<span>Not generated yet</span>'
                  f'<small>{hint}</small></div>')
@@ -242,7 +242,7 @@ function gen(kind){{
   btn.disabled=true;btn.textContent='Generating…';log.style.display='block';log.textContent='';
   stage.className=stageBase(kind)+' is-gen';
   stage.innerHTML='<div class="cst-empty">'+ICON[kind]+'<span>Generating your '+kind+'…</span><small>'
-    +(kind==='reel'?'this usually takes 10–20 minutes (Veo) — you can leave it running':'this can take a minute')+'</small></div>';
+    +(kind==='reel'?'this usually takes 10–20 minutes (Veo) — you can leave it running':'this usually takes a few minutes — you can leave it running')+'</small></div>';
   const es=new EventSource('/generate/'+kind+'?slug='+encodeURIComponent(SLUG));
   const line=(t,cls)=>{{const d=document.createElement('div');if(cls)d.className=cls;d.textContent=t;
     log.appendChild(d);log.scrollTop=log.scrollHeight;}};
@@ -286,12 +286,13 @@ def _studio_page(slug: str, out_dir: str) -> str | None:
             if i >= 0 else report + section)
     bar = ('<div class="cst-bar"><a href="/dashboard?slug=' + slug +
            '" target="_blank">⤓ Download the full dashboard</a></div>')
-    # Auto-run the FAST poster only; the reel (10–20 min Veo) is opt-in via its button so the owner
-    # never lands on a 25-minute wait they didn't ask for (proactive audit finding).
+    # Nothing auto-runs: BOTH the poster (~a few min, slow image model + QA retries) and the reel
+    # (10–20 min Veo) are heavy, so the report shows INSTANTLY and each creative is an explicit
+    # button with an honest estimate — the owner never lands on a wait they didn't ask for.
     return (f'<!doctype html><html lang="en"><head><meta charset="utf-8">'
             f'<meta name="viewport" content="width=device-width,initial-scale=1">'
             f'<title>Baseera Studio · {slug}</title>{_studio_css()}</head><body>'
-            f'{bar}{body}{_studio_js(slug, not has_poster, False)}</body></html>')
+            f'{bar}{body}{_studio_js(slug, False, False)}</body></html>')
 
 
 # ------------------------------------------------------------------------------------------------

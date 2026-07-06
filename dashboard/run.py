@@ -124,9 +124,12 @@ def generate_poster(slug: str, *, out_dir: str = "outputs", on_progress=None) ->
     if not P["profile"].is_file():
         return None
     P["poster"].parent.mkdir(parents=True, exist_ok=True)
+    # No --research on the studio path (deep web research pushed it past 420s). 900s: the one-shot
+    # engine regenerates the slow image model on a QA-gate fail (bounded retries), so a legitimately
+    # retrying poster needs room (MEASURED: rawafrican exceeded 600s). Still profile-grounded.
     ok, _ = _run([py, "-m", "poster", str(P["profile"]), "--engine", "oneshot",
-                  "--out", str(P["poster"]), "--research"],
-                 timeout=420, label="Poster (one-shot)", on_progress=on_progress)
+                  "--out", str(P["poster"])],
+                 timeout=900, label="Poster (one-shot)", on_progress=on_progress)
     return P["poster"] if (ok and P["poster"].is_file()) else None
 
 
