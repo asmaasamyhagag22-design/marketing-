@@ -38,6 +38,18 @@ DEFAULT_VEO_MODEL = "veo-3.1-generate-001"
 _VEO_DURATIONS = (4, 6, 8)
 
 
+def _videos_config(types, dur):
+    """Veo config. person_generation='ALLOW_ADULT' so Veo actually RENDERS the PERSON the creative-
+    director prompt asks for (a hand/model using the product) — without it Veo suppresses people and
+    falls back to a camera-only move over the still (the 'static zoom' the owner saw). Falls back to
+    the minimal config if the pinned SDK build rejects the field."""
+    base = dict(aspect_ratio=DEFAULT_ASPECT, number_of_videos=1, duration_seconds=dur)
+    try:
+        return types.GenerateVideosConfig(person_generation="ALLOW_ADULT", **base)
+    except (TypeError, ValueError):
+        return types.GenerateVideosConfig(**base)
+
+
 @runtime_checkable
 class VideoProvider(Protocol):
     """Generates a text-free scene clip and returns the saved mp4 path.
@@ -225,11 +237,7 @@ class VeoProvider:
             kwargs = dict(
                 model=self.model,
                 prompt=prompt,
-                config=types.GenerateVideosConfig(
-                    aspect_ratio=DEFAULT_ASPECT,
-                    number_of_videos=1,
-                    duration_seconds=dur,
-                ),
+                config=_videos_config(types, dur),
             )
             if image_obj is not None:
                 kwargs["image"] = image_obj           # image-to-video seed

@@ -125,13 +125,27 @@ def _image_blocks(image_urls: list[str], *, max_images: int, max_side: int = 640
 # vocabulary, delivery examples, and imagery now swap by mode so each reel is true to its brand.
 _ELEGANT_CATS = {"jewelry", "jewellery", "fashion", "accessories", "watches", "couture"}
 _FOOD_CATS = {"restaurant", "cafe", "bakery", "food", "fast_food", "patisserie", "coffee_shop"}
+_BEAUTY_CATS = {"beauty", "cosmetics", "cosmetic", "skincare", "haircare", "salon", "spa", "personal_care"}
+_BEAUTY_KEYWORDS = ("skin", "hair", "face", "lip", "cosmetic", "cream", "serum", "cleanser", "mist",
+                    " oil", "shampoo", "makeup", "lotion", "beauty", "salon", "fragrance", "perfume")
+
+
+def _is_beauty(profile: dict) -> bool:
+    """A beauty/skincare/haircare brand — often typed just 'ecommerce', so detect it from the
+    offerings/description keywords (>=2 hits). This vertical is the MOST people-driven (someone
+    applying the product), so it must not fall into the bland 'generic' motion."""
+    text = (_v(profile, "description") + " " + _v(profile, "tagline") + " " + " ".join(
+        str(o.get("name") if isinstance(o, dict) else o) for o in (profile.get("offerings") or []))).lower()
+    return sum(1 for k in _BEAUTY_KEYWORDS if k in text) >= 2
 
 
 def _vertical_mode(profile: dict) -> str:
-    """'elegant' for luxury/jewelry/fashion (tone or category), 'food' for restaurants/cafes,
-    else 'generic'. Drives the motion + delivery vocabulary so the reel fits the brand."""
+    """'beauty' (person applying the product), 'elegant' (luxury/jewelry, worn), 'food' (savoured),
+    else 'generic' — every mode now demands a PERSON using the product with real energy."""
     cat = _v(profile, "category").lower()
     tone = _v(profile, "tone_of_voice").lower()
+    if cat in _BEAUTY_CATS or _is_beauty(profile):
+        return "beauty"
     if tone == "luxury" or cat in _ELEGANT_CATS:
         return "elegant"
     if cat in _FOOD_CATS:
@@ -139,30 +153,43 @@ def _vertical_mode(profile: dict) -> str:
     return "generic"
 
 
+# Shared rule for EVERY mode: a real PERSON enters frame and USES the product, energetic/TikTok-native
+# motion — the OLD guidance ("refined", "never spectacle", "slow push-in", "true to that exact photo")
+# made Veo only move the camera over a still, which read as a static zoom (owner: "الصورة متزومة
+# مبتهزش"). The PRODUCT stays exactly as shown (it's the i2v seed); only the person/action is generated.
+_MOTION_TAIL = (" The PRODUCT in the photo must stay exactly as shown (same shape, label, colour); ADD "
+                "the person and the action AROUND it. Real, energetic movement in every second — NOT a "
+                "slow zoom, NOT a static pan. Add no fake text, logos, or signage.")
 _MOTION_GUIDANCE = {
+    "beauty": (
+        "- veo_prompt: a vivid, TikTok-native Veo 3.1 IMAGE-TO-VIDEO prompt where a real PERSON uses "
+        "THIS exact product: a hand enters frame, picks it up and applies it (sprays the mist into "
+        "flowing hair, smooths the oil through strands, works the cleanser on fresh skin), and the "
+        "model REACTS — a satisfied smile, hair catching the light and swinging, glowing skin. "
+        "Tactile, quick natural gestures, a snappy push-in or whip-pan." + _MOTION_TAIL
+    ),
     "elegant": (
-        "- veo_prompt: a vivid Veo 3.1 IMAGE-TO-VIDEO prompt with REFINED, ELEGANT motion true to "
-        "that exact photo. Show the product WORN or admired in real life — a piece catching the "
-        "light on skin, a hand slowly turning, a poised model, fabric and light shifting, light "
-        "glancing off metal and stones, a slow refined dolly or rack focus. Human grace and "
-        "craftsmanship, never spectacle. NOT a flat zoom. Add no fake text, logos, or signage."
+        "- veo_prompt: a vivid Veo 3.1 IMAGE-TO-VIDEO prompt where a poised model WEARS/holds THIS "
+        "exact piece and it comes ALIVE — a hand turning it into the light, the piece on skin as she "
+        "moves, an admiring glance, fabric and light shifting, a confident dynamic camera. Refined "
+        "but ALIVE, real movement." + _MOTION_TAIL
     ),
     "food": (
-        "- veo_prompt: a vivid Veo 3.1 IMAGE-TO-VIDEO prompt with appetising motion true to that "
-        "exact photo — rising steam, a sizzling grill, hands plating, sauce glistening, a slow "
-        "push-in on the dish. NOT a flat zoom. Add no fake text, logos, or signage."
+        "- veo_prompt: a vivid Veo 3.1 IMAGE-TO-VIDEO prompt where a real person ENJOYS this exact "
+        "dish — a hand reaches in and lifts/pours/plates it, a satisfied bite, rising steam, sauce "
+        "glistening, energetic appetite-driven motion." + _MOTION_TAIL
     ),
     "generic": (
-        "- veo_prompt: a vivid Veo 3.1 IMAGE-TO-VIDEO prompt describing cinematic MOTION and LIFE "
-        "true to that exact photo — people moving, hands working, ambient life, fabric and light "
-        "shifting, a slow dolly/crane move or rack focus. NOT a flat zoom. Keep it TRUE to what is "
-        "really in the photo; add no fake text, logos, or signage."
+        "- veo_prompt: a vivid Veo 3.1 IMAGE-TO-VIDEO prompt where a real PERSON picks up and USES "
+        "this exact product and reacts genuinely — hands working, natural gestures, a dynamic camera "
+        "with real energy and life." + _MOTION_TAIL
     ),
 }
 _DELIVERY_EG = {
+    "beauty": "'fresh and upbeat', 'confident glow', 'delighted reaction', 'warm friendly invitation'",
     "elegant": "'hushed reverence', 'quiet confidence', 'warm elegant invitation', 'proud heritage'",
     "food": "'intrigued, slow build', 'mouth-watering excitement', 'warm proud invitation'",
-    "generic": "'intrigued, slow build', 'confident and bold', 'warm proud invitation'",
+    "generic": "'confident and bold', 'upbeat and energetic', 'warm proud invitation'",
 }
 
 
@@ -184,8 +211,12 @@ def _system_prompt(n_scenes: int, language: str, mode: str = "generic") -> str:
         "offering (the product in REAL PHOTO index 0 when one is featured); do NOT narrate store "
         "locations, kiosks, branches, or a vague brand montage. If the identity signals HERITAGE, "
         "weave that in — never invent history.\n\n"
+        "MOTION & PEOPLE (this is a TikTok-style ad, not a slideshow): EVERY scene must have real,"
+        " energetic MOTION and — wherever the product is used or worn — a real PERSON in frame using"
+        " or reacting to it. NEVER a slow zoom or a static pan over a still. Use a DISTINCT photo for"
+        " each scene (different image_index) so it's a fast SEQUENCE of shots, not one image lingering.\n\n"
         "For EACH scene:\n"
-        "- image_index: which REAL photo to bring to life (use the indices shown).\n"
+        "- image_index: which REAL photo to bring to life (use the indices shown; a DIFFERENT one per scene).\n"
         + motion + "\n"
         f"- voiceover: one short, natural narration line in {language} that carries the story and "
         "sells the moment.\n"
@@ -200,7 +231,9 @@ def _system_prompt(n_scenes: int, language: str, mode: str = "generic") -> str:
         "numbers, or certifications. Every factual claim must come from the identity provided. "
         "The reel must feel premium, human, and authentic to THIS brand's vertical.\n"
         "SELF-CHECK before returning: the reel NAMES the brand, NAMES/SHOWS one hero product, states "
-        ">=1 real benefit, and ends on the CTA — using ONLY identity facts. If any is missing, fix it.\n\n"
+        ">=1 real benefit, ends on the CTA — using ONLY identity facts — AND most scenes show a real "
+        "PERSON using/reacting to the product with visible motion (not a camera move over a still) on "
+        "DISTINCT photos. If any is missing, rewrite it.\n\n"
         "Return ONLY a JSON object, no prose, no markdown fences:\n"
         '{"concept":"...","hook":"...","music_mood":"...","cta":"...","language":"' + language + '",'
         '"scenes":[{"image_index":0,"veo_prompt":"...","voiceover":"...","voiceover_delivery":"...",'

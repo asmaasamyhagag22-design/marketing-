@@ -52,34 +52,43 @@ def test_vertical_mode_maps_brand_to_mode():
     assert _vertical_mode({"category": {"value": "restaurant"}}) == "food"
     assert _vertical_mode({"category": {"value": "jewelry"}}) == "elegant"
     assert _vertical_mode({"category": {"value": "fashion"}}) == "elegant"
-    # a luxury TONE makes any vertical elegant (e.g. a jeweller tagged generic 'ecommerce')
+    # a luxury TONE makes a NON-beauty vertical elegant (e.g. a jeweller tagged generic 'ecommerce')
     assert _vertical_mode({"category": {"value": "ecommerce"},
                            "tone_of_voice": {"value": "luxury"}}) == "elegant"
     assert _vertical_mode({"category": {"value": "clinic"}}) == "generic"
+    # a haircare/skincare brand (often just 'ecommerce') is detected as BEAUTY from its offerings
+    assert _vertical_mode({"category": {"value": "ecommerce"},
+                           "offerings": [{"name": "Hair Care"}, {"name": "Face Care"},
+                                         {"name": "Lip Care"}]}) == "beauty"
 
 
-def test_elegant_prompt_is_worn_and_not_food():
+def test_elegant_prompt_shows_the_piece_worn_alive_not_food():
     p = _system_prompt(5, "ar", "elegant")
-    # elegance vocabulary: the product WORN, light on metal — NOT sizzling grills
-    assert "WORN" in p and "elegant" in p.lower()
+    assert "WEARS" in p and ("ALIVE" in p or "alive" in p)     # worn + real movement, not a still
     assert "sizzling" not in p.lower() and "steam" not in p.lower()
-    # minimal on-screen text is still the policy (scene 0 names the product; others empty)
     assert "TEXT-FREE" in p
-    # a required AD SPINE (Slice 3), heritage-aware, still fact-disciplined
-    assert "AD SPINE" in p and "never invent history" in p
-    assert "invent NO facts" in p
+    assert "AD SPINE" in p and "never invent history" in p and "invent NO facts" in p
 
 
 def test_food_prompt_keeps_appetising_motion():
     p = _system_prompt(5, "en", "food")
     assert "steam" in p.lower() or "sizzling" in p.lower()
-    assert "TEXT-FREE" in p                       # minimal-text policy is universal
+    assert "TEXT-FREE" in p
 
 
-def test_generic_prompt_has_no_food_or_worn_bias():
-    p = _system_prompt(5, "en", "generic")
-    assert "sizzling" not in p.lower()
-    assert "cinematic MOTION" in p and "TEXT-FREE" in p
+def test_every_mode_demands_people_action_and_is_grounded():
+    # engineer/owner: the reel was a slow zoom on one still, no people. Every mode must now direct a
+    # real PERSON using the product with energy, while the PRODUCT stays exactly as shown (grounded).
+    for mode in ("beauty", "elegant", "food", "generic"):
+        p = _system_prompt(5, "en", mode)
+        assert "PERSON" in p                                   # a human in frame
+        assert "NOT a slow zoom" in p                          # the exact defect, forbidden
+        assert "stay exactly as shown" in p                    # product grounding preserved
+    beauty = _system_prompt(5, "en", "beauty")
+    assert "TikTok" in beauty and ("applies" in beauty or "sprays" in beauty)
+    # the global directives: distinct photo per scene + a people self-check
+    assert "DISTINCT photo" in beauty
+    assert "PERSON using/reacting to the product" in beauty
 
 
 def test_prompt_requires_an_ad_arc_so_the_reel_says_what_it_advertises():
