@@ -73,7 +73,11 @@ def live(tmp_path, monkeypatch):
             {"name": {"value": "Test Brand"}, "category": {"value": "ecommerce"}}), encoding="utf-8")
         return slug
 
-    def fake_poster(slug, *, out_dir="outputs", on_progress=None):
+    captured: dict = {}
+
+    def fake_poster(slug, *, out_dir="outputs", on_progress=None, product_name=None, product_image=None):
+        captured["product_name"] = product_name
+        captured["product_image"] = product_image
         on_progress("stage_start", "Poster (one-shot)", "  -> Poster ...")
         P = srv._run_mod.paths(slug, out_dir)
         P["poster"].parent.mkdir(parents=True, exist_ok=True)
@@ -83,6 +87,7 @@ def live(tmp_path, monkeypatch):
 
     monkeypatch.setattr("dashboard.run.analyze", fake_analyze)
     monkeypatch.setattr("dashboard.run.generate_poster", fake_poster)
+    srv._Handler._captured = captured   # expose for the product-threading test
     srv._Handler.out_dir = str(tmp_path)
     httpd = ThreadingHTTPServer(("127.0.0.1", 0), srv._Handler)
     threading.Thread(target=httpd.serve_forever, daemon=True).start()
@@ -131,6 +136,22 @@ def test_studio_does_not_rerun_existing_assets(live):
     assert "Regenerate" in h
 
 
+def test_picked_product_is_threaded_into_generation(live):
+    # the studio picker passes the chosen product; the server must forward it to generate_*
+    _get(live + "/analyze?url=https://brand.example/")
+    _get(live + "/generate/poster?slug=brand_example&pname=Hair%20Growth&pimg=https://b.example/p.jpg")
+    cap = srv._Handler._captured
+    assert cap["product_name"] == "Hair Growth"
+    assert cap["product_image"] == "https://b.example/p.jpg"
+
+
+def test_product_args_builds_cli_flags():
+    from dashboard.run import _product_args
+    assert _product_args(None, None) == []
+    assert _product_args("Hair Growth", "https://b/p.jpg") == [
+        "--product-name", "Hair Growth", "--product-image", "https://b/p.jpg"]
+
+
 def test_generate_poster_then_serve_the_asset(live):
     _get(live + "/analyze?url=https://brand.example/")
     _s, body = _get(live + "/generate/poster?slug=brand_example")
@@ -146,7 +167,7 @@ def test_concurrent_generate_runs_only_one_subprocess(live, monkeypatch):
     calls = {"n": 0}
     lock = threading.Lock()
 
-    def slow_poster(slug, *, out_dir="outputs", on_progress=None):
+    def slow_poster(slug, *, out_dir="outputs", on_progress=None, product_name=None, product_image=None):
         with lock:
             calls["n"] += 1
         on_progress("stage_start", "Poster (one-shot)", "  -> Poster ...")

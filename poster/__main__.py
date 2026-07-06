@@ -85,6 +85,11 @@ def main() -> int:
     )
     ap.add_argument("--headline", default=None,
                     help="override the headline (e.g. a planned content-calendar hook).")
+    ap.add_argument("--product-name", default=None,
+                    help="FEATURE one product: make it the hero offering so the concept centres on "
+                         "it (the user picked it from the scraped catalogue).")
+    ap.add_argument("--product-image", default=None,
+                    help="the picked product's real image (reserved for image-conditioning).")
     ap.add_argument("--from-plan", default=None,
                     help="a content_plan.json (from `python -m strategy`) to drive this poster.")
     ap.add_argument("--item", type=int, default=0,
@@ -97,6 +102,16 @@ def main() -> int:
         return 2
 
     profile = json.loads(profile_path.read_text(encoding="utf-8"))
+
+    # FEATURE a user-picked product: make it the HERO offering so the concept/art-director centres
+    # the poster on it instead of a generic brand creative (engineer's suggestion #1). Grounded —
+    # it's a real product the user chose from the scraped catalogue.
+    if args.product_name:
+        _p = profile.get("profile", profile) if isinstance(profile.get("profile"), dict) else profile
+        _offs = _p.get("offerings") or []
+        _p["offerings"] = [{"name": args.product_name}] + [o for o in _offs
+                                                           if (o.get("name") if isinstance(o, dict) else o) != args.product_name]
+        print(f"[product] featuring '{args.product_name}' as the hero offering")
 
     from poster.from_profile import build_poster_brief
     from poster.template import render_poster_html

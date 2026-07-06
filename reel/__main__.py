@@ -91,6 +91,11 @@ def main() -> int:
                     help="a content_plan.json (from `python -m strategy`) to drive this reel.")
     ap.add_argument("--item", type=int, default=0,
                     help="with --from-plan: which calendar item index to render (default 0).")
+    ap.add_argument("--product-image", default=None,
+                    help="FEATURE one product: use this real product image as the reel's footage "
+                         "(the user picked it from the scraped catalogue) instead of the whole set.")
+    ap.add_argument("--product-name", default=None,
+                    help="the picked product's name, woven into the story/voice-over.")
     args = ap.parse_args()
 
     profile_path = Path(args.profile)
@@ -154,6 +159,15 @@ def main() -> int:
                 max_keep=max(2, args.frames),
             )
             print(f"   [curate] {len(selected)}/{len(usable)} are on-brand photos", file=sys.stderr)
+
+    # FEATURE the user-picked product: put its REAL image first (+ a little supporting b-roll) so the
+    # reel is ABOUT that product, not a generic brand montage (engineer's suggestion #1). Bypasses
+    # the quality gate — the user chose it — and works even when the brand's other photos were junk.
+    if args.product_image:
+        supporting = [p for p in (selected or []) if p != args.product_image][:2]
+        selected = [args.product_image] + supporting
+        if args.product_name:
+            print(f"   [product] featuring '{args.product_name}'", file=sys.stderr)
 
     out = Path(args.out) if args.out else Path("outputs/reels") / f"{profile_path.stem}.mp4"
 

@@ -2,8 +2,21 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1067 passed, 0 failed** (2026-07-05/06; grew from 880 as each audit fix
+Test suite: **1073 passed, 0 failed** (2026-07-05/06; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**Studio product-picker (2026-07-06, engineer suggestion #1):** the studio now lets the user CHOOSE
+which product to advertise, grounded in the RAW scrape. `dashboard/products.py::products_for_slug`
+extracts pickable products from the freshest manifest (names from real `/collections|/products/<slug>`
+pages, images from role-tagged images_of_interest; banners/logos excluded) — NOT the profile's
+`content_images` (which for rawafrican were store-location photos). `GET /products?slug=` feeds a
+thumbnail picker in the Creative Studio; the chosen product flows `pname/pimg` → `_stream_generate`
+→ `generate_poster/reel(product_name, product_image)` → `--product-name`/`--product-image` on both
+CLIs: the poster makes it the HERO offering, the reel uses its real image as the footage. Whole-brand
+stays the default. Also FIXED: `append_endcard_to_reel` (branded logo end-card) was defined but NEVER
+called by either reel path — every reel shipped with no logo; now wired in (owner: "الريل مفيهوش
+لوجو"). MEASURED: rawafrican → 6 real products (Hair Growth, Face/Lip/Nail Care, …); reel end-card
+verified (real logo on brand green). Live product-featured OUTPUT verification pending (paid run).
 
 **Active work — adversarial audit (2026-07-05):** a deep verified audit found 1 CRITICAL
 + 8 HIGH + a medium/low tail + finder-flagged leads (full list in the session +

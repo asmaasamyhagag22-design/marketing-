@@ -180,6 +180,20 @@ def _studio_css() -> str:
     .cst-wrap{{max-width:1180px;margin:0 auto;}}
     .cst-grid{{display:grid;grid-template-columns:1fr 1fr;gap:18px;}}
     @media(max-width:760px){{.cst-grid{{grid-template-columns:1fr;}}}}
+    .cst-pick{{margin-bottom:18px;}}
+    .cst-pick-h{{font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:15px;margin-bottom:10px;}}
+    .cst-pick-h span{{font-family:'Inter',sans-serif;font-weight:400;font-size:12.5px;color:{c['muted']};}}
+    .cst-pick-row{{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 8px;}}
+    .cst-pick-load{{color:{c['muted']};font-size:13px;}}
+    .cst-chip{{flex:0 0 auto;width:104px;cursor:pointer;border:2px solid transparent;border-radius:12px;
+      background:{c['surface']};box-shadow:0 4px 12px rgba(126,52,80,.06);overflow:hidden;transition:all .15s;}}
+    .cst-chip:hover{{transform:translateY(-2px);}}
+    .cst-chip.sel{{border-color:{c['blush500']};box-shadow:0 6px 16px rgba(184,92,122,.24);}}
+    .cst-chip img{{width:104px;height:88px;object-fit:cover;display:block;background:{c['blush100']};}}
+    .cst-chip .lab{{font-size:11px;font-weight:600;color:{c['ink']};padding:6px 7px;line-height:1.25;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}}
+    .cst-chip.all{{width:auto;padding:0 12px;display:flex;align-items:center;min-height:88px;}}
+    .cst-chip.all .lab{{white-space:normal;}}
     .cst-panel{{background:{c['surface']};border:1px solid {c['line']};border-radius:16px;padding:16px;
       display:flex;flex-direction:column;gap:12px;box-shadow:0 8px 24px rgba(126,52,80,.06);}}
     .cst-head{{font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:16px;display:flex;
@@ -220,7 +234,12 @@ def _studio_section(slug: str, has_poster: bool, has_reel: bool) -> str:
     """The interactive Creative Studio block (uses the dashboard's own .sec/.card/.bar classes)."""
     return f"""<div class="sec"><div class="sec-h"><span class="bar"></span>
       <h2>Creative Studio — generate on demand</h2><span class="cnt">grounded · brand-safe · yours to drive</span></div>
-      <div class="card"><div class="cst-grid">
+      <div class="card">
+        <div class="cst-pick">
+          <div class="cst-pick-h">🛍️ Choose a product to feature <span id="pick-sel">— whole brand</span></div>
+          <div class="cst-pick-row" id="product-picker"><span class="cst-pick-load">loading products…</span></div>
+        </div>
+        <div class="cst-grid">
         {_panel('poster', '🎨', 'Poster', 'one-shot · crisp logo', has_poster, slug)}
         {_panel('reel', '🎬', 'Reel', 'Veo 3.1 · branded end-card', has_reel, slug)}
       </div></div></div>"""
@@ -231,6 +250,26 @@ def _studio_js(slug: str, auto_poster: bool, auto_reel: bool) -> str:
 const SLUG={json.dumps(slug)};
 const AUTO={{poster:{str(auto_poster).lower()},reel:{str(auto_reel).lower()}}};
 const ICON={{poster:'🎨',reel:'🎬'}};
+let SEL=null;   // the chosen product to feature (null = whole brand)
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}}[c]));
+function pick(el,prod){{
+  document.querySelectorAll('.cst-chip').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel'); SEL=prod;
+  document.getElementById('pick-sel').textContent = prod ? ('— '+prod.name) : '— whole brand';
+}}
+function loadProducts(){{
+  const row=document.getElementById('product-picker'); if(!row)return;
+  fetch('/products?slug='+encodeURIComponent(SLUG)).then(r=>r.json()).then(d=>{{
+    const items=(d&&d.products)||[]; row.innerHTML='';
+    const all=document.createElement('div'); all.className='cst-chip all sel';
+    all.innerHTML='<div class="lab">✦ Whole brand</div>'; all.onclick=()=>pick(all,null); row.appendChild(all);
+    if(!items.length){{const s=document.createElement('span'); s.className='cst-pick-load';
+      s.textContent='(no distinct products in the scrape — using the whole brand)'; row.appendChild(s); return;}}
+    items.forEach(p=>{{const c=document.createElement('div'); c.className='cst-chip';
+      c.innerHTML='<img src="'+esc(p.image)+'" alt="" onerror="this.style.visibility=\\'hidden\\'"><div class="lab">'+esc(p.name)+'</div>';
+      c.onclick=()=>pick(c,p); row.appendChild(c);}});
+  }}).catch(()=>{{row.innerHTML='<span class="cst-pick-load">(couldn\\'t load products)</span>';}});
+}}
 function stageBase(kind){{return 'cst-stage'+(kind==='reel'?' is-reel':'');}}
 function setEmpty(stage,kind,head,sub){{
   stage.className=stageBase(kind);
@@ -243,7 +282,9 @@ function gen(kind){{
   stage.className=stageBase(kind)+' is-gen';
   stage.innerHTML='<div class="cst-empty">'+ICON[kind]+'<span>Generating your '+kind+'…</span><small>'
     +(kind==='reel'?'this usually takes 10–20 minutes (Veo) — you can leave it running':'this usually takes a few minutes — you can leave it running')+'</small></div>';
-  const es=new EventSource('/generate/'+kind+'?slug='+encodeURIComponent(SLUG));
+  let gu='/generate/'+kind+'?slug='+encodeURIComponent(SLUG);
+  if(SEL){{gu+='&product='+encodeURIComponent(SEL.url)+'&pimg='+encodeURIComponent(SEL.image)+'&pname='+encodeURIComponent(SEL.name);}}
+  const es=new EventSource(gu);
   const line=(t,cls)=>{{const d=document.createElement('div');if(cls)d.className=cls;d.textContent=t;
     log.appendChild(d);log.scrollTop=log.scrollHeight;}};
   es.addEventListener('stage',e=>{{const d=JSON.parse(e.data);
@@ -259,10 +300,10 @@ function gen(kind){{
     setEmpty(stage,kind,'Couldn\\'t generate the '+kind,'press Regenerate to try again');}});
   es.onerror=()=>{{if(es.readyState===EventSource.CLOSED){{btn.disabled=false;}}}};
 }}
-// Auto-RUN what isn't made yet, right after Analyze — the studio fills itself in; Regenerate stays.
 window.addEventListener('load',()=>{{
+  loadProducts();                                  // populate the product picker
   if(AUTO.poster)gen('poster');
-  if(AUTO.reel)setTimeout(()=>gen('reel'),500);   // stagger so both logs start clean
+  if(AUTO.reel)setTimeout(()=>gen('reel'),500);
 }});
 </script>"""
 
@@ -342,6 +383,8 @@ class _Handler(BaseHTTPRequestHandler):
             self._stream_analyze(q)
         elif route == "/studio":
             self._serve_studio(q)
+        elif route == "/products":
+            self._serve_products(q)
         elif route == "/generate/poster":
             self._stream_generate(q, "poster")
         elif route == "/generate/reel":
@@ -367,6 +410,20 @@ class _Handler(BaseHTTPRequestHandler):
                        "text/plain; charset=utf-8")
             return
         self._send(200, page.encode("utf-8"), "text/html; charset=utf-8")
+
+    def _serve_products(self, q: dict):
+        """Grounded pickable products from the brand's raw scrape — the product-picker's data."""
+        slug = (q.get("slug") or [""])[0]
+        if not _ok_slug(slug):
+            self._send(400, b"bad slug", "text/plain; charset=utf-8")
+            return
+        try:
+            from dashboard.products import products_for_slug
+            items = products_for_slug(slug)
+        except Exception:
+            items = []
+        self._send(200, json.dumps({"products": items}).encode("utf-8"),
+                   "application/json; charset=utf-8")
 
     def _serve_dashboard(self, q: dict):
         """Build + serve the full self-contained dashboard (with whatever assets exist) for export."""
@@ -456,6 +513,11 @@ class _Handler(BaseHTTPRequestHandler):
 
     def _stream_generate(self, q: dict, kind: str):
         slug = (q.get("slug") or [""])[0]
+        # the chosen product to FEATURE (from the picker); absent -> whole-brand creative
+        product_name = (q.get("pname") or [""])[0].strip() or None
+        product_image = (q.get("pimg") or [""])[0].strip() or None
+        if product_image and not product_image.startswith(("http://", "https://")):
+            product_image = None
         self._begin_sse()
         if not _ok_slug(slug):
             self._sse_write(sse("failed", {"msg": "bad slug"}))
@@ -479,7 +541,8 @@ class _Handler(BaseHTTPRequestHandler):
         try:
             fn = _run_mod.generate_poster if kind == "poster" else _run_mod.generate_reel
             try:
-                asset = fn(slug, out_dir=self.out_dir, on_progress=on_progress)
+                asset = fn(slug, out_dir=self.out_dir, on_progress=on_progress,
+                           product_name=product_name, product_image=product_image)
             except Exception as exc:
                 self._sse_write(sse("failed", {"msg": f"{type(exc).__name__}: {exc}"}))
                 return

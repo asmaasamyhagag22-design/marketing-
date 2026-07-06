@@ -117,8 +117,20 @@ def analyze(url: str, *, out_dir: str = "outputs", on_progress=None) -> str | No
     return slug
 
 
-def generate_poster(slug: str, *, out_dir: str = "outputs", on_progress=None) -> Path | None:
-    """On-demand: (re)generate the one-shot poster from the saved profile. Returns its path."""
+def _product_args(product_name: str | None, product_image: str | None) -> list[str]:
+    """CLI flags so the poster/reel FEATURE the user-picked product (else whole-brand)."""
+    args: list[str] = []
+    if product_name:
+        args += ["--product-name", product_name]
+    if product_image:
+        args += ["--product-image", product_image]
+    return args
+
+
+def generate_poster(slug: str, *, out_dir: str = "outputs", on_progress=None,
+                    product_name: str | None = None, product_image: str | None = None) -> Path | None:
+    """On-demand: (re)generate the one-shot poster from the saved profile, optionally FEATURING a
+    picked product. Returns its path."""
     py = sys.executable
     P = paths(slug, out_dir)
     if not P["profile"].is_file():
@@ -128,19 +140,21 @@ def generate_poster(slug: str, *, out_dir: str = "outputs", on_progress=None) ->
     # engine regenerates the slow image model on a QA-gate fail (bounded retries), so a legitimately
     # retrying poster needs room (MEASURED: rawafrican exceeded 600s). Still profile-grounded.
     ok, _ = _run([py, "-m", "poster", str(P["profile"]), "--engine", "oneshot",
-                  "--out", str(P["poster"])],
+                  "--out", str(P["poster"])] + _product_args(product_name, product_image),
                  timeout=900, label="Poster (one-shot)", on_progress=on_progress)
     return P["poster"] if (ok and P["poster"].is_file()) else None
 
 
-def generate_reel(slug: str, *, out_dir: str = "outputs", on_progress=None) -> Path | None:
-    """On-demand: (re)generate the Opus-directed Veo 3.1 reel from the saved profile."""
+def generate_reel(slug: str, *, out_dir: str = "outputs", on_progress=None,
+                 product_name: str | None = None, product_image: str | None = None) -> Path | None:
+    """On-demand: (re)generate the Opus-directed Veo 3.1 reel, optionally FEATURING a picked product."""
     py = sys.executable
     P = paths(slug, out_dir)
     if not P["profile"].is_file():
         return None
     P["reel"].parent.mkdir(parents=True, exist_ok=True)
-    ok, _ = _run([py, "-m", "reel", str(P["profile"]), "--creative", "--out", str(P["reel"])],
+    ok, _ = _run([py, "-m", "reel", str(P["profile"]), "--creative", "--out", str(P["reel"])]
+                 + _product_args(product_name, product_image),
                  timeout=1500, label="Reel (Veo 3.1, Opus-directed)", on_progress=on_progress)
     return P["reel"] if (ok and P["reel"].is_file()) else None
 
