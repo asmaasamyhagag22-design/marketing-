@@ -166,6 +166,52 @@ def test_vertical_seed_reframes_landscape_to_9x16():
     assert abs((w / h) - (9 / 16)) < 0.01
 
 
+def test_edge_bg_color_samples_the_border():
+    from PIL import Image
+    from reel.video_provider import _edge_bg_color
+    assert _edge_bg_color(Image.new("RGB", (100, 100), (240, 240, 235))) == (240, 240, 235)
+
+
+def test_vertical_seed_pad_is_seamless_and_keeps_the_whole_product(monkeypatch):
+    """A single FEATURED product uses REEL_SEED_FILL=pad: CONTAIN the whole photo (nothing cropped)
+    over its OWN background colour — seamless (owner: "الصورة مقصوصة" without a blurred band).
+    A white studio shot pads with white, NOT a dim blurred copy."""
+    import io
+    from PIL import Image
+    from reel.video_provider import _to_vertical_seed
+    src = Image.new("RGB", (1600, 900), (255, 255, 255))          # white studio background
+    for x in range(700, 900):                                     # a red product block in the middle
+        for y in range(350, 550):
+            src.putpixel((x, y), (200, 30, 30))
+    buf = io.BytesIO(); src.save(buf, format="JPEG")
+
+    monkeypatch.setenv("REEL_SEED_FILL", "pad")
+    out, _ = _to_vertical_seed(buf.getvalue(), width=768, height=1366)
+    im = Image.open(io.BytesIO(out)).convert("RGB")
+    w, h = im.size
+    assert abs((w / h) - (9 / 16)) < 0.01
+    # the TOP padding IS the seed's own white background — near-white, NOT a dark blurred band
+    assert min(im.getpixel((w // 2, 5))) > 235
+    # the product survived the contain (red appears down the centre column) -> nothing cropped
+    assert any(im.getpixel((w // 2, y))[0] > 150 and im.getpixel((w // 2, y))[1] < 120
+               for y in range(0, h, 8))
+
+
+def test_vertical_seed_blur_dims_the_band_so_pad_is_the_cleaner_default(monkeypatch):
+    """Contrast: REEL_SEED_FILL=blur pads with a dimmed blurred copy (a visible band), which is
+    exactly why a featured product now defaults to 'pad' instead."""
+    import io
+    from PIL import Image
+    from reel.video_provider import _to_vertical_seed
+    buf = io.BytesIO()
+    Image.new("RGB", (1600, 900), (255, 255, 255)).save(buf, format="JPEG")
+    monkeypatch.setenv("REEL_SEED_FILL", "blur")
+    out, _ = _to_vertical_seed(buf.getvalue(), width=768, height=1366)
+    im = Image.open(io.BytesIO(out)).convert("RGB")
+    # blur mode dims the padding to ~0.55 brightness, so a white seed's band is clearly grey
+    assert im.getpixel((im.size[0] // 2, 5))[0] < 210
+
+
 # ---------------------------------------------------------------------
 # Compositor seeds ONLY the brand bookends (intro + outro)
 # ---------------------------------------------------------------------

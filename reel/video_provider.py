@@ -98,12 +98,34 @@ def _mime_for(ctype: str, low_src: str) -> Optional[str]:
     return "image/jpeg"
 
 
+def _edge_bg_color(img) -> tuple[int, int, int]:
+    """The seed's own background colour, sampled from its four border strips (a 1px average of
+    each edge, then averaged). A studio product shot on white/grey returns that exact tone, so
+    padding with it is SEAMLESS — no visible band."""
+    w, h = img.size
+    tb = max(1, h // 12)
+    lr = max(1, w // 12)
+    strips = [
+        img.crop((0, 0, w, tb)),            # top
+        img.crop((0, h - tb, w, h)),        # bottom
+        img.crop((0, 0, lr, h)),            # left
+        img.crop((w - lr, 0, w, h)),        # right
+    ]
+    from PIL import Image
+    cols = [s.resize((1, 1), Image.LANCZOS).getpixel((0, 0)) for s in strips]
+    n = len(cols)
+    return tuple(int(sum(c[i] for c in cols) / n) for i in range(3))  # type: ignore[return-value]
+
+
 def _to_vertical_seed(data: bytes, *, width: int = 768, height: int = 1366) -> tuple[bytes, str]:
     """Make a FULL-FRAME 9:16 seed so Veo i2v doesn't letterbox a landscape photo.
 
     Default 'cover' crops to fill (sharp, professional, the standard reel look).
-    Set REEL_SEED_FILL=blur to instead CONTAIN the whole photo over a blurred copy
-    (keeps every edge, slightly softer), or REEL_SEED_FILL=none to pass through.
+    REEL_SEED_FILL=pad CONTAINS the whole photo (nothing cropped) over its OWN background
+    colour — seamless for a studio product shot, so the product is never cut off AND there is
+    no visible band (this is the default for a single FEATURED product). REEL_SEED_FILL=blur
+    contains it over a blurred+dimmed copy instead (keeps edges but leaves a soft band on
+    seed-hugging scenes), or REEL_SEED_FILL=none passes through.
     Returns (jpeg_bytes, 'image/jpeg'); falls back to the input on any error."""
     mode = (os.getenv("REEL_SEED_FILL") or "cover").lower()
     if mode == "none":
@@ -112,7 +134,12 @@ def _to_vertical_seed(data: bytes, *, width: int = 768, height: int = 1366) -> t
         import io
         from PIL import Image, ImageEnhance, ImageFilter, ImageOps
         img = Image.open(io.BytesIO(data)).convert("RGB")
-        if mode == "blur":
+        if mode == "pad":
+            fg = img.copy()
+            fg.thumbnail((width, height), Image.LANCZOS)
+            canvas = Image.new("RGB", (width, height), _edge_bg_color(img))
+            canvas.paste(fg, ((width - fg.width) // 2, (height - fg.height) // 2))
+        elif mode == "blur":
             bg = ImageOps.fit(img, (width, height), method=Image.LANCZOS)
             bg = ImageEnhance.Brightness(bg.filter(ImageFilter.GaussianBlur(40))).enhance(0.55)
             fg = img.copy()

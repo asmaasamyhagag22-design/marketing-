@@ -2,7 +2,7 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1083 passed, 0 failed** (2026-07-05/06; grew from 880 as each audit fix
+Test suite: **1086 passed, 0 failed** (2026-07-05/06; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
 
 **Single-product REEL — one item, realistic, framed-for-9:16 (2026-07-06):** owner: "أنا هعملّ ريل
@@ -17,9 +17,13 @@ dropper, the person REMOVES or FLIPS it BEFORE dispensing … NEVER pressing a s
 a closed bottle" (owner: "مش يضغط والغطا مقفول"). **(3) FRAMING** — a FRAMING block makes the director
 compose vertical-first for the 1080x1920 frame ("product FULLY visible … NEVER a wide/landscape shot
 that gets cropped … NOTHING is cut off"), and when a product is featured the seed defaults to
-`REEL_SEED_FILL=blur` (CONTAIN the whole photo over a blurred copy) instead of the cropping 'cover' —
-so the source Veo builds its scene from is complete, not pre-cut (owner: "الصورة مقصوصة"). +3 tests.
-Live single-product OUTPUT render still pending (paid Veo run).
+`REEL_SEED_FILL=pad` — CONTAIN the whole photo over its OWN background colour (`_edge_bg_color` samples
+the four border strips), so a studio product shot pads SEAMLESSLY (no crop AND no band). VERIFIED live
+(Hair Growth, Veo 3.1): 1080x1920, 21s + branded end-card, all 5 scenes the SAME product, a real model
+spraying the mist onto glossy hair (physically-logical use, not a static zoom), ad-arc HOOK→use→result→
+CTA "Get The Raw Experience". First pass used the earlier `blur` seed and left a faint band on the two
+seed-hugging scenes → switched the default to the seamless `pad` seed (`_to_vertical_seed` gained a
+'pad' mode; +3 seed tests). Re-render on `pad` pending owner go.
 
 **Crawl reaches INDIVIDUAL products, not just categories (2026-07-06):** owner: azza/rawafrican came
 out with category-level offerings only (RINGS/EARRINGS; Face/Hair Care). A multi-agent analysis found

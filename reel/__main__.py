@@ -166,11 +166,12 @@ def main() -> int:
     if args.product_image:
         selected = [args.product_image]
         # FRAMING: a single product photo is usually landscape/square; the default 'cover' seed
-        # CROPS it to 9:16 (owner: "الصورة كأنها مقصوصة"). CONTAIN it over a blurred copy so the
-        # WHOLE product stays in frame — the seed Veo builds its vertical scene around is complete,
-        # not pre-cut. (User may still override with an explicit REEL_SEED_FILL.)
+        # CROPS it to 9:16 (owner: "الصورة كأنها مقصوصة"). 'pad' CONTAINS the WHOLE product over its
+        # OWN background colour — nothing cropped AND no visible band (a blurred copy left a soft
+        # band on seed-hugging scenes), so the seed Veo builds its vertical scene around is complete
+        # and seamless. (User may still override with an explicit REEL_SEED_FILL.)
         import os as _os
-        _os.environ.setdefault("REEL_SEED_FILL", "blur")
+        _os.environ.setdefault("REEL_SEED_FILL", "pad")
         if args.product_name:
             print(f"   [product] featuring ONLY '{args.product_name}' "
                   f"(seed fill={_os.environ['REEL_SEED_FILL']})", file=sys.stderr)
