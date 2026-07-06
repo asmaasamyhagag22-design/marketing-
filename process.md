@@ -2,7 +2,7 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1050 passed, 0 failed** (2026-07-05/06; grew from 880 as each audit fix
+Test suite: **1052 passed, 0 failed** (2026-07-05/06; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
 
 **Active work — adversarial audit (2026-07-05):** a deep verified audit found 1 CRITICAL
@@ -340,9 +340,16 @@ Packages: `scraper/`, `business_profile/`, `grounding/`, `competitor/`, `brand/`
   suppress the 0-peer fallback. MEASURED: Azza Fahmy Strengths 4 page-attribute → 9 (5 brand-level
   first: heritage, 18kt gold, craftsmanship, service, shipping); Raw African +7 (incl. "Loved by
   17k+ Customers", "Cruelty-Free"). Universal (jewelry + skincare, no vertical hacks). Wired at
-  full_run.py + api/routes/swot.py. +4 hermetic tests. NEXT SLICES (designed, not yet built):
-  re-phrase mechanical gap lines (S2), trends→Opportunities/Threats (S3), readiness-gap
-  Weaknesses (S4).
+  full_run.py + api/routes/swot.py. +4 hermetic tests.
+- **Strategist phrasing (2026-07-06, SWOT-quality Slice 2)**: the mechanical own-site lines still
+  read as a raw attribute dump ("Number of CTAs: 3", "Online booking: not detected on site").
+  `brand_signals.phrase_dimension(dim_key,label,kind,value,positive)` re-phrases the SAME
+  scrape-grounded cell into strategist language ("Clear conversion paths (3 calls-to-action)",
+  "No WhatsApp contact channel", "Single-language site (missing Arabic/English)") — TEXT only,
+  citation/evidence/claim_strength unchanged — in `_standalone_from_subject`. Keyed off dim.key
+  with a clean label fallback (a new dimension never regresses to a dump). +2 tests (2 legacy
+  standalone assertions updated). NEXT SLICES (designed): trends -> Opportunities/Threats (S3),
+  readiness-gap Weaknesses (S4).
 - **TOWS grounding gate fails CLOSED** (2026-07-05): a ledger error on a strategy's text
   now returns not-grounded → the pairing keeps its GROUNDED deterministic template instead
   of shipping the LLM's unverified text (was fail-open — an error let unverified strategy

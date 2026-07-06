@@ -26,6 +26,43 @@ _TRUST_PROOF_KEYS = (
 )
 
 
+# Strategist phrasing for the subject's own-site dimensions, so a standalone SWOT reads like a
+# strategist wrote it ("Thin conversion path (3 CTAs)") instead of a raw attribute dump
+# ("Number of CTAs: 3"). TEXT ONLY — the SWOTItem's citation/evidence/claim_strength are unchanged,
+# and the cell is the same scrape-grounded fact. Keyed off dim.key (universal; no vertical wording).
+_DIM_STRONG = {   # present / count > 0
+    "online_booking": "Online booking available on-site",
+    "whatsapp": "Direct WhatsApp contact channel",
+    "shows_reviews": "Customer reviews shown on-site",
+    "bilingual": "Bilingual site (Arabic + English)",
+    "cta_count": "Clear conversion paths ({v} calls-to-action)",
+    "offerings_count": "Broad offering range ({v} lines)",
+    "trust_count": "Visible trust markers ({v} on-site)",
+    "social_count": "Active social presence ({v} channels)",
+}
+_DIM_WEAK = {     # absent / count == 0
+    "online_booking": "No online booking path on-site",
+    "whatsapp": "No WhatsApp contact channel",
+    "shows_reviews": "No customer reviews shown on-site",
+    "bilingual": "Single-language site (missing Arabic/English)",
+    "cta_count": "No clear call-to-action on the page",
+    "offerings_count": "No offerings surfaced on-site",
+    "trust_count": "No visible trust markers on-site",
+    "social_count": "No social links on-site",
+}
+
+
+def phrase_dimension(dim_key: str, label: str, kind: str, value: Any, positive: bool) -> str:
+    """Strategist phrasing for one own-site dimension. Falls back to a clean label-based phrase for
+    any dimension not in the tables (so a new dimension never regresses to a raw dump)."""
+    tmpl = (_DIM_STRONG if positive else _DIM_WEAK).get(dim_key)
+    if tmpl:
+        return tmpl.format(v=value) if "{v}" in tmpl else tmpl
+    if kind == "count":
+        return f"{label}: {value}" if positive else f"{label}: none on-site"
+    return f"{label} present on-site" if positive else f"{label} not on-site"
+
+
 def _val(x: Any) -> str:
     if isinstance(x, dict):
         return str(x.get("value") or "").strip()

@@ -238,6 +238,8 @@ def _standalone_from_subject(matrix: ComparativeGapMatrix):
     UNKNOWN (None) cells are skipped so we never infer. Counts are the already-
     deduped values from the matrix (no inflated 'N social links').
     """
+    from competitor.brand_signals import phrase_dimension   # lazy: brand_signals imports SWOTItem
+
     vals = matrix.subject.values
     strengths: List[SWOTItem] = []
     weaknesses: List[SWOTItem] = []
@@ -249,16 +251,14 @@ def _standalone_from_subject(matrix: ComparativeGapMatrix):
             continue
         cite = ["your scraped site", dim.key]
         ev = f"subject {dim.key}={v}"
+        # Same scrape-grounded cell, strategist phrasing (not a raw "label: value" dump).
         if dim.kind == "bool":
-            if v:
-                strengths.append(SWOTItem(f"{dim.label}: present on site", cite, ev))
-            else:
-                weaknesses.append(SWOTItem(f"{dim.label}: not detected on site", cite, ev))
+            bucket = strengths if v else weaknesses
+            bucket.append(SWOTItem(phrase_dimension(dim.key, dim.label, dim.kind, v, bool(v)), cite, ev))
         elif dim.kind == "count":
-            if v and v > 0:
-                strengths.append(SWOTItem(f"{dim.label}: {v}", cite, ev))
-            else:
-                weaknesses.append(SWOTItem(f"{dim.label}: none detected", cite, ev))
+            positive = bool(v and v > 0)
+            bucket = strengths if positive else weaknesses
+            bucket.append(SWOTItem(phrase_dimension(dim.key, dim.label, dim.kind, v, positive), cite, ev))
     return strengths, weaknesses
 
 

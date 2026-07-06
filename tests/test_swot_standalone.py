@@ -25,8 +25,9 @@ def _subject():
 def test_zero_peers_degrades_to_standalone():
     swot = synthesize_swot(ComparativeGapMatrix(columns=[_subject()], gaps=[]), themes=[])
     assert swot.mode == "standalone"
+    # strategist phrasing (Slice 2): WhatsApp present -> a strength; booking absent -> a weakness
     assert any("WhatsApp" in s.text for s in swot.strengths)
-    assert any("Online booking" in w.text for w in swot.weaknesses)
+    assert any("booking" in w.text.lower() for w in swot.weaknesses)
     assert any(n.startswith("Standalone Strategic Analysis (No Competitors") for n in swot.notes)
 
 
@@ -42,7 +43,8 @@ def test_standalone_skips_unknown_cells_and_uses_deduped_counts():
     cited_keys = {c for it in swot.strengths + swot.weaknesses for c in it.citation}
     assert "shows_reviews" not in cited_keys          # UNKNOWN -> excluded (rule #4)
     assert "trust_count" not in cited_keys
-    assert any("Social links: 1" in s.text for s in swot.strengths)  # deduped, not inflated
+    # deduped count (1), not inflated — now in strategist phrasing (Slice 2)
+    assert any("social presence (1 channels)" in s.text for s in swot.strengths)
 
 
 def test_competitive_mode_unchanged_when_gaps_exist():
