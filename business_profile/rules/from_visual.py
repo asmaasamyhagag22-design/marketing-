@@ -140,13 +140,38 @@ def _logo_basenames(v) -> set[str]:
     return out
 
 
+# Tokens that mark an image as a store/stockist LOCATION or a page banner — NOT a product. A brand's
+# "where to buy" gallery (mall / pharmacy / branch photos) is role=content too, so without this the
+# reel animated kiosks while the voice-over sold products (MEASURED: rawafrican's content_images were
+# 8-9 store-location photos). Universal tokens only; no brand names.
+_LOCATION_TOKENS = (
+    "mall", "city_stars", "citystars", "pharmacy", "el-ezaby", "elezaby", "shooting_club",
+    "shooting-club", "branch", "branches", "kiosk", "where-to-buy", "where_to_buy", "find-us",
+    "find_us", "location", "outlet", "stockist", "storefront", "store-front", "banner", "slide",
+    "cover", "map",
+)
+
+
+def _content_rank(src: str, alt: str) -> int:
+    """Product-first ranking (0=product, 1=neutral, 2=store/banner). Replaces the old extension sort
+    that promoted webp/jpg — which happened to be the store photos — over the .png product mockups."""
+    blob = (src + " " + (alt or "")).lower()
+    if any(t in blob for t in _LOCATION_TOKENS):
+        return 2                                       # store/stockist/banner -> LAST
+    s = src.lower()
+    if "/products/" in s or "/collections/" in s or "/product/" in s or (alt or "").strip():
+        return 0                                       # product page OR a product alt -> FIRST
+    return 1
+
+
 def _content_images(manifest: ScrapeManifest, limit: int = 12) -> list[str]:
-    """The brand's REAL on-page photos (CONTENT role), logos excluded, deduped by
-    filename, capped. This is the imagery the reel animates so it comes FROM THE
-    PLACE. JPEG/JPG (real photos) are ordered first; flat PNG graphics last."""
+    """The brand's REAL on-page PRODUCT photos (CONTENT role), logos + store-location shots excluded,
+    deduped, capped. This is the imagery the reel animates + the poster draws from, so it must show
+    what the brand SELLS, not its shop fronts. Ranked product-first (a stable sort preserves order
+    within a rank)."""
     imgs = getattr(manifest, "images_of_interest", None) or []
     logo_bn = _logo_basenames(getattr(manifest, "visual", None))
-    out: list[str] = []
+    items: list[tuple[str, str]] = []                  # (src, alt)
     seen: set[str] = set()
     for im in imgs:
         if im.role != ImageRole.CONTENT:
@@ -158,10 +183,9 @@ def _content_images(manifest: ScrapeManifest, limit: int = 12) -> list[str]:
         if bn in logo_bn or bn in seen:
             continue
         seen.add(bn)
-        out.append(src)
-    # Photos (jpeg/jpg/webp) first — flat PNGs are more likely decorative graphics.
-    out.sort(key=lambda u: 0 if u.split("?")[0].lower().endswith((".jpg", ".jpeg", ".webp")) else 1)
-    return out[:limit]
+        items.append((src, getattr(im, "alt", "") or ""))
+    items.sort(key=lambda p: _content_rank(p[0], p[1]))
+    return [s for s, _ in items[:limit]]
 
 
 def _homepage_screenshot_path(manifest: ScrapeManifest) -> Optional[str]:
