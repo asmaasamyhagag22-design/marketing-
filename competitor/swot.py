@@ -90,6 +90,7 @@ def synthesize_swot(
     matrix: ComparativeGapMatrix,
     themes: Optional[List[ReviewTheme]] = None,
     unique_insights: Optional[List[str]] = None,
+    profile: Optional[dict] = None,
 ) -> SWOT:
     themes = themes or []
     swot = SWOT()
@@ -197,6 +198,28 @@ def synthesize_swot(
             swot.strengths.append(SWOTItem(
                 text=text, citation=["your profile"],
                 evidence="unique competitive edge stated on the site"))
+
+    # Brand-level strengths from the grounded profile (distinctive value props + real proof) — the
+    # signals the mechanical matrix throws away (owner: "the SWOT is all page attributes, not
+    # brand-level"). Ledger-gated (no invented facts) and PREPENDED so the SWOT LEADS with brand
+    # strategy, not "Number of CTAs". profile=None -> unchanged (regression-safe). Added AFTER the
+    # standalone/floor logic so it can't suppress the 0-peer fallback (keyed on an empty SWOT).
+    if profile:
+        try:
+            from grounding import EvidenceLedger
+
+            from competitor.brand_signals import strengths_from_profile
+            brand = strengths_from_profile(profile, EvidenceLedger.from_profile(profile))
+        except Exception:  # noqa: BLE001 — a signal-mining error must never break the SWOT
+            brand = []
+        existing = {s.text.strip().lower() for s in swot.strengths}
+        fresh: List[SWOTItem] = []
+        for it in brand:
+            k = it.text.strip().lower()
+            if k and k not in existing:
+                existing.add(k)
+                fresh.append(it)
+        swot.strengths[:0] = fresh   # prepend brand-level strengths
 
     if not any([swot.strengths, swot.weaknesses, swot.opportunities, swot.threats]):
         swot.notes.append("No subject dimensions were known either — the scrape "

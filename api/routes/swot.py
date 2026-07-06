@@ -120,7 +120,8 @@ def swot_from_profile(req: SwotFromProfileRequest) -> SwotResponse:
             themes = []
 
         swot = synthesize_swot(matrix, themes=themes,
-                               unique_insights=unique_insight_texts(profile))
+                               unique_insights=unique_insight_texts(profile),
+                               profile=profile)
         if subject_places is not None:
             swot.notes.append(
                 f"subject Places listing matched: {subject_places.name} "

@@ -2,7 +2,7 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1046 passed, 0 failed** (2026-07-05/06; grew from 880 as each audit fix
+Test suite: **1050 passed, 0 failed** (2026-07-05/06; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
 
 **Active work — adversarial audit (2026-07-05):** a deep verified audit found 1 CRITICAL
@@ -326,6 +326,23 @@ Packages: `scraper/`, `business_profile/`, `grounding/`, `competitor/`, `brand/`
   `claim_strength` ladder (validated / directional_not_validated /
   internally_supported); own-site S/W floor in competitive mode; review-theme
   complaints → Threats, unmet needs → Opportunities; standalone degrade never empty.
+- **Brand-level Strengths (2026-07-06, SWOT-quality Slice 1)**: owner called the SWOT "stupid —
+  all page attributes, not brand-level" (Strengths read "Number of CTAs: 3", "Social links: 20"
+  for a heritage jewelry house). The rich profile was thrown away — `value_propositions` /
+  `domain_schema` appeared ZERO times in swot.py/matrix.py; only offering/trust COUNTS leaked in.
+  Now `competitor/brand_signals.py::strengths_from_profile(profile, ledger)` mines the grounded
+  profile — distinctive `value_propositions` + proof-carrying `trust_signals` (generic checkout
+  boilerplate filtered) — into Strengths, each **Ledger-gated** (same `all(v.sourced for v in
+  ledger.audit_text(text))` gate as TOWS/strategy; fail-closed) and cited to its profile field,
+  `internally_supported`. `synthesize_swot(..., profile=None)` gains the param and **prepends**
+  them so the SWOT LEADS with brand strategy; the mechanical gaps stay as a secondary signal.
+  `profile=None` is byte-identical (regression-safe); added after the standalone check so it can't
+  suppress the 0-peer fallback. MEASURED: Azza Fahmy Strengths 4 page-attribute → 9 (5 brand-level
+  first: heritage, 18kt gold, craftsmanship, service, shipping); Raw African +7 (incl. "Loved by
+  17k+ Customers", "Cruelty-Free"). Universal (jewelry + skincare, no vertical hacks). Wired at
+  full_run.py + api/routes/swot.py. +4 hermetic tests. NEXT SLICES (designed, not yet built):
+  re-phrase mechanical gap lines (S2), trends→Opportunities/Threats (S3), readiness-gap
+  Weaknesses (S4).
 - **TOWS grounding gate fails CLOSED** (2026-07-05): a ledger error on a strategy's text
   now returns not-grounded → the pairing keeps its GROUNDED deterministic template instead
   of shipping the LLM's unverified text (was fail-open — an error let unverified strategy

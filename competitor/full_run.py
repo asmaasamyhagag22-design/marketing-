@@ -184,14 +184,17 @@ def main():
         except TypeError:
             pass
 
+    # Serialize the profile ONCE — the SWOT now mines it for brand-level strengths (value props +
+    # proof, Ledger-gated) and TOWS reuses it downstream.
+    profile_dict = (profile.model_dump(mode="json")
+                    if hasattr(profile, "model_dump") else (profile if isinstance(profile, dict) else None))
     swot = synthesize_swot(matrix, themes=themes,
-                           unique_insights=unique_insight_texts(profile))
+                           unique_insights=unique_insight_texts(profile),
+                           profile=profile_dict)
 
     # TOWS synthesis (strategies + priority actions) from the cited SWOT —
     # deterministic here (no extra LLM cost on the CLI path); never raises.
     from competitor import build_tows
-    profile_dict = (profile.model_dump(mode="json")
-                    if hasattr(profile, "model_dump") else None)
     tows = build_tows(swot, caller=None, profile=profile_dict)
 
     # --- consolidated result -> output file ------------------------------------
