@@ -48,6 +48,19 @@ def test_elegant_dark_card_has_serif_and_no_fake_button():
     assert ".beam" not in html                      # the old random light-beams are gone
 
 
+def test_reel_cli_wires_the_branded_endcard(monkeypatch):
+    # regression: append_endcard_to_reel EXISTED but was never called by either reel path, so every
+    # reel shipped with no logo (owner: "الريل مفيهوش لوجو"). The CLI must now call it (unless --no-logo).
+    import reel.endcard as ec
+    from reel.__main__ import _append_brand_endcard
+    calls = []
+    monkeypatch.setattr(ec, "append_endcard_to_reel", lambda profile, path: calls.append(path) or True)
+    _append_brand_endcard({"name": {"value": "X"}}, "/tmp/reel.mp4", enabled=True)
+    assert calls == ["/tmp/reel.mp4"]                    # end-card appended
+    _append_brand_endcard({}, "/tmp/reel.mp4", enabled=False)
+    assert calls == ["/tmp/reel.mp4"]                    # --no-logo -> not appended again
+
+
 def test_bold_light_card_has_hairline_cta_and_dark_ink():
     html = _endcard_html("data:image/png;base64,AAAA", "As-Salam", "Book now", "assih.com",
                          "#1b3a6b", "#2b4a7b", rtl=False, width=1080, height=1920,

@@ -33,6 +33,20 @@ def _load_env() -> None:
         pass
 
 
+def _append_brand_endcard(profile: dict, reel_path, *, enabled: bool) -> None:
+    """Append the branded END-CARD (real logo on the brand colour) to a finished reel — the owner:
+    "the reel must END with the logo and the brand colour". Best-effort: the helper existed but was
+    NEVER wired into either reel path, so every reel shipped without it (the "no logo" complaint)."""
+    if not enabled:
+        return
+    try:
+        from reel.endcard import append_endcard_to_reel
+        if append_endcard_to_reel(profile, reel_path):
+            print("     + branded end-card (logo on the brand colour)", file=sys.stderr)
+    except Exception:  # noqa: BLE001 — the end-card is a nicety, never fail the reel over it
+        pass
+
+
 def main() -> int:
     _load_env()
     import json
@@ -159,6 +173,7 @@ def main() -> int:
             with_voiceover=not args.no_voiceover,
         )
         if result is not None:
+            _append_brand_endcard(profile, result.reel_path, enabled=not args.no_logo)
             print(f"\n[ok] CREATIVE reel -> {Path(result.reel_path).resolve()}")
             print(f"     concept: {creative.concept[:90]}")
             print(f"     {result.width}x{result.height}  {result.duration_s}s  "
@@ -219,6 +234,8 @@ def main() -> int:
         scale=args.scale, music_path=args.music, voiceover_path=voiceover_path,
         include_logo=not args.no_logo,
     )
+
+    _append_brand_endcard(profile, result.reel_path, enabled=not args.no_logo)
 
     print(f"\n[ok] reel -> {Path(result.reel_path).resolve()}")
     print(f"     {result.width}x{result.height}  {result.duration_s}s  "
