@@ -89,7 +89,8 @@ def main() -> int:
                     help="FEATURE one product: make it the hero offering so the concept centres on "
                          "it (the user picked it from the scraped catalogue).")
     ap.add_argument("--product-image", default=None,
-                    help="the picked product's real image (reserved for image-conditioning).")
+                    help="the picked product's real image — composited as the PRIMARY product prop "
+                         "(oneshot engine) so the poster SHOWS that exact product with its real label.")
     ap.add_argument("--from-plan", default=None,
                     help="a content_plan.json (from `python -m strategy`) to drive this poster.")
     ap.add_argument("--item", type=int, default=0,
@@ -208,6 +209,7 @@ def main() -> int:
         no_image=args.no_image, headline_override=headline_override,
         trend_context=trend_context or None, engine=args.engine,
         out_dir=str(Path(args.out).parent or "."),
+        product_image=args.product_image,
     )
 
     # Place the result at the requested --out path.

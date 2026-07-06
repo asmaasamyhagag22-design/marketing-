@@ -348,20 +348,28 @@ def _image_bytes_from_url(url: Optional[str]) -> tuple[Optional[bytes], str]:
     return None, "image/jpeg"
 
 
-def _gather_product_props(profile, caller, log) -> tuple[list, list[str]]:
+def _gather_product_props(profile, caller, log, product_image: Optional[str] = None) -> tuple[list, list[str]]:
     """The brand's REAL product photos as scene props for the one-shot composite (the
     owner's radical fix: a real product photo carries its REAL, correct label — like
     the logo, the model composites an attached asset instead of inventing packaging).
+
+    `product_image` (set when the user PICKED a product) becomes the PRIMARY prop — so the
+    poster SHOWS that exact product (parallels the reel's featured image), kept even if the
+    quality gate would drop it (the user chose it); the second slot fills from the gated rest.
 
     Quality-gated (reel.image_quality), max 2, SSRF-guarded fetch. Each photo's REAL
     label text is OCR'd once so those lines become ALLOWED extras in the fidelity gate
     (invented labels stay junk). ([], []) on any failure — never raises."""
     try:
-        urls = ((profile or {}).get("visual") or {}).get("content_images") or []
-        if not urls:
+        urls = list(((profile or {}).get("visual") or {}).get("content_images") or [])
+        picked = [product_image] if product_image else []
+        if picked:
+            urls = [u for u in urls if u != product_image]     # de-dup; picked leads
+        if not urls and not picked:
             return [], []
         from reel.image_quality import filter_usable_photos
-        keep = filter_usable_photos(urls, max_keep=2)
+        gated = filter_usable_photos(urls, max_keep=2) if urls else []
+        keep = (picked + gated)[:2]                            # picked product first, then best other
         props: list = []
         allowed: list[str] = []
         import poster.oneshot as oneshot
@@ -382,7 +390,7 @@ def _gather_product_props(profile, caller, log) -> tuple[list, list[str]]:
 
 def _try_oneshot(profile, brief, concept, brand_dna, caller, *, arabic, audit,
                  out_dir, variation, max_retries, log,
-                 qa_caller=None) -> Optional[PosterGenResult]:
+                 qa_caller=None, product_image: Optional[str] = None) -> Optional[PosterGenResult]:
     """ONE-SHOT engine: a Gemini image model composes the ENTIRE creative (layout +
     typography + graphics) in one call — the measured pilot (poster/oneshot.py:
     Arabic fidelity 5/5) earned it this pipeline mode; same idea as TrendPulse's
@@ -420,7 +428,8 @@ def _try_oneshot(profile, brief, concept, brand_dna, caller, *, arabic, audit,
             dna_lines = "; ".join(vals)[:800]
         # The brand's REAL products as composited props (real, correct labels) —
         # their OCR'd label lines become ALLOWED extras below.
-        product_imgs, allowed_lines = _gather_product_props(profile, caller, log)
+        product_imgs, allowed_lines = _gather_product_props(profile, caller, log,
+                                                            product_image=product_image)
 
         prompt = oneshot.build_oneshot_prompt(
             copy, brand_name=brief.business_name or "",
@@ -567,6 +576,7 @@ def generate_poster(
     out_dir: str = "outputs/posters",
     engine: str = "classic",
     language: str = "auto",
+    product_image: Optional[str] = None,
     log=_safe_log,
 ) -> PosterGenResult:
     """The one pipeline. `caller` = a (multimodal) Gemini caller; `qa_caller` defaults to it.
@@ -693,7 +703,8 @@ def generate_poster(
     if prefer_oneshot:
         r = _try_oneshot(profile, brief, concept, brand_dna, caller, arabic=arabic,
                          audit=audit, out_dir=out_dir, variation=variation,
-                         max_retries=max_qa_retries, log=log, qa_caller=qa_caller)
+                         max_retries=max_qa_retries, log=log, qa_caller=qa_caller,
+                         product_image=product_image)
         if r is not None:
             return _emit(r)
         log("[oneshot] gate not passed / unavailable -> classic overlay pipeline")

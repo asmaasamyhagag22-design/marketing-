@@ -158,7 +158,7 @@ def test_real_product_props_allow_their_real_labels_but_not_invented_ones(monkey
     junk. Also a real bag carrying the brand name correctly is allowed."""
     import poster.pipeline as _pl
     monkeypatch.setattr(_pl, "_gather_product_props",
-                        lambda profile, caller, log: ([(b"img", "image/jpeg")],
+                        lambda profile, caller, log, product_image=None: ([(b"img", "image/jpeg")],
                                                       ["Panadol Extra 500mg", "Daturial Bag"]))
     res, calls = _run(monkeypatch, tmp_path, seen_lines=[
         "Autonomous AI Systems", "Book a Meeting",
@@ -170,13 +170,42 @@ def test_real_product_props_allow_their_real_labels_but_not_invented_ones(monkey
 
     # Invented labels (not on any attached asset) still reject the render.
     monkeypatch.setattr(_pl, "_gather_product_props",
-                        lambda profile, caller, log: ([(b"img", "image/jpeg")],
+                        lambda profile, caller, log, product_image=None: ([(b"img", "image/jpeg")],
                                                       ["Panadol Extra 500mg"]))
     res2, calls2 = _run(monkeypatch, tmp_path, seen_lines=[
         "Autonomous AI Systems", "Book a Meeting",
         "XKZ Formula", "GlowMax 3000", "Vitaboost Pro",   # 3 invented labels
     ])
     assert res2 is None
+
+
+def test_gather_product_props_prioritizes_the_user_picked_product(monkeypatch):
+    """When the user PICKS a product (studio RAG picker), its REAL photo becomes the PRIMARY
+    composited prop so the poster SHOWS that exact product — parallel to the reel's featured image,
+    and kept even if the quality gate would drop it (the user chose it)."""
+    import poster.pipeline as pl
+    import reel.image_quality as iq
+
+    profile = {"visual": {"content_images": ["https://x/a.jpg", "https://x/b.jpg"]}}
+    picked = "https://x/hairgrowth.jpg"                    # NOT among the scraped content_images
+    monkeypatch.setattr(pl, "_image_bytes_from_url",
+                        lambda u: (b"IMG:" + u.encode(), "image/jpeg"))
+
+    # gate keeps the content images -> picked still LEADS and the set is capped at 2
+    monkeypatch.setattr(iq, "filter_usable_photos", lambda urls, max_keep=2: list(urls)[:max_keep])
+    props, _ = pl._gather_product_props(profile, None, lambda m: None, product_image=picked)
+    assert props[0] == (b"IMG:" + picked.encode(), "image/jpeg")   # the picked product is primary
+    assert len(props) <= 2
+
+    # even if the gate drops EVERY scraped image, the user's pick survives
+    monkeypatch.setattr(iq, "filter_usable_photos", lambda urls, max_keep=2: [])
+    props2, _ = pl._gather_product_props(profile, None, lambda m: None, product_image=picked)
+    assert props2 and props2[0] == (b"IMG:" + picked.encode(), "image/jpeg")
+
+    # no pick -> unchanged behaviour (scraped content images, in order)
+    monkeypatch.setattr(iq, "filter_usable_photos", lambda urls, max_keep=2: list(urls)[:max_keep])
+    props3, _ = pl._gather_product_props(profile, None, lambda m: None)
+    assert [p[0] for p in props3] == [b"IMG:https://x/a.jpg", b"IMG:https://x/b.jpg"]
 
 
 def test_prompt_product_props_mode_vs_unlabeled_mode():

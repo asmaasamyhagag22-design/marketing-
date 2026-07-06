@@ -2,8 +2,22 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1091 passed, 0 failed** (2026-07-05/06; grew from 880 as each audit fix
+Test suite: **1092 passed, 0 failed** (2026-07-05/06; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**Picked product now drives the POSTER's IMAGE too, not just its name (2026-07-06):** owner: "عملت حوار
+الراج وظبطت أنا أختار المنتج اللي عايزة أعمله الإعلان أو البوستر" — the studio RAG product-picker feeds
+BOTH the ad (reel) and the poster. AUDIT of the poster path found a gap: `poster/__main__.py`'s
+`--product-image` was declared but "reserved" — never wired — so picking a product set it as the hero
+OFFERING (name → concept) but the poster's IMAGE-conditioning still composited whatever the first two
+`content_images` were, NOT the picked product's real photo (the reel used the real image; the poster
+didn't). Fixed by threading `product_image` through `generate_poster → _try_oneshot →
+_gather_product_props`, where the picked photo is now the PRIMARY composited prop — kept even if the
+quality gate would drop it (the user chose it), second slot filled from the gated rest, its real label
+OCR'd into the fidelity allow-list. The studio poster uses `--engine oneshot` (dashboard/run.py), which
+is exactly the composited-prop path, so the picker now makes the poster SHOW the exact chosen product
+with its correct label (parallel to the reel's featured seed). +1 test. (Classic engine, CLI-only,
+still conditions on content_images generically — a measured follow-up if ever needed.)
 
 **Reel creative-director upgraded to the agency PERFORMANCE-AD playbook (2026-07-06):** owner supplied a
 detailed Senior-Creative-Director brief (Hook→Body→CTA spine; the SUBJECT+STYLE+CAMERA+LIGHTING+MOTION
