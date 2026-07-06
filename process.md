@@ -2,7 +2,7 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1037 passed, 0 failed** (2026-07-05/06; grew from 880 as each audit fix
+Test suite: **1042 passed, 0 failed** (2026-07-05/06; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
 
 **Active work — adversarial audit (2026-07-05):** a deep verified audit found 1 CRITICAL
@@ -419,6 +419,17 @@ Packages: `scraper/`, `business_profile/`, `grounding/`, `competitor/`, `brand/`
   mid-word → "بيقطع"). Now ONE continuous script → ONE call → ONE voice/performance, TIME-FIT to
   the footage (gentle `atempo` only if it runs long, else pad — never a mid-word cut). The
   delivery brief is tone-aware and no longer hardcodes an "appetizing food ad" (a vertical leak).
+- **End-card redesigned — logo always visible, elegant, no fake button (2026-07-06)**: the brand
+  end-card put the LOGO on the brand's OWN primary colour, so a GOLD jewelry logo VANISHED on a
+  gold ground (owner: "انت بظت اللوجو"); the name was chunky sans ("الكلام بشع"); and a solid
+  white "Catalog" BUTTON sat in a non-interactive video ("الزار دا إيه لازمته"). Now: the
+  background is chosen by the LOGO's luminance — a light/gold/white logo gets a DEEP brand-tinted
+  charcoal card (the real luxury gold-on-black look), a dark logo gets a brand-tinted IVORY card —
+  so the logo ALWAYS has contrast, plus a brand-colour halo behind it. Typography is tone-aware
+  (refined **Fraunces/Amiri serif** for luxury via `_reel_theme`, clean Space Grotesk otherwise).
+  The fake button is gone: elegant cards show the brand URL as the real "where to go"; non-elegant
+  cards use a hairline outlined chip. VISUALLY VERIFIED across 3 archetypes (Azza Fahmy gold→dark,
+  As-Salam navy→light, Orange orange→dark). (`endcard.py`; +5 hermetic tests.)
 - **Creative-director is tone/vertical-aware (2026-07-06)**: the Opus reel director's system
   prompt hard-coded FOOD dynamics into EVERY reel ("steam/smoke, flames, mouth-watering") — wrong
   for a jewelry house. `_vertical_mode(profile)` now swaps the motion + delivery vocabulary:

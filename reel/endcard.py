@@ -14,43 +14,143 @@ from typing import Any, Optional
 
 from reel.ffmpeg_tools import run_ffmpeg
 from reel.schemas import REEL_H, REEL_W
+from reel.textlayer import _FONTS_LINK
 
 
-def _endcard_html(logo_uri: Optional[str], name: str, cta: str, accent: str, accent2: str,
-                  rtl: bool, width: int, height: int) -> str:
-    align = "center"
-    logo_block = (f'<img class="logo" src="{logo_uri}">' if logo_uri else "")
-    cta_block = f'<div class="cta">{cta}</div>' if cta else ""
+# ----- small colour helpers (contrast-aware background) -----
+def _hex_to_rgb(h: str) -> tuple[int, int, int]:
+    s = (h or "").lstrip("#")
+    if len(s) == 3:
+        s = "".join(c * 2 for c in s)
+    if len(s) != 6:
+        return (22, 20, 26)
+    try:
+        return (int(s[0:2], 16), int(s[2:4], 16), int(s[4:6], 16))
+    except ValueError:
+        return (22, 20, 26)
+
+
+def _rgb_to_hex(rgb) -> str:
+    return "#%02x%02x%02x" % tuple(max(0, min(255, int(round(c)))) for c in rgb)
+
+
+def _mix(a, b, t: float):
+    return tuple(a[i] * (1 - t) + b[i] * t for i in range(3))
+
+
+def _luma(rgb) -> float:
+    return 0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]
+
+
+def _logo_mean_luma(logo_url: Optional[str]) -> float:
+    """Average luminance (0-255) of the logo's NON-transparent pixels — decides whether the card
+    goes dark (a light/gold/white logo pops on charcoal — the real luxury look) or light (a dark
+    wordmark pops on ivory). Missing/undecodable logo -> treat as light (255) -> dark card."""
+    if not logo_url:
+        return 255.0
+    try:
+        import io
+
+        from PIL import Image
+
+        from reel.video_provider import _load_reference_image
+        loaded = _load_reference_image(logo_url)
+        if not loaded:
+            return 255.0
+        data, _mime = loaded
+        im = Image.open(io.BytesIO(data)).convert("RGBA")
+        im.thumbnail((160, 160))
+        vis = [(r, g, b) for (r, g, b, a) in im.getdata() if a > 40]
+        if not vis:
+            return 255.0
+        return sum(_luma(p) for p in vis) / len(vis)
+    except Exception:
+        return 255.0
+
+
+def _endcard_html(logo_uri: Optional[str], name: str, cta: str, url_label: str,
+                  accent: str, accent2: str, rtl: bool, width: int, height: int,
+                  *, elegant: bool, dark: bool) -> str:
+    ac = _hex_to_rgb(accent)
+    if dark:
+        # deep brand-tinted charcoal (keeps the brand hue but dark, so a light/gold logo pops)
+        center = _rgb_to_hex(_mix(ac, (12, 11, 16), 0.72))
+        mid = _rgb_to_hex(_mix(ac, (8, 8, 11), 0.87))
+        bg = f"radial-gradient(120% 96% at 50% 42%, {center} 0%, {mid} 58%, #060608 100%)"
+        ink, sub = "#F5EFE9", "rgba(245,239,233,0.60)"
+        rule = _rgb_to_hex(_mix(ac, (255, 255, 255), 0.20))
+        cta_border = "rgba(245,239,233,0.45)"
+    else:
+        # brand-tinted ivory (a dark wordmark pops here)
+        center = _rgb_to_hex(_mix(ac, (255, 255, 255), 0.86))
+        mid = _rgb_to_hex(_mix(ac, (255, 255, 255), 0.93))
+        bg = f"radial-gradient(120% 96% at 50% 42%, {center} 0%, {mid} 62%, #F3ECE2 100%)"
+        ink, sub = "#2A1A1F", "rgba(42,26,31,0.58)"
+        rule = _rgb_to_hex(_mix(ac, (0, 0, 0), 0.12))
+        cta_border = _rgb_to_hex(_mix(ac, (0, 0, 0), 0.18))
+
+    head_family = ("'Fraunces','Amiri','Cairo',serif" if elegant
+                   else "'Space Grotesk','Cairo',system-ui,sans-serif")
+    name_weight = 500 if elegant else 700
+    name_ls = "0.05em" if elegant else "0.01em"
+    name_size = round(width * (0.058 if elegant else 0.07))
+
+    logo_block = (f'<div class="logo-wrap"><div class="halo"></div>'
+                  f'<img class="logo" src="{logo_uri}"></div>' if logo_uri else "")
     name_block = f'<div class="name">{name}</div>' if name else ""
+    # The old chunky white "button" implied a tap in a NON-interactive video (owner: "الزار دا
+    # إيه لازمته"). Elegant brands: no fake button — the brand's own URL is the real "where to
+    # go", set as a refined letter-spaced line. Non-elegant: a light hairline CTA chip + the URL.
+    cta_block = ("" if (elegant or not cta)
+                 else f'<div class="cta">{cta}</div>')
+    url_block = f'<div class="url">{url_label}</div>' if url_label else ""
+
     return f"""<!doctype html><html dir="{'rtl' if rtl else 'ltr'}" lang="ar"><head><meta charset="utf-8">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&family=Cairo:wght@700;800&display=swap" rel="stylesheet">
+{_FONTS_LINK}
 <style>
  html,body{{margin:0;padding:0;width:{width}px;height:{height}px;}}
  .card{{position:relative;width:{width}px;height:{height}px;overflow:hidden;
-   font-family:'Space Grotesk','Cairo',system-ui,sans-serif;color:#fff;text-align:{align};
-   background:radial-gradient(120% 90% at 50% 38%, {accent} 0%, {accent2} 55%, #05070c 100%);}}
- /* soft light-beam motif — a premium, brand-coloured GRAPHIC (universal; never tints people) */
- .beam{{position:absolute;left:50%;top:-10%;width:8px;height:120%;transform-origin:top center;
-   background:linear-gradient(to bottom, rgba(255,255,255,.55), rgba(255,255,255,0));
-   filter:blur(3px);opacity:.5;}}
- .b1{{transform:translateX(-50%) rotate(-18deg);}}
- .b2{{transform:translateX(-50%) rotate(0deg);opacity:.35;}}
- .b3{{transform:translateX(-50%) rotate(18deg);}}
+   font-family:'Space Grotesk','Cairo',system-ui,sans-serif;color:{ink};text-align:center;
+   background:{bg};}}
+ .grain{{position:absolute;inset:0;opacity:.05;pointer-events:none;
+   background:radial-gradient(circle at 50% 42%, rgba(255,255,255,.10) 0%, transparent 42%);}}
  .wrap{{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);
-   display:flex;flex-direction:column;align-items:center;gap:38px;padding:0 90px;box-sizing:border-box;}}
- .logo{{height:{round(height*0.16)}px;max-width:76%;object-fit:contain;
-   filter:drop-shadow(0 6px 30px rgba(0,0,0,.6));}}
- .name{{font-family:'Cairo','Space Grotesk',sans-serif;font-weight:800;
-   font-size:{round(width*0.075)}px;letter-spacing:0.5px;text-shadow:0 3px 18px rgba(0,0,0,.6);}}
- .cta{{display:inline-block;font-weight:800;font-size:{round(width*0.05)}px;
-   background:#fff;color:#111;padding:0.6em 1.8em;border-radius:999px;
-   box-shadow:0 12px 34px rgba(0,0,0,.5);}}
+   display:flex;flex-direction:column;align-items:center;gap:34px;padding:0 96px;box-sizing:border-box;}}
+ .logo-wrap{{position:relative;display:flex;align-items:center;justify-content:center;}}
+ .halo{{position:absolute;width:170%;height:270%;left:-35%;top:-85%;z-index:0;pointer-events:none;
+   background:radial-gradient(circle at 50% 50%, {accent}5c 0%, {accent}26 34%, transparent 66%);
+   filter:blur(34px);}}
+ .logo{{position:relative;z-index:1;height:{round(height*0.165)}px;max-width:74%;object-fit:contain;
+   filter:drop-shadow(0 8px 26px rgba(0,0,0,{'0.55' if dark else '0.16'}));}}
+ .rule{{width:56px;height:1px;background:{rule};opacity:.85;}}
+ .name{{font-family:{head_family};font-weight:{name_weight};font-size:{name_size}px;
+   letter-spacing:{name_ls};line-height:1.16;max-width:82%;}}
+ .cta{{font-family:'Space Grotesk','Cairo',sans-serif;font-weight:600;
+   font-size:{round(width*0.032)}px;letter-spacing:0.14em;text-transform:uppercase;color:{ink};
+   border:1px solid {cta_border};border-radius:999px;padding:0.7em 1.7em;}}
+ .url{{font-family:'Space Grotesk','Cairo',sans-serif;font-weight:600;font-size:{round(width*0.028)}px;
+   letter-spacing:0.18em;text-transform:uppercase;color:{sub};}}
 </style></head>
-<body><div class="card">
- <div class="beam b1"></div><div class="beam b2"></div><div class="beam b3"></div>
- <div class="wrap">{logo_block}{name_block}{cta_block}</div>
+<body><div class="card"><div class="grain"></div>
+ <div class="wrap">{logo_block}<div class="rule"></div>{name_block}{cta_block}{url_block}</div>
 </div></body></html>"""
+
+
+def _url_label(profile: dict) -> str:
+    """A clean domain for the end-card 'where to go' line (eg.azzafahmy.com -> azzafahmy.com)."""
+    from urllib.parse import urlparse
+    for k in ("final_url", "source_url"):
+        v = profile.get(k)
+        if isinstance(v, dict):
+            v = v.get("value")
+        if isinstance(v, str) and v.strip():
+            host = urlparse(v if "//" in v else "http://" + v).netloc.split("@")[-1].split(":")[0].lower()
+            parts = [p for p in host.split(".") if p]
+            # drop leading www / common country-shop subdomains so the brand domain reads clean
+            while len(parts) > 2 and parts[0] in ("www", "eg", "m", "shop", "store", "en", "ar"):
+                parts = parts[1:]
+            return ".".join(parts)
+    return ""
 
 
 def render_endcard(profile: dict, out_png: Path, *, width: int = REEL_W, height: int = REEL_H) -> Optional[Path]:
@@ -59,7 +159,7 @@ def render_endcard(profile: dict, out_png: Path, *, width: int = REEL_W, height:
         from playwright.sync_api import sync_playwright
 
         from reel.from_profile import build_reel_brief, is_rtl
-        from reel.text_overlay import _appropriate_cta
+        from reel.text_overlay import _appropriate_cta, _reel_theme
         from reel.textlayer import _logo_data_uri
 
         brief = build_reel_brief(profile)
@@ -70,7 +170,13 @@ def render_endcard(profile: dict, out_png: Path, *, width: int = REEL_W, height:
         accent = pal[0] if pal else "#1b2340"
         accent2 = pal[1] if len(pal) > 1 else accent
         logo_uri = _logo_data_uri(brief.logo_url) if brief.logo_url else None
-        html = _endcard_html(logo_uri, name, cta, accent, accent2, is_rtl(name), width, height)
+        # Theme (elegant serif for luxury/fashion, same signal as the captions) + a contrast-aware
+        # background so the logo is never lost against a same-hue brand colour (the gold-on-gold
+        # end-card the owner flagged). A light/gold/white logo -> dark card; a dark logo -> light.
+        elegant = _reel_theme(profile) == "elegant"
+        dark = _logo_mean_luma(brief.logo_url) >= 130.0
+        html = _endcard_html(logo_uri, name, cta, _url_label(profile), accent, accent2,
+                             is_rtl(name), width, height, elegant=elegant, dark=dark)
 
         out_png = Path(out_png)
         out_png.parent.mkdir(parents=True, exist_ok=True)
