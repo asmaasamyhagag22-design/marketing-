@@ -193,10 +193,10 @@ def main():
     # Places peers). Best-effort: any failure (offline / no key) degrades to [] — never blocks.
     trends: list = []
     try:
-        from trends import keywords_from_profile, top_trends
+        from trends import keywords_from_profile, top_trends_bounded
         kws = keywords_from_profile(profile_dict or {})
-        if kws:
-            trends = top_trends(kws, require_match=True, top_k=6)
+        if kws:                              # HARD 12s deadline — a hung source never blocks analyze
+            trends = top_trends_bounded(kws, timeout_s=12.0, require_match=True, top_k=6)
     except Exception:
         trends = []
 

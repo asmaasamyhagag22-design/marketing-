@@ -92,8 +92,11 @@ def analyze(url: str, *, out_dir: str = "outputs", on_progress=None) -> str | No
     P["out"].mkdir(parents=True, exist_ok=True)
     _emit(on_progress, "run_start", "Analyze", f"\n* Baseera - analyzing {url}\n")
 
+    # 1500s (25 min): a full competitive analysis of a rich e-commerce brand (30-page crawl +
+    # discovering & scraping each peer + profile LLM + SWOT) genuinely exceeded the old 900s and
+    # was killed mid-run (MEASURED: rawafrican.net). The subprocess prints its own [1/5]... progress.
     ok, _ = _run([py, "competitor/full_run.py", url, "--out", str(P["result"]), "--no-themes"],
-                 timeout=900, label="Scrape + Profile + Competitors + SWOT", on_progress=on_progress)
+                 timeout=1500, label="Scrape + Profile + Competitors + SWOT", on_progress=on_progress)
     if not ok or not P["result"].is_file():
         return None
 

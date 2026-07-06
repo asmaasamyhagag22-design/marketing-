@@ -1,10 +1,32 @@
 """Trend engine — hermetic (injected fake sources, no network)."""
 from __future__ import annotations
 
+import time
+
 from trends import (
-    TrendItem, fetch_trends, rank_trends, match_to_keywords, top_trends,
+    TrendItem, fetch_trends, rank_trends, match_to_keywords, top_trends, top_trends_bounded,
     keywords_from_profile,
 )
+
+
+def test_top_trends_bounded_abandons_a_slow_source(monkeypatch):
+    # a hung/slow trend source must NEVER block analyze — bounded fetch returns [] fast
+    import trends.engine as eng
+
+    def _slow(*a, **k):
+        time.sleep(5)
+        return ["should-not-appear"]
+
+    monkeypatch.setattr(eng, "top_trends", _slow)
+    t0 = time.monotonic()
+    out = eng.top_trends_bounded(["ai"], timeout_s=0.3)
+    assert out == [] and (time.monotonic() - t0) < 2.0     # returned ~immediately, not after 5s
+
+
+def test_top_trends_bounded_returns_items_when_fast(monkeypatch):
+    import trends.engine as eng
+    monkeypatch.setattr(eng, "top_trends", lambda *a, **k: ["a", "b"])
+    assert eng.top_trends_bounded(["x"], timeout_s=2.0) == ["a", "b"]
 
 
 class _FakeSource:

@@ -122,10 +122,10 @@ def swot_from_profile(req: SwotFromProfileRequest) -> SwotResponse:
         # On-topic market trends -> brand-level Opportunities/Threats (best-effort; [] on failure).
         trends: list = []
         try:
-            from trends import keywords_from_profile, top_trends
+            from trends import keywords_from_profile, top_trends_bounded
             kws = keywords_from_profile(profile or {})
             if kws:
-                trends = top_trends(kws, require_match=True, top_k=6)
+                trends = top_trends_bounded(kws, timeout_s=12.0, require_match=True, top_k=6)
         except Exception:
             trends = []
 

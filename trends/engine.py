@@ -148,3 +148,23 @@ def top_trends(
         items = [it for it in items if it.matched_terms]
     items.sort(key=lambda it: (len(it.matched_terms), it.trend_score), reverse=True)
     return items[: max(0, top_k)]
+
+
+def top_trends_bounded(keywords: list[str], *, timeout_s: float = 12.0, **kwargs) -> list[TrendItem]:
+    """`top_trends` with a HARD wall-clock deadline. Trend sources do live network I/O, so a slow or
+    hanging source must NEVER block the caller (e.g. the SWOT analysis) — a miss just degrades to []
+    (the SWOT already handles empty trends). Runs the fetch on a daemon thread and abandons it if it
+    overruns; returns [] on timeout or any error."""
+    import threading
+    box: dict = {"items": []}
+
+    def _work():
+        try:
+            box["items"] = top_trends(keywords, **kwargs)
+        except Exception:
+            box["items"] = []
+
+    t = threading.Thread(target=_work, daemon=True)
+    t.start()
+    t.join(timeout_s)
+    return box["items"] if not t.is_alive() else []

@@ -8,12 +8,13 @@ from .sources import (
     HackerNewsSource, RedditSource, DevToSource,
 )
 from .engine import (
-    fetch_trends, rank_trends, match_to_keywords, top_trends, keywords_from_profile,
+    fetch_trends, rank_trends, match_to_keywords, top_trends, top_trends_bounded,
+    keywords_from_profile,
 )
 
 __all__ = [
     "TrendItem", "TrendSource", "default_trend_sources",
     "HackerNewsSource", "RedditSource", "DevToSource",
-    "fetch_trends", "rank_trends", "match_to_keywords", "top_trends",
+    "fetch_trends", "rank_trends", "match_to_keywords", "top_trends", "top_trends_bounded",
     "keywords_from_profile",
 ]
