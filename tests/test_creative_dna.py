@@ -12,6 +12,18 @@ from brand.creative_dna import (
 )
 from business_profile.llm.caller import MockCaller
 
+
+def _tiny_png() -> bytes:
+    """A REAL, decodable tiny PNG. The DNA vision path now sanitizes references (decode +
+    re-encode, drop the undecodable) so a bad brand-ad image can't 400 the whole call — so the
+    tests must feed VALID image bytes, not the old placeholder b"x"."""
+    import io
+
+    from PIL import Image
+    buf = io.BytesIO()
+    Image.new("RGB", (12, 12), (180, 120, 60)).save(buf, "PNG")
+    return buf.getvalue()
+
 # A real brand: its own site + a known Facebook profile (handle 'WeBrand').
 _PROFILE = {
     "name": {"value": "WE"},
@@ -84,7 +96,7 @@ def test_brand_owned_kept_others_rejected_counts_recorded():
     captured = {}
     def fetch(urls):
         captured["urls"] = list(urls)
-        return [(u, b"x", "image/jpeg") for u in urls]
+        return [(u, _tiny_png(), "image/png") for u in urls]
     dna = build_creative_dna(_PROFILE, caller=MockCaller({"creative_dna": _dna_resp()}),
                              _harvester=lambda *a, **k: harvested, _image_fetcher=fetch)
     assert dna.harvested_total == 4 and dna.kept_after_brand_filter == 2
@@ -99,7 +111,7 @@ def test_no_brand_owned_falls_back_to_site_images():
     harvested = [_cand("https://img/news.jpg", "adsoftheworld.com", "https://adsoftheworld.com/x")]
     dna = build_creative_dna(_PROFILE, caller=MockCaller({"creative_dna": _dna_resp()}),
                              _harvester=lambda *a, **k: harvested,
-                             _image_fetcher=lambda urls: [(u, b"x", "image/jpeg") for u in urls])
+                             _image_fetcher=lambda urls: [(u, _tiny_png(), "image/png") for u in urls])
     assert dna.kept_after_brand_filter == 0          # nothing brand-owned from search
     assert dna.site_images_used == 1                  # but the scraped site image carries it
     assert dna.used_vision is True
@@ -156,7 +168,7 @@ def test_tier2_reputable_portfolio_only_when_brand_named():
 def _shot_profile(tmp_path):
     """A profile whose visual points at a real (tiny) homepage screenshot on disk."""
     shot = tmp_path / "00_homepage_full.png"
-    shot.write_bytes(b"\x89PNG\r\n\x1a\nfakepixels")
+    shot.write_bytes(_tiny_png())
     return {
         "name": {"value": "SmallBrand"},
         "source_url": "https://smallbrand.example/",
@@ -182,7 +194,7 @@ def test_homepage_screenshot_feeds_vision_first_with_stock_caveat(tmp_path):
     # No ads, no content photos — the designed page alone builds a REAL vision DNA.
     assert dna.used_vision is True
     assert dna.homepage_screenshot_used is True
-    assert caller.images and caller.images[0][0] == shot.read_bytes()   # screenshot FIRST
+    assert caller.images and len(caller.images) == 1   # only the screenshot (sanitized JPEG)
     # The owner's caveat is in the prompt: embedded photos may be stock/supplier shots.
     assert "STOCK" in caller.system or "stock" in caller.system
     assert "HOMEPAGE" in caller.user

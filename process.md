@@ -500,9 +500,12 @@ Packages: `scraper/`, `business_profile/`, `grounding/`, `competitor/`, `brand/`
      but English-COPY brand like Azza Fahmy, where the copy-language signal is absent). The
      classic garble that remains is caught by the vision-QA gate (pass=False, flagged not shipped).
      3 hermetic tests (reserve-corner prompt; deterministic composite; unchanged).
-  2. **`creative_dna` vision fails 400 `INVALID_ARGUMENT: Provided image is not valid`** on some of
-     the brand's real ad images → degrades gracefully to `dna=no` (no crash) but LOSES the DNA
-     signal for that run. Needs a pre-validate/transcode (or skip-bad-image) before the Pro vision call.
+  2. **`creative_dna` vision 400 `Provided image is not valid` — FIXED 2026-07-06.** A single
+     undecodable brand-ad reference (an SVG, a truncated download, an HTML error page returned as
+     bytes) 400'd the WHOLE vision call → the brand lost its DNA signal. Fix:
+     `brand.creative_dna._sanitize_vision_images` decodes + re-encodes every reference to a clean
+     JPEG the model accepts and DROPS the undecodable, before the call; if none survive, vision is
+     skipped honestly (`used_vision=False`). Tests feed valid tiny images now.
   3. **Trends SOURCES are tech-centric** (Hacker News / dev.to / Reddit). The engine works
      (keywords/dedup/scoring/graceful source-failure), but for a consumer/fashion/jewelry brand the
      items are off-domain + low-relevance (buttons/AI/compilers for a jeweller). This is a SOURCE-

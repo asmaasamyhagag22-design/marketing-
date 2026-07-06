@@ -248,6 +248,33 @@ def _homepage_screenshot(profile: Any) -> Optional[tuple[str, bytes, str]]:
     return None
 
 
+def _sanitize_vision_images(items: list[tuple[bytes, str]]) -> list[tuple[bytes, str]]:
+    """Decode + re-encode each (bytes, mime) to a clean JPEG the vision model accepts, dropping
+    any that don't decode — an SVG, a truncated download, an HTML error page returned as bytes,
+    an unsupported codec. Prevents ONE bad brand-ad reference from 400-ing the whole DNA call
+    ('Provided image is not valid' — measured on Azza Fahmy, which then lost its DNA signal)."""
+    import io
+
+    out: list[tuple[bytes, str]] = []
+    for b, _m in items:
+        if not b:
+            continue
+        try:
+            from PIL import Image
+
+            img = Image.open(io.BytesIO(b))
+            img.load()                          # force full decode (catches truncated/corrupt)
+            if img.mode != "RGB":
+                img = img.convert("RGB")
+            img.thumbnail((1568, 1568))          # keep the payload sane
+            buf = io.BytesIO()
+            img.save(buf, format="JPEG", quality=88)
+            out.append((buf.getvalue(), "image/jpeg"))
+        except Exception:                        # noqa: BLE001 — a bad reference is simply skipped
+            continue
+    return out
+
+
 def build_creative_dna(
     profile: dict[str, Any],
     *,
@@ -351,9 +378,17 @@ def build_creative_dna(
         + "\n".join(f"[{i}] {u}" for i, u in enumerate(labels))
     )
 
+    # Sanitize (decode + re-encode to JPEG, drop the undecodable) so one bad reference image
+    # can't 400 the whole call. If nothing valid survives, skip vision honestly (no DNA).
+    vision_images = _sanitize_vision_images(
+        ([(shot[1], shot[2])] if shot else []) + [(b, m) for (_u2, b, m) in images]
+    )
+    if not vision_images:
+        return BrandCreativeDNA(
+            business_name=name, used_vision=False, references_seen=seen_urls,
+            note="no decodable reference images", **_counts,
+        )
     try:
-        vision_images = ([(shot[1], shot[2])] if shot else []) \
-            + [(b, m) for (_u2, b, m) in images]
         resp, _u = caller(
             system, user, _DnaResponse, group_name="creative_dna",
             images=vision_images,
