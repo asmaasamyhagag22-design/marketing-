@@ -63,10 +63,10 @@ def test_elegant_prompt_is_worn_and_not_food():
     # elegance vocabulary: the product WORN, light on metal — NOT sizzling grills
     assert "WORN" in p and "elegant" in p.lower()
     assert "sizzling" not in p.lower() and "steam" not in p.lower()
-    # minimal on-screen text is now a hard policy, not "a caption per scene"
-    assert "TEXT-FREE" in p and "AT MOST" in p
-    # a coherent STORY arc, heritage-aware, still fact-disciplined
-    assert "STORY" in p and "never invent history" in p
+    # minimal on-screen text is still the policy (scene 0 names the product; others empty)
+    assert "TEXT-FREE" in p
+    # a required AD SPINE (Slice 3), heritage-aware, still fact-disciplined
+    assert "AD SPINE" in p and "never invent history" in p
     assert "invent NO facts" in p
 
 
@@ -80,3 +80,14 @@ def test_generic_prompt_has_no_food_or_worn_bias():
     p = _system_prompt(5, "en", "generic")
     assert "sizzling" not in p.lower()
     assert "cinematic MOTION" in p and "TEXT-FREE" in p
+
+
+def test_prompt_requires_an_ad_arc_so_the_reel_says_what_it_advertises():
+    # Slice 3 (engineer: "I can't tell what it advertises"): the reel MUST name the brand + product
+    # + benefit + CTA, be self-explanatory fast, and never drift into a store-kiosk montage.
+    p = _system_prompt(5, "en", "generic")
+    for beat in ("HOOK", "WHAT IT IS", "BENEFIT", "CTA"):
+        assert beat in p, beat
+    assert "by scene 2" in p                                  # self-explanatory in the first seconds
+    assert "do NOT narrate store" in p and "kiosks" in p      # no vague brand/location montage
+    assert "SELF-CHECK" in p and "NAMES the brand" in p       # closing verification
