@@ -89,3 +89,59 @@ def extract_ajax_detail_urls(
                 if len(out) >= max_urls:
                     return out
     return out
+
+
+def _same_origin(url: str, base: str) -> bool:
+    from urllib.parse import urlparse
+    try:
+        return urlparse(url).netloc == urlparse(base).netloc
+    except Exception:  # noqa: BLE001
+        return False
+
+
+def _default_script_fetch(url: str) -> Optional[str]:
+    """Guarded, size-capped GET of a same-origin script body."""
+    try:
+        from scraper.url_utils import is_safe_public_url
+        if not is_safe_public_url(url):
+            return None
+        import urllib.request
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=15) as r:   # noqa: S310 — guarded above
+            return r.read(1_000_000).decode("utf-8", "replace")
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def discover_ajax_details(html: str, base_url: str, *, fetch=None, max_scripts: int = 8) -> list[str]:
+    """End-to-end discovery: gather the page's inline + SAME-ORIGIN external JS (that's where the
+    `.load(...)` template lives), then resolve the JS-built detail URLs. `fetch(url)->str|None`
+    fetches a script body (injectable for tests; defaults to a guarded GET). Only same-origin
+    scripts are fetched (the template is first-party; skip jQuery/CDN). Never raises."""
+    try:
+        from bs4 import BeautifulSoup
+        soup = BeautifulSoup(html or "", "html.parser")
+    except Exception:  # noqa: BLE001
+        return []
+    js_texts: list[str] = []
+    externals: list[str] = []
+    for s in soup.find_all("script"):
+        src = s.get("src")
+        if src:
+            u = urljoin(base_url, src)
+            if _same_origin(u, base_url):
+                externals.append(u)
+        else:
+            t = s.string or s.get_text() or ""
+            if t.strip():
+                js_texts.append(t)
+    if externals:
+        f = fetch or _default_script_fetch
+        for u in externals[:max_scripts]:
+            try:
+                body = f(u)
+            except Exception:  # noqa: BLE001
+                body = None
+            if body:
+                js_texts.append(body)
+    return extract_ajax_detail_urls(html, base_url, js_texts)

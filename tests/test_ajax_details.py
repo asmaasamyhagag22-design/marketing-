@@ -5,7 +5,7 @@ in JS from a data-attribute and never appears in the HTML.
 """
 from __future__ import annotations
 
-from scraper.ajax_details import extract_ajax_detail_urls
+from scraper.ajax_details import discover_ajax_details, extract_ajax_detail_urls
 
 # The exact NTI shape: div.courseLinks a[data-target], and a .load() that wraps data-target in a
 # pages/modules/<id>.html path with a random cache-buster query.
@@ -62,4 +62,28 @@ def test_no_template_returns_empty():
 def test_dedupes_repeated_targets():
     html = '<a data-target="5">a</a><a data-target="5">b</a>'
     urls = extract_ajax_detail_urls(html, "https://s.example/", ['x.load("m/"+e.getAttribute("data-target")+".html")'])
+    assert urls == ["https://s.example/m/5.html"]
+
+
+def test_discover_gathers_external_same_origin_js(monkeypatch):
+    # The NTI shape: the .load() template lives in an EXTERNAL same-origin script.
+    html = ('<html><body><div class="courseLinks"><a data-target="2631">X</a></div>'
+            '<script src="/dey/js/popupCourse.js"></script>'
+            '<script src="https://cdn.other.com/jquery.js"></script></body></html>')
+    fetched = []
+
+    def fake_fetch(u):
+        fetched.append(u)
+        return 'x.load("pages/modules/"+link.getAttribute("data-target")+".html?id="+r)'
+    urls = discover_ajax_details(html, "https://www.nti.sci.eg/dey/coursesev.php?catID=205",
+                                 fetch=fake_fetch)
+    assert urls == ["https://www.nti.sci.eg/dey/pages/modules/2631.html"]
+    # only the SAME-ORIGIN script is fetched (the CDN jQuery is skipped)
+    assert fetched == ["https://www.nti.sci.eg/dey/js/popupCourse.js"]
+
+
+def test_discover_uses_inline_script_without_any_fetch():
+    html = ('<a data-target="5">x</a>'
+            '<script>b.load("m/"+e.getAttribute("data-target")+".html")</script>')
+    urls = discover_ajax_details(html, "https://s.example/", fetch=lambda u: None)
     assert urls == ["https://s.example/m/5.html"]

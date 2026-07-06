@@ -793,6 +793,59 @@ def scrape(input_url: str, output_root: str = "scrapes", *, light: bool = False)
                         if normalize_url(s[0]) != normalize_url(normalized)
                     ]
 
+                # URL-less 'modal' detail discovery: some sites reveal a page's real content via a
+                # JS .load(...) that BUILDS the detail URL from a data-attribute (no href) — e.g.
+                # NTI course popovers -> pages/modules/<data-target>.html. We resolve those and add
+                # them to the frontier so their text is actually scraped. Bounded by a per-crawl cap
+                # + a shared JS-body cache (the .load template lives in ONE first-party script).
+                _js_cache: dict = {}
+
+                def _cached_js(u, _c=_js_cache):
+                    if u not in _c:
+                        from .ajax_details import _default_script_fetch
+                        _c[u] = _default_script_fetch(u)
+                    return _c[u]
+
+                _ajax_added = 0
+                _AJAX_MAX = 40
+                frontier_norms = {normalize_url(s[0]) for s in subpages}
+
+                def _add_ajax_details(page_html: str, page_final_url: str, insert_at: int = 0) -> int:
+                    """Resolve JS-built detail URLs on a page and splice them into the frontier at
+                    `insert_at` (right AFTER the page being processed) so they're fetched NEXT —
+                    they're the real content the user came for, not tail candidates. Returns how
+                    many were added. Best-effort; never raises into the crawl."""
+                    nonlocal _ajax_added, page_cap
+                    if light or _ajax_added >= _AJAX_MAX or not page_html:
+                        return 0
+                    added = 0
+                    try:
+                        from .ajax_details import discover_ajax_details
+                        pos = insert_at
+                        for du in discover_ajax_details(page_html, page_final_url, fetch=_cached_js):
+                            ndu = normalize_url(du)
+                            if ndu in frontier_norms:
+                                continue
+                            frontier_norms.add(ndu)
+                            dpt, dtier = classify_url(du)
+                            subpages.insert(pos, (du, dpt, dtier, ""))   # splice in ahead of the tail
+                            pos += 1
+                            added += 1
+                            _ajax_added += 1
+                            if _ajax_added >= _AJAX_MAX:
+                                break
+                    except Exception:  # noqa: BLE001 — never fail the crawl over this
+                        return added
+                    # Give the resolved detail pages their OWN slots so they don't push planned
+                    # pages past the cap (the time budget still bounds the crawl). Bounded by _AJAX_MAX.
+                    page_cap += added
+                    return added
+
+                _home_ajax = _add_ajax_details(home_result.html or "", home_result.final_url)
+                if _home_ajax:
+                    manifest.notes.append(
+                        f"ajax_modal_details(home): +{_home_ajax} JS-built detail URLs resolved")
+
                 # H2 redirect-dedup: a selected subpage URL can redirect to (or serve) a
                 # page we ALREADY fetched (the homepage, or another subpage). Seed the
                 # set with the homepage's final url; each fetched subpage is checked via
@@ -886,6 +939,14 @@ def scrape(input_url: str, output_root: str = "scrapes", *, light: bool = False)
 
                         manifest.pages.append(sub_record)
                         all_links.extend(sub_links)
+                        # This subpage may itself reveal url-less 'modal' details (e.g. the NTI
+                        # category page carries the course popovers). Splice them in right AFTER the
+                        # current page (0-based index i) so they're fetched next, not at the tail.
+                        _sub_ajax = _add_ajax_details(sub_result.html or "", sub_result.final_url,
+                                                      insert_at=i)
+                        if _sub_ajax:
+                            manifest.notes.append(
+                                f"ajax_modal_details({sub_url}): +{_sub_ajax} JS-built detail URLs")
                         # H1: re-evaluate the store signal over the ACCUMULATED links as
                         # subpages reveal more product URLs, and upgrade the budget ONCE if
                         # it crosses the threshold — the one-shot homepage detection above
