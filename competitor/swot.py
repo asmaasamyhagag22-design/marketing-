@@ -86,11 +86,25 @@ def unique_insight_texts(profile) -> List[str]:
     return out
 
 
+def _prepend_unique(dst: List[SWOTItem], items: List[SWOTItem]) -> None:
+    """Prepend `items` to `dst` (so they LEAD), skipping any whose text already appears — used to
+    put brand-level strengths and market-trend O/T ahead of the mechanical lines without dupes."""
+    existing = {s.text.strip().lower() for s in dst}
+    fresh: List[SWOTItem] = []
+    for it in items:
+        k = it.text.strip().lower()
+        if k and k not in existing:
+            existing.add(k)
+            fresh.append(it)
+    dst[:0] = fresh
+
+
 def synthesize_swot(
     matrix: ComparativeGapMatrix,
     themes: Optional[List[ReviewTheme]] = None,
     unique_insights: Optional[List[str]] = None,
     profile: Optional[dict] = None,
+    trends: Optional[list] = None,
 ) -> SWOT:
     themes = themes or []
     swot = SWOT()
@@ -212,14 +226,20 @@ def synthesize_swot(
             brand = strengths_from_profile(profile, EvidenceLedger.from_profile(profile))
         except Exception:  # noqa: BLE001 — a signal-mining error must never break the SWOT
             brand = []
-        existing = {s.text.strip().lower() for s in swot.strengths}
-        fresh: List[SWOTItem] = []
-        for it in brand:
-            k = it.text.strip().lower()
-            if k and k not in existing:
-                existing.add(k)
-                fresh.append(it)
-        swot.strengths[:0] = fresh   # prepend brand-level strengths
+        _prepend_unique(swot.strengths, brand)   # brand-level strengths lead
+
+    # Market-shift Opportunities/Threats from on-topic TRENDS — the signal the SWOT never had, so
+    # an ecommerce brand with no Places peers and no reachable reviews still gets real O/T (not an
+    # empty quadrant). Grounded: junk hosts dropped + Ledger-gated inside the helper. Prepended so
+    # market signals lead; trends=None/[] -> unchanged (regression-safe).
+    if trends:
+        try:
+            from competitor.brand_signals import opportunities_threats_from_trends
+            t_opps, t_threats = opportunities_threats_from_trends(profile or {}, trends)
+        except Exception:  # noqa: BLE001
+            t_opps, t_threats = [], []
+        _prepend_unique(swot.opportunities, t_opps)
+        _prepend_unique(swot.threats, t_threats)
 
     if not any([swot.strengths, swot.weaknesses, swot.opportunities, swot.threats]):
         swot.notes.append("No subject dimensions were known either — the scrape "

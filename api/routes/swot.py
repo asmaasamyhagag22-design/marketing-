@@ -119,9 +119,19 @@ def swot_from_profile(req: SwotFromProfileRequest) -> SwotResponse:
         except Exception:
             themes = []
 
+        # On-topic market trends -> brand-level Opportunities/Threats (best-effort; [] on failure).
+        trends: list = []
+        try:
+            from trends import keywords_from_profile, top_trends
+            kws = keywords_from_profile(profile or {})
+            if kws:
+                trends = top_trends(kws, require_match=True, top_k=6)
+        except Exception:
+            trends = []
+
         swot = synthesize_swot(matrix, themes=themes,
                                unique_insights=unique_insight_texts(profile),
-                               profile=profile)
+                               profile=profile, trends=trends)
         if subject_places is not None:
             swot.notes.append(
                 f"subject Places listing matched: {subject_places.name} "

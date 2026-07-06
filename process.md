@@ -2,7 +2,7 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1052 passed, 0 failed** (2026-07-05/06; grew from 880 as each audit fix
+Test suite: **1055 passed, 0 failed** (2026-07-05/06; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
 
 **Active work — adversarial audit (2026-07-05):** a deep verified audit found 1 CRITICAL
@@ -348,8 +348,20 @@ Packages: `scraper/`, `business_profile/`, `grounding/`, `competitor/`, `brand/`
   "No WhatsApp contact channel", "Single-language site (missing Arabic/English)") — TEXT only,
   citation/evidence/claim_strength unchanged — in `_standalone_from_subject`. Keyed off dim.key
   with a clean label fallback (a new dimension never regresses to a dump). +2 tests (2 legacy
-  standalone assertions updated). NEXT SLICES (designed): trends -> Opportunities/Threats (S3),
-  readiness-gap Weaknesses (S4).
+  standalone assertions updated).
+- **Trend-driven Opportunities/Threats (2026-07-06, SWOT-quality Slice 3)**: the SWOT had no
+  market-shift signal — an online brand with no Places peers and no reachable reviews got EMPTY
+  O/T. `brand_signals.opportunities_threats_from_trends(profile, trends)` maps on-topic
+  `TrendItem`s to Opportunities ("Rising interest in {terms}: {title}") or Threats (decline/
+  regulation/ban keywords → "Category headwind on {terms}: {title}"), each citing the trend URL,
+  `directional_not_validated`. GROUNDED: junk/aggregator hosts dropped via `is_reputable_web_source`
+  then every line **Ledger-gated** (candidates indexed as web evidence, `from_profile(..., swot=)`).
+  `synthesize_swot(..., trends=None)` gains the param and PREPENDS them (market signals lead);
+  `None`/`[]` is byte-identical (regression-safe). Callers (`full_run.py`, `api/routes/swot.py`)
+  fetch `top_trends(keywords_from_profile(profile), require_match=True, top_k=6)` best-effort
+  (any failure → [], never blocks). MEASURED: Raw African O/T 0/0 → 2 opps + 1 threat from
+  synthetic trends (regulation → threat; junk host + off-topic dropped). +3 hermetic tests.
+  REMAINING: readiness-gap Weaknesses (S4).
 - **TOWS grounding gate fails CLOSED** (2026-07-05): a ledger error on a strategy's text
   now returns not-grounded → the pairing keeps its GROUNDED deterministic template instead
   of shipping the LLM's unverified text (was fail-open — an error let unverified strategy

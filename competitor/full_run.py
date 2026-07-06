@@ -188,9 +188,21 @@ def main():
     # proof, Ledger-gated) and TOWS reuses it downstream.
     profile_dict = (profile.model_dump(mode="json")
                     if hasattr(profile, "model_dump") else (profile if isinstance(profile, dict) else None))
+
+    # On-topic market trends -> brand-level Opportunities/Threats (esp. for online brands with no
+    # Places peers). Best-effort: any failure (offline / no key) degrades to [] — never blocks.
+    trends: list = []
+    try:
+        from trends import keywords_from_profile, top_trends
+        kws = keywords_from_profile(profile_dict or {})
+        if kws:
+            trends = top_trends(kws, require_match=True, top_k=6)
+    except Exception:
+        trends = []
+
     swot = synthesize_swot(matrix, themes=themes,
                            unique_insights=unique_insight_texts(profile),
-                           profile=profile_dict)
+                           profile=profile_dict, trends=trends)
 
     # TOWS synthesis (strategies + priority actions) from the cited SWOT —
     # deterministic here (no extra LLM cost on the CLI path); never raises.

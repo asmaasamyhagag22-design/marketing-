@@ -118,3 +118,73 @@ def strengths_from_profile(profile: Any, ledger: Any = None) -> list[SWOTItem]:
         if _is_strong_trust(t):
             emit(t, "trust_signals")
     return out
+
+
+# A trend title signalling a category HEADWIND (a Threat) rather than an opening (Opportunity).
+_TREND_THREAT_KEYS = (
+    "ban", "banned", "decline", "declining", "shortage", "regulation", "regulat", "lawsuit",
+    "recall", "boycott", "crackdown", "tariff", "restrict", "crisis", "shutdown", "layoff",
+)
+
+
+def opportunities_threats_from_trends(profile: Any, trends: list) -> tuple[list, list]:
+    """Map on-topic market TRENDS to brand-level Opportunities/Threats — the market-shift signal the
+    SWOT never had (why ecommerce brands with no Places peers got empty O/T quadrants). Each line
+    cites the trend URL and is `directional_not_validated` (a single web signal). GROUNDED: a
+    non-reputable/aggregator host is dropped up front, and every line is then Ledger-gated exactly
+    like the rest of the pipeline. Returns (opportunities, threats); ([],[]) when no on-topic trend
+    survives. Pure — the caller fetches trends (best-effort) and passes them in."""
+    opps: list[SWOTItem] = []
+    threats: list[SWOTItem] = []
+    if not trends:
+        return opps, threats
+    try:
+        from grounding.ledger import is_reputable_web_source
+    except Exception:
+        def is_reputable_web_source(_u):  # noqa: ANN001 — degrade permissive if grounding absent
+            return True
+
+    cand: list[tuple[str, str, str]] = []   # (bucket, text, url)
+    seen: set[str] = set()
+    for t in trends:
+        title = str(getattr(t, "title", "") or "").strip()
+        url = str(getattr(t, "url", "") or "").strip()
+        terms = [str(x) for x in (getattr(t, "matched_terms", ()) or ()) if x]
+        if not title or not terms:
+            continue                                     # off-topic / unusable
+        if url and not is_reputable_web_source(url):
+            continue                                     # junk/aggregator host — not proof
+        low = title.lower()
+        if any(k in low for k in _TREND_THREAT_KEYS):
+            bucket, text = "threats", f"Category headwind on {', '.join(terms)}: {title}"
+        else:
+            bucket, text = "opportunities", f"Rising interest in {', '.join(terms)}: {title}"
+        key = text.strip().lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        cand.append((bucket, text, url))
+    if not cand:
+        return opps, threats
+
+    # Build a ledger with the candidate trends indexed as web evidence (+ the profile), then gate
+    # each line — a reputable trend self-grounds; anything the ledger can't back is dropped.
+    ledger = None
+    try:
+        from grounding import EvidenceLedger
+        swot_ev = {
+            "opportunities": [{"text": tx, "citation": [u]} for (b, tx, u) in cand if b == "opportunities"],
+            "threats": [{"text": tx, "citation": [u]} for (b, tx, u) in cand if b == "threats"],
+        }
+        ledger = EvidenceLedger.from_profile(_unwrap(profile) or {}, swot=swot_ev)
+    except Exception:
+        ledger = None
+
+    for bucket, text, url in cand:
+        if not _gated(ledger, text):
+            continue
+        item = SWOTItem(text=text, citation=[url or "market trends"],
+                        evidence="market trend signal (on-topic)",
+                        claim_strength="directional_not_validated")
+        (opps if bucket == "opportunities" else threats).append(item)
+    return opps, threats
