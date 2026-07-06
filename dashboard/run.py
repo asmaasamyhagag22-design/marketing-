@@ -34,7 +34,11 @@ for _s in (sys.stdout, sys.stderr):
 
 def _slug(url: str) -> str:
     host = (urlparse(url).netloc or url).replace("www.", "").replace(":", "_")
-    return "".join(ch if ch.isalnum() else "_" for ch in host).strip("_") or "brand"
+    # ASCII-only: str.isalnum() is True for Unicode letters (é, ü, 日), which would make a slug the
+    # server's ASCII guard (_SLUG_RE) rejects — an IDN brand would analyze fine then 400 at /studio.
+    # These bytes also become on-disk filenames, so keep them plain ASCII.
+    return "".join(ch if (ch.isascii() and ch.isalnum()) else "_"
+                   for ch in host).strip("_") or "brand"
 
 
 def _emit(on_progress, event: str, label: str, msg: str) -> None:

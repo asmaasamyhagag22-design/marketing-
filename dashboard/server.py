@@ -38,6 +38,11 @@ _C = {
 
 _SLUG_RE = re.compile(r"^[A-Za-z0-9_]+$")
 
+# One in-flight generation per (slug, kind) across all request threads — a duplicate request
+# (refresh / second tab / SSE reconnect) is rejected instead of racing on the same output file.
+_INFLIGHT: set = set()
+_INFLIGHT_LOCK = threading.Lock()
+
 
 def sse(event: str, data) -> bytes:
     """Format one Server-Sent Event frame (JSON-encoded data, so newlines can't break framing)."""
@@ -397,7 +402,14 @@ class _Handler(BaseHTTPRequestHandler):
         self._serve_file(path, ctype)
 
     def _serve_file(self, path: Path, ctype: str):
-        data = path.read_bytes()
+        try:
+            data = path.read_bytes()
+        except (OSError, PermissionError):
+            # e.g. Windows holds an exclusive lock while ffmpeg rewrites the mp4 mid-regenerate —
+            # return a clean 503 instead of letting the read escape do_GET as an unhandled 500.
+            self._send(503, b"asset is being regenerated - try again in a moment",
+                       "text/plain; charset=utf-8")
+            return
         rng = self.headers.get("Range")
         if rng and rng.startswith("bytes="):     # minimal single-range (video seeking)
             try:
@@ -453,18 +465,32 @@ class _Handler(BaseHTTPRequestHandler):
             if alive["v"] and not self._sse_write(sse("stage", {"event": event, "label": label, "msg": msg})):
                 alive["v"] = False
 
-        fn = _run_mod.generate_poster if kind == "poster" else _run_mod.generate_reel
+        # One generation per (slug, kind) at a time. A browser refresh / second tab / SSE reconnect
+        # would otherwise spawn a DUPLICATE subprocess writing the SAME file — a torn PNG/MP4 and a
+        # wasted paid Veo render. Reject the duplicate cleanly instead.
+        key = (slug, kind)
+        with _INFLIGHT_LOCK:
+            if key in _INFLIGHT:
+                self._sse_write(sse("failed",
+                    {"msg": f"A {kind} is already generating for this brand — please wait for it."}))
+                return
+            _INFLIGHT.add(key)
         try:
-            asset = fn(slug, out_dir=self.out_dir, on_progress=on_progress)
-        except Exception as exc:
-            self._sse_write(sse("failed", {"msg": f"{type(exc).__name__}: {exc}"}))
-            return
-        if not alive["v"]:
-            return
-        if asset and Path(asset).is_file():
-            self._sse_write(sse("done", {"kind": kind, "asset": f"/asset?slug={slug}&kind={kind}"}))
-        else:
-            self._sse_write(sse("failed", {"msg": f"{kind} generation did not produce a file."}))
+            fn = _run_mod.generate_poster if kind == "poster" else _run_mod.generate_reel
+            try:
+                asset = fn(slug, out_dir=self.out_dir, on_progress=on_progress)
+            except Exception as exc:
+                self._sse_write(sse("failed", {"msg": f"{type(exc).__name__}: {exc}"}))
+                return
+            if not alive["v"]:
+                return
+            if asset and Path(asset).is_file():
+                self._sse_write(sse("done", {"kind": kind, "asset": f"/asset?slug={slug}&kind={kind}"}))
+            else:
+                self._sse_write(sse("failed", {"msg": f"{kind} generation did not produce a file."}))
+        finally:
+            with _INFLIGHT_LOCK:
+                _INFLIGHT.discard(key)
 
 
 def serve(host: str = "127.0.0.1", port: int = 8770, out_dir: str = "outputs",

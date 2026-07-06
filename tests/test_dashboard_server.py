@@ -34,6 +34,16 @@ def test_slug_guard_rejects_traversal():
     assert not srv._ok_slug("")
 
 
+def test_idn_url_slug_is_ascii_and_accepted_by_the_server():
+    # str.isalnum() is True for é/ü/日, so an IDN brand once analyzed fine then 400'd at /studio.
+    # _slug must emit only what the server's ASCII guard accepts.
+    from dashboard.run import _slug
+    for url in ["https://café.com", "https://münchen.de", "https://日本.jp", "https://naïve.io"]:
+        s = _slug(url)
+        assert s.isascii(), (url, s)
+        assert srv._ok_slug(s), (url, s)          # analyze -> studio round-trips, no 400
+
+
 def test_landing_page_wires_analyze_over_sse():
     html = srv._landing_html()
     assert 'id="url"' in html and 'id="go"' in html                 # URL box + Analyze
@@ -127,6 +137,58 @@ def test_generate_poster_then_serve_the_asset(live):
     assert "event: done" in stream and "/asset?slug=brand_example&kind=poster" in stream
     status, data = _get(live + "/asset?slug=brand_example&kind=poster")
     assert status == 200 and data.startswith(b"\x89PNG")
+
+
+def test_concurrent_generate_runs_only_one_subprocess(live, monkeypatch):
+    # a refresh / second tab must NOT spawn a duplicate generation racing on the same file
+    import time as _t
+    calls = {"n": 0}
+    lock = threading.Lock()
+
+    def slow_poster(slug, *, out_dir="outputs", on_progress=None):
+        with lock:
+            calls["n"] += 1
+        on_progress("stage_start", "Poster (one-shot)", "  -> Poster ...")
+        _t.sleep(1.5)                                   # hold the in-flight window open
+        P = srv._run_mod.paths(slug, out_dir)
+        P["poster"].parent.mkdir(parents=True, exist_ok=True)
+        P["poster"].write_bytes(b"\x89PNGX")
+        return P["poster"]
+
+    monkeypatch.setattr("dashboard.run.generate_poster", slow_poster)
+    _get(live + "/analyze?url=https://brand.example/")   # seed the slug
+    bodies: list = []
+
+    def hit():
+        try:
+            bodies.append(_get(live + "/generate/poster?slug=brand_example", timeout=20)[1].decode())
+        except Exception as e:                           # noqa: BLE001
+            bodies.append(str(e))
+
+    ts = [threading.Thread(target=hit) for _ in range(2)]
+    for t in ts:
+        t.start()
+    for t in ts:
+        t.join()
+    assert calls["n"] == 1                               # only ONE real generation ran
+    assert any("already generating" in b for b in bodies)  # the duplicate was rejected cleanly
+
+
+def test_asset_being_regenerated_returns_503(live, monkeypatch):
+    import pathlib
+    _get(live + "/analyze?url=https://brand.example/")
+    _get(live + "/generate/poster?slug=brand_example")   # poster now exists (fake)
+    orig = pathlib.Path.read_bytes
+
+    def boom(self):
+        if self.name.endswith("_poster.png"):
+            raise PermissionError("locked by ffmpeg")
+        return orig(self)
+
+    monkeypatch.setattr(pathlib.Path, "read_bytes", boom)
+    with pytest.raises(urllib.error.HTTPError) as e:
+        _get(live + "/asset?slug=brand_example&kind=poster")
+    assert e.value.code == 503                           # clean 503, not an unhandled 500
 
 
 def test_bad_slug_and_missing_analysis_are_guarded(live):
