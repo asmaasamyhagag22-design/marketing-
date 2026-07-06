@@ -130,6 +130,20 @@ def _is_blog_or_news_detail(url: str, anchor_text: str = "") -> bool:
     return False
 
 
+def is_product_detail(url: str) -> bool:
+    """True for an INDIVIDUAL product page (/products/<slug>, /product/<slug>, /pdp/<slug>,
+    /collections/<cat>/products/<slug>) — a single item with a name/price/image — as opposed to a
+    category/collection LIST (/products, /collections, /collections/<cat>, /shop). classify_url still
+    returns PRODUCTS for both (backward-compatible); the crawl FRONTIER reads this boolean to prefer
+    individual products so a store's catalogue is captured item-by-item, not just at the department
+    level (MEASURED: azza scraped 26 collection pages, 0 individual products, of 226 discovered)."""
+    _path, segments, _q = _normalized_path(url)
+    for i in range(len(segments) - 1):
+        if segments[i] in ("products", "product", "pdp") and segments[i + 1]:
+            return True           # a product token followed by a slug -> a product-detail page
+    return False
+
+
 def classify_url(url: str, anchor_text: str = "") -> tuple[PageType, PageTier]:
     """Return (page_type, tier) for this URL.
 

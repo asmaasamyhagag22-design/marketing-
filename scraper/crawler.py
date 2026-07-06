@@ -35,7 +35,7 @@ from .config import (
     VIEWPORT_HEIGHT,
     VIEWPORT_WIDTH,
 )
-from .classify.page_type import classify_homepage, classify_url
+from .classify.page_type import classify_homepage, classify_url, is_product_detail
 from .errors import ErrorCode
 from .extractors.contact import extract_contact, fill_addresses_from_schema_org
 from .extractors.forms import extract_forms
@@ -225,7 +225,61 @@ def _select_subpages_to_fetch(
     }
     candidates = list(by_norm.values())
     candidates.sort(key=lambda c: (tier_rank[c[2]], type_priority.get(c[1], 50)))
-    return candidates[:cap]
+    return _reserve_product_quota(candidates, cap)
+
+
+def _diversify_by_parent(products: list, n: int) -> list:
+    """Round-robin across the products' PARENT paths so we pick a SPREAD of the catalogue (a few from
+    each collection), not 30 variants of one family."""
+    groups: dict = {}
+    order: list = []
+    for c in products:
+        parent = "/".join(c[0].split("?")[0].rstrip("/").split("/")[:-1])   # drop the product slug
+        if parent not in groups:
+            groups[parent] = []
+            order.append(parent)
+        groups[parent].append(c)
+    out: list = []
+    while len(out) < n:
+        took = False
+        for parent in order:
+            g = groups[parent]
+            if g and len(out) < n:
+                out.append(g.pop(0))
+                took = True
+        if not took:
+            break
+    return out
+
+
+def _reserve_product_quota(candidates: list, cap: int) -> list:
+    """Give a large, DIVERSIFIED share of the frontier to INDIVIDUAL product pages so a store's
+    catalogue is captured item-by-item, not just at the department level. Without this, all product
+    URLs tie on (tier, type) and the stable sort lets collection/nav pages (discovered first) fill
+    every slot while /products/<slug> pages sit in the discarded tail (MEASURED: azza fetched 26
+    collections, 0 individual products). No product-detail URLs -> unchanged (non-store safe)."""
+    if cap <= 0:
+        return []
+    products = [c for c in candidates if is_product_detail(c[0])]
+    if not products:
+        return candidates[:cap]
+    others = [c for c in candidates if not is_product_detail(c[0])]
+    # keep up to ~35% for the top-ranked landing/collection/contact pages (offerings tree + key pages);
+    # give the REST of the budget to a diverse spread of individual products.
+    chosen_others = others[: round(cap * 0.35)]
+    prod_quota = min(len(products), cap - len(chosen_others))
+    chosen_products = _diversify_by_parent(products, prod_quota)
+    # Interleave ~1 landing/collection page per 2 products so BOTH the offerings tree and a spread of
+    # individual products are reached before the time budget binds.
+    out: list = []
+    oi = pi = 0
+    while len(out) < cap and (oi < len(chosen_others) or pi < len(chosen_products)):
+        if oi < len(chosen_others):
+            out.append(chosen_others[oi]); oi += 1
+        for _ in range(2):
+            if pi < len(chosen_products) and len(out) < cap:
+                out.append(chosen_products[pi]); pi += 1
+    return out[:cap]
 
 
 def _looks_like_ecommerce(home_links: list, sitemap_urls: list[str]) -> tuple[bool, int]:

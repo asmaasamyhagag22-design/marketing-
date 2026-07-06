@@ -2,8 +2,23 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1077 passed, 0 failed** (2026-07-05/06; grew from 880 as each audit fix
+Test suite: **1080 passed, 0 failed** (2026-07-05/06; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**Crawl reaches INDIVIDUAL products, not just categories (2026-07-06):** owner: azza/rawafrican came
+out with category-level offerings only (RINGS/EARRINGS; Face/Hair Care). A multi-agent analysis found
+the crawl discovers 200+ pages but fetches ~12-30, AND (worse) `/collections/rings` and
+`/products/<slug>` classify IDENTICALLY (PageType.PRODUCTS), so the stable frontier sort let
+collections (discovered first) fill every slot while individual product pages sat in the discarded
+tail. Slice 3: `page_type.is_product_detail(url)` distinguishes a PDP (`/products|/product|/pdp/<slug>`)
+from a list — a pure boolean, no PageType enum change (zero ripple). Slice 4:
+`crawler._reserve_product_quota` gives ~65% of the frontier to individual products, DIVERSIFIED across
+parent collections (`_diversify_by_parent` round-robin), interleaved with the top landing/collection
+pages — so the SAME page budget now captures a spread of real products (name/image/price) that the
+product picker + reel need, item-by-item. Non-store frontiers are unchanged. +3 tests. (Designed
+follow-ups: Slice 1 cut per-page overhead on light sub-pages so each PDP is genuinely cheap; Slice 2
+per-page wall-clock timeout; Slice 5 raise the store cap 30→60 + a matched time budget so the crawl
+goes DEEPER — the measured floor is ~11s/page of hard-coded homepage waits, not page weight.)
 
 **Reel/poster coherence — content_images are now PRODUCTS, not shop-fronts (2026-07-06, root cause):**
 the engineer: "I can't tell what the reel advertises." A multi-agent analysis found the true cause in
