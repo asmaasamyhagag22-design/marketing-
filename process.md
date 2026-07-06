@@ -2,7 +2,7 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1021 passed, 0 failed** (2026-07-05/06; grew from 880 as each audit fix
+Test suite: **1024 passed, 0 failed** (2026-07-05/06; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
 
 **Active work — adversarial audit (2026-07-05):** a deep verified audit found 1 CRITICAL
@@ -516,11 +516,15 @@ Packages: `scraper/`, `business_profile/`, `grounding/`, `competitor/`, `brand/`
      `brand.creative_dna._sanitize_vision_images` decodes + re-encodes every reference to a clean
      JPEG the model accepts and DROPS the undecodable, before the call; if none survive, vision is
      skipped honestly (`used_vision=False`). Tests feed valid tiny images now.
-  3. **Trends SOURCES are tech-centric** (Hacker News / dev.to / Reddit). The engine works
-     (keywords/dedup/scoring/graceful source-failure), but for a consumer/fashion/jewelry brand the
-     items are off-domain + low-relevance (buttons/AI/compilers for a jeweller). This is a SOURCE-
-     COVERAGE gap, not a code bug — needs consumer/fashion/social trend feeds (e.g. Google Trends)
-     to be useful for non-tech brands. The grounding gate still prevents a forced irrelevant trend.
+  3. **Trends sources tech-centric — FIXED 2026-07-06.** HN/Dev.to/generic-Reddit gave a jeweller
+     "buttons/AI/compilers". Now sources are VERTICAL-AWARE (`trends/sources.py`): a new
+     `SerperTrendSource` searches the brand's own salient keywords + "trends" via the configured
+     SERP provider (the reliable consumer source — measured: Azza Fahmy → Forbes/Elle/Marie
+     Claire/Net-a-Porter "Jewelry Trends 2026"); Reddit picks subreddits by vertical (jewelry →
+     r/jewelry,femalefashionadvice; food → r/food …, best-effort since Reddit's public JSON is
+     largely blocked now); the TECH feeds (HN, Dev.to) are added ONLY for a brand with a WHOLE
+     tech keyword (word-level match, so "techniques"/"keychains" don't drag them in — the measured
+     bug). `python -m trends` now loads `.env` for the SERP key. 3 hermetic tests.
 - **Reel is still officially UNGATED in the coverage block**: captions/voiceover/hook
   ARE gated, but Veo extends speech beyond the provided lines (ungated model speech)
   and there is no per-reel audit trail yet. → closing items in §7 Phase 1.

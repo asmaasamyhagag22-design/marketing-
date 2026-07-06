@@ -130,6 +130,119 @@ class DevToSource:
         return out
 
 
-def default_trend_sources() -> list[TrendSource]:
-    """The keyless sources used by default."""
-    return [HackerNewsSource(), RedditSource(), DevToSource()]
+_GENERIC_KW = {"ecommerce", "retail", "shop", "store", "online", "brand", "company", "business",
+               "service", "services", "product", "products", "quality", "premium", "best"}
+
+
+class SerperTrendSource:
+    """CURRENT, vertical-relevant trends via the configured SERP provider (Serper) — the reliable
+    consumer source now that Reddit's public JSON is largely blocked. Searches the brand's own
+    salient keywords + 'trends', so a jeweller gets jewellery trends, not Hacker News. Returns []
+    (never raises) when no provider/key is configured or the search fails."""
+    name = "web"
+
+    def __init__(self, keywords: Optional[list[str]] = None):
+        self.keywords = [str(k).lower() for k in (keywords or [])]
+
+    def _query(self) -> str:
+        terms = [k for k in self.keywords if len(k) >= 4 and k not in _GENERIC_KW][:3]
+        return (" ".join(terms) + " trends 2026").strip() if terms else ""
+
+    def fetch(self, limit: int = 30) -> list[TrendItem]:
+        q = self._query()
+        if not q:
+            return []
+        try:
+            from competitor.search_providers import get_default_search_provider
+            prov = get_default_search_provider()
+            if prov is None:
+                return []
+            out: list[TrendItem] = []
+            for i, hit in enumerate(prov.search(q, num=min(max(1, limit), 15)) or []):
+                title = (getattr(hit, "title", "") or "").strip()
+                if not title:
+                    continue
+                out.append(TrendItem(
+                    title=title, url=getattr(hit, "link", "") or "", source=self.name,
+                    score=float(max(1, 20 - i)), created_ts=None,   # rank-ordered, treated as fresh
+                ))
+            return out
+        except Exception:
+            return []
+
+
+# Consumer-vertical → relevant subreddits. The OLD default (HN + generic Reddit + Dev.to) was
+# TECH-skewed, so a jewelry/food/beauty brand got "buttons/AI/compilers" trends (measured on Azza
+# Fahmy). We now pick subreddits by the brand's own keywords, and only add the tech feeds (HN,
+# Dev.to) for an actually-tech brand.
+_VERTICAL_SUBS: dict[tuple, list[str]] = {
+    ("jewelry", "jewellery", "ring", "earring", "necklace", "bracelet", "brooch", "cufflink",
+     "gold", "diamond", "gem", "luxury"): ["jewelry", "femalefashionadvice", "Luxury"],
+    ("fashion", "clothing", "apparel", "wear", "dress", "shoe", "bag", "accessor", "couture",
+     "streetwear", "outfit"): ["femalefashionadvice", "malefashionadvice", "streetwear"],
+    ("beauty", "cosmetic", "makeup", "skincare", "perfume", "fragrance", "hair", "salon", "nail",
+     "spa", "lash"): ["MakeupAddiction", "SkincareAddiction", "beauty"],
+    ("food", "restaurant", "cafe", "coffee", "bakery", "kitchen", "meal", "dish", "cuisine",
+     "burger", "pizza", "grill", "dessert"): ["food", "FoodPorn", "Cooking"],
+    ("fitness", "gym", "workout", "wellness", "nutrition", "supplement", "yoga"):
+        ["Fitness", "nutrition", "loseit"],
+    ("home", "furniture", "decor", "interior", "kitchenware", "appliance", "bedding"):
+        ["InteriorDesign", "HomeDecorating"],
+    ("pharmacy", "clinic", "medical", "dental", "doctor", "health", "care", "therapy"):
+        ["Health", "pharmacy"],
+    ("tech", "software", "app", "saas", "developer", "digital", "platform", "cloud", "code",
+     "data", "ai"): ["technology", "gadgets", "programming"],
+    ("education", "academy", "course", "training", "school", "learn", "tutor"):
+        ["education", "GetMotivated"],
+}
+_GENERAL_SUBS = ["marketing", "business", "Entrepreneur"]
+_TECH_KEYS = ("tech", "software", "app", "saas", "developer", "digital", "platform", "cloud",
+              "code", "data", "ai", "startup")
+
+
+def _kw_hit(key: str, kws: list[str]) -> bool:
+    """WORD-level match — a stem key (>=4 chars) matches a token by prefix/containment, a short
+    key (e.g. 'ai', 'app') only matches a WHOLE token. Prevents 'ai' matching inside 'keychains'
+    (measured bug: a jewelry brand got the tech feeds because 'keychains' contains 'ai')."""
+    for kw in kws:
+        kw = str(kw).lower()
+        if kw == key:
+            return True
+        if len(key) >= 4 and (kw.startswith(key) or key in kw):
+            return True
+    return False
+
+
+def _subreddits_for(keywords: Optional[list[str]]) -> list[str]:
+    """Subreddits relevant to the brand's own keywords; a diverse consumer set if nothing matches."""
+    kws = [str(k).lower() for k in (keywords or [])]
+    subs: list[str] = []
+    for keys, sublist in _VERTICAL_SUBS.items():
+        if any(_kw_hit(k, kws) for k in keys):
+            subs.extend(sublist)
+    if not subs:                                            # unknown vertical -> broad consumer mix
+        subs = ["femalefashionadvice", "food", "gadgets"]
+    subs += _GENERAL_SUBS
+    seen: set[str] = set()
+    out: list[str] = []
+    for s in subs:
+        if s.lower() not in seen:
+            seen.add(s.lower())
+            out.append(s)
+    return out[:6]
+
+
+def default_trend_sources(keywords: Optional[list[str]] = None) -> list[TrendSource]:
+    """Keyless sources, tuned to the brand's vertical. Reddit uses subreddits picked from the
+    brand's keywords; the TECH-only feeds (Hacker News, Dev.to) are added ONLY for a tech brand."""
+    kws = [str(k).lower() for k in (keywords or [])]
+    # Web search (Serper) FIRST — the reliable, vertical-relevant source — then Reddit (best-effort).
+    sources: list[TrendSource] = [
+        SerperTrendSource(keywords=keywords),
+        RedditSource(subreddits=_subreddits_for(keywords)),
+    ]
+    # TECH feeds are added ONLY when a tech key is a WHOLE keyword — not a stem-prefix, so
+    # "techniques"/"application"/"database" (jewelry/retail words) don't drag in HN/Dev.to.
+    if any(k in kws for k in _TECH_KEYS):
+        sources += [HackerNewsSource(), DevToSource()]
+    return sources

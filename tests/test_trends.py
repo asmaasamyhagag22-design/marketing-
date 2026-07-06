@@ -88,3 +88,34 @@ def test_keywords_from_profile_extracts_topical_terms():
     kws = keywords_from_profile(profile)
     assert "jewelry" in kws and "diamond" in kws and "handcrafted" in kws
     assert "the" not in kws and "business" not in kws   # stopwords excluded
+
+
+# ---- vertical-aware source selection (consumer brands must not get TECH trends) ----
+
+def test_subreddits_are_vertical_aware():
+    from trends.sources import _subreddits_for
+    assert "jewelry" in _subreddits_for(["rings", "earrings", "jewellery"])
+    assert "food" in _subreddits_for(["burger", "restaurant"])
+    assert "SkincareAddiction" in _subreddits_for(["makeup", "skincare"])
+    assert "technology" in _subreddits_for(["saas", "platform"])
+    # unknown vertical -> a broad CONSUMER mix, never tech-only
+    assert "femalefashionadvice" in _subreddits_for(["widget"])
+
+
+def test_tech_feeds_only_for_tech_brands():
+    from trends.sources import default_trend_sources
+    # a jewelry brand: web search + Reddit consumer subs, NO Hacker News / Dev.to
+    assert [s.name for s in default_trend_sources(["rings", "earrings"])] == ["web", "reddit"]
+    # a software brand: keeps the tech feeds
+    names = [s.name for s in default_trend_sources(["saas", "developer"])]
+    assert "hackernews" in names and "devto" in names
+
+
+def test_serper_trend_source_builds_a_vertical_query_and_is_offline_safe(monkeypatch):
+    from trends.sources import SerperTrendSource
+    src = SerperTrendSource(["ecommerce", "rings", "earrings", "necklaces"])
+    assert src._query() == "rings earrings necklaces trends 2026"   # drops the generic 'ecommerce'
+    # No provider configured / any failure -> [] (never raises).
+    import competitor.search_providers as sp
+    monkeypatch.setattr(sp, "get_default_search_provider", lambda: None)
+    assert src.fetch(10) == []

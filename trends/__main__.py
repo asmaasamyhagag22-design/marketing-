@@ -18,6 +18,13 @@ def main() -> int:
             _s.reconfigure(encoding="utf-8", errors="replace")  # type: ignore[attr-defined]
         except Exception:
             pass
+    # Load .env so the web (Serper) trend source finds SERPER_API_KEY — trends used to be keyless
+    # (HN/Reddit/Dev.to), but the reliable consumer source now searches the SERP provider.
+    try:
+        from dotenv import load_dotenv
+        load_dotenv(Path(__file__).resolve().parent.parent / ".env")
+    except Exception:
+        pass
 
     ap = argparse.ArgumentParser(prog="trends", description="Trending items for a business.")
     ap.add_argument("keywords", nargs="*", help="topic keywords (space-separated)")

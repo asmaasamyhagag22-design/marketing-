@@ -140,6 +140,8 @@ def top_trends(
 ) -> list[TrendItem]:
     """Fetch → rank → match, then return the strongest trends with on-topic ones FIRST.
     `require_match=True` drops trends that share no keyword with the business."""
+    if sources is None:                                    # pick sources by the brand's vertical
+        sources = default_trend_sources(keywords=keywords)
     items = rank_trends(fetch_trends(sources, limit_per_source=limit_per_source), now=now)
     match_to_keywords(items, keywords)
     if require_match:
