@@ -450,6 +450,10 @@ Packages: `scraper/`, `business_profile/`, `grounding/`, `competitor/`, `brand/`
   run in the Baseera design language — brand + KPIs, the CITED SWOT (citations + claim-strength
   badges on screen = the moat visible), discovered competitors (peer-fit + why-selected), the
   TOWS strategies + posture, the content calendar, and the embedded poster. 3 hermetic tests.
+- **One-command demo** (`dashboard/run.py`, `python -m dashboard.run <url> [--fast] [--open]`):
+  a URL in, a finished dashboard out — drives the real pipeline as subprocesses
+  (competitor.full_run → strategy → poster(one-shot) → dashboard), each stage best-effort with a
+  clean stage-by-stage progress log for a LIVE demo. `--fast` skips the poster for speed.
 
 ---
 
