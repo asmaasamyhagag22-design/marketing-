@@ -35,28 +35,38 @@ def _slug(url: str) -> str:
     return "".join(ch if ch.isalnum() else "_" for ch in host).strip("_") or "brand"
 
 
-def _run(cmd: list[str], *, timeout: int, label: str) -> tuple[bool, str]:
+def _emit(on_progress, event: str, label: str, msg: str) -> None:
+    """Print for the CLI and, when a live UI is watching, forward (event, label, msg)."""
+    print(msg, flush=True)
+    if on_progress:
+        try:
+            on_progress(event, label, msg)
+        except Exception:
+            pass
+
+
+def _run(cmd: list[str], *, timeout: int, label: str, on_progress=None) -> tuple[bool, str]:
     """Run one stage; stream a compact status. Returns (ok, tail_of_output)."""
-    print(f"  -> {label} ...", flush=True)
+    _emit(on_progress, "stage_start", label, f"  -> {label} ...")
     t0 = time.monotonic()
     try:
         p = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout,
                            encoding="utf-8", errors="replace")
     except subprocess.TimeoutExpired:
-        print(f"    [X] {label} timed out after {timeout}s", flush=True)
+        _emit(on_progress, "stage_fail", label, f"    [X] {label} timed out after {timeout}s")
         return False, ""
     dt = time.monotonic() - t0
     tail = "\n".join((p.stdout or "").strip().splitlines()[-3:])
     if p.returncode == 0:
-        print(f"    [OK] {label}  ({dt:.0f}s)", flush=True)
+        _emit(on_progress, "stage_ok", label, f"    [OK] {label}  ({dt:.0f}s)")
         return True, tail
     err = "\n".join((p.stderr or p.stdout or "").strip().splitlines()[-3:])
-    print(f"    [X] {label} failed ({dt:.0f}s): {err[:200]}", flush=True)
+    _emit(on_progress, "stage_fail", label, f"    [X] {label} failed ({dt:.0f}s): {err[:200]}")
     return False, tail
 
 
 def run_pipeline(url: str, *, fast: bool = False, out_dir: str = "outputs",
-                 open_when_done: bool = False) -> Path | None:
+                 open_when_done: bool = False, on_progress=None) -> Path | None:
     py = sys.executable
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)

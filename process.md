@@ -2,7 +2,7 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1025 passed, 0 failed** (2026-07-05/06; grew from 880 as each audit fix
+Test suite: **1031 passed, 0 failed** (2026-07-05/06; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
 
 **Active work — adversarial audit (2026-07-05):** a deep verified audit found 1 CRITICAL
@@ -454,6 +454,15 @@ Packages: `scraper/`, `business_profile/`, `grounding/`, `competitor/`, `brand/`
   a URL in, a finished dashboard out — drives the real pipeline as subprocesses
   (competitor.full_run → strategy → poster(one-shot) → dashboard), each stage best-effort with a
   clean stage-by-stage progress log for a LIVE demo. `--fast` skips the poster for speed.
+  `run_pipeline(..., on_progress=(event,label,msg)→None)` streams stage boundaries to a live UI.
+- **Local LIVE web app** (`dashboard/server.py`, `python -m dashboard.server [--port 8770]
+  [--no-open]`): open the browser, paste a URL, press Analyze, and WATCH the pipeline run — stage
+  chips light up and a console streams the log over **SSE** (`GET /run?url=` → `stage`/`done`/
+  `failed` events), then the finished dashboard loads inline (`GET /view?f=<slug>_dashboard.html`,
+  traversal-guarded). Stdlib-only (`http.server` + threads; no framework/async/build), Baseera-
+  styled landing page, wraps the SAME tested `run_pipeline`. 6 hermetic tests (pipeline FAKED —
+  SSE framing, traversal guard, landing markers, full live-socket run). Answers the owner's ask:
+  "open it locally on the browser, put a URL, watch the process."
 
 ---
 
