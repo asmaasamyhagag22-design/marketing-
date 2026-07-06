@@ -15,6 +15,7 @@ def main() -> int:
     ap.add_argument("--profile", default=None, help="a business_profile.json")
     ap.add_argument("--plan", default=None, help="a content_plan.json (from python -m strategy)")
     ap.add_argument("--poster", default=None, help="a rendered poster PNG to embed")
+    ap.add_argument("--reel", default=None, help="a rendered reel MP4 to embed (plays in-page)")
     ap.add_argument("--out", default="outputs/dashboard.html", help="output HTML path")
     ap.add_argument("--artifact", action="store_true",
                     help="emit body+style only (no <html>/<head>) for publishing as an Artifact")
@@ -22,7 +23,7 @@ def main() -> int:
 
     out = build_dashboard(
         args.competitor, profile_path=args.profile, plan_path=args.plan,
-        poster_path=args.poster, out_path=args.out, standalone=not args.artifact,
+        poster_path=args.poster, reel_path=args.reel, out_path=args.out, standalone=not args.artifact,
     )
     print(f"[dashboard] -> {out}  ({out.stat().st_size // 1024} KB)")
     return 0

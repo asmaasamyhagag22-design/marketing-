@@ -82,3 +82,28 @@ def test_dashboard_degrades_without_optional_inputs(tmp_path):
     out = build_dashboard(cp, out_path=str(tmp_path / "d.html"))
     h = Path(out).read_text(encoding="utf-8")
     assert "Baseera" in h and "SWOT" in h
+
+
+def test_dashboard_embeds_the_reel_video(tmp_path):
+    # Owner: "everything you finish should show in the dashboard" — the reel plays IN the page,
+    # base64-inlined so it stays self-contained (no external URL / separate media server).
+    cp, pp, lp = _write(tmp_path)
+    reel = tmp_path / "brand_reel.mp4"
+    reel.write_bytes(b"\x00\x00\x00\x18ftypmp42fake-reel-bytes")
+    out = build_dashboard(cp, profile_path=pp, plan_path=lp, reel_path=str(reel),
+                          out_path=str(tmp_path / "d.html"))
+    h = Path(out).read_text(encoding="utf-8")
+    assert "<video" in h and "data:video/mp4;base64," in h        # the reel plays in-page
+    assert "branded end-card" in h                                # the creative note mentions it
+    assert "http://" not in h.replace("http://www.w3.org", "")    # still self-contained
+
+
+def test_creative_section_shows_with_only_a_reel(tmp_path):
+    # A reel alone (poster failed/skipped) must still render the Creative section.
+    cp, pp, lp = _write(tmp_path)
+    reel = tmp_path / "brand_reel.mp4"
+    reel.write_bytes(b"\x00\x00\x00\x18ftypmp42fake")
+    out = build_dashboard(cp, profile_path=pp, reel_path=str(reel), out_path=str(tmp_path / "d.html"))
+    h = Path(out).read_text(encoding="utf-8")
+    assert "Creative — agency-grade" in h and "<video" in h
+    assert 'alt="poster"' not in h                                # no poster embedded, reel only

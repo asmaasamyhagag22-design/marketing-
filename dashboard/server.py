@@ -149,7 +149,7 @@ def _landing_html() -> str:
   <div class="foot">Runs locally on your machine. Nothing leaves except the page you analyze.</div>
 </div>
 <script>
-const STAGES = ["Scrape + Profile + Competitors + SWOT","Content calendar","Poster (one-shot)","Dashboard"];
+const STAGES = ["Scrape + Profile + Competitors + SWOT","Content calendar","Poster (one-shot)","Reel (Veo 3.1, Opus-directed)","Dashboard"];
 const $=s=>document.querySelector(s);
 const url=$("#url"), go=$("#go"), fast=$("#fast"), strip=$("#strip"), log=$("#log"),
       done=$("#done"), frame=$("#frame");

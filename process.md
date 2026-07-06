@@ -2,7 +2,7 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1042 passed, 0 failed** (2026-07-05/06; grew from 880 as each audit fix
+Test suite: **1044 passed, 0 failed** (2026-07-05/06; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
 
 **Active work — adversarial audit (2026-07-05):** a deep verified audit found 1 CRITICAL
@@ -486,6 +486,13 @@ Packages: `scraper/`, `business_profile/`, `grounding/`, `competitor/`, `brand/`
   (competitor.full_run → strategy → poster(one-shot) → dashboard), each stage best-effort with a
   clean stage-by-stage progress log for a LIVE demo. `--fast` skips the poster for speed.
   `run_pipeline(..., on_progress=(event,label,msg)→None)` streams stage boundaries to a live UI.
+- **Everything in one dashboard (2026-07-06)**: the dashboard now embeds the **reel** (an inline
+  `<video>`, base64 so the page stays self-contained) alongside the poster in the Creative section
+  (`build_dashboard(..., reel_path=)`, `python -m dashboard --reel`). `dashboard.run` grew a reel
+  stage (Opus-directed, Veo 3.1, best-effort, `--fast` skips it) and the live server's progress
+  chips include it, so a full run produces a dashboard showing profile → SWOT → competitors → TOWS
+  → calendar → poster → **reel** in one place (owner: "كل حاجة تظهر في الداش بورد"). VISUALLY
+  VERIFIED (poster + 9:16 reel player + evidence note render side by side). +2 tests.
 - **Local LIVE web app** (`dashboard/server.py`, `python -m dashboard.server [--port 8770]
   [--no-open]`): open the browser, paste a URL, press Analyze, and WATCH the pipeline run — stage
   chips light up and a console streams the log over **SSE** (`GET /run?url=` → `stage`/`done`/

@@ -245,7 +245,11 @@ def _css() -> str:
     .cal-topic{{font-weight:700;font-size:13.5px;}} .cal-hook{{font-size:12px;color:{c['inkSoft']};margin-top:2px;font-style:italic;}}
     /* creative */
     .creative{{display:grid;grid-template-columns:1fr 1.2fr;gap:16px;align-items:start;}}
-    .creative img{{width:100%;border-radius:14px;border:1px solid {c['line']};display:block;}}
+    .media-col{{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start;}}
+    .media{{flex:1 1 190px;min-width:0;}}
+    .creative img,.creative video{{width:100%;border-radius:14px;border:1px solid {c['line']};
+      display:block;background:#0b0b11;}}
+    .reel-vid{{aspect-ratio:9/16;max-height:560px;object-fit:contain;}}
     .creative .cap{{font-size:11.5px;color:{c['muted']};margin-top:8px;text-align:center;}}
     .foot{{text-align:center;color:{c['muted']};font-size:11.5px;margin-top:34px;}}
     .foot b{{color:{c['blush600']};}}
@@ -259,6 +263,7 @@ def build_dashboard(
     profile_path: Optional[str] = None,
     plan_path: Optional[str] = None,
     poster_path: Optional[str] = None,
+    reel_path: Optional[str] = None,
     out_path: str = "outputs/dashboard.html",
     standalone: bool = True,
     generated_at: Optional[str] = None,
@@ -333,17 +338,29 @@ def build_dashboard(
           <div class="card">{''.join(_calendar_row(it) for it in items)}</div></div>"""
 
     poster_uri = _data_uri(poster_path)
+    reel_uri = _data_uri(reel_path)
     creative_html = ""
-    if poster_uri:
+    if poster_uri or reel_uri:
+        media = ""
+        if poster_uri:
+            media += (f'<div class="media"><img src="{poster_uri}" alt="poster">'
+                      f'<div class="cap">Poster · one-shot engine · logo composited crisp</div></div>')
+        if reel_uri:
+            # base64-inlined so the page stays self-contained (opens as a file AND serves the same);
+            # the reel plays right in the dashboard — "everything shows in one place".
+            media += (f'<div class="media"><video class="reel-vid" src="{reel_uri}" controls playsinline '
+                      f'preload="metadata"></video>'
+                      f'<div class="cap">Reel · Veo 3.1 · grounded story · branded end-card</div></div>')
         creative_html = f"""<div class="sec"><div class="sec-h"><span class="bar"></span>
           <h2>Creative — agency-grade, brand-safe</h2></div>
           <div class="card creative">
-            <div><img src="{poster_uri}" alt="poster"><div class="cap">Poster · one-shot engine · logo composited crisp</div></div>
+            <div class="media-col">{media}</div>
             <div><div class="swot-t" style="font-size:15px">Every hard claim traces to real evidence.</div>
               <p style="font-size:13px;color:{_C['inkSoft']};margin-top:8px;line-height:1.6">
               The headline and proof lines pass the Evidence Ledger before they render; the brand logo is
               the real asset composited deterministically (never re-drawn by the image model). The reel
-              uses the same grounded story with continuous voice-over and refined typography.</p></div>
+              tells the same grounded story with continuous voice-over, refined typography and a branded
+              end-card (the real logo on the brand colour).</p></div>
           </div></div>"""
 
     gen = generated_at or datetime.now().strftime("%Y-%m-%d")

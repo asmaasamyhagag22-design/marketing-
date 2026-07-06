@@ -5,10 +5,12 @@
     python -m dashboard.run https://brand.com --open      # open the dashboard when done
 
 Runs the REAL pipeline end to end - competitor.full_run (scrape -> profile -> competitors -> SWOT
--> TOWS) -> strategy (content calendar) -> poster (one-shot, crisp logo) -> dashboard - driving the
-existing tested CLIs as subprocesses so each loads .env and handles its own errors. Prints a
-clean stage-by-stage progress log so it reads well when demoed live. Every stage is best-effort:
-a stage that fails is skipped and the dashboard is still built from whatever succeeded.
+-> TOWS) -> strategy (content calendar) -> poster (one-shot, crisp logo) -> reel (Opus-directed,
+Veo 3.1) -> dashboard - driving the existing tested CLIs as subprocesses so each loads .env and
+handles its own errors. The finished dashboard embeds BOTH the poster and the reel, so everything
+shows in one place. Prints a clean stage-by-stage progress log so it reads well when demoed live.
+Every stage is best-effort: a stage that fails is skipped and the dashboard is still built from
+whatever succeeded. `--fast` skips the heavy poster + reel for a snappy preview.
 """
 from __future__ import annotations
 
@@ -75,6 +77,7 @@ def run_pipeline(url: str, *, fast: bool = False, out_dir: str = "outputs",
     profile_json = out / f"{slug}_profile.json"
     plan_json = out / f"{slug}_plan.json"
     poster_png = out / "posters" / f"{slug}_poster.png"
+    reel_mp4 = out / "reels" / f"{slug}_reel.mp4"
     dash_html = out / f"{slug}_dashboard.html"
 
     print(f"\n* Baseera - analyzing {url}\n")
@@ -108,13 +111,22 @@ def run_pipeline(url: str, *, fast: bool = False, out_dir: str = "outputs",
         if ok and poster_png.is_file():
             poster_arg = ["--poster", str(poster_png)]
 
-    # 5) Build the dashboard from whatever succeeded.
+    # 5) Reel (Opus-directed, Veo 3.1). Heavy, so --fast skips it — but a full run shows the reel
+    #    right in the dashboard (owner: "كل حاجة تظهر في الداش بورد").
+    reel_arg: list[str] = []
+    if not fast and have_profile:
+        ok, _ = _run([py, "-m", "reel", str(profile_json), "--creative", "--out", str(reel_mp4)],
+                     timeout=1500, label="Reel (Veo 3.1, Opus-directed)")
+        if ok and reel_mp4.is_file():
+            reel_arg = ["--reel", str(reel_mp4)]
+
+    # 6) Build the dashboard from whatever succeeded.
     cmd = [py, "-m", "dashboard", str(result_json), "--out", str(dash_html)]
     if profile_json.is_file():
         cmd += ["--profile", str(profile_json)]
     if plan_json.is_file():
         cmd += ["--plan", str(plan_json)]
-    cmd += poster_arg
+    cmd += poster_arg + reel_arg
     ok, _ = _run(cmd, timeout=120, label="Dashboard")
     if not ok or not dash_html.is_file():
         return None
