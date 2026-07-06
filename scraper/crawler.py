@@ -523,11 +523,15 @@ def _process_fetched_page(
 # Top-level scrape entry point
 # ---------------------------------------------------------------------
 
-def scrape(input_url: str, output_root: str = "scrapes") -> tuple[ScrapeManifest, Path]:
+def scrape(input_url: str, output_root: str = "scrapes", *, light: bool = False) -> tuple[ScrapeManifest, Path]:
     """Scrape one business URL and return (manifest, output_dir).
 
-    Always returns a manifest, even on failure — failures are
-    recorded inside.
+    Always returns a manifest, even on failure — failures are recorded inside.
+
+    light=True: a SHALLOW crawl (homepage + a few pages, no e-commerce budget upgrade) for
+    COMPETITOR benchmarking — the comparison matrix needs only surface signals (whatsapp / cta /
+    social / offerings COUNTS), and a full 30-page store crawl PER competitor made a competitive
+    analysis of an e-commerce brand run >25 min and time out (MEASURED: rawafrican.net).
     """
     started = time.monotonic()
     # Validate the USER INPUT once, here at the boundary (ensure_scheme no longer validates,
@@ -706,8 +710,11 @@ def scrape(input_url: str, output_root: str = "scrapes") -> tuple[ScrapeManifest
                 # homepage had 2 product links one run, 164 another). The signal is therefore
                 # RE-EVALUATED over accumulated links inside the fetch loop below.
                 is_store, n_prod = _looks_like_ecommerce(home_links, sitemap_result.urls)
-                page_cap = ECOMMERCE_MAX_INTERNAL_PAGES if is_store else MAX_INTERNAL_PAGES
-                budget_secs = ECOMMERCE_BUDGET_SECONDS if is_store else TOTAL_BUDGET_SECONDS
+                if light:                      # competitor benchmarking: surface signals only
+                    is_store, page_cap, budget_secs = False, 4, 70
+                else:
+                    page_cap = ECOMMERCE_MAX_INTERNAL_PAGES if is_store else MAX_INTERNAL_PAGES
+                    budget_secs = ECOMMERCE_BUDGET_SECONDS if is_store else TOTAL_BUDGET_SECONDS
                 if is_store:
                     manifest.notes.append(
                         f"E-commerce detected ({n_prod}+ product URLs) -> adaptive crawl budget "
@@ -831,7 +838,7 @@ def scrape(input_url: str, output_root: str = "scrapes") -> tuple[ScrapeManifest
                         # under-counts when a JS store renders few links on the snapshot
                         # (offline-validated: nahdi's failing 6-page run had 15 product
                         # URLs across the pages it DID fetch — enough to flip).
-                        if not is_store:
+                        if not is_store and not light:   # light stays shallow — never upgrade
                             is_store, n_prod = _looks_like_ecommerce(all_links, sitemap_result.urls)
                             if is_store:
                                 page_cap = ECOMMERCE_MAX_INTERNAL_PAGES

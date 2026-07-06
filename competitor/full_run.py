@@ -73,8 +73,10 @@ from competitor.swot import unique_insight_texts
 
 
 def scrape_fn(url):
-    """What build_matrix calls to scrape each benchmark competitor's site."""
-    manifest, _ = scrape(url)
+    """What build_matrix calls to scrape each benchmark competitor's site. LIGHT crawl — the matrix
+    only needs surface signals (whatsapp/cta/social/offerings counts), and a full store crawl PER
+    competitor made an e-commerce analysis time out (>25 min)."""
+    manifest, _ = scrape(url, light=True)
     return manifest
 
 

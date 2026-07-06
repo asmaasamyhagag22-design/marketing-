@@ -23,3 +23,21 @@ def test_zero_page_crawl_is_detected_as_nothing():
 def test_a_crawl_with_pages_is_usable():
     assert scrape_yielded_nothing(_Manifest([object()])) is False
     assert scrape_yielded_nothing(_Manifest([object(), object()])) is False
+
+
+def test_competitor_scrape_is_light(monkeypatch):
+    # each competitor must be crawled SHALLOW (surface signals only) — a full store crawl per peer
+    # made an e-commerce analysis time out (>25 min). scrape_fn must pass light=True.
+    import competitor.full_run as fr
+    seen = {}
+
+    def _fake_scrape(url, *a, light=False, **kw):
+        seen["light"] = light
+
+        class _M:
+            pages = []
+        return _M(), None
+
+    monkeypatch.setattr(fr, "scrape", _fake_scrape)
+    fr.scrape_fn("https://peer.example/")
+    assert seen["light"] is True
