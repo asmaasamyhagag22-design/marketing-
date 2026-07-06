@@ -78,6 +78,13 @@ def scrape_fn(url):
     return manifest
 
 
+def scrape_yielded_nothing(manifest) -> bool:
+    """True when the crawl fetched ZERO usable pages — the site blocked us, was unreachable, or had
+    an invalid cert. Building a profile from an empty manifest yields a hollow, ungrounded result;
+    the caller must surface a clear failure instead of proceeding on garbage."""
+    return len(getattr(manifest, "pages", []) or []) == 0
+
+
 def _make_caller():
     """build_profile needs an explicit LLM caller. Build the OpenAI one,
     tolerating either OpenAICaller() or OpenAICaller(model=...)."""
@@ -128,6 +135,15 @@ def main():
 
     say("[1/5] scraping subject site: %s" % args.url)
     manifest, scrape_dir = scrape(args.url)
+
+    # A 0-page crawl (blocked / unreachable / bad cert) would otherwise build a hollow profile and a
+    # garbage dashboard that LOOKS successful. Fail loudly instead so the studio shows a clear reason.
+    if scrape_yielded_nothing(manifest):
+        fails = "; ".join(str(f) for f in (getattr(manifest, "failures", []) or [])[:2])
+        print("!! could not read this site — 0 pages scraped"
+              + (f" ({fails})" if fails else "")
+              + ". It may block crawlers, be down, or have an invalid certificate.", file=sys.stderr)
+        return 3
 
     say("[2/5] building BusinessProfile (OpenAI extraction)...")
     caller = _make_caller()
