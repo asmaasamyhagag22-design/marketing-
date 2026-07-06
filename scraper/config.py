@@ -19,10 +19,14 @@ MAX_INTERNAL_PAGES = 12  # in addition to homepage
 # budget now bind at roughly the SAME point (~13 pages at ~11s/page render), so raising the
 # page cap ALONE is a no-op; a store needs BOTH a higher cap AND a proportionally larger time
 # budget. Triggered UNIVERSALLY when the homepage links + sitemap reveal many product-type URLs
-# (a SIGNAL via the page-type classifier — never a vertical or a hardcoded name). A store scrape
-# then takes ~5-6 min; per-page render-speed work is the follow-up to bring that down.
-ECOMMERCE_MAX_INTERNAL_PAGES = 30
-ECOMMERCE_BUDGET_SECONDS = 330        # ~30 pages at ~11s/page (cap and time bind together)
+# (a SIGNAL via the page-type classifier — never a vertical or a hardcoded name).
+# 2026-07-06: raised 30/330 -> 50/560 because the owner needs INDIVIDUAL products captured, not
+# just categories — the frontier now reserves most of the budget for product-DETAIL pages
+# (crawler._reserve_product_quota), so the extra slots buy ~50 real products (name/price/image),
+# not more collections. A store scrape now takes ~8-9 min; cutting the ~11s/page hard-coded
+# homepage-footer waits for light sub-pages is the designed follow-up to bring that back down.
+ECOMMERCE_MAX_INTERNAL_PAGES = 50
+ECOMMERCE_BUDGET_SECONDS = 560        # ~50 pages at ~11s/page (cap and time bind together)
 ECOMMERCE_PRODUCT_URL_MIN = 15        # >= this many PRODUCTS-type URLs (homepage+sitemap) -> store
 
 # A crawl must NEVER end homepage-only when internal links exist: pre-crawl stages

@@ -15,10 +15,12 @@ from a list — a pure boolean, no PageType enum change (zero ripple). Slice 4:
 `crawler._reserve_product_quota` gives ~65% of the frontier to individual products, DIVERSIFIED across
 parent collections (`_diversify_by_parent` round-robin), interleaved with the top landing/collection
 pages — so the SAME page budget now captures a spread of real products (name/image/price) that the
-product picker + reel need, item-by-item. Non-store frontiers are unchanged. +3 tests. (Designed
-follow-ups: Slice 1 cut per-page overhead on light sub-pages so each PDP is genuinely cheap; Slice 2
-per-page wall-clock timeout; Slice 5 raise the store cap 30→60 + a matched time budget so the crawl
-goes DEEPER — the measured floor is ~11s/page of hard-coded homepage waits, not page weight.)
+product picker + reel need, item-by-item. Non-store frontiers are unchanged. +3 tests. **Slice 5
+(DONE): store cap 30 -> 50 + budget 330 -> 560s** (config.py) + `MAX_SITEMAP_URLS` 200 -> 300 — the
+crawl goes DEEPER, and because the frontier reserves the budget for product-DETAIL pages, the extra
+slots buy ~50 real PRODUCTS not more collections (store scrape ~8-9 min). Remaining follow-ups: Slice 1
+cut per-page overhead on light sub-pages (the ~11s/page floor is hard-coded homepage-footer waits, not
+page weight) to bring the time back down; Slice 2 a per-page wall-clock timeout for safety.
 
 **Reel/poster coherence — content_images are now PRODUCTS, not shop-fronts (2026-07-06, root cause):**
 the engineer: "I can't tell what the reel advertises." A multi-agent analysis found the true cause in

@@ -39,7 +39,7 @@ logger = logging.getLogger(__name__)
 
 
 # ---- Limits (you confirmed these on 2026-05-21) ---------------------
-MAX_SITEMAP_URLS = 200
+MAX_SITEMAP_URLS = 300   # more /products/<slug> candidates for the frontier's product quota to spread across
 MAX_INDEX_RECURSION_DEPTH = 1  # one level of sitemap-index fan-out
 SITEMAP_FETCH_TIMEOUT_S = 5.0
 MAX_SITEMAP_BYTES = 8 * 1024 * 1024  # 8 MiB hard cap per file
