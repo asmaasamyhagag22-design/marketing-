@@ -185,6 +185,14 @@ def _studio_css() -> str:
     .cst-pick-h span{{font-family:'Inter',sans-serif;font-weight:400;font-size:12.5px;color:{c['muted']};}}
     .cst-pick-row{{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 8px;}}
     .cst-pick-load{{color:{c['muted']};font-size:13px;}}
+    .cst-pick-url{{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap;}}
+    .cst-pick-url input{{flex:1 1 300px;min-width:0;padding:8px 11px;border:1.5px solid {c['line']};
+      border-radius:9px;background:#fff;color:{c['ink']};font-family:'Inter',sans-serif;font-size:13px;}}
+    .cst-pick-url input:focus{{outline:none;border-color:{c['blush500']};box-shadow:0 0 0 3px rgba(184,92,122,.13);}}
+    .cst-pick-url button{{padding:8px 16px;border:1px solid {c['blush600']};color:{c['blush700']};
+      background:transparent;border-radius:9px;cursor:pointer;font-size:13px;font-weight:600;}}
+    .cst-pick-url button:disabled{{opacity:.5;cursor:default;}}
+    .cst-pick-url .msg{{font-size:12.5px;color:{c['muted']};}}
     .cst-chip{{flex:0 0 auto;width:104px;cursor:pointer;border:2px solid transparent;border-radius:12px;
       background:{c['surface']};box-shadow:0 4px 12px rgba(126,52,80,.06);overflow:hidden;transition:all .15s;}}
     .cst-chip:hover{{transform:translateY(-2px);}}
@@ -238,6 +246,11 @@ def _studio_section(slug: str, has_poster: bool, has_reel: bool) -> str:
         <div class="cst-pick">
           <div class="cst-pick-h">🛍️ Choose a product to feature <span id="pick-sel">— whole brand</span></div>
           <div class="cst-pick-row" id="product-picker"><span class="cst-pick-load">loading products…</span></div>
+          <div class="cst-pick-url">
+            <input id="purl" type="url" placeholder="…or paste a product link not in the list (we'll scrape it)"/>
+            <button id="purl-btn" onclick="addByUrl()">Add product</button>
+            <span class="msg" id="purl-msg"></span>
+          </div>
         </div>
         <div class="cst-grid">
         {_panel('poster', '🎨', 'Poster', 'one-shot · crisp logo', has_poster, slug)}
@@ -269,6 +282,22 @@ function loadProducts(){{
       c.innerHTML='<img src="'+esc(p.image)+'" alt="" onerror="this.style.visibility=\\'hidden\\'"><div class="lab">'+esc(p.name)+'</div>';
       c.onclick=()=>pick(c,p); row.appendChild(c);}});
   }}).catch(()=>{{row.innerHTML='<span class="cst-pick-load">(couldn\\'t load products)</span>';}});
+}}
+function addByUrl(){{
+  const inp=document.getElementById('purl'),msg=document.getElementById('purl-msg'),btn=document.getElementById('purl-btn');
+  const url=(inp.value||'').trim(); if(!url){{msg.textContent='paste a product link first';return;}}
+  msg.textContent='scraping the product…'; btn.disabled=true;
+  fetch('/product_by_url?slug='+encodeURIComponent(SLUG)+'&url='+encodeURIComponent(url))
+    .then(r=>r.json()).then(d=>{{
+      btn.disabled=false;
+      if(!d||!d.ok){{msg.textContent='✗ '+((d&&d.error)||'couldn\\'t scrape that page');return;}}
+      const row=document.getElementById('product-picker');
+      const c=document.createElement('div'); c.className='cst-chip';
+      c.innerHTML='<img src="'+esc(d.product.image)+'" alt="" onerror="this.style.visibility=\\'hidden\\'"><div class="lab">'+esc(d.product.name)+'</div>';
+      c.onclick=()=>pick(c,d.product); row.appendChild(c);
+      pick(c,d.product);                 // auto-select the freshly scraped product
+      msg.textContent='✓ added & selected'; inp.value='';
+    }}).catch(()=>{{btn.disabled=false;msg.textContent='✗ error scraping';}});
 }}
 function stageBase(kind){{return 'cst-stage'+(kind==='reel'?' is-reel':'');}}
 function setEmpty(stage,kind,head,sub){{
@@ -385,6 +414,8 @@ class _Handler(BaseHTTPRequestHandler):
             self._serve_studio(q)
         elif route == "/products":
             self._serve_products(q)
+        elif route == "/product_by_url":
+            self._serve_product_by_url(q)
         elif route == "/generate/poster":
             self._stream_generate(q, "poster")
         elif route == "/generate/reel":
@@ -424,6 +455,34 @@ class _Handler(BaseHTTPRequestHandler):
             items = []
         self._send(200, json.dumps({"products": items}).encode("utf-8"),
                    "application/json; charset=utf-8")
+
+    def _serve_product_by_url(self, q: dict):
+        """Scrape ONE product from a user-pasted URL (an item the crawl never reached) and return
+        its name+image so it can be featured directly in the reel/poster. Public-URL guarded."""
+        def _json(payload: dict):
+            self._send(200, json.dumps(payload).encode("utf-8"),
+                       "application/json; charset=utf-8")
+        raw = (q.get("url") or [""])[0].strip()
+        if not raw:
+            _json({"ok": False, "error": "no url"})
+            return
+        try:
+            from scraper.url_utils import ensure_scheme, is_safe_public_url
+            url = ensure_scheme(raw)
+            if not is_safe_public_url(url):
+                _json({"ok": False, "error": "that link isn't a public URL"})
+                return
+            from scraper.product_page import scrape_product_page
+            info = scrape_product_page(url)
+        except Exception as exc:  # noqa: BLE001
+            _json({"ok": False, "error": type(exc).__name__})
+            return
+        if info is None or not info.usable:
+            _json({"ok": False, "error": "no product found on that page"})
+            return
+        _json({"ok": True, "product": {
+            "name": info.name, "image": info.image, "url": info.url,
+            "price": info.price, "currency": info.currency}})
 
     def _serve_dashboard(self, q: dict):
         """Build + serve the full self-contained dashboard (with whatever assets exist) for export."""

@@ -2,7 +2,7 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1105 passed, 0 failed** (2026-07-05/06; grew from 880 as each audit fix
+Test suite: **1109 passed, 0 failed** (2026-07-05/06; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
 
 **Scrape a product by its URL — for an item the crawl never reached (2026-07-06, slice 1):** owner:
@@ -13,9 +13,12 @@ need. New `scraper/product_page.py`: `parse_product(html, url)` (pure, hermetic)
 name / image / price / description — JSON-LD schema.org `Product` FIRST (parsed directly, since
 `extract_structured_data` intentionally skips JSON-LD; walks `@graph`), then og:/meta/`<h1>` fallback,
 relative image URLs resolved. `scrape_product_page(url)` fetches the page via Playwright then parses.
-VALIDATED on a real rawafrican page (extracted name+image live). +5 tests. Slice 2 (pending): wire a
-"paste product URL" input into the studio → `scrape_product_page` → feed the picked name+image straight
-to the reel/poster (both CLIs already take `--product-name`/`--product-image`).
+VALIDATED on a real rawafrican page (extracted name+image live). +5 tests. **Slice 2 (DONE): wired into
+the studio** — the product picker now has a "paste a product link not in the list" input; JS `addByUrl()`
+→ `GET /product_by_url?url=` → `_serve_product_by_url` (public-URL guarded via `is_safe_public_url`) →
+`scrape_product_page` → returns {name,image,price} → a new picker chip is added AND auto-selected, so it
+flows straight into the reel/poster via the existing `pname/pimg` path. +4 tests (route ok/reject-non-
+public/no-product + the studio UI). So a product the crawl never reached is one paste away from an ad.
 
 **Reel SCENE QA gate — reject Veo hallucinations, don't just prompt against them (2026-07-06):**
 owner watched a real render and caught three failures the prompt CANNOT stop (Veo i2v drifts from the

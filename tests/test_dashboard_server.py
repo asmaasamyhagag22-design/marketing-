@@ -126,6 +126,41 @@ def test_studio_renders_report_plus_creative_studio(live):
     assert "AUTO={poster:false,reel:false}" in h
 
 
+def test_studio_has_paste_a_product_url_input(live):
+    _get(live + "/analyze?url=https://brand.example/")
+    _s, body = _get(live + "/studio?slug=brand_example")
+    h = body.decode("utf-8")
+    assert 'id="purl"' in h and "addByUrl()" in h                      # the paste-a-link UI + handler
+    assert "/product_by_url?" in h                                     # JS calls the new route
+
+
+def test_product_by_url_scrapes_and_returns_the_product(live, monkeypatch):
+    from scraper.product_page import ProductInfo
+    monkeypatch.setattr("scraper.product_page.scrape_product_page",
+                        lambda url: ProductInfo(name="Rosemary Mist", image="https://x/i.jpg",
+                                                url=url, price="250", currency="EGP"))
+    monkeypatch.setattr("scraper.url_utils.is_safe_public_url", lambda u: True)
+    _s, body = _get(live + "/product_by_url?slug=brand_example&url=https://shop.example/products/x")
+    d = json.loads(body)
+    assert d["ok"] is True
+    assert d["product"]["name"] == "Rosemary Mist" and d["product"]["image"] == "https://x/i.jpg"
+
+
+def test_product_by_url_rejects_non_public_url(live, monkeypatch):
+    monkeypatch.setattr("scraper.url_utils.is_safe_public_url", lambda u: False)
+    _s, body = _get(live + "/product_by_url?slug=brand_example&url=http://localhost/x")
+    d = json.loads(body)
+    assert d["ok"] is False and "public" in d["error"].lower()
+
+
+def test_product_by_url_reports_when_no_product_found(live, monkeypatch):
+    monkeypatch.setattr("scraper.product_page.scrape_product_page", lambda url: None)
+    monkeypatch.setattr("scraper.url_utils.is_safe_public_url", lambda u: True)
+    _s, body = _get(live + "/product_by_url?slug=brand_example&url=https://shop.example/about")
+    d = json.loads(body)
+    assert d["ok"] is False and "no product" in d["error"].lower()
+
+
 def test_studio_does_not_rerun_existing_assets(live):
     _get(live + "/analyze?url=https://brand.example/")
     _get(live + "/generate/poster?slug=brand_example")                 # poster now exists (fake)
