@@ -279,12 +279,16 @@ def _logo_bytes(logo_url: Optional[str]) -> tuple[Optional[bytes], str]:
     return None, "image/png"
 
 
-def _overlay_real_logo(poster_path: Path, logo_bytes: bytes, *, rtl: bool) -> bool:
-    """Composite the brand's REAL logo asset onto the finished one-shot poster's top corner —
-    deterministic and pixel-exact, so an Arabic logo is NEVER garbled by the image model (which
-    re-draws attached logos: "عزة فهمي" → "ةفهمص"). The one-shot prompt reserves this corner clean.
-    A luminance-adaptive frosted plate + soft shadow keep the mark legible on any background.
-    Best-effort: returns False (leaving the poster untouched) on any error. Never raises."""
+def _overlay_real_logo(poster_path: Path, logo_bytes: bytes, *, rtl: bool,
+                       xy: Optional[list] = None) -> bool:
+    """Composite the brand's REAL logo asset onto the finished poster — deterministic and
+    pixel-exact, so an Arabic logo is NEVER garbled by the image model (which re-draws / bakes
+    logos: "عزة فهمي" → "ةفهمص"). Used by BOTH engines: the one-shot reserves a clean corner, and
+    on the classic path the OPAQUE plate here sits over the design's logo spot (`xy`) — the same
+    place the Imagen STYLE background tends to bake a garbled logo — hiding it under the real mark
+    (the adaptive HTML plate skips a plate on good contrast, letting the baked garble show through).
+    `xy` = the design's fractional [x,y] logo position (0..1); falls back to a reading-side corner.
+    Best-effort; never raises."""
     try:
         import io as _io
 
@@ -293,8 +297,7 @@ def _overlay_real_logo(poster_path: Path, logo_bytes: bytes, *, rtl: bool) -> bo
         poster = Image.open(poster_path).convert("RGBA")
         W, H = poster.size
         logo = Image.open(_io.BytesIO(logo_bytes)).convert("RGBA")
-        # Trim fully-transparent margins so the plate hugs the real mark.
-        bbox = logo.split()[3].getbbox()
+        bbox = logo.split()[3].getbbox()            # trim transparent margins -> plate hugs the mark
         if bbox:
             logo = logo.crop(bbox)
         tw = int(W * 0.24)
@@ -306,11 +309,24 @@ def _overlay_real_logo(poster_path: Path, logo_bytes: bytes, *, rtl: bool) -> bo
             tw, th = max(1, int(logo.width * scale)), cap
         logo = logo.resize((max(1, tw), max(1, th)), Image.LANCZOS)
 
-        margin = int(W * 0.05)
-        padx, pady = int(th * 0.75), int(th * 0.55)
-        pw, ph = tw + 2 * padx, th + 2 * pady
-        px = (W - margin - pw) if rtl else margin
-        py = margin
+        pady = int(th * 0.60)
+        padx = int(th * 0.9)
+        pw = min(int(W * 0.52), tw + int(W * 0.30))       # generous width to cover a baked logo
+        ph = th + 2 * pady
+        edge = int(W * 0.02)
+        # Anchor the plate over the design's logo spot (where a baked garble co-locates); clamp
+        # on-canvas. Fall back to a reading-side top corner when there is no position hint.
+        try:
+            fx = float(xy[0]) if xy and len(xy) >= 2 else (0.85 if rtl else 0.15)
+            fy = float(xy[1]) if xy and len(xy) >= 2 else 0.06
+        except Exception:
+            fx, fy = (0.85 if rtl else 0.15), 0.06
+        px = int(fx * W - pw / 2)
+        py = int(fy * H - ph / 2)
+        px = max(edge, min(W - pw - edge, px))
+        py = max(edge, min(H - ph - edge, py))
+        lx = px + padx if fx < 0.5 else (px + pw - padx - logo.width)   # mark hugs the outer side
+        ly = py + pady
 
         region = poster.crop((max(0, px), max(0, py),
                               min(W, px + pw), min(H, py + ph))).convert("L")
@@ -326,10 +342,11 @@ def _overlay_real_logo(poster_path: Path, logo_bytes: bytes, *, rtl: bool) -> bo
         poster.alpha_composite(shadow, (px - 24, py - 24))
 
         plate = Image.new("RGBA", (pw, ph), (0, 0, 0, 0))
+        # Fully OPAQUE plate — it must HIDE any baked brand text underneath, not blend with it.
         ImageDraw.Draw(plate).rounded_rectangle(
-            [0, 0, pw - 1, ph - 1], radius=radius, fill=plate_rgb + (200,))
+            [0, 0, pw - 1, ph - 1], radius=radius, fill=plate_rgb + (255,))
         poster.alpha_composite(plate, (px, py))
-        poster.alpha_composite(logo, (px + padx, py + pady))
+        poster.alpha_composite(logo, (lx, ly))
 
         poster.convert("RGB").save(poster_path)
         return True
@@ -690,7 +707,12 @@ def generate_poster(
     # 3c) ONE-SHOT engine (opt-in): the whole creative composed by the Gemini image
     #     model — same gated copy, per-run design diversity. Ships ONLY on a verbatim
     #     OCR gate pass; otherwise falls through to the classic path below.
-    if engine == "oneshot":
+    # Prefer the one-shot engine for an ARABIC brand that has a LOGO: the classic STYLE background
+    # bakes a GARBLED Arabic logo at an unpredictable spot (measured: Azza Fahmy "عزة فهمي"→"ةفهمص",
+    # uncoverable), while the one-shot reserves a clean corner and composites the REAL logo crisply.
+    # Explicit engine="oneshot" always tries it. Either way it falls back to classic if the gate fails.
+    prefer_oneshot = engine == "oneshot" or (bool(brief.logo_url) and arabic)
+    if prefer_oneshot:
         r = _try_oneshot(profile, brief, concept, brand_dna, caller, arabic=arabic,
                          audit=audit, out_dir=out_dir, variation=variation,
                          max_retries=max_qa_retries, log=log, qa_caller=qa_caller)

@@ -487,13 +487,19 @@ Packages: `scraper/`, `business_profile/`, `grounding/`, `competitor/`, `brand/`
   a regression test (`test_saturated_brand_color_beats_a_pale_high_dominance_button`).
 - **End-to-end live demo (2026-07-05, eg.azzafahmy.com) — remaining problems surfaced** (the
   pipeline ran all 7 stages; the moat + QA gates behaved honestly; these are the open weaknesses):
-  1. **Poster one-shot garbled Arabic logo — FIXED 2026-07-05.** The one-shot Imagen engine
-     re-drew the brand lockup and produced broken Arabic ("ةفهمص" for "عزة فهمي"). Fix: the prompt
-     now tells the model to RESERVE a clean corner and NOT draw the logo at all; the logo is no
-     longer attached to generation; `poster.pipeline._overlay_real_logo` COMPOSITES the real logo
-     asset onto that corner deterministically (PIL, luminance-adaptive frosted plate + soft
-     shadow) — pixel-exact, so Arabic is never garbled. Runs before the vision-QA read, so QA sees
-     the crisp logo. Verified by compositing onto the demo poster (crisp "عزة فهمي"). 1 hermetic test.
+  1. **Poster garbled Arabic logo — FIXED (one-shot) + routed 2026-07-05/06.** The image model
+     re-draws/bakes the brand logo and garbles Arabic ("عزة فهمي"→"ةفهمص"). **One-shot engine:**
+     the prompt now RESERVES a clean corner (draws no logo), the logo is not attached to
+     generation, and `poster.pipeline._overlay_real_logo` COMPOSITES the real logo asset there
+     deterministically (PIL, opaque plate + soft shadow) — pixel-exact, never garbled. **Classic
+     engine (default):** its Imagen STYLE background bakes a garbled logo at an UNPREDICTABLE
+     location (measured on Azza Fahmy: bottom-right ~96%h) — trying to "cover" it is unwinnable
+     whack-a-mole (it just adds a competing logo), so we do NOT patch the classic path. Instead:
+     (a) an ARABIC-copy brand with a logo now auto-prefers the one-shot engine; (b) a new
+     `python -m poster --engine oneshot` flag lets ANY brand use it (needed for an Arabic-LOGO
+     but English-COPY brand like Azza Fahmy, where the copy-language signal is absent). The
+     classic garble that remains is caught by the vision-QA gate (pass=False, flagged not shipped).
+     3 hermetic tests (reserve-corner prompt; deterministic composite; unchanged).
   2. **`creative_dna` vision fails 400 `INVALID_ARGUMENT: Provided image is not valid`** on some of
      the brand's real ad images → degrades gracefully to `dna=no` (no crash) but LOSES the DNA
      signal for that run. Needs a pre-validate/transcode (or skip-bad-image) before the Pro vision call.

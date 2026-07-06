@@ -41,6 +41,13 @@ def main() -> int:
     ap.add_argument("profile", help="path to a business_profile.json")
     ap.add_argument("--out", default="outputs/posters/poster.png", help="output PNG path")
     ap.add_argument(
+        "--engine", choices=("classic", "oneshot"), default="classic",
+        help="poster engine: 'classic' (Imagen background + crisp HTML overlay) or 'oneshot' "
+             "(the whole creative composed by the image model; reserves a clean corner and "
+             "composites the REAL logo — best for a brand whose LOGO carries Arabic script, "
+             "which the classic STYLE background can bake garbled).",
+    )
+    ap.add_argument(
         "--no-image", action="store_true",
         help="skip Imagen; use a brand-palette gradient background (fast/free).",
     )
@@ -184,7 +191,7 @@ def main() -> int:
     res = generate_poster(
         profile, caller=caller, variation=variation, brand_dna=brand_dna,
         no_image=args.no_image, headline_override=headline_override,
-        trend_context=trend_context or None,
+        trend_context=trend_context or None, engine=args.engine,
         out_dir=str(Path(args.out).parent or "."),
     )
 
