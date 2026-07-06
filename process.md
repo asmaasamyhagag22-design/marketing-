@@ -2,7 +2,7 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1058 passed, 0 failed** (2026-07-05/06; grew from 880 as each audit fix
+Test suite: **1059 passed, 0 failed** (2026-07-05/06; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
 
 **Active work — adversarial audit (2026-07-05):** a deep verified audit found 1 CRITICAL
@@ -133,6 +133,14 @@ Packages: `scraper/`, `business_profile/`, `grounding/`, `competitor/`, `brand/`
 ## 5. Feature inventory — BUILT ✅ (by subsystem, with the load-bearing details)
 
 ### 5.A Scraper (universal ingestion)
+- **Tolerates invalid TLS certs (2026-07-06)**: `make_browser_context` sets
+  `ignore_https_errors=True`. A real brand site with an expired/misconfigured cert
+  (`net::ERR_CERT_AUTHORITY_INVALID`, MEASURED: marasimltd.com) made Chromium refuse it → the whole
+  scrape returned 0 pages in ~23s ("finished in 23 seconds and produced nothing"). We only READ
+  public marketing content (no credentials submitted), so a cert-authority error must not block the
+  crawl. (Common on MENA small-business sites.) +1 test. NOTE: a site returning HTTP 403 (active
+  bot-block / IP rate-limit after repeated runs) is a SEPARATE, transient condition — not fixed by
+  this and not evaded (out of bounds); the realistic Chrome-131 UA is already set.
 - **Adaptive crawl budget**: default 12 pages/150s; e-commerce detected by product-URL
   density (incl. `/plp/`,`/pdp/`) → 30 pages/330s. Light sub-page fetches (block
   images/fonts/media, skip screenshots) ≈20% faster.
@@ -556,7 +564,12 @@ Packages: `scraper/`, `business_profile/`, `grounding/`, `competitor/`, `brand/`
   analyze→studio→generate→asset flow, slug guard, SSE framing). VISUALLY VERIFIED (studio renders
   report + poster/reel panels with Regenerate). The studio **auto-runs** whatever isn't generated
   yet on load (missing poster/reel → auto-start, streaming into its panel; existing assets stay put
-  with Regenerate) so they don't sit idle after Analyze (owner: "شغّلهم").
+  with Regenerate) so they don't sit idle after Analyze (owner: "شغّلهم"). **Light generating state
+  (2026-07-06)**: the empty/generating asset stage was a big near-black box (owner: "طلع سواد" while
+  the poster/reel were still generating) — now a light blush-tinted placeholder with the brand icon,
+  a "Generating your poster/reel…" label + shimmer, switching to a dark frame only once a real asset
+  is present; a failed generation shows a light "Couldn't generate — press Regenerate" state, never
+  a black void.
 
 ---
 

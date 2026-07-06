@@ -148,16 +148,20 @@ url.addEventListener("keydown",e=>{{if(e.key==="Enter")go.click();}});
 def _panel(kind: str, icon: str, title: str, sub: str, has_asset: bool, slug: str) -> str:
     """One Creative-Studio panel: a stage (asset or placeholder) + log + a generate/regenerate button."""
     asset_url = f"/asset?slug={slug}&amp;kind={kind}"
+    reel_cls = " is-reel" if kind == "reel" else ""
     if has_asset and kind == "poster":
-        stage = f'<img src="{asset_url}" alt="poster">'
+        stage_cls, inner = f"cst-stage{reel_cls} has-asset", f'<img src="{asset_url}" alt="poster">'
     elif has_asset and kind == "reel":
-        stage = f'<video src="{asset_url}" controls playsinline preload="metadata"></video>'
+        stage_cls = f"cst-stage{reel_cls} has-asset"
+        inner = f'<video src="{asset_url}" controls playsinline preload="metadata"></video>'
     else:
-        stage = f'<div class="cst-empty">{icon}<span>No {kind} yet</span></div>'
+        stage_cls = f"cst-stage{reel_cls}"
+        inner = (f'<div class="cst-empty">{icon}<span>Not generated yet</span>'
+                 f'<small>starts automatically — or press below</small></div>')
     btn = "Regenerate" if has_asset else f"Generate {kind}"
     return f"""<div class="cst-panel" id="{kind}-panel">
       <div class="cst-head">{icon} {title} <span class="cst-sub">{sub}</span></div>
-      <div class="cst-stage{' is-reel' if kind == 'reel' else ''}" id="{kind}-stage">{stage}</div>
+      <div class="{stage_cls}" id="{kind}-stage">{inner}</div>
       <div class="cst-log" id="{kind}-log"></div>
       <button class="cst-btn" id="{kind}-btn" onclick="gen('{kind}')">{btn}</button>
     </div>"""
@@ -174,13 +178,24 @@ def _studio_css() -> str:
     .cst-head{{font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:16px;display:flex;
       align-items:center;gap:8px;}}
     .cst-sub{{margin-left:auto;font-size:11px;font-weight:400;color:{c['muted']};font-family:'Inter',sans-serif;}}
-    .cst-stage{{border-radius:12px;overflow:hidden;background:#0b0b11;display:flex;align-items:center;
-      justify-content:center;min-height:220px;}}
-    .cst-stage.is-reel{{aspect-ratio:9/16;max-height:520px;margin:0 auto;width:auto;}}
-    .cst-stage img,.cst-stage video{{width:100%;height:auto;display:block;border-radius:12px;}}
+    .cst-stage{{position:relative;border-radius:12px;overflow:hidden;display:flex;align-items:center;
+      justify-content:center;min-height:240px;
+      background:linear-gradient(140deg,{c['blush100']},#F3E9DD);
+      border:1.5px dashed rgba(168,69,107,0.30);}}
+    .cst-stage.is-reel{{aspect-ratio:9/16;max-height:520px;margin:0 auto;width:auto;min-height:0;}}
+    .cst-stage.has-asset{{background:#0e0e13;border:1px solid {c['line']};border-style:solid;}}
+    .cst-stage img,.cst-stage video{{width:100%;height:auto;display:block;}}
     .cst-stage.is-reel video{{height:100%;object-fit:contain;}}
-    .cst-empty{{display:flex;flex-direction:column;align-items:center;gap:8px;color:#6b5b63;font-size:34px;
-      padding:40px 0;}} .cst-empty span{{font-size:13px;}}
+    .cst-empty{{display:flex;flex-direction:column;align-items:center;gap:9px;color:{c['blush600']};
+      font-size:30px;padding:30px 14px;text-align:center;}}
+    .cst-empty span{{font-size:13.5px;font-weight:600;color:{c['inkSoft']};}}
+    .cst-empty small{{font-size:11.5px;color:{c['muted']};font-weight:400;}}
+    .cst-stage.is-gen{{border-style:solid;border-color:rgba(184,92,122,.38);}}
+    .cst-stage.is-gen::after{{content:'';position:absolute;inset:0;pointer-events:none;
+      background:linear-gradient(100deg,transparent 25%,rgba(184,92,122,.16) 50%,transparent 75%);
+      background-size:220% 100%;animation:cstshim 1.5s linear infinite;}}
+    @keyframes cstshim{{from{{background-position:220% 0}}to{{background-position:-220% 0}}}}
+    @media(prefers-reduced-motion:reduce){{.cst-stage.is-gen::after{{animation:none}}}}
     .cst-log{{display:none;background:#2A1A1F;color:#F3E7EC;border-radius:10px;padding:11px 13px;
       font-family:'Space Grotesk',ui-monospace,Consolas,monospace;font-size:11.5px;line-height:1.65;
       max-height:150px;overflow:auto;white-space:pre-wrap;word-break:break-word;}}
@@ -208,10 +223,19 @@ def _studio_js(slug: str, auto_poster: bool, auto_reel: bool) -> str:
     return f"""<script>
 const SLUG={json.dumps(slug)};
 const AUTO={{poster:{str(auto_poster).lower()},reel:{str(auto_reel).lower()}}};
+const ICON={{poster:'🎨',reel:'🎬'}};
+function stageBase(kind){{return 'cst-stage'+(kind==='reel'?' is-reel':'');}}
+function setEmpty(stage,kind,head,sub){{
+  stage.className=stageBase(kind);
+  stage.innerHTML='<div class="cst-empty">'+ICON[kind]+'<span>'+head+'</span><small>'+sub+'</small></div>';
+}}
 function gen(kind){{
   const btn=document.getElementById(kind+'-btn'),log=document.getElementById(kind+'-log'),
         stage=document.getElementById(kind+'-stage');
   btn.disabled=true;btn.textContent='Generating…';log.style.display='block';log.textContent='';
+  stage.className=stageBase(kind)+' is-gen';
+  stage.innerHTML='<div class="cst-empty">'+ICON[kind]+'<span>Generating your '+kind+'…</span><small>'
+    +(kind==='reel'?'this can take a minute or two (Veo)':'this can take a minute')+'</small></div>';
   const es=new EventSource('/generate/'+kind+'?slug='+encodeURIComponent(SLUG));
   const line=(t,cls)=>{{const d=document.createElement('div');if(cls)d.className=cls;d.textContent=t;
     log.appendChild(d);log.scrollTop=log.scrollHeight;}};
@@ -219,12 +243,14 @@ function gen(kind){{
     line(d.msg, d.msg.includes('[OK]')?'l-ok':d.msg.includes('[X]')?'l-bad':'l-run');}});
   es.addEventListener('done',e=>{{const d=JSON.parse(e.data);es.close();btn.disabled=false;btn.textContent='Regenerate';
     const u=d.asset+'&v='+Date.now();
-    if(kind==='poster')stage.innerHTML='<img src="'+u+'" alt="poster">';
-    else{{stage.classList.add('is-reel');stage.innerHTML='<video src="'+u+'" controls playsinline preload="metadata"></video>';}}
+    stage.className=stageBase(kind)+' has-asset';
+    stage.innerHTML=(kind==='poster')?'<img src="'+u+'" alt="poster">'
+      :'<video src="'+u+'" controls playsinline preload="metadata"></video>';
   }});
-  es.addEventListener('failed',e=>{{const d=JSON.parse(e.data);es.close();btn.disabled=false;btn.textContent='Try again';
-    line('[X] '+(d.msg||'generation failed'),'l-bad');}});
-  es.onerror=()=>{{if(es.readyState===EventSource.CLOSED)btn.disabled=false;}};
+  es.addEventListener('failed',e=>{{const d=JSON.parse(e.data);es.close();btn.disabled=false;btn.textContent='Regenerate';
+    line('[X] '+(d.msg||'generation failed'),'l-bad');
+    setEmpty(stage,kind,'Couldn\\'t generate the '+kind,'press Regenerate to try again');}});
+  es.onerror=()=>{{if(es.readyState===EventSource.CLOSED){{btn.disabled=false;}}}};
 }}
 // Auto-RUN what isn't made yet, right after Analyze — the studio fills itself in; Regenerate stays.
 window.addEventListener('load',()=>{{

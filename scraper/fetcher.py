@@ -123,12 +123,18 @@ def _salvage_partial_dom(page: Page, result: FetchResult, reason: str) -> bool:
 
 
 def make_browser_context(browser: Browser) -> BrowserContext:
-    """Create a context with our standard fingerprint."""
+    """Create a context with our standard fingerprint.
+
+    ignore_https_errors=True: many REAL small-business sites (especially MENA) have an expired or
+    misconfigured TLS cert — Chromium refuses those by default (net::ERR_CERT_AUTHORITY_INVALID),
+    so the whole scrape returned 0 pages in ~20s (MEASURED: marasimltd.com). We only READ public
+    marketing content (no credentials submitted), so a cert-authority error is not a real risk and
+    must not block the crawl."""
     return browser.new_context(
         user_agent=USER_AGENT,
         viewport={"width": VIEWPORT_WIDTH, "height": VIEWPORT_HEIGHT},
         java_script_enabled=True,
-        ignore_https_errors=False,
+        ignore_https_errors=True,
         locale="en-US",
         extra_http_headers={"Accept-Language": ACCEPT_LANGUAGE},
     )
