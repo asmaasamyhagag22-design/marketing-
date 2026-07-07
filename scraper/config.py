@@ -10,8 +10,12 @@ All tunable values live here. No magic numbers in the rest of the code.
 # pages) were badly under-covered. The LLM evidence pack is char-capped, so more
 # pages cost crawl TIME only, not tokens. Raised for solid coverage; a slow site now
 # takes ~2.5 min instead of ~1 min. Tune down for speed-over-coverage.
-TOTAL_BUDGET_SECONDS = 150
-MAX_INTERNAL_PAGES = 12  # in addition to homepage
+# 2026-07-07: owner wants MOST of the data captured and is fine with up to ~10 min per scrape.
+# Raised 150/12 -> 540/40 so link-rich sites (institutes, directories, multi-service brands) go
+# DEEP instead of stopping at 12 pages / 2.5 min. The budget is a CEILING, not a floor — a small
+# site with few links still finishes fast (it exhausts its frontier well before the cap/time).
+TOTAL_BUDGET_SECONDS = 540
+MAX_INTERNAL_PAGES = 40  # in addition to homepage
 
 # Adaptive crawl budget for E-COMMERCE (Pillar 1). MEASURED (benchmark/measure_ecom_*.py): a
 # store discovers 100-300+ internal pages but the default 12-page / 150s budget reaches only
