@@ -1,11 +1,11 @@
-"""Domain-adaptive profile schema (Anthropic / Claude).
+"""Domain-adaptive profile schema (Anthropic).
 
 The base BusinessProfile is UNIVERSAL by design — the same fields for every
 business. But "not all restaurants are the same, nor all educational places"
 (user, 2026-06-14): a charcoal grill, a patisserie, and a fine-dining cafe deserve
 DIFFERENT marketing attributes, and so do a coding bootcamp vs a university.
 
-This module asks Claude to read the (already grounded) scrape result and generate
+This module asks the Anthropic model to read the (already grounded) scrape result and generate
 a schema TAILORED to this specific business's vertical + website: the 5-8 attributes
 that actually matter for marketing IT, each filled FROM the evidence with a verbatim
 supporting quote. It is ADDITIVE — it sits beside the base BusinessProfile, never
@@ -32,7 +32,7 @@ _DEFAULT_MODEL = "claude-sonnet-4-6"
 
 
 class DomainField(BaseModel):
-    """One domain-specific attribute Claude judged important for THIS business."""
+    """One domain-specific attribute the model judged important for THIS business."""
     key: str                       # snake_case machine name, e.g. "cuisine_style"
     label: str                     # human label, e.g. "Cuisine style"
     value: str                     # the extracted value
@@ -41,7 +41,7 @@ class DomainField(BaseModel):
 
 
 class DomainProfile(BaseModel):
-    """A schema Claude built for this specific business + the values it filled."""
+    """A schema the model built for this specific business + the values it filled."""
     vertical: str                  # specific vertical (finer than the base category)
     rationale: str                 # one line: why these attributes for this business
     fields: list[DomainField] = Field(default_factory=list)
@@ -60,7 +60,7 @@ def _v(profile: dict, key: str) -> str:
 
 
 def _evidence_text(profile: dict) -> str:
-    """Concatenate the profile's REAL extracted text — the only thing Claude may
+    """Concatenate the profile's REAL extracted text — the only thing the model may
     draw from. Everything here is already evidence-backed by the base pipeline."""
     parts: list[str] = []
     name = _v(profile, "name")
@@ -100,7 +100,7 @@ def _norm(s: str) -> str:
 
 def _is_grounded(quote: str, evidence: str) -> bool:
     """True if the quote is really in the evidence (verbatim or high token overlap)
-    — so Claude can't invent an attribute that the scrape doesn't support."""
+    — so the model can't invent an attribute that the scrape doesn't support."""
     q, e = _norm(quote), _norm(evidence)
     if not q:
         return False

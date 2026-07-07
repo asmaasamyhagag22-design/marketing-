@@ -1,6 +1,6 @@
 """Review-theme extractor (Anthropic SDK).
 
-Reads the REAL competitor reviews (from Places, <=5 per place) and asks Claude to
+Reads the REAL competitor reviews (from Places, <=5 per place) and asks the model to
 surface recurring praise/complaint themes. The themes feed synthesize_swot() as
 Opportunities / Threats.
 

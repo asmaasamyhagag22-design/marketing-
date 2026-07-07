@@ -1,6 +1,6 @@
 """Domain-adaptive schema (business_profile.domain_schema).
 
-The Claude call needs a key + network; these tests cover the deterministic parts:
+The Anthropic call needs a key + network; these tests cover the deterministic parts:
 evidence assembly, the code-enforced grounding check (so an invented attribute is
 dropped), JSON parsing, and honest-degrade with no key. The "different verticals ->
 different schemas" behaviour is shown by the live elkbabgi/digilians runs.

@@ -1,7 +1,7 @@
 """Opus creative director for the reel.
 
 The user wants more than "animate a photo + stamp static text". They want a real
-creative DIRECTOR: send the business identity + the REAL photos to Claude Opus, and
+creative DIRECTOR: send the business identity + the REAL photos to Opus, and
 let it design a complete, engaging reel — for EACH scene a rich Veo 3.1
 image-to-video prompt (cinematic MOTION and life inside the scene: people moving,
 ambient action, camera movement — not just a zoom), a punchy VOICE-OVER line, and
@@ -75,7 +75,7 @@ def _identity_block(profile: dict) -> str:
     if vps:
         lines.append("Value props: " + "; ".join(vps))
 
-    # Domain-adaptive attributes (Claude-generated, grounded) — the richest signal.
+    # Domain-adaptive attributes (model-generated, grounded) — the richest signal.
     try:
         from business_profile.domain_schema import build_domain_profile
         dp = build_domain_profile(profile)

@@ -79,7 +79,7 @@ def main() -> int:
                     help="skip the vision photo-curator (use ALL scraped content images; "
                          "may include partner logos / QR codes / icons)")
     ap.add_argument("--creative", action="store_true",
-                    help="CREATIVE mode: Claude Opus directs the reel (per-scene Veo 3.1 "
+                    help="CREATIVE mode: Opus directs the reel (per-scene Veo 3.1 "
                          "prompts + voice-over) from the identity + real photos. Veo 3.1 "
                          "brings each real photo to life; OpenAI TTS narrates.")
     ap.add_argument("--no-voiceover", action="store_true",

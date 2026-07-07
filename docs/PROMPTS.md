@@ -21,7 +21,7 @@ So a single deliverable (a poster, a reel) passes through *several* prompts of d
 | **feedback / instructions** | Regeneration feedback appended on a retry when a gate fails |
 | **retrieval intent** | An embedded query string used to *select* evidence (RAG), not sent as chat |
 
-Models in play: **Gemini 2.5** (Pro for the heavy extraction/strategy calls, Flash for cheap judges) is the production default; **Anthropic Claude** (Opus for the reel director, Sonnet for the domain-schema + review-theme calls); **Gemini image + vision** models for poster render and read-back QA; **Gemini `text-embedding-004`** for RAG; **OpenAI** callers as a drop-in fallback and `gpt-audio` for reel voice-over. All text calls go through one `Caller` protocol, so any provider is swappable and tests inject a `MockCaller`.
+Models in play: **Gemini 2.5** (Pro for the heavy extraction/strategy calls, Flash for cheap judges) is the production default; **Anthropic** (Opus for the reel director, Sonnet for the domain-schema + review-theme calls); **Gemini image + vision** models for poster render and read-back QA; **Gemini `text-embedding-004`** for RAG; **OpenAI** callers as a drop-in fallback and `gpt-audio` for reel voice-over. All text calls go through one `Caller` protocol, so any provider is swappable and tests inject a `MockCaller`.
 
 ## Contents
 
@@ -113,8 +113,8 @@ Turns scraped page blocks into a structured brand profile. Every extraction call
 
 - **Where:** [`business_profile/domain_schema.py`:116](https://github.com/asmaasamyhagag22-design/marketing-/blob/main/business_profile/domain_schema.py#L116)
 - **Kind:** user
-- **Model:** Anthropic Claude (claude-sonnet-4-6) via anthropic.Anthropic().messages.create in build_domain_profile
-- **Does:** Standalone prompt asking Claude to (1) name the business's specific vertical and (2) design + fill 5-8 domain-specific marketing attributes, each with a verbatim evidence_quote, returned as strict JSON. Grounding is code-enforced afterward.
+- **Model:** Anthropic (claude-sonnet-4-6) via anthropic.Anthropic().messages.create in build_domain_profile
+- **Does:** Standalone prompt asking the Anthropic model to (1) name the business's specific vertical and (2) design + fill 5-8 domain-specific marketing attributes, each with a verbatim evidence_quote, returned as strict JSON. Grounding is code-enforced afterward.
 
 > You are designing a MARKETING-INTELLIGENCE schema for one specific business... Do TWO things: 1. Identify its SPECIFIC vertical — finer than a generic category... 2. Propose the 5-8 domain-specific ATTRIBUTES that matter MOST... Use ONLY the evidence. If an attribute can't be supported by a quote, OMIT it... Return ONLY a JSON object, no prose, no markdown fences.
 
@@ -359,7 +359,7 @@ Opus (vision) designs an N-scene 9:16 ad from the brand's REAL photos on a HOOK 
 
 - **Where:** [`reel/creative_director.py`:201](https://github.com/asmaasamyhagag22-design/marketing-/blob/main/reel/creative_director.py#L201)
 - **Kind:** system
-- **Model:** Anthropic Claude Opus (claude-opus-4-8) via design_creative_reel -> client.messages.create(system=...)
+- **Model:** Anthropic Opus (claude-opus-4-8) via design_creative_reel -> client.messages.create(system=...)
 - **Does:** Directs Opus to design an N-scene vertical 9:16 ad reel from the identity + real photos, following the HOOK -> WHAT-IT-IS -> BENEFIT -> PROOF -> CTA spine, and return JSON scenes (veo_prompt/voiceover/on_screen_text).
 
 > You are a SENIOR CREATIVE DIRECTOR with 15 years in performance-marketing and TikTok/Reels advertising... Design a {n_scenes}-scene reel that ADVERTISES this brand with the proven AD SPINE... Return ONLY a JSON object, no prose, no markdown fences.
@@ -368,7 +368,7 @@ Opus (vision) designs an N-scene 9:16 ad from the brand's REAL photos on a HOOK 
 
 - **Where:** [`reel/creative_director.py`:168](https://github.com/asmaasamyhagag22-design/marketing-/blob/main/reel/creative_director.py#L168)
 - **Kind:** template fragment
-- **Model:** Anthropic Claude Opus (claude-opus-4-8) — injected into _system_prompt by mode
+- **Model:** Anthropic Opus (claude-opus-4-8) — injected into _system_prompt by mode
 - **Does:** Per-vertical (beauty/elegant/food/generic) veo_prompt motion-guidance fragment picked by _vertical_mode and spliced into the system prompt so each reel's motion vocabulary fits the brand.
 
 > beauty: '- veo_prompt: a vivid, TikTok-native Veo 3.1 IMAGE-TO-VIDEO prompt where a real PERSON uses THIS exact product: a hand enters frame, picks it up and applies it... and the model REACTS'
@@ -377,7 +377,7 @@ Opus (vision) designs an N-scene 9:16 ad from the brand's REAL photos on a HOOK 
 
 - **Where:** [`reel/creative_director.py`:160](https://github.com/asmaasamyhagag22-design/marketing-/blob/main/reel/creative_director.py#L160)
 - **Kind:** template fragment
-- **Model:** Anthropic Claude Opus (claude-opus-4-8) — appended to every _MOTION_GUIDANCE mode
+- **Model:** Anthropic Opus (claude-opus-4-8) — appended to every _MOTION_GUIDANCE mode
 - **Does:** Shared motion tail appended to every mode's guidance: keep the product identity exact, add the person/action around it, only physically-logical use, real energetic movement (no slow zoom/static pan).
 
 > The product's IDENTITY must stay exactly as shown — same shape, label, colour and proportions... Show only PHYSICALLY LOGICAL use... Real, energetic movement in every second — NOT a slow zoom, NOT a static pan. Add no fake text, logos, or signage.
@@ -386,7 +386,7 @@ Opus (vision) designs an N-scene 9:16 ad from the brand's REAL photos on a HOOK 
 
 - **Where:** [`reel/creative_director.py`:193](https://github.com/asmaasamyhagag22-design/marketing-/blob/main/reel/creative_director.py#L193)
 - **Kind:** template fragment
-- **Model:** Anthropic Claude Opus (claude-opus-4-8) — injected into _system_prompt's voiceover_delivery line
+- **Model:** Anthropic Opus (claude-opus-4-8) — injected into _system_prompt's voiceover_delivery line
 - **Does:** Per-vertical example voiceover_delivery phrases handed to Opus as examples of the emotion/performance note to write for each scene's narration.
 
 > beauty: 'fresh and upbeat', 'confident glow', 'delighted reaction', 'warm friendly invitation'; elegant: 'hushed reverence', 'quiet confidence'...
@@ -395,7 +395,7 @@ Opus (vision) designs an N-scene 9:16 ad from the brand's REAL photos on a HOOK 
 
 - **Where:** [`reel/creative_director.py`:205](https://github.com/asmaasamyhagag22-design/marketing-/blob/main/reel/creative_director.py#L205)
 - **Kind:** template fragment
-- **Model:** Anthropic Claude Opus (claude-opus-4-8)
+- **Model:** Anthropic Opus (claude-opus-4-8)
 - **Does:** Featured-vs-whole-brand variant text inside _system_prompt: when featured_product is set, forces every scene onto REAL PHOTO index 0 (same product, varied shots); otherwise anchors on one hero product across distinct photos.
 
 > FEATURED PRODUCT: {featured}. This reel advertises ONLY this product — EVERY scene is the SAME product (REAL PHOTO index 0), varied by SHOT and ACTION... NEVER a different product.
@@ -404,7 +404,7 @@ Opus (vision) designs an N-scene 9:16 ad from the brand's REAL photos on a HOOK 
 
 - **Where:** [`reel/creative_director.py`:372](https://github.com/asmaasamyhagag22-design/marketing-/blob/main/reel/creative_director.py#L372)
 - **Kind:** user
-- **Model:** Anthropic Claude Opus (claude-opus-4-8) — user message with image blocks
+- **Model:** Anthropic Opus (claude-opus-4-8) — user message with image blocks
 - **Does:** Builds the user turn sent to Opus: the business identity brief (_identity_block, line 60) + an optional FEATURED PRODUCT note (feat, line 370) + the downscaled real-photo image blocks, then asks it to design the reel.
 
 > BUSINESS IDENTITY:\n{identity} ... You have {len(used)} real photos below. Design the reel.  / feat: 'FEATURED PRODUCT (advertise ONLY this): {featured_product}. Every scene is the SAME product below — vary the shot/action, not the item.'
