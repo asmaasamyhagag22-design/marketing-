@@ -60,7 +60,7 @@ _load_env()  # must happen before importing/using anything that reads keys
 
 from scraper import scrape
 from business_profile.build import build_profile
-from business_profile.llm import OpenAICaller
+from business_profile.llm import OpenAICaller, default_caller
 from competitor import (
     PlacesClient,
     route_discovery,
@@ -88,12 +88,18 @@ def scrape_yielded_nothing(manifest) -> bool:
 
 
 def _make_caller():
-    """build_profile needs an explicit LLM caller. Build the OpenAI one,
-    tolerating either OpenAICaller() or OpenAICaller(model=...)."""
+    """build_profile needs an explicit LLM caller. Use the PRIMARY prod caller (Gemini/Vertex — the
+    GCP credits are the budget, and it's what poster/reel/strategy already use), falling back to
+    OpenAI only if Gemini can't be built. MEASURED (ITI, 2026-07-07): gpt-4o-mini extracted 0
+    offerings from the API-recovered SPA blocks where Gemini extracted 7 — the dashboard was silently
+    running the weaker extractor while everything downstream ran on Gemini."""
     try:
-        return OpenAICaller()
-    except TypeError:
-        return OpenAICaller(model="gpt-4o-mini")
+        return default_caller(strong=True)
+    except Exception:  # noqa: BLE001 — no Gemini/Vertex -> OpenAI fallback
+        try:
+            return OpenAICaller()
+        except TypeError:
+            return OpenAICaller(model="gpt-4o-mini")
 
 
 def _as_profile(built):
