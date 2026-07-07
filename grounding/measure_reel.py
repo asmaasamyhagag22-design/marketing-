@@ -8,12 +8,12 @@ Two paths per brand:
   A. DEFAULT narration path (`build_storyboard` caller=None -> `narration_lines`) — verbatim,
      no LLM. Expected ~0 unsourced: the sanity FLOOR proving the gate doesn't false-positive on
      genuinely grounded reel copy. Runs offline, ZERO cost. This is the number Step 1 produces.
-  B. CREATIVE path (`reel.creative_director.design_creative_reel`, `--creative`) — the Opus
-     GENERATION surface, the real risk. It costs money (one Opus call/brand), so it is OPT-IN:
-     it runs only with `--creative` AND an `ANTHROPIC_API_KEY` present — never spends silently.
+  B. CREATIVE path (`reel.creative_director.design_creative_reel`, `--creative`) — the Gemini 2.5
+     Pro GENERATION surface, the real risk. It costs money (one Gemini call/brand), so it is OPT-IN:
+     it runs only with `--creative` AND Gemini creds present — never spends silently.
 
 Run:  python -m grounding.measure_reel              (path A only, offline, default)
-      python -m grounding.measure_reel --creative   (also path B; needs ANTHROPIC_API_KEY)
+      python -m grounding.measure_reel --creative   (also path B; needs Gemini creds)
 """
 from __future__ import annotations
 
@@ -68,9 +68,12 @@ def main(argv: list[str]) -> int:
             load_dotenv()
         except Exception:
             pass
-        if not os.environ.get("ANTHROPIC_API_KEY"):
-            print("[creative] --creative requested but ANTHROPIC_API_KEY is not set -> path B "
-                  "skipped (no spend). Running the offline floor only.\n")
+        _has_gemini = any(os.environ.get(k) for k in
+                          ("GOOGLE_CLOUD_PROJECT", "GEMINI_API_KEY", "GOOGLE_API_KEY"))
+        if not _has_gemini:
+            print("[creative] --creative requested but no Gemini creds "
+                  "(GOOGLE_CLOUD_PROJECT / GEMINI_API_KEY) -> path B skipped (no spend). "
+                  "Running the offline floor only.\n")
             do_creative = False
 
     agg = {

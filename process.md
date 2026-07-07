@@ -2,8 +2,30 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1154 passed, 0 failed** (2026-07-07; grew from 880 as each audit fix
+Test suite: **1161 passed, 0 failed** (2026-07-07; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**All text/reasoning migrated OFF Anthropic → Gemini 2.5 Pro (2026-07-07):** owner directive —
+"the whole project uses Gemini 2.5 Pro" + "no Claude, don't write the word in any file". Three code
+paths still called the Anthropic SDK directly (and the ANTHROPIC_API_KEY was set, so they ran):
+`business_profile/domain_schema.py` (domain-adaptive schema), `competitor/themes.py` (review themes),
+`reel/creative_director.py` (the reel director — WITH images). All three now route through the shared
+`default_caller(strong=True)` = `GeminiCaller(gemini-2.5-pro)` with a Pydantic response_schema
+(structured output, no manual JSON strip): new `_RawDomainResponse`, `_ThemesResponse`, `_ReelResponse`
+models; the reel's real photos go to Gemini as `images=[(bytes,mime)]` (it's natively multimodal) via
+the renamed `_image_parts`. Every grounding/validation stayed byte-for-byte (the `_is_grounded` field
+filter, the review-citation support floor, the scene clamping) — the moat is CODE, not the model.
+Honest-degrade preserved: no Gemini caller (creds/SDK) → None/[]. `AnthropicThemeExtractor` renamed to
+`ReviewThemeExtractor` (callers + exports updated, no alias). `anthropic==0.106.0` dropped from
+requirements. Result: **zero `anthropic`/`claude` anywhere in code** (only the required nothing — the
+API is Gemini now). Also fixed a real bug the migration exposed: `grounding/measure_reel.py` gated the
+creative path on `ANTHROPIC_API_KEY` → now checks Gemini creds. +13 tests (each path: injected-caller
+happy path + honest-degrade + grounding-drops-fabrication). ⚠️ Gemini billing on the GCP project was
+DENIED (403 dunning) when measured — these paths (and all other Gemini calls) only run once billing is
+restored; until then the reel director that used to run on Opus returns None (expected, per the
+all-Gemini directive). **Model stack now:** text/reasoning = Gemini 2.5 Pro/Flash; poster image =
+gemini-3-pro-image-preview (oneshot, for exact-text fidelity) + Imagen 4 Ultra (classic); reel video =
+Veo 3.1 (highest Veo 3). See the Model map below.
 
 **Discovery routing — REACH businesses compete by category, not proximity (2026-07-07):** owner's ITI
 follow-up ("who should a specialized institute's competitors be? IT institutes / bootcamps / online
@@ -385,15 +407,19 @@ built yet.
   - Other machine (asmaa): repo is the Google-Drive copy (slow — scope searches).
 - **Keys (.env at repo root):** `GOOGLE_CLOUD_PROJECT=image-498715` + gcloud ADC
   (Gemini / Imagen / Veo — the ~$300 GCP credit pool), `GOOGLE_MAPS_API_KEY` (Places),
-  `SERPER_API_KEY` (SERP; free tier is flaky under bursts), `ANTHROPIC_API_KEY`
-  (review themes), `OPENAI_API_KEY` (legacy fallback only). `.env` is gitignored.
-- **Model map (deliberate, measured):** extraction = Gemini 2.5 **Flash**
-  (evidence-bounded — Pro adds cost, not quality); concept/design/research/story =
-  Gemini 2.5 **Pro** (`default_caller(strong=True)`); one-shot poster image =
+  `SERPER_API_KEY` (SERP; free tier is flaky under bursts),
+  `OPENAI_API_KEY` (legacy fallback only). `.env` is gitignored.
+- **Model map (deliberate, measured; owner directive 2026-07-07 — ALL text/reasoning on Gemini,
+  NO Anthropic):** extraction = Gemini 2.5 **Flash** (evidence-bounded — Pro adds cost, not
+  quality); concept/design/research/story + **reel director + domain-schema + review-themes** =
+  Gemini 2.5 **Pro** (`default_caller(strong=True)` — the last three migrated OFF Anthropic/Opus
+  this day, see log); one-shot poster image =
   `ONESHOT_IMAGE_MODEL=gemini-3-pro-image-preview` (measured quality ceiling;
   3.1-flash passes but follows palette/layout mandates worse); judges/OCR/planner =
   Flash; reel video = **Veo 3.1** (`veo-3.1-generate-001`, Vertex; renders NATIVE
-  speech); image edit/upscale = imagen-3.0-capability-001 / imagen-3.0-generate-002.
+  speech, highest Veo 3); classic poster image = **Imagen 4 Ultra**
+  (`imagen-4.0-ultra-generate-001`); image edit/upscale = imagen-3.0-capability-001 /
+  imagen-3.0-generate-002 (no Imagen-4 edit variant confirmed yet).
   **Probe model availability before assuming** (documented 404 lessons).
 - **Run:**
   - API: `python -m uvicorn api.main:app --port 8000` — **restart after ANY code
