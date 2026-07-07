@@ -47,6 +47,29 @@ def test_arabic_concept_passes_and_keeps_arabic_copy():
     assert c.proof_points == ["إنترنت أسرع", "تغطية أوسع"]
 
 
+def test_concept_prompt_enforces_the_stranger_test_and_grounds_the_visual():
+    # Owner: the poster sold a FEELING ('your unfair advantage') + a generic stock woman, never
+    # saying what ITI does. The concept prompt must now force ANCHOR-NAME-PROVE (the stranger test)
+    # and ground the visual in the real service, banning stock people + faces-in-screens.
+    captured: dict = {}
+
+    class _Rec:
+        def __call__(self, system, user, response_model, group_name="", images=None):
+            captured["system"] = system
+            captured["user"] = user
+            return _resp(), None
+
+    build_creative_concept(_AR, caller=_Rec())
+    s, u = captured["system"], captured["user"]
+    assert "STRANGER TEST" in s and "WHAT THEY DO" in s and "SPECIFIC" in s
+    assert "anchored on a CONCRETE" in s                       # single_message must name the offering
+    assert "staring at the camera holding a laptop" in s       # the exact stock cliché, banned
+    assert "rendered INSIDE a screen" in s                     # no faces/text/logos in-scene (the glitch)
+    assert "the real world of THIS service" in s               # SELF-CHECK grounds the visual
+    # the real offerings reach the prompt so it CAN anchor on a concrete service
+    assert "مركز الاتصال" in u
+
+
 def test_latin_headline_regenerates_then_falls_back_no_latin():
     # The mock returns the SAME Latin headline every call -> retries exhausted -> grounded
     # Arabic fallback. The pipeline NEVER ships Latin on an Arabic brand.
