@@ -33,6 +33,19 @@ def test_oneshot_prompt_carries_copy_verbatim_with_the_contract():
     assert "deep purple" in p and "light streaks" in p               # brand grounding
 
 
+def test_oneshot_prompt_makes_the_primary_color_dominate_not_just_the_cta():
+    # Owner: the ITI poster came out navy when the brand is red — 'the brand color should
+    # DOMINATE the composition, not just the CTA'. The FIRST palette color is the primary and
+    # the mandate must force it into a LARGE color field, and forbid a generic navy default.
+    p = build_oneshot_prompt({"headline": "H"}, brand_name="ITI",
+                             palette_names="brick red, deep red, slate blue")
+    assert "PRIMARY and must DOMINATE" in p
+    assert "LARGE color field" in p
+    assert "NOT enough to tint only the small CTA button" in p
+    assert "generic default blue/navy" in p           # resist the model's documented navy drift
+    assert "brick red" in p                            # the real first palette color reaches the model
+
+
 def test_oneshot_prompt_skips_empty_fields_and_optional_clauses():
     p = build_oneshot_prompt({"headline": "Stay Close", "subheadline": "", "cta": ""})
     assert 'HEADLINE (dominant, hero typography): "Stay Close"' in p

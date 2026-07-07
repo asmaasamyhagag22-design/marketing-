@@ -118,10 +118,14 @@ def build_oneshot_prompt(copy: dict, *, brand_name: str = "", palette_names: str
         # prompt gets baked into the artwork as text — documented lesson).
         parts.append(
             f"COLOR SYSTEM — MANDATORY: build the entire design on the brand palette: "
-            f"{palette_names}. The FIRST color is the brand's primary — make it "
-            "unmistakably present (the CTA button, key accents, or a dominant color "
-            "field). Neutrals (black/white/grey) may support but never replace the "
-            "brand colors. Do NOT invent a different color scheme."
+            f"{palette_names}. The FIRST color is the brand's PRIMARY and must DOMINATE "
+            "the poster as a LARGE color field — a background zone, a major panel, or the "
+            "hero graphic area — so the design reads as THIS brand's color at a glance; it "
+            "is NOT enough to tint only the small CTA button. Use the remaining palette "
+            "colors for secondary accents. Neutrals (black/white/grey) may support but "
+            "never replace or out-weigh the brand colors — do NOT let a neutral, nor a "
+            "generic default blue/navy, become the dominant color. Do NOT invent a "
+            "different color scheme."
         )
     if dna_lines:
         parts.append(f"The brand's own visual language (match it): {dna_lines}")
