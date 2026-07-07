@@ -2,8 +2,25 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1115 passed, 0 failed** (2026-07-05/06; grew from 880 as each audit fix
+Test suite: **1125 passed, 0 failed** (2026-07-05/06; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**API-driven SPA scraping — recover content from same-site JSON (ITI, 2026-07-07):** owner (via the new
+Scraper-QA panel) caught ITI (iti.gov.eg) finishing in 53s with only 4 pages + 0 offerings. DIAGNOSED
+live: ITI is a full **Angular SPA** — its homepage exposes only 4 static `<a href>` links, and ALL real
+content (the programme catalogue, contacts, partners) loads at runtime from **same-site JSON APIs**
+(`pgateway.iti.gov.eg/OldApi/ProgramCategory/…`, navigated by the Angular router with NO href). A
+link-following crawler sees a news-heavy shell → 0 offerings. Fix (universal): new
+`scraper/xhr_capture.py::extract_json_text` flattens captured JSON bodies to their human-readable
+strings (names/titles/descriptions; drops guids/urls/filenames/dates/hashes). `fetcher._fetch_page_once`
+attaches a `page.on("response")` listener that captures **same-registrable-domain** JSON during the
+render (`same_registrable_host`, so `pgateway.iti.gov.eg` ≡ `iti.gov.eg`; bounded 30×400KB), stores it
+on `FetchResult.api_text` (+ appends to rendered_text). `crawler._process_fetched_page` turns
+`api_text` into **CITABLE `tag="api"` text_blocks** (real block_ids, Section.MAIN) so offerings/contacts/
+partners extracted from it survive the evidence validator. VERIFIED LIVE end-to-end: ITI homepage
+text-blocks 370→684 (82 API blocks: Post Graduates / Under Graduates / Tech-Business / Vodafone / Fawry /
+Work Phone …), and a full profile build now extracts **12 offerings (was 0)**. Non-SPA sites are
+unchanged (no same-site JSON → empty capture). +5 tests.
 
 **URL-less 'modal' details (NTI) — resolve the URLs JS builds from a data-attribute (2026-07-06, slice
 1):** owner: NTI's course catalogue shows each course as a card; clicking opens a modal with the real

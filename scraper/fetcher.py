@@ -44,6 +44,9 @@ class FetchResult:
     duration_ms: int
     html: str = ""
     rendered_text: str = ""
+    # Human-readable content recovered from same-site JSON APIs during the render (SPA content
+    # that never appears in the HTML). The crawler turns this into citable text_blocks.
+    api_text: str = ""
     full_screenshot_bytes: bytes = b""
     viewport_screenshot_bytes: bytes = b""
     content_hash: Optional[str] = None
@@ -298,6 +301,34 @@ def _fetch_page_once(context: BrowserContext, url: str, keep_page: bool = False,
         except Exception:
             pass
 
+    # API-driven SPA capture: some sites (Angular/React) expose almost no <a href> links and load
+    # their real content from their OWN JSON APIs (ITI: iti.gov.eg shell + pgateway.iti.gov.eg
+    # program catalogue). Capture same-registrable-domain JSON responses during the render so that
+    # content isn't invisible to a link-follower. Bounded; best-effort; never fails the fetch.
+    _xhr_bodies: list[tuple[str, str]] = []
+    _XHR_MAX = 30
+
+    def _capture_json(resp) -> None:
+        try:
+            if len(_xhr_bodies) >= _XHR_MAX:
+                return
+            ctype = (resp.headers.get("content-type") or "").lower()
+            if "json" not in ctype:
+                return
+            from .url_utils import same_registrable_host
+            if not same_registrable_host(resp.url, url):
+                return
+            body = resp.text()
+            if body and len(body) <= 400_000:
+                _xhr_bodies.append((resp.url, body))
+        except Exception:  # noqa: BLE001 — a response body may be unavailable/redirect; skip it
+            pass
+
+    try:
+        page.on("response", _capture_json)
+    except Exception:  # noqa: BLE001
+        pass
+
     try:
         response = page.goto(url, wait_until="domcontentloaded")
         if response is not None:
@@ -318,6 +349,19 @@ def _fetch_page_once(context: BrowserContext, url: str, keep_page: bool = False,
         result.html = page.content()
         result.rendered_text = page.evaluate("() => document.body ? document.body.innerText : ''") or ""
         title = page.title() or ""
+
+        # Fold in any API-driven SPA content captured during the render (see _capture_json above),
+        # so the SAME text extraction that reads a normal page now also sees the SPA's JSON content
+        # (programme names, contacts, partners) that never appears in the HTML.
+        if _xhr_bodies:
+            try:
+                from .xhr_capture import extract_json_text
+                extra = extract_json_text(_xhr_bodies)
+                if extra:
+                    result.api_text = extra                       # -> citable text_blocks (crawler)
+                    result.rendered_text = (result.rendered_text.rstrip() + "\n" + extra).strip()
+            except Exception:  # noqa: BLE001
+                pass
 
         # Bot protection check
         bot_code = _detect_bot_protection(result.rendered_text, title)

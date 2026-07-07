@@ -58,6 +58,7 @@ from .schemas import (
     ScrapeManifest,
     ScrapeMeta,
     SiteMetadata,
+    Section,
     TextBlock,
 )
 from .url_utils import (
@@ -349,6 +350,23 @@ def _process_fetched_page(
     text_blocks: list[TextBlock] = []
     if page_obj is not None:
         text_blocks = extract_text_blocks(page_obj, fetch_result.final_url)
+
+    # API-driven SPA content (captured from same-site JSON during the fetch, e.g. ITI's programme
+    # catalogue) becomes CITABLE text_blocks — so offerings/contacts/partners extracted from it
+    # carry a real block_id and survive the evidence validator, instead of being invisible.
+    api_text = getattr(fetch_result, "api_text", "") or ""
+    if api_text:
+        from .extractors.text_blocks import _slug_for_url
+        slug = _slug_for_url(fetch_result.final_url)
+        base = len(text_blocks)
+        for j, piece in enumerate(s.strip() for s in api_text.split(" · ")):
+            if len(piece) < 2 or j >= 150:                     # bounded
+                continue
+            text_blocks.append(TextBlock(
+                block_id=f"{slug}_api_{base + j:04d}",
+                page_url=fetch_result.final_url, tag="api",
+                text=piece[:1000], section=Section.MAIN, selector="[api-json]",
+            ))
 
     # Forms
     forms = extract_forms(fetch_result.html, fetch_result.final_url)
