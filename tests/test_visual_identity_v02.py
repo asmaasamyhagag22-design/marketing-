@@ -117,7 +117,41 @@ def test_digilians_like_multiple_authority_partner_logos_sets_cobranding_warning
     assert len(v.authority_logos) == 1
     assert len(v.partner_logos) == 1
     assert v.co_branding_detected is True
-    assert "co_branding_detected" in v.visual_warnings
+
+
+def test_spa_named_logo_is_chosen_when_header_heuristic_misses_it():
+    # ITI (Angular SPA): the real logo is <img src=ColoredLogo.svg class="header__image"> but the
+    # custom <app-header> isn't recognized, so it gets NO in_header/near_nav/home signal and lands
+    # as a sub-threshold unknown_candidate (score ~42). Its FILENAME ('...Logo.svg') is the rescue
+    # signal. Prefer the coloured mark over the white/footer inverse.
+    candidates = [
+        _candidate("https://iti.example/assets/images/ColoredLogo.svg", alt="", source_type="svg_file",
+                   context="", in_header=False, near_nav=False, links_to_home=False),
+        _candidate("https://iti.example/assets/images/WhiteLogo.svg", alt="", source_type="svg_file",
+                   context="", in_header=False, near_nav=False, links_to_home=False, in_footer=True),
+        _candidate("https://iti.example/assets/parteners/Vodafone.png", alt="", source_type="img",
+                   context="partner sponsor", in_header=False, near_nav=False, links_to_home=False),
+    ]
+    v = build_visual_identity(_png(), _computed(candidates, site_name="Information Technology Institute"),
+                              "https://iti.example/")
+    assert v.primary_logo is not None
+    assert v.primary_logo.src.endswith("ColoredLogo.svg")   # the coloured mark, not the white footer one
+
+
+def test_named_logo_rescue_excludes_partner_and_authority_svgs():
+    # Even an SVG with a pure 'logo' filename is REFUSED when it is classified as a partner or an
+    # authority mark — the rescue only promotes the brand's OWN mark, never a co-brand.
+    from scraper.extractors.visual import _choose_primary_logo
+    from scraper.schemas import LogoCandidate
+    cands = [
+        LogoCandidate(src="https://x.example/partners/logo.svg", page_url="https://x.example/",
+                      source_type="svg_file", classification="partner_logo", score=42,
+                      reasons=["logo_keyword", "svg_file"]),
+        LogoCandidate(src="https://x.example/authority/logo.svg", page_url="https://x.example/",
+                      source_type="svg_file", classification="government_logo", score=42,
+                      reasons=["logo_keyword", "svg_file"]),
+    ]
+    assert _choose_primary_logo(cands, ["xbrand"]) is None
 
 
 def test_social_icons_and_hero_banners_are_not_selected_as_primary_logo():

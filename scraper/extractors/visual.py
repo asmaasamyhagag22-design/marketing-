@@ -37,6 +37,25 @@ SOCIAL_KEYWORDS = (
     "tiktok", "whatsapp", "telegram", "pinterest", "snapchat",
 )
 LOGO_KEYWORDS = ("logo", "brand", "identity")
+# A PURE brand-mark filename: `logo`, `brand-logo`, `ColoredLogo`, `WhiteLogo`, `logo-dark`… — a
+# variant qualifier optionally around 'logo'/'wordmark'/'brandmark'. NOT `ministry-logo` /
+# `techcrunch-logo` / `feature-badge` (a third-party or generic name has a non-variant token).
+_LOGO_VARIANT = (r"colou?red|white|black|dark|light|main|primary|secondary|site|header|footer|"
+                 r"full|mono|colou?r|brand")
+_PURE_LOGO_RE = re.compile(
+    rf"^(?:{_LOGO_VARIANT})?[-_ ]?(?:logo|wordmark|brandmark)(?:[-_ ]?(?:{_LOGO_VARIANT}|mark))?$",
+    re.IGNORECASE)
+
+
+def _is_pure_logo_filename(src: str) -> bool:
+    """True when the filename basename is a PURE brand-mark token (see _PURE_LOGO_RE)."""
+    s = (src or "").split("?")[0]
+    if s.lower().startswith("data:"):
+        return False
+    base = s.rsplit("/", 1)[-1].rsplit(".", 1)[0]
+    return bool(_PURE_LOGO_RE.match(base.strip().lower()))
+
+
 HERO_KEYWORDS = ("hero", "banner", "slider", "slide", "carousel", "gallery", "cover")
 PARTNER_KEYWORDS = ("partner", "partners", "sponsor", "sponsored", "powered", "alliance")
 AUTHORITY_KEYWORDS = (
@@ -761,7 +780,35 @@ def _choose_primary_logo(
             if floored and len({c.src for c in floored}) == 1:
                 pool = [max(floored, key=lambda c: c.score)]
             else:
-                return None
+                # NAMED-LOGO rescue (SPA headers — MEASURED on ITI): an SVG/img whose FILENAME
+                # literally names the brand's OWN mark ("logo"/"brand"/"identity") is the logo even
+                # when the header-position heuristic missed it — a custom Angular/React header
+                # (<app-header>, class="header__image") drops the +30 in-header bonus, so the real
+                # logo lands as a sub-threshold unknown_candidate (ITI: ColoredLogo.svg scored 42).
+                # Exclude partner/authority/sponsor/favicon marks; when several are just COLOURWAYS
+                # of the same mark (colored/white/dark…), take the coloured/non-inverse one.
+                _NON_OWN = {"partner_logo", "government_logo", "sponsor_logo",
+                            "initiative_logo", "favicon", "apple_touch_icon", "og_image"}
+                # Restricted to SVG marks with a PURE-logo filename: a vector logo is almost always
+                # the brand's OWN mark (partners/press/badges are raster PNGs), and the strict
+                # filename gate (`ColoredLogo`/`logo`/`brand-logo`, NOT `ministry-logo`/
+                # `techcrunch-logo`) keeps this from reopening the floor-rescue's deliberate refusals.
+                named = [
+                    c for c in candidates
+                    if c.classification not in _NON_OWN
+                    and c.source_type in {"svg_file", "inline_svg"}
+                    and _is_pure_logo_filename(c.src)
+                    and c.score >= 8
+                ]
+                if named:
+                    def _own_rank(c: LogoCandidate) -> tuple:
+                        f = (c.src or "").lower()
+                        inverse = any(w in f for w in ("white", "mono", "dark", "black",
+                                                       "inverse", "invert", "footer"))
+                        return (0 if inverse else 1, c.score)
+                    pool = [max(named, key=_own_rank)]
+                else:
+                    return None
 
     # Prefer a REAL raster logo image over a text wordmark (a high-scoring wordmark
     # is frequently a nav label like "Home" / "الرئيسية" / "About us").

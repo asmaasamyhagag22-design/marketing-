@@ -2,8 +2,22 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1125 passed, 0 failed** (2026-07-05/06; grew from 880 as each audit fix
+Test suite: **1128 passed, 0 failed** (2026-07-05/06; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**SPA logo capture — the "poster with no logo" bug (ITI, 2026-07-07):** owner: the ITI poster shipped
+with NO logo. Root cause found in `visual.py`: ITI's real mark IS captured (`<img
+src=.../ColoredLogo.svg class="header__image">`, scored 42) but the custom Angular header
+(`<app-header>`, not a `<header>`) never fired the +30 in-header bonus, so it landed as a sub-threshold
+`unknown_candidate` and `logo_url` came out NONE. Fix: a **NAMED-LOGO rescue** in
+`_choose_primary_logo` — a last resort (only when every other path found nothing) that promotes an
+**SVG** whose filename is a **PURE brand-mark** (`ColoredLogo`/`WhiteLogo`/`logo`/`brand-logo`, via
+`_is_pure_logo_filename`), excluding partner/authority/sponsor/favicon marks, preferring the coloured
+variant over the white/footer inverse. Restricted to SVG + pure-name so it can NOT reopen the
+floor-rescue's deliberate refusals (all of which are PNG/data-uri third-party walls / low-repetition
+tiles). VERIFIED LIVE: ITI now `Logo found: True`, `primary_logo=ColoredLogo.svg` (was None). +2 tests.
+Combined with the SPA XHR-capture + the poster stranger-test prompt, a re-generated ITI poster now has
+a real logo + 12 grounded programs to anchor on.
 
 **API-driven SPA scraping — recover content from same-site JSON (ITI, 2026-07-07):** owner (via the new
 Scraper-QA panel) caught ITI (iti.gov.eg) finishing in 53s with only 4 pages + 0 offerings. DIAGNOSED
