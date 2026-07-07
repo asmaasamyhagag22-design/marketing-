@@ -119,6 +119,26 @@ def render_creative_reel(
     if not creative or not creative.scenes:
         return None, None
 
+    # PRE-RENDER EVAL (owner: 'evaluate the reel before it comes out'): score the PLAN against the
+    # stranger test + caption rules BEFORE the 10-15 min Veo render. A weak plan is regenerated once
+    # (a cheap Opus call) rather than rendered; the compositor's scene_qa still checks each rendered
+    # clip afterwards. Deterministic, so it never adds a network dependency.
+    try:
+        from reel.plan_eval import evaluate_reel_plan
+        verdict = evaluate_reel_plan(creative, profile=profile, featured=bool(featured_product))
+        if not verdict.ok:
+            logger.info("reel plan eval: score=%d issues=%s -> regenerating once",
+                        verdict.score, verdict.issues)
+            retry = design_creative_reel(profile, photos, n_scenes=n_scenes, language=language,
+                                         featured_product=featured_product)
+            if retry and retry.scenes:
+                v2 = evaluate_reel_plan(retry, profile=profile, featured=bool(featured_product))
+                if v2.score >= verdict.score:                 # keep the stronger plan
+                    creative, verdict = retry, v2
+            logger.info("reel plan eval (final): score=%d issues=%s", verdict.score, verdict.issues)
+    except Exception:  # noqa: BLE001 — the eval must never block a render
+        pass
+
     storyboard = build_creative_storyboard(creative, brief)
 
     vo_path = None
