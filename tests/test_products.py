@@ -7,7 +7,9 @@ crawl reached, images from real on-site assets, chrome (banners/logos) excluded.
 """
 from __future__ import annotations
 
-from dashboard.products import products_from_manifest, _titleize
+import json
+
+from dashboard.products import products_from_manifest, scrape_qa_for_slug, _titleize
 
 
 def test_titleize_cleans_shopify_slugs():
@@ -51,3 +53,33 @@ def test_products_are_grounded_lines_with_real_images():
 def test_no_product_pages_yields_empty():
     assert products_from_manifest({"pages": [{"final_url": "https://b.com/", "page_type": "homepage"}]}) == []
     assert products_from_manifest({}) == []
+
+
+def test_scrape_qa_summarizes_the_freshest_manifest(tmp_path):
+    # a saved scrape under scrapes/<slug>_<ts>/manifest.json -> a compact quality summary the
+    # Scraper-QA panel renders (so the owner can verify the scraper at a glance).
+    m = _manifest()
+    m["scrape_meta"] = {"final_url": "https://b.com/", "pages_attempted": 6,
+                        "pages_succeeded": 5, "duration_ms": 42000, "budget_exceeded": False}
+    m["readiness"] = {"ready_for_extraction": True, "major_missing": []}
+    m["notes"] = ["E-commerce detected (12+ product URLs)",
+                  "ajax_modal_details(https://b.com/cat): +6 JS-built detail URLs",
+                  "some unrelated note"]
+    m["failures"] = []
+    m["pages"][1]["text_blocks"] = [{"text": "a"}, {"text": "b"}]
+    d = tmp_path / "acme_20260706_120000"
+    d.mkdir(parents=True)
+    (d / "manifest.json").write_text(json.dumps(m), encoding="utf-8")
+
+    qa = scrape_qa_for_slug("acme", scrapes_dir=str(tmp_path))
+    assert qa is not None
+    assert qa["pages_succeeded"] == 5 and qa["pages_attempted"] == 6
+    assert qa["ready"] is True and qa["products"] >= 2
+    assert qa["text_blocks"] == 2 and qa["images"] == 4
+    # only the notable notes are surfaced (the url-less-modal + ecommerce), not the unrelated one
+    assert any("ajax_modal" in n for n in qa["key_notes"])
+    assert not any("unrelated" in n for n in qa["key_notes"])
+
+
+def test_scrape_qa_none_when_no_manifest(tmp_path):
+    assert scrape_qa_for_slug("nobody", scrapes_dir=str(tmp_path)) is None

@@ -193,6 +193,25 @@ def _studio_css() -> str:
       background:transparent;border-radius:9px;cursor:pointer;font-size:13px;font-weight:600;}}
     .cst-pick-url button:disabled{{opacity:.5;cursor:default;}}
     .cst-pick-url .msg{{font-size:12.5px;color:{c['muted']};}}
+    .cst-qa{{margin-bottom:18px;border:1px solid {c['line']};border-radius:14px;overflow:hidden;}}
+    .cst-qa-h{{display:flex;justify-content:space-between;align-items:center;gap:10px;
+      padding:11px 15px;background:{c['blush100']};cursor:pointer;font-family:'Fraunces',Georgia,serif;
+      font-weight:600;font-size:14.5px;}}
+    .cst-qa-h .rd{{font-family:'Inter',sans-serif;font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;}}
+    .cst-qa-h .rd.ok{{color:{c['ok']};background:rgba(63,143,107,.12);}}
+    .cst-qa-h .rd.no{{color:{c['bad']};background:rgba(181,72,72,.1);}}
+    .cst-qa-body{{padding:14px 15px;}}
+    .cst-qa-grid{{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:9px;margin-bottom:12px;}}
+    .cst-qa-stat{{background:{c['surface']};border:1px solid {c['line']};border-radius:10px;padding:9px 11px;text-align:center;}}
+    .cst-qa-stat b{{display:block;font-family:'Fraunces',Georgia,serif;font-size:20px;color:{c['ink']};line-height:1.1;}}
+    .cst-qa-stat span{{font-size:11px;color:{c['muted']};}}
+    .cst-qa-notes{{display:flex;flex-direction:column;gap:5px;margin-bottom:10px;}}
+    .cst-qa-notes .n{{font-size:12px;color:{c['blush700']};background:{c['blush100']};padding:4px 9px;border-radius:7px;}}
+    .cst-qa-pages{{max-height:150px;overflow-y:auto;border-top:1px dashed {c['line']};padding-top:8px;}}
+    .cst-qa-pages a{{display:flex;justify-content:space-between;gap:10px;font-size:11.5px;color:{c['muted']};
+      text-decoration:none;padding:2px 0;}}
+    .cst-qa-pages a:hover{{color:{c['blush700']};}}
+    .cst-qa-pages a b{{color:{c['ink']};font-weight:600;flex-shrink:0;}}
     .cst-chip{{flex:0 0 auto;width:104px;cursor:pointer;border:2px solid transparent;border-radius:12px;
       background:{c['surface']};box-shadow:0 4px 12px rgba(126,52,80,.06);overflow:hidden;transition:all .15s;}}
     .cst-chip:hover{{transform:translateY(-2px);}}
@@ -243,6 +262,13 @@ def _studio_section(slug: str, has_poster: bool, has_reel: bool) -> str:
     return f"""<div class="sec"><div class="sec-h"><span class="bar"></span>
       <h2>Creative Studio — generate on demand</h2><span class="cnt">grounded · brand-safe · yours to drive</span></div>
       <div class="card">
+        <div class="cst-qa" id="scrape-qa">
+          <div class="cst-qa-h" onclick="toggleQA()">
+            <span>🔎 Scraper quality <span id="qa-sub" style="font-family:'Inter',sans-serif;font-weight:400;font-size:12px;color:#8a7480"></span></span>
+            <span class="rd" id="qa-ready">…</span>
+          </div>
+          <div class="cst-qa-body" id="qa-body"><div class="cst-pick-load">loading scrape quality…</div></div>
+        </div>
         <div class="cst-pick">
           <div class="cst-pick-h">🛍️ Choose a product to feature <span id="pick-sel">— whole brand</span></div>
           <div class="cst-pick-row" id="product-picker"><span class="cst-pick-load">loading products…</span></div>
@@ -299,6 +325,34 @@ function addByUrl(){{
       msg.textContent='✓ added & selected'; inp.value='';
     }}).catch(()=>{{btn.disabled=false;msg.textContent='✗ error scraping';}});
 }}
+function toggleQA(){{const b=document.getElementById('qa-body');if(b)b.style.display=(b.style.display==='none'?'block':'none');}}
+function loadScrapeQA(){{
+  const body=document.getElementById('qa-body'),ready=document.getElementById('qa-ready'),sub=document.getElementById('qa-sub');
+  if(!body)return;
+  fetch('/scrape_qa?slug='+encodeURIComponent(SLUG)).then(r=>r.json()).then(d=>{{
+    const q=d&&d.qa;
+    if(!q){{ready.textContent='no scrape';ready.className='rd no';
+      body.innerHTML='<div class="cst-pick-load">(no saved scrape found for this brand)</div>';return;}}
+    ready.textContent=q.ready?'✓ ready':'⚠ not ready';ready.className='rd '+(q.ready?'ok':'no');
+    if(sub)sub.textContent='· '+(q.final_url||'').replace(/^https?:\\/\\//,'').replace(/\\/$/,'');
+    const stat=(n,l)=>'<div class="cst-qa-stat"><b>'+n+'</b><span>'+l+'</span></div>';
+    let h='<div class="cst-qa-grid">'
+      +stat(q.pages_succeeded+'/'+q.pages_attempted,'pages')
+      +stat(q.products,'products')
+      +stat(q.images,'images')
+      +stat(q.text_blocks,'text blocks')
+      +stat((q.duration_ms/1000).toFixed(0)+'s','duration')
+      +stat(q.failures,'failures')
+      +'</div>';
+    if(q.budget_exceeded)h+='<div class="cst-qa-notes"><div class="n" style="color:#b3402e;background:#fdecec">⚠ budget exceeded — some pages skipped</div></div>';
+    if((q.major_missing||[]).length)h+='<div class="cst-qa-notes"><div class="n" style="color:#b3402e;background:#fdecec">missing: '+q.major_missing.map(esc).join(', ')+'</div></div>';
+    if((q.key_notes||[]).length){{h+='<div class="cst-qa-notes">';q.key_notes.forEach(n=>{{h+='<div class="n">'+esc(n)+'</div>';}});h+='</div>';}}
+    if((q.pages||[]).length){{h+='<div class="cst-qa-pages">';q.pages.forEach(p=>{{
+      h+='<a href="'+esc(p.url)+'" target="_blank" rel="noopener"><span>'+esc(p.url.replace(/^https?:\\/\\//,''))+'</span><b>'+p.blocks+'</b></a>';}});h+='</div>';}}
+    body.innerHTML=h;
+  }}).catch(()=>{{ready.textContent='error';ready.className='rd no';
+    body.innerHTML='<div class="cst-pick-load">(couldn\\'t load scrape quality)</div>';}});
+}}
 function stageBase(kind){{return 'cst-stage'+(kind==='reel'?' is-reel':'');}}
 function setEmpty(stage,kind,head,sub){{
   stage.className=stageBase(kind);
@@ -330,6 +384,7 @@ function gen(kind){{
   es.onerror=()=>{{if(es.readyState===EventSource.CLOSED){{btn.disabled=false;}}}};
 }}
 window.addEventListener('load',()=>{{
+  loadScrapeQA();                                  // scraper quality panel
   loadProducts();                                  // populate the product picker
   if(AUTO.poster)gen('poster');
   if(AUTO.reel)setTimeout(()=>gen('reel'),500);
@@ -416,6 +471,8 @@ class _Handler(BaseHTTPRequestHandler):
             self._serve_products(q)
         elif route == "/product_by_url":
             self._serve_product_by_url(q)
+        elif route == "/scrape_qa":
+            self._serve_scrape_qa(q)
         elif route == "/generate/poster":
             self._stream_generate(q, "poster")
         elif route == "/generate/reel":
@@ -454,6 +511,21 @@ class _Handler(BaseHTTPRequestHandler):
         except Exception:
             items = []
         self._send(200, json.dumps({"products": items}).encode("utf-8"),
+                   "application/json; charset=utf-8")
+
+    def _serve_scrape_qa(self, q: dict):
+        """A compact quality summary of the brand's freshest scrape — so the owner can verify the
+        SCRAPER (pages/products/images/coverage/readiness + notable notes) at a glance."""
+        slug = (q.get("slug") or [""])[0]
+        if not _ok_slug(slug):
+            self._send(400, b"bad slug", "text/plain; charset=utf-8")
+            return
+        try:
+            from dashboard.products import scrape_qa_for_slug
+            qa = scrape_qa_for_slug(slug)
+        except Exception:
+            qa = None
+        self._send(200, json.dumps({"qa": qa}).encode("utf-8"),
                    "application/json; charset=utf-8")
 
     def _serve_product_by_url(self, q: dict):

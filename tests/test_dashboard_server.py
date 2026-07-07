@@ -161,6 +161,30 @@ def test_product_by_url_reports_when_no_product_found(live, monkeypatch):
     assert d["ok"] is False and "no product" in d["error"].lower()
 
 
+def test_studio_has_scraper_quality_panel(live):
+    _get(live + "/analyze?url=https://brand.example/")
+    _s, body = _get(live + "/studio?slug=brand_example")
+    h = body.decode("utf-8")
+    assert 'id="scrape-qa"' in h and "loadScrapeQA()" in h                 # the QA panel + its loader
+    assert "/scrape_qa?" in h                                              # JS calls the new route
+
+
+def test_scrape_qa_route_returns_the_summary(live, monkeypatch):
+    fake = {"pages_succeeded": 5, "pages_attempted": 6, "products": 3, "images": 4,
+            "text_blocks": 120, "duration_ms": 42000, "budget_exceeded": False,
+            "ready": True, "major_missing": [], "failures": 0, "pages": [], "key_notes": []}
+    monkeypatch.setattr("dashboard.products.scrape_qa_for_slug", lambda slug: fake)
+    _s, body = _get(live + "/scrape_qa?slug=brand_example")
+    d = json.loads(body)
+    assert d["qa"]["ready"] is True and d["qa"]["pages_succeeded"] == 5
+
+
+def test_scrape_qa_route_null_when_no_scrape(live, monkeypatch):
+    monkeypatch.setattr("dashboard.products.scrape_qa_for_slug", lambda slug: None)
+    _s, body = _get(live + "/scrape_qa?slug=brand_example")
+    assert json.loads(body)["qa"] is None
+
+
 def test_studio_does_not_rerun_existing_assets(live):
     _get(live + "/analyze?url=https://brand.example/")
     _get(live + "/generate/poster?slug=brand_example")                 # poster now exists (fake)

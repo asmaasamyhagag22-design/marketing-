@@ -103,3 +103,46 @@ def products_for_slug(slug: str, *, scrapes_dir: str = "scrapes", limit: int = 1
         return products_from_manifest(json.loads(mp.read_text(encoding="utf-8")), limit=limit)
     except Exception:
         return []
+
+
+# Notes worth surfacing in the Scraper-QA panel (capabilities/limits the owner cares about).
+_QA_NOTE_KEYS = ("ajax_modal", "e-commerce", "ecommerce", "product", "budget", "sitemap",
+                 "root_anchor", "deep", "readiness")
+
+
+def scrape_qa_for_slug(slug: str, *, scrapes_dir: str = "scrapes") -> dict | None:
+    """A compact QUALITY summary of a brand's freshest scrape — so the owner can verify the scraper
+    at a glance (pages, products, images, text coverage, readiness, and the notable notes such as the
+    url-less-modal resolution). None when there is no manifest. Never raises."""
+    mp = _latest_manifest(slug, scrapes_dir)
+    if not mp:
+        return None
+    try:
+        m = json.loads(mp.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+    sm = m.get("scrape_meta") or {}
+    rd = m.get("readiness") or {}
+    pages = m.get("pages") or []
+    notes = [n for n in (m.get("notes") or []) if isinstance(n, str)]
+    text_blocks = sum(len(p.get("text_blocks") or []) for p in pages if isinstance(p, dict))
+    products = products_from_manifest(m, limit=100)
+    key_notes = [n for n in notes if any(k in n.lower() for k in _QA_NOTE_KEYS)]
+    return {
+        "manifest_path": str(mp),
+        "final_url": sm.get("final_url") or "",
+        "pages_attempted": int(sm.get("pages_attempted") or 0),
+        "pages_succeeded": int(sm.get("pages_succeeded") or 0),
+        "duration_ms": int(sm.get("duration_ms") or 0),
+        "budget_exceeded": bool(sm.get("budget_exceeded")),
+        "ready": bool(rd.get("ready_for_extraction")),
+        "major_missing": list(rd.get("major_missing") or [])[:8],
+        "text_blocks": text_blocks,
+        "images": len(m.get("images_of_interest") or []),
+        "products": len(products),
+        "failures": len(m.get("failures") or []),
+        "pages": [{"url": (p.get("url") or p.get("final_url") or ""),
+                   "blocks": len(p.get("text_blocks") or [])}
+                  for p in pages if isinstance(p, dict)][:25],
+        "key_notes": key_notes[:10],
+    }
