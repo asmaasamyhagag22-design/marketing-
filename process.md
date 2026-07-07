@@ -2,8 +2,27 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1137 passed, 0 failed** (2026-07-07; grew from 880 as each audit fix
+Test suite: **1142 passed, 0 failed** (2026-07-07; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**Poster primary color must DOMINATE + never self-list a competitor (2026-07-07):** two more
+"continue on the best solutions" fixes. **(1) on-brand color dominance** (owner: the ITI poster read
+navy when the brand is red — "the brand color should DOMINATE, not just the CTA"): the palette DATA was
+already fixed (logo-SVG extraction leads with ITI's red `#9c3c3c`; navy is 5th and never reaches the
+top-4 `_palette_names`), but the one-shot COLOR SYSTEM mandate let the model satisfy "make it present"
+with only the CTA button (the old "or a dominant color field" was optional). Strengthened: the first
+palette color is the PRIMARY and must occupy a LARGE color field (background zone / major panel / hero
+graphic area) so the poster reads as this brand at a glance; neutrals may support but never out-weigh
+it, and the model may not drift to a generic default navy. Universal; the render is still measured by
+the paid benchmark. +1 test. **(2) no self-competitor across scripts** (owner: irrelevant "competitors"
+for ITI — the saved run in fact listed ITI as its OWN peer): the Places result «معهد تكنولوجيا
+المعلومات - ITI» (an Alexandria branch, no website) beat both `_is_self` checks — the profile carried
+its URL only in `source_url` (so the domain check never ran) and the exact-name check compared English
+"Information Technology Institute" to the Arabic listing. `_is_self` now also reads `source_url` and
+adds a cross-script brand-label check: the subject's registrable-domain label ("iti" from iti.gov.eg,
+PSL-correct) matched as a distinct token in the candidate name catches a different-script branch of the
+same brand; guarded by a generic-label stoplist + ≥3-char rule so it never drops a real peer sharing a
+common word. +4 tests.
 
 **Reel pre-render plan-eval + poster service-prop gate + PROMPTS.md catalog (2026-07-07):** three
 landed under the owner's "continue on the best solutions" authority. **(1) evaluate the reel BEFORE it
