@@ -348,6 +348,22 @@ def _image_bytes_from_url(url: Optional[str]) -> tuple[Optional[bytes], str]:
     return None, "image/jpeg"
 
 
+# SERVICE categories whose content images are BUILDINGS / PEOPLE, not products — compositing them
+# as scene "props" produces clutter + a hallucinated framed face (owner: the ITI poster). A
+# whole-brand poster for these attaches NO props. Any other / unknown category keeps the prop path
+# (product/food brands), and a PICKED product always attaches regardless of category.
+_SERVICE_NO_PROP_CATS = {"clinic", "hospital", "education", "government", "agency",
+                         "services_b2b", "services_b2c", "professional_services",
+                         "real_estate", "fitness", "nonprofit", "automotive"}
+
+
+def _profile_category(profile) -> str:
+    cat = (profile or {}).get("category") if isinstance(profile, dict) else None
+    if isinstance(cat, dict):
+        cat = cat.get("value")
+    return str(getattr(cat, "value", cat) or "").lower()
+
+
 def _gather_product_props(profile, caller, log, product_image: Optional[str] = None) -> tuple[list, list[str]]:
     """The brand's REAL product photos as scene props for the one-shot composite (the
     owner's radical fix: a real product photo carries its REAL, correct label — like
@@ -361,8 +377,15 @@ def _gather_product_props(profile, caller, log, product_image: Optional[str] = N
     label text is OCR'd once so those lines become ALLOWED extras in the fidelity gate
     (invented labels stay junk). ([], []) on any failure — never raises."""
     try:
-        urls = list(((profile or {}).get("visual") or {}).get("content_images") or [])
         picked = [product_image] if product_image else []
+        # A WHOLE-BRAND poster only composites content images as product props for a PRODUCT / food
+        # brand (retail / ecommerce / beauty / restaurant). For a SERVICE brand (education, clinic,
+        # agency, government…) the content images are BUILDINGS and PEOPLE, and composing them as
+        # desk objects produces clutter + a hallucinated framed face (owner: the ITI poster). A
+        # PICKED product always attaches (the user chose it); only the whole-brand path is gated.
+        if not picked and _profile_category(profile) in _SERVICE_NO_PROP_CATS:
+            return [], []
+        urls = list(((profile or {}).get("visual") or {}).get("content_images") or [])
         if picked:
             urls = [u for u in urls if u != product_image]     # de-dup; picked leads
         if not urls and not picked:

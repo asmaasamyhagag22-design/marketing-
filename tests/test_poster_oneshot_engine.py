@@ -208,6 +208,30 @@ def test_gather_product_props_prioritizes_the_user_picked_product(monkeypatch):
     assert [p[0] for p in props3] == [b"IMG:https://x/a.jpg", b"IMG:https://x/b.jpg"]
 
 
+def test_product_props_skipped_for_a_service_brand_but_kept_for_products(monkeypatch):
+    # Owner: the ITI poster had a building model + a framed face — content images composited as
+    # 'product props' on a SERVICE brand. A whole-brand service poster must attach NO props; a
+    # product brand still does; and a PICKED product always attaches even on a service brand.
+    import poster.pipeline as pl
+    import reel.image_quality as iq
+    monkeypatch.setattr(pl, "_image_bytes_from_url", lambda u: (b"IMG:" + u.encode(), "image/jpeg"))
+    monkeypatch.setattr(iq, "filter_usable_photos", lambda urls, max_keep=2: list(urls)[:max_keep])
+
+    service = {"category": {"value": "education"},
+               "visual": {"content_images": ["https://x/building.jpg", "https://x/person.jpg"]}}
+    assert pl._gather_product_props(service, None, lambda m: None) == ([], [])   # whole brand -> no props
+
+    # a PICKED product always attaches, even for a service brand
+    props, _ = pl._gather_product_props(service, None, lambda m: None,
+                                        product_image="https://x/course.jpg")
+    assert props and props[0] == (b"IMG:https://x/course.jpg", "image/jpeg")
+
+    # a PRODUCT brand attaches whole-brand props as before
+    ecom = {"category": {"value": "ecommerce"}, "visual": {"content_images": ["https://x/p.jpg"]}}
+    props2, _ = pl._gather_product_props(ecom, None, lambda m: None)
+    assert props2 and props2[0] == (b"IMG:https://x/p.jpg", "image/jpeg")
+
+
 def test_prompt_product_props_mode_vs_unlabeled_mode():
     from poster.oneshot import build_oneshot_prompt
     with_products = build_oneshot_prompt({"headline": "H"}, brand_name="B", n_products=2)
