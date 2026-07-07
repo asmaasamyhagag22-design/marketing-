@@ -12,6 +12,20 @@ Hermetic: mock judge / mock caller, no network, no real LLM.
 from types import SimpleNamespace
 
 from grounding import EvidenceLedger, make_subject_judge
+from grounding.subject_judge import _window
+
+
+def test_window_centers_on_token_so_far_proving_context_survives():
+    # A blind head-slice (text[:400]) clips away the sentence that proves the match when the token
+    # sits deep in a long block. _window centers a 400-char window on the token instead.
+    short = "the best coffee in town"
+    assert _window(short, "best") == short           # <=400 chars -> unchanged (old [:400] behaviour)
+    far = ("x" * 900) + " served with the finest BEST brew imaginable " + ("y" * 900)
+    w = _window(far, "BEST")
+    assert "BEST brew" in w                            # token + its context preserved...
+    assert len(w) <= 410 < len(far)                    # ...in a ~400-char window, not the whole block
+    assert _window(("z" * 900), "absent")[:1] == "z"  # token not found -> head-slice fallback
+    assert _window("", "best") == "" and _window(None, "best") == ""  # None / empty safe
 
 
 def _num_sourced(led, copy):

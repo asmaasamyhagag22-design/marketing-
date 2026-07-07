@@ -8,8 +8,15 @@ different schemas" behaviour is shown by the live elkbabgi/digilians runs.
 from __future__ import annotations
 
 from business_profile.domain_schema import (
-    _evidence_text, _is_grounded, _safe_json_object, build_domain_profile,
+    _PROMPT, _evidence_text, _is_grounded, _safe_json_object, build_domain_profile,
 )
+
+
+def test_prompt_requires_actionable_attributes():
+    # The domain schema must yield attributes a marketer can ACT on (targeting/message/proof),
+    # not trivia fields — so the generated schema feeds campaign decisions downstream.
+    assert "a marketer could ACT on" in _PROMPT
+    assert "targeting axis" in _PROMPT and "proof point" in _PROMPT
 
 
 def _profile():

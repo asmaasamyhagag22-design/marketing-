@@ -28,6 +28,33 @@ _SYSTEM = (
 )
 
 
+def _window(text: str, token: str, radius: int = 200) -> str:
+    """A ≤2·radius-char window CENTERED on the shared token, so the sentence that justifies (or
+    refutes) the match survives truncation. A blind head-slice (text[:400]) can clip away the
+    proving context when the token sits deep in a long block — a silent recall edge. Falls back
+    to a head-slice when the token isn't found. Only WHICH span the judge sees changes; its
+    wording (measurement-locked _SYSTEM) is untouched, and for any text ≤2·radius the result is
+    the whole string — identical to the old [:400] on the short claims the judge was tuned on."""
+    text = "" if text is None else str(text)      # coerce: this runs BEFORE judge()'s try/except,
+    token = "" if token is None else str(token)    # so it must never raise (never-raise guarantee).
+    budget = 2 * radius
+    if len(text) <= budget:
+        return text
+    lo = text.lower().find(token.lower()) if token else -1
+    if lo < 0:
+        return text[:budget]
+    start = lo - radius
+    end = lo + len(token) + radius
+    if start < 0:                                   # clamped left -> slide right to fill the budget
+        end -= start
+        start = 0
+    if end > len(text):                             # clamped right -> slide left to fill the budget
+        start = max(0, start - (end - len(text)))
+        end = len(text)
+    clip = text[start:end]
+    return ("…" + clip) if start > 0 else clip
+
+
 def make_subject_judge(caller: Any) -> Optional[Callable[[str, str, str], Optional[bool]]]:
     """Build a same-subject judge from a Gemini caller (use a cheap Flash caller — the judge
     fires only on ambiguous claims). Returns a callable ``(claim_text, evidence_text, token)
@@ -46,8 +73,8 @@ def make_subject_judge(caller: Any) -> Optional[Callable[[str, str, str], Option
     def judge(claim_text: str, evidence_text: str, token: str) -> Optional[bool]:
         user = (
             f"Shared value/word: {token!r}\n"
-            f"CLAIM copy: {(claim_text or '')[:400]!r}\n"
-            f"BRAND evidence: {(evidence_text or '')[:400]!r}\n"
+            f"CLAIM copy: {_window(claim_text, token)!r}\n"
+            f"BRAND evidence: {_window(evidence_text, token)!r}\n"
             "Do the claim and the evidence use this value for the SAME thing?"
         )
         try:

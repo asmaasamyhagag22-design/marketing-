@@ -132,6 +132,7 @@ Rules:
 - Use ONLY the evidence. If an attribute can't be supported by a quote, OMIT it.
 - Do not invent dishes, programs, certifications, audiences, or claims not in the evidence.
 - Prefer attributes that distinguish this business from generic peers in its field.
+- Each attribute must be one a marketer could ACT on — a targeting axis, a message angle, or a proof point — not a trivia field. If it wouldn't change a campaign decision, omit it.
 
 Return ONLY a JSON object, no prose, no markdown fences:
 {{"vertical": "...", "rationale": "one line: why these attributes for this business", "fields": [{{"key": "...", "label": "...", "value": "...", "evidence_quote": "..."}}]}}"""
