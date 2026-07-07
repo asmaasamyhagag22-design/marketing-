@@ -835,6 +835,56 @@ def _extract_svg_colors(raw_candidates: list[dict]) -> list[dict[str, Any]]:
             out.append({"color": raw_color, "role": "logo_svg", "weight": 10})
     return out
 
+
+def _logo_svg_signals(logo_src: Optional[str], page_url: str) -> list[dict[str, Any]]:
+    """Brand colors parsed from the SELECTED primary logo when it is an EXTERNAL .svg FILE.
+
+    `_logo_pixel_signals` samples raster pixels but SKIPS svg, and only INLINE-svg fills were ever
+    read — so an EXTERNAL svg logo (ITI's ColoredLogo.svg, brand red #9a3333) contributed NOTHING
+    and the page background (navy #203947) won the palette. This fetches the svg (SSRF-guarded,
+    bounded), parses fill/stroke/stop-color, drops white/black/neutral-gray (plates + the dark
+    wordmark text), QUANTIZES near-duplicate shades so a logo's many reds cluster into ONE, and
+    emits weighted 'logo_svg' signals so the brand's TRUE colour drives the palette. Never raises."""
+    if not logo_src:
+        return []
+    src = str(logo_src)
+    if not (src.lower().split("?")[0].endswith(".svg") and src.startswith(("http://", "https://"))):
+        return []
+    try:
+        from urllib.parse import urljoin
+        from urllib.request import Request, urlopen
+
+        from scraper.url_utils import is_safe_public_url
+        url = urljoin(page_url or "", src)
+        if not is_safe_public_url(url):
+            return []
+        req = Request(url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"})
+        with urlopen(req, timeout=8) as resp:                 # noqa: S310 — guarded above
+            text = resp.read(1_500_000).decode("utf-8", "replace")
+    except Exception:  # noqa: BLE001
+        return []
+    raw = re.findall(r'(?:fill|stroke|stop-color)\s*[:=]\s*["\']?(#[0-9a-fA-F]{3,6}|rgb\([^)]+\))', text)
+    counts: Counter = Counter()
+    for c in raw:
+        hx = _normalize_css_color(c)
+        if not hx or _is_near_white(hx) or _is_near_black(hx) or _is_low_saturation_gray(hx):
+            continue                                          # drop plates + the dark text/neutrals
+        rgb = _hex_to_rgb(hx)
+        if not rgb:
+            continue
+        r, g, b = rgb
+        q = f"#{min(r // 24 * 24 + 12, 255):02x}{min(g // 24 * 24 + 12, 255):02x}{min(b // 24 * 24 + 12, 255):02x}"
+        counts[q] += 1
+    if not counts:
+        return []
+    total = sum(counts.values())
+    out: list[dict[str, Any]] = []
+    for hx, n in counts.most_common(6):
+        out.append({"color": hx, "role": "logo_svg", "weight": round(6 + 8 * min(n / total, 0.75), 2)})
+        if len(out) >= 3:
+            break
+    return out
+
 def _logo_pixel_signals(logo_src: Optional[str], page_url: str) -> list[dict[str, Any]]:
     """Dominant PIXEL colors of the selected primary logo (raster PNG/JPG/WebP).
 
@@ -1172,14 +1222,16 @@ def build_visual_identity(
         c for c in logo_candidates if c.score >= 45 and c.classification in {"government_logo", "partner_logo", "sponsor_logo", "initiative_logo"}
     ]) >= 2)
 
-    # The SELECTED primary logo's pixel colors are the strongest brand signal —
-    # feed them into the palette scoring (raster logos contributed nothing before;
-    # inline-SVG fills were already captured via 'logo_svg').
+    # The SELECTED primary logo's colors are the strongest brand signal — feed them into the palette
+    # scoring. Raster logos contributed nothing before (_logo_pixel_signals); INLINE-svg fills were
+    # captured via 'logo_svg'; an EXTERNAL .svg logo (ITI's ColoredLogo.svg -> brand RED) was missed
+    # entirely, so the page background won — _logo_svg_signals now parses the svg file's colors.
     if primary_logo is not None:
-        pixel_signals = _logo_pixel_signals(primary_logo.src, page_url)
-        if pixel_signals:
+        logo_signals = (_logo_pixel_signals(primary_logo.src, page_url)
+                        + _logo_svg_signals(primary_logo.src, page_url))
+        if logo_signals:
             computed = dict(computed)
-            computed["color_signals"] = list(computed.get("color_signals") or []) + pixel_signals
+            computed["color_signals"] = list(computed.get("color_signals") or []) + logo_signals
 
     brand_palette, palette_info = _build_brand_palette(raw_palette, computed)
     visual_warnings: list[str] = []

@@ -138,6 +138,39 @@ def test_spa_named_logo_is_chosen_when_header_heuristic_misses_it():
     assert v.primary_logo.src.endswith("ColoredLogo.svg")   # the coloured mark, not the white footer one
 
 
+def test_external_svg_logo_colors_drive_the_brand_palette(monkeypatch):
+    # ITI: the logo is an EXTERNAL .svg whose real brand colour is RED, while the page background is
+    # navy. _logo_svg_signals must fetch + parse the svg and surface the SATURATED red (not the grey
+    # wordmark text or the white plate), so the brand's TRUE colour wins the palette.
+    import scraper.extractors.visual as vis
+    from scraper.extractors.visual import _hex_to_rgb, _is_low_saturation_gray, _is_near_white
+    svg = ('<svg><path fill="#9a3333"/><path fill="#9d3433"/><path fill="#903332"/>'
+           '<path fill="#424143"/><path fill="#ffffff"/><stop stop-color="#b03633"/></svg>')
+
+    class _Resp:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+        def read(self, *a):
+            return svg.encode("utf-8")
+
+    monkeypatch.setattr("scraper.url_utils.is_safe_public_url", lambda u: True)
+    monkeypatch.setattr("urllib.request.urlopen", lambda *a, **k: _Resp())
+
+    sig = vis._logo_svg_signals("https://x.example/ColoredLogo.svg", "https://x.example/")
+    assert sig, "expected logo svg colour signals"
+    top = sig[0]["color"]
+    assert not _is_low_saturation_gray(top) and not _is_near_white(top)   # not the grey text / white
+    r, g, b = _hex_to_rgb(top)
+    assert r > g and r > b                                                # a RED is dominant
+    # a non-svg / non-http logo yields nothing (no spurious fetch)
+    assert vis._logo_svg_signals("inline-svg:0", "https://x/") == []
+    assert vis._logo_svg_signals("https://x/logo.png", "https://x/") == []
+
+
 def test_named_logo_rescue_excludes_partner_and_authority_svgs():
     # Even an SVG with a pure 'logo' filename is REFUSED when it is classified as a partner or an
     # authority mark — the rescue only promotes the brand's OWN mark, never a co-brand.
