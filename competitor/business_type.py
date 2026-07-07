@@ -123,14 +123,18 @@ def classify_business_type(profile, manifest=None) -> BusinessTypeResult:
     local = has_address or category in _LOCAL_CATEGORIES
     ecom = category in _ECOMMERCE_CATEGORIES or ecom_structural
 
-    if local and (ecom or reach):
+    # A REACH CATEGORY wins over the weak ecom_structural signal: an education/services brand
+    # trips priced_offerings>=2 just by listing course/service fees, but it is NOT an ecommerce
+    # store — it competes by category, so it must route to web discovery (HYBRID with a footprint,
+    # else REACH), never get mislabelled ECOMMERCE. Measured: ITI (2 priced courses) -> REACH.
+    if reach:
+        bt = BusinessType.HYBRID if local else BusinessType.REACH
+    elif local and ecom:
         bt = BusinessType.HYBRID          # a real footprint AND category-searchable -> both engines
     elif local:
         bt = BusinessType.LOCAL
     elif ecom:
         bt = BusinessType.ECOMMERCE
-    elif reach:
-        bt = BusinessType.REACH           # category-searchable, no local footprint -> web only
     else:
         bt = BusinessType.UNKNOWN
 

@@ -78,6 +78,16 @@ def test_reach_category_with_a_local_footprint_is_hybrid():
     assert r.signals["reach_category"] is True and r.signals["has_physical_address"] is True
 
 
+def test_reach_category_beats_priced_offering_ecom_signal():
+    # ITI's real profile has 2 priced COURSES -> ecom_structural=True. A reach category must NOT be
+    # mislabelled ECOMMERCE by that weak signal; it still routes to web discovery as REACH.
+    off = [NS(price_text="EGP 5000", page_url="https://iti.gov.eg/a"),
+           NS(price_text="EGP 8000", page_url="https://iti.gov.eg/b")]
+    r = classify_business_type(_profile(category="education", offerings=off))
+    assert r.business_type is BusinessType.REACH
+    assert r.signals["reach_category"] is True and r.signals["priced_offerings"] == 2
+
+
 def test_proximity_local_categories_are_unchanged():
     # restaurant/clinic/etc. still compete locally -> LOCAL, not REACH.
     r = classify_business_type(_profile(category="restaurant"))
