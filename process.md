@@ -2,8 +2,35 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1142 passed, 0 failed** (2026-07-07; grew from 880 as each audit fix
+Test suite: **1149 passed, 0 failed** (2026-07-07; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**Batch 1 prompt refactor — one GROUNDING_CONTRACT + catalog shapes (2026-07-07):** owner ran an
+expert 5-lens critique of the 10 business_profile prompts and asked to "fix these first prompts." The
+root problem was DUPLICATION, not bad instructions: nine prompts each re-stated the grounding rules,
+and the copies had drifted (one call stricter than another). Mapped exhaustively first (a 5-agent
+workflow: exact source + the ONLY consumer `extractor.py` + every test-asserted substring + the
+category→guidance mechanism), then adversarially reviewed the diff before committing. Changes:
+**(1) `GROUNDING_CONTRACT`** — the canonical block (5 non-negotiable rules + a positive coverage line +
+the lifted anti-cliché "specificity is the filter" rule), stated ONCE and injected into the shared
+`SYSTEM_PROMPT`; the 4 group USER prompts inherit it instead of re-litigating (SYSTEM_PROMPT is sent as
+the system role for all groups). **(2) identity** — tagline is COPY-verbatim, description is
+COMPOSE-but-every-claim-cites-a-block_id (the implicit mode-switch made explicit); category enum
+hardened ("'other' only when nothing fits, never a shortcut for 'unsure'" — it routes downstream
+specialization). **(3) offerings** — dropped the prose FORBIDDEN-CLAIMS block (redundant with contract
+rule 3 + the `UNSUBSTANTIATED_CLAIM_TOKENS` validator); kept the own-name ban + honest-empty + the
+1-2-broad-category cap. **(4) `_OFFERINGS_GUIDANCE` (18 vertical keys) → `_CATALOG_SHAPES` (4 universal
+shapes: broad_catalog / named_menu / programs / default) + `_CATEGORY_TO_SHAPE` map** — the central
+fix: config keyed by a universal signal with a universal default (rule 5), so `_shape_for(None/unknown)
+→ default` BY CONSTRUCTION and the documented fail-open None-key bug is impossible; every hard-won
+specific (DEPARTMENTS-FIRST, SKU≠offering, breadth, named-menu discipline) preserved inside the shapes.
+**(5) trust** — deleted "Skip vague self-praise" (the contract's specificity rule covers it).
+**(6) same-subject judge** — its 400-char truncation is now WINDOWED on the shared token (a head-slice
+clipped the proving sentence on long blocks); `_window` coerces inputs so it can't break the judge's
+never-raise→None guarantee; `_SYSTEM` (measurement-locked 98%) untouched, short claims byte-identical.
+**(7) domain_schema** — attributes must be marketer-ACTIONABLE (targeting axis / message angle / proof
+point), not trivia. NOT touched (measure-first): `_GROUP_QUERIES` cross-lingual recall (ticketed).
++7 tests; docs/PROMPTS.md updated (§1: `_CATALOG_SHAPES`, GROUNDING_CONTRACT).
 
 **Poster primary color must DOMINATE + never self-list a competitor (2026-07-07):** two more
 "continue on the best solutions" fixes. **(1) on-brand color dominance** (owner: the ITI poster read

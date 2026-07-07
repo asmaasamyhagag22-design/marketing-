@@ -2,7 +2,7 @@
 
 > **Every LLM / image / vision prompt in this repo, in one place.** Generated from an automated sweep of the codebase, then curated. For each prompt: where it lives (`file:line`, click to open), which model receives it, what kind of prompt it is, what it does, and a short excerpt. **The source file is always the source of truth** — most prompts are *assembled* at call time (f-strings, per-vertical fragments, grounding facts spliced in), so the excerpts below are representative, not byte-exact.
 
-**53 prompts** across **5 subsystems.**
+**54 prompts** across **5 subsystems.**
 
 ## How prompting works in this system
 
@@ -25,7 +25,7 @@ Models in play: **Gemini 2.5** (Pro for the heavy extraction/strategy calls, Fla
 
 ## Contents
 
-- [1. Business Profile — evidence-grounded extraction](#1-business-profile--evidence-grounded-extraction) · 8 prompts
+- [1. Business Profile — evidence-grounded extraction](#1-business-profile--evidence-grounded-extraction) · 9 prompts
 - [2. Poster — concept, copy, image, and the fidelity gate](#2-poster--concept-copy-image-and-the-fidelity-gate) · 25 prompts
 - [3. Reel — Opus creative director, Veo render, scene QA](#3-reel--opus-creative-director-veo-render-scene-qa) · 9 prompts
 - [4. Competitor & Strategy — themes, TOWS, discovery, calendar](#4-competitor--strategy--themes-tows-discovery-calendar) · 9 prompts
@@ -37,41 +37,50 @@ Models in play: **Gemini 2.5** (Pro for the heavy extraction/strategy calls, Fla
 
 Turns scraped page blocks into a structured brand profile. Every extraction call shares one strict system prompt that forbids any value without a verbatim `block_id` citation — this is the first grounding wall. Four grouped user prompts (identity / offerings / positioning / trust) each get only the RAG-selected evidence for that group.
 
+### GROUNDING_CONTRACT
+
+- **Where:** [`business_profile/llm/prompts.py`:29](https://github.com/asmaasamyhagag22-design/marketing-/blob/main/business_profile/llm/prompts.py#L29)
+- **Kind:** system (canonical block, injected into SYSTEM_PROMPT)
+- **Model:** shared across all four groups (Gemini 2.5 default / OpenAI fallback)
+- **Does:** THE single source of the grounding rules — stated once and injected into SYSTEM_PROMPT instead of nine drifting copies. Five non-negotiable rules (evidence-bound + null-when-unsupported, verbatim quotes incl. Arabic, invent-nothing-falsifiable, no fabricated ids, language integrity) + a positive coverage line + the lifted anti-cliché specificity rule.
+
+> [GROUNDING CONTRACT — non-negotiable, applies to every value you emit] 1. Evidence-bound: every value must be supported by a block_id present EXACTLY in the supplied evidence. No support -> value = null. Never guess. 2. Verbatim quotes: character-exact substring of ONE real block — including Arabic diacritics/spelling. 3. Invent nothing falsifiable... 4. No fabricated ids. 5. Language integrity... Coverage of the real, evidenced facts is the goal... Reject the generic... Specificity is the filter.
+
 ### SYSTEM_PROMPT
 
-- **Where:** [`business_profile/llm/prompts.py`:18](https://github.com/asmaasamyhagag22-design/marketing-/blob/main/business_profile/llm/prompts.py#L18)
+- **Where:** [`business_profile/llm/prompts.py`:48](https://github.com/asmaasamyhagag22-design/marketing-/blob/main/business_profile/llm/prompts.py#L48)
 - **Kind:** system
 - **Model:** Gemini 2.5 (GeminiCaller, default) or OpenAI gpt-4o-mini (OpenAICaller) via run_llm_extraction
-- **Does:** Shared system prompt for all four grouped extraction calls; forces strictly evidence-backed output with block_id citations and verbatim quotes.
+- **Does:** Shared system prompt for all four grouped extraction calls; embeds GROUNDING_CONTRACT verbatim + OPERATING NOTES (may-emit-inferred-if-cited, quotes under 200 chars).
 
-> You are a business profile extractor... ABSOLUTE RULES: 1. EVERY value you emit must be backed by evidence... 2. EVERY evidence entry must cite a block_id that appears EXACTLY as written... 3. EVERY quote must be a verbatim substring... 4. NEVER invent block_ids... 5. If a field has no supporting evidence, return value=null.
+> You are a business profile extractor... [GROUNDING CONTRACT ...] ... OPERATING NOTES: - You may emit a value INFERRED from copy... only if you cite the blocks... - Keep quotes short (under 200 characters)...
 
 ### build_identity_prompt
 
 - **Where:** [`business_profile/llm/prompts.py`:58](https://github.com/asmaasamyhagag22-design/marketing-/blob/main/business_profile/llm/prompts.py#L58)
 - **Kind:** user
 - **Model:** Gemini 2.5 / OpenAI via Caller (group='identity', IdentityResponse)
-- **Does:** Builds the identity-group user prompt: extract tagline, 2-3 sentence description, and one category from a fixed enum list.
+- **Does:** Builds the identity-group user prompt (inherits GROUNDING_CONTRACT): tagline (COPY verbatim, don't compose), description (COMPOSE from evidence, every claim traces to a block_id), and one hardened category from the fixed enum ('other' only when nothing fits, never as a shortcut for 'unsure').
 
-> EXTRACT: 1. tagline: a single concise self-description... Verbatim from the page. 2. description: a 2-3 sentence summary of what the business does, who it serves, and where... 3. category: choose ONE from this fixed list... If none clearly fit, return 'other'.
+> Extract three identity fields (the GROUNDING CONTRACT governs every value): 1. tagline... copied VERBATIM if one exists; null if none. Copy, don't compose. 2. description: 2-3 sentences you COMPOSE from evidenced facts... Compose, but grounded. 3. category: choose exactly ONE from {enum}... use 'other' only when no listed category genuinely applies.
 
 ### build_offerings_prompt
 
 - **Where:** [`business_profile/llm/prompts.py`:276](https://github.com/asmaasamyhagag22-design/marketing-/blob/main/business_profile/llm/prompts.py#L276)
 - **Kind:** user
 - **Model:** Gemini 2.5 / OpenAI via Caller (group='offerings', OfferingsResponse)
-- **Does:** Builds the offerings-group user prompt: extract offerings[] (name/short_description/price_text/evidence) plus pricing_posture, with a category-aware item cap and forbidden-claims warning.
+- **Does:** Builds the offerings-group user prompt (inherits GROUNDING_CONTRACT): extract offerings[] (name/short_description/price_text/evidence) + pricing_posture, with a category-aware item cap and the swapped catalog-SHAPE guidance. The prose FORBIDDEN-CLAIMS block was DROPPED (redundant with contract rule 3 + the UNSUBSTANTIATED_CLAIM_TOKENS validator); the own-name ban + honest-empty stay.
 
-> UNIVERSAL RULES FOR OFFERINGS: Each offering has: name..., short_description..., price_text..., and evidence... Prefer SPECIFIC named offerings... if nothing concrete is listed, return an EMPTY list — honest-empty is better than padding. NEVER emit the business's OWN NAME as an offering... FORBIDDEN CLAIMS (must NOT be inferred)... PRICING POSTURE: choose one of budget, mid, premium, unknown.
+> Extract the concrete things this business offers... Prefer SPECIFIC named offerings; if only broad categories exist capture at most 1-2; if nothing concrete is listed, return an EMPTY list — honest-empty beats padding. NEVER emit the business's OWN NAME... Then apply the structural selection rules for THIS catalog shape: {shape} ... PRICING POSTURE: choose one of budget, mid, premium, unknown.
 
-### _OFFERINGS_GUIDANCE
+### _CATALOG_SHAPES + _CATEGORY_TO_SHAPE
 
-- **Where:** [`business_profile/llm/prompts.py`:81](https://github.com/asmaasamyhagag22-design/marketing-/blob/main/business_profile/llm/prompts.py#L81)
+- **Where:** [`business_profile/llm/prompts.py`:94](https://github.com/asmaasamyhagag22-design/marketing-/blob/main/business_profile/llm/prompts.py#L94)
 - **Kind:** template fragment
-- **Model:** Gemini 2.5 / OpenAI (injected into build_offerings_prompt per rules_category)
-- **Does:** Per-vertical guidance fragments swapped into the offerings prompt by category. Keys: clinic, hospital, restaurant, cafe, education, ecommerce, retail, beauty, services_b2b, professional_services, agency, fitness, hospitality, real_estate, automotive, nonprofit, government, _generic.
+- **Model:** Gemini 2.5 / OpenAI (one shape injected into build_offerings_prompt, chosen by `_shape_for(rules_category)`)
+- **Does:** REPLACES the old 18 per-vertical keys with 4 UNIVERSAL catalog shapes + a category→shape map (process.md rule 5: config keyed by a universal signal, universal default, never vertical names as logic). Shapes: `broad_catalog` (ecommerce/retail — DEPARTMENTS-FIRST, SKU≠offering, breadth), `named_menu` (restaurant/cafe), `programs` (clinic/hospital/education/agency/fitness/gov/… — named service lines), `default` (beauty/other/None/unknown — the adaptive fallback with store-detection). An unknown/None category resolves to `default` BY CONSTRUCTION, so the old fail-open None-key bug is impossible.
 
-> e.g. ecommerce/_generic HARD RULES for large stores: 1. DEPARTMENTS FIRST: prefer the store's OWN department/category names... 2. A name carrying a pack size, weight, count or flavor variant... is a SKU — NEVER an offering... 3. BREADTH over depth... ONE product family may NEVER occupy more than 2 entries. 4. At most 2-3 individual flagship products. (restaurant: named signature dishes verbatim; education: courses/programs/diplomas; etc.)
+> broad_catalog: DEPARTMENTS FIRST... a name with pack size/weight/count/flavor is a SKU — NEVER an offering... breadth over depth... | programs: NAMED SERVICES, PROGRAMS or SPECIALTIES... capture the specific name, not the bare category... | named_menu: the SPECIFIC named items the page lists (verbatim from the menu)... | default: ...IF THE EVIDENCE SHOWS A PRODUCT STORE, apply the broad_catalog HARD RULES.
 
 ### build_positioning_prompt
 
@@ -89,7 +98,7 @@ Turns scraped page blocks into a structured brand profile. Every extraction call
 - **Model:** Gemini 2.5 / OpenAI via Caller (group='trust', TrustResponse)
 - **Does:** Builds the trust-group user prompt: extract trust_signals[] (certifications, awards, clients, tenure, credentials, testimonials) and service_areas[].
 
-> EXTRACT: 1. trust_signals: concrete proof points that build credibility... certifications... awards... notable clients or partners... tenure... team credentials... testimonials (only when a real quote with attribution is present)... Skip vague self-praise. Cap at 8 items. 2. service_areas: geographic regions the business explicitly serves... Skip mailing addresses — only places they say they SERVE.
+> EXTRACT: 1. trust_signals: concrete proof points that build credibility... certifications... awards... notable clients or partners... tenure... team credentials... testimonials (only when a real quote with attribution is present)... Cap at 8 items. (The old "Skip vague self-praise" was removed — the contract's specificity rule now covers it globally.) 2. service_areas: geographic regions the business explicitly serves... Skip mailing addresses — only places they say they SERVE.
 
 ### _GROUP_QUERIES
 
