@@ -165,6 +165,23 @@ def test_prompt_is_veo_safe_and_grounds_social_proof_and_cta_copy():
     assert "only its position/pose may change" in p            # identity preserved as the hand operates it
 
 
+def test_reel_says_what_the_brand_does_varies_scenes_and_paces_captions():
+    # Owner's reel feedback, closing the "say what the brand does" point on the reel too:
+    # (1) name what the brand DOES + the specific service (works for a service brand, not just a
+    # product); (2) the background must CHANGE per scene (not persist behind the person); (3) captions
+    # went by too fast + needed MEASURED feeling (not flat, not over-the-top).
+    p = _system_prompt(5, "en", "generic")
+    # (1) stranger test + services
+    assert "STRANGER TEST" in p and "WHAT IT DOES" in p
+    assert "PRODUCT OR SERVICE" in p                          # the reel advertises a service, not only a product
+    assert "SERVICE being delivered" in p                     # the benefit is shown in the service's real setting
+    # (2) per-scene background variety
+    assert "SCENE VARIETY" in p and "frozen wallpaper" in p
+    # (3) readable pacing + measured feeling
+    assert "LONG ENOUGH TO READ" in p and "needs >=3s" in p
+    assert "MEASURED" in p and "over-acted" in p
+
+
 def test_prompt_has_a_physics_logic_check_and_fast_cut_pacing():
     # Owner's "Logic Check": the director must verify every scene is physically possible before
     # returning, and cut at a TikTok pace (2-4s), not linger.

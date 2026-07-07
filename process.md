@@ -2,8 +2,23 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1128 passed, 0 failed** (2026-07-05/06; grew from 880 as each audit fix
+Test suite: **1129 passed, 0 failed** (2026-07-05/06; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**Reel director — say what the brand DOES, vary the scene, pace the text (2026-07-07):** owner's reel
+feedback (same STRANGER-TEST point as the poster): (1) "in every reel I need to understand what the
+brand does; if it's a service, name the service" — the prompt was entirely product-centric ("the
+product", "Shop the mist"), useless for a service brand (ITI). Fixed: WHAT-IT-IS beat is now the
+STRANGER TEST (voiceover must convey WHO + WHAT IT DOES/category + the SPECIFIC named product OR
+service); BENEFIT generalised to "a PRODUCT mid-use OR a SERVICE delivered in its real setting (a
+learner coding in the lab, a graduate hired)"; HARD RULE + SELF-CHECK now demand product-OR-service.
+(2) "the background must NOT stay behind me the whole reel" — new SCENE VARIETY rule: every scene is a
+DIFFERENT setting/angle/moment; never one backdrop held the whole reel; even with one photo, change
+framing/distance/action each scene (no frozen wallpaper). (3) "the text goes by too fast, and no
+feeling (but not over-the-top)" — captions ≤4-5 words and must stay on screen LONG ENOUGH TO READ (a
+captioned scene needs ≥3s); voiceover delivery is REAL/warm but MEASURED (never flat/robotic, never
+melodramatic/over-acted). +1 test; existing 17 preserved. Pairs with the poster stranger-test prompt —
+both assets now anchored in the concrete offering, not a vibe.
 
 **SPA logo capture — the "poster with no logo" bug (ITI, 2026-07-07):** owner: the ITI poster shipped
 with NO logo. Root cause found in `visual.py`: ITI's real mark IS captured (`<img
