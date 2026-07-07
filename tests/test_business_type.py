@@ -57,3 +57,28 @@ def test_ecommerce_from_structural_signals_only():
 def test_tolerates_dict_profile():
     r = classify_business_type({"category": {"value": "ecommerce"}, "locations": [], "offerings": []})
     assert r.business_type is BusinessType.ECOMMERCE
+
+
+def test_reach_category_without_address_is_web_only_not_local():
+    # ITI shape: an IT-training institute (education), no scraped address. It competes by
+    # CATEGORY (other institutes/bootcamps/platforms), not proximity -> REACH (web discovery),
+    # NOT LOCAL (which gave it universities + its own branch via Places).
+    for cat in ("education", "professional_services", "services_b2b", "agency"):
+        r = classify_business_type(_profile(category=cat))
+        assert r.business_type is BusinessType.REACH, cat
+        assert r.signals["reach_category"] is True
+
+
+def test_reach_category_with_a_local_footprint_is_hybrid():
+    # A training institute WITH a real campus address still has category peers, so it gets BOTH
+    # engines (Places local peers + web category peers), never pure proximity-LOCAL.
+    loc = NS(address_text="Smart Village, Giza", latitude=None, longitude=None)
+    r = classify_business_type(_profile(category="education", locations=[loc]))
+    assert r.business_type is BusinessType.HYBRID
+    assert r.signals["reach_category"] is True and r.signals["has_physical_address"] is True
+
+
+def test_proximity_local_categories_are_unchanged():
+    # restaurant/clinic/etc. still compete locally -> LOCAL, not REACH.
+    r = classify_business_type(_profile(category="restaurant"))
+    assert r.business_type is BusinessType.LOCAL and r.signals["reach_category"] is False

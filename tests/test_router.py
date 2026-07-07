@@ -55,6 +55,33 @@ def test_unknown_routes_to_web_engine(monkeypatch):
     assert any("web engine" in n for n in res.notes)
 
 
+def test_reach_category_uses_web_engine_never_places(monkeypatch):
+    # ITI shape: education, no address -> REACH. It must NOT hit Places-proximity (which gave it
+    # universities + its own branch); it uses the web engine's category search instead.
+    calls = _patch_places(monkeypatch, PeerMatchResult([_fake_peer()], False, 1, 1))
+    class FakeWeb:
+        name = "fake-web"
+        def discover(self, profile, manifest=None):
+            return [_fake_peer(place_id="w1", name="Other IT Institute")]
+    res = route_discovery(_profile(category="education"), places_client=object(), web_engine=FakeWeb())
+    assert calls["n"] == 0                       # REACH never depends on Places-proximity
+    assert len(res.competitors) == 1
+    assert any("REACH -> web engine" in n for n in res.notes)
+
+
+def test_reach_with_address_is_hybrid_places_plus_web(monkeypatch):
+    # A training institute WITH a campus address is HYBRID: Places local peers + web category peers.
+    _patch_places(monkeypatch, PeerMatchResult([_fake_peer(place_id="p1")], False, 3, 2))
+    class FakeWeb:
+        name = "fake-web"
+        def discover(self, profile, manifest=None):
+            return [_fake_peer(place_id="w2", website="https://bootcamp.com")]
+    loc = NS(address_text="Smart Village, Giza", latitude=None, longitude=None)
+    res = route_discovery(_profile(category="education", locations=[loc]),
+                          places_client=object(), web_engine=FakeWeb())
+    assert len(res.competitors) == 2             # p1 (Places) + w2 (web)
+
+
 def test_local_uses_places(monkeypatch):
     sentinel = PeerMatchResult([_fake_peer()], False, 5, 3, notes=["places ran"])
     calls = _patch_places(monkeypatch, sentinel)

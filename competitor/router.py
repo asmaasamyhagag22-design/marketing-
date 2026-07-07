@@ -3,14 +3,18 @@
 Classifies the business (business_type.classify_business_type), then routes to
 the right engine:
 
-    LOCAL     -> Places          (discovery.discover_competitors)
-    ECOMMERCE -> web engine      (pluggable; NullWebDiscoveryEngine by default)
-    HYBRID    -> Places + web    (merged, deduped)
-    UNKNOWN   -> web engine      (grounded SERP peers when one is wired; the Null
-                 engine returns [] -> standalone, the old skip behavior. MEASURED
-                 need: a B2B services company — no address, no cart — classified
-                 UNKNOWN and got NO discovery at all, so its SWOT could never have
-                 Opportunities/Threats.)
+    LOCAL       -> Places          (discovery.discover_competitors)
+    ECOMMERCE   -> web engine      (pluggable; NullWebDiscoveryEngine by default)
+    REACH       -> web engine      (education / professional / B2B / agency — competes by
+                   category not proximity, so Places-proximity is the wrong relevance model;
+                   the SERP engine's LLM judge finds true category peers and drops the
+                   universities/directories Places surfaced. MEASURED: ITI.)
+    HYBRID      -> Places + web    (merged, deduped)
+    UNKNOWN     -> web engine      (grounded SERP peers when one is wired; the Null
+                   engine returns [] -> standalone, the old skip behavior. MEASURED
+                   need: a B2B services company — no address, no cart — classified
+                   UNKNOWN and got NO discovery at all, so its SWOT could never have
+                   Opportunities/Threats.)
 
 Contract: never raises, never returns None. On a skip, an engine failure, or an
 empty result it returns a valid (possibly empty) PeerMatchResult — the SWOT layer
@@ -128,12 +132,15 @@ def route_discovery(
     if bt is BusinessType.LOCAL:
         return _places(profile, places_client, base, **discovery_kwargs)
 
-    if bt is BusinessType.ECOMMERCE:
+    if bt in (BusinessType.ECOMMERCE, BusinessType.REACH):
+        # Both compete by category, not proximity -> web only. REACH (education / B2B /
+        # professional / agency) would get universities + directories from Places; the SERP
+        # engine's relevance judge finds true category peers instead.
         peers = _dedup(_safe_web(web_engine, profile, manifest))
         tail = (f"{len(peers)} web peer(s)" if peers
                 else f"no peers (web engine '{web_engine.name}' wired no results); standalone analysis.")
         return PeerMatchResult(peers, len(peers) < TARGET_PEERS, 0, 0,
-                               [base, f"ECOMMERCE -> web engine '{web_engine.name}': {tail}"], [])
+                               [base, f"{bt.value.upper()} -> web engine '{web_engine.name}': {tail}"], [])
 
     # HYBRID -> Places + web, merged
     places_res = _places(profile, places_client, base, **discovery_kwargs)

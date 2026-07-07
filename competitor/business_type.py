@@ -1,8 +1,8 @@
-"""Business-type classification: LOCAL / ECOMMERCE / HYBRID / UNKNOWN.
+"""Business-type classification: LOCAL / ECOMMERCE / HYBRID / REACH / UNKNOWN.
 
 Pure and grounded — no network, no inference beyond the signals it exposes. The
 discovery router (discovery.route_discovery) uses the verdict to pick an engine:
-LOCAL -> Places, ECOMMERCE -> web engine (stub), HYBRID -> both, UNKNOWN -> skip.
+LOCAL -> Places, ECOMMERCE/REACH -> web engine, HYBRID -> both, UNKNOWN -> web.
 
 Every result carries the `signals` that drove it, so the decision is traceable
 (no hidden heuristics). Reads the real BusinessProfile shape but tolerates a
@@ -19,16 +19,26 @@ class BusinessType(str, Enum):
     LOCAL = "local"
     ECOMMERCE = "ecommerce"
     HYBRID = "hybrid"
+    REACH = "reach"          # competes by category/reach, not proximity -> web discovery
     UNKNOWN = "unknown"
 
 
-# category.value -> coarse class. Anything not listed is "ambiguous" (services_*,
-# agency, professional_services, nonprofit, other) and leans on structural signals.
+# category.value -> coarse class. Anything not listed is "ambiguous" (services_b2c,
+# nonprofit, other) and leans on structural signals.
 _LOCAL_CATEGORIES = {
     "restaurant", "cafe", "clinic", "hospital", "beauty", "fitness",
-    "automotive", "education", "real_estate", "hospitality", "government",
+    "automotive", "real_estate", "hospitality", "government",
 }
 _ECOMMERCE_CATEGORIES = {"ecommerce", "retail"}
+
+# REACH categories compete by CATEGORY / expertise across a whole city, country, or online
+# — an IT-training institute's rivals are other institutes / bootcamps / platforms, NOT the
+# building next door — so geographic PROXIMITY is a poor relevance signal for them (Places
+# returns broad-category neighbours: universities, faculties). They route to web-discovery
+# (SERP + LLM relevance judge). With a real local footprint they become HYBRID (Places + web);
+# without one they are REACH (web only), never pure proximity-LOCAL. (Measured: ITI, an IT
+# institute, was classed LOCAL and Places returned universities + the brand's own branch.)
+_REACH_CATEGORIES = {"education", "professional_services", "services_b2b", "agency"}
 
 # Strong: a services/local site almost never exposes these. Medium: pathy hints
 # that products exist but are weaker on their own.
@@ -109,15 +119,18 @@ def classify_business_type(profile, manifest=None) -> BusinessTypeResult:
     # ecommerce structural evidence (any strong signal, or repeated weaker ones)
     ecom_structural = cart_or_checkout or priced >= 2 or product_paths >= 2
 
+    reach = category in _REACH_CATEGORIES
     local = has_address or category in _LOCAL_CATEGORIES
     ecom = category in _ECOMMERCE_CATEGORIES or ecom_structural
 
-    if local and ecom:
-        bt = BusinessType.HYBRID
+    if local and (ecom or reach):
+        bt = BusinessType.HYBRID          # a real footprint AND category-searchable -> both engines
     elif local:
         bt = BusinessType.LOCAL
     elif ecom:
         bt = BusinessType.ECOMMERCE
+    elif reach:
+        bt = BusinessType.REACH           # category-searchable, no local footprint -> web only
     else:
         bt = BusinessType.UNKNOWN
 
@@ -128,10 +141,12 @@ def classify_business_type(profile, manifest=None) -> BusinessTypeResult:
         "cart_or_checkout_links": cart_or_checkout,
         "product_shop_paths": product_paths,
         "ecom_structural": ecom_structural,
+        "reach_category": reach,
     }
     reasoning = (
         f"category={category or 'unknown'} "
-        f"(local={category in _LOCAL_CATEGORIES}, ecom={category in _ECOMMERCE_CATEGORIES}); "
+        f"(local={category in _LOCAL_CATEGORIES}, ecom={category in _ECOMMERCE_CATEGORIES}, "
+        f"reach={reach}); "
         f"address={has_address}; ecom_structural={ecom_structural} "
         f"(cart/checkout={cart_or_checkout}, priced_offerings={priced}, "
         f"product_paths={product_paths}) -> {bt.value}"

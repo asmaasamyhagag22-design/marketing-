@@ -2,8 +2,24 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1149 passed, 0 failed** (2026-07-07; grew from 880 as each audit fix
+Test suite: **1154 passed, 0 failed** (2026-07-07; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**Discovery routing — REACH businesses compete by category, not proximity (2026-07-07):** owner's ITI
+follow-up ("who should a specialized institute's competitors be? IT institutes / bootcamps / online
+platforms?"). Root cause: `business_type.classify_business_type` had `education` in `_LOCAL_CATEGORIES`,
+so ITI → LOCAL → Places-proximity ONLY, which returns broad-category NEIGHBOURS (universities, the
+faculty of education, the brand's own branch) — proximity is the WRONG relevance model for a business
+that competes by category across a city/country/online. Fix: new `BusinessType.REACH` +
+`_REACH_CATEGORIES = {education, professional_services, services_b2b, agency}`; education removed from
+`_LOCAL_CATEGORIES`. A reach business with NO local footprint → REACH (web-discovery only); WITH a
+campus address → HYBRID (Places local peers + web category peers), never pure proximity-LOCAL. The
+router routes REACH → the SERP web engine, whose LLM relevance judge finds true category peers and drops
+universities/directories (`topuniversities.com` etc. already block-listed). The production path
+(`full_run.py`, `api/routes/swot.py`) already wires `default_web_engine()`, and `SERPER_API_KEY` is set,
+so this is LIVE — ITI now routes to category web-discovery instead of Places noise. Universal (no
+IT-institute hack): the signal is "competes by reach/category", not the specific vertical. +5 tests.
+Pairs with the earlier cross-script self-match fix (ITI was listing its own branch as a peer).
 
 **Batch 1 prompt refactor — one GROUNDING_CONTRACT + catalog shapes (2026-07-07):** owner ran an
 expert 5-lens critique of the 10 business_profile prompts and asked to "fix these first prompts." The
