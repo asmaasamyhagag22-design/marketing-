@@ -1,6 +1,6 @@
 """Domain-adaptive schema (business_profile.domain_schema).
 
-The Anthropic call needs a key + network; these tests cover the deterministic parts:
+The Gemini call needs creds + network; these tests cover the deterministic parts:
 evidence assembly, the code-enforced grounding check (so an invented attribute is
 dropped), JSON parsing, and honest-degrade with no key. The "different verticals ->
 different schemas" behaviour is shown by the live elkbabgi/digilians runs.
@@ -51,11 +51,40 @@ def test_safe_json_object_strips_fences():
     assert _safe_json_object("garbage") is None
 
 
-def test_no_key_degrades_to_none(monkeypatch):
-    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
-    assert build_domain_profile(_profile(), api_key=None) is None
+def test_no_caller_degrades_to_none(monkeypatch):
+    # No Gemini caller available (bare env: no GOOGLE_CLOUD_PROJECT/GEMINI creds) -> honest None.
+    monkeypatch.delenv("GOOGLE_CLOUD_PROJECT", raising=False)
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
+    assert build_domain_profile(_profile()) is None
 
 
-def test_too_little_evidence_returns_none(monkeypatch):
-    monkeypatch.setenv("ANTHROPIC_API_KEY", "x")
+def test_injected_caller_is_grounded_and_none_when_nothing_survives(monkeypatch):
+    # A fake caller lets us exercise the grounding filter hermetically (no network).
+    from business_profile.domain_schema import _RawDomainField, _RawDomainResponse
+    from business_profile.llm.caller import Usage
+
+    prof = _profile()
+    ev = _evidence_text(prof)
+
+    def caller_grounded(system, user, response_model, group_name="", images=None):
+        # one field whose quote is verbatim in the evidence -> kept
+        quote = ev.split("\n")[0][:30]
+        return (_RawDomainResponse(vertical="charcoal grill", rationale="why",
+                                   fields=[_RawDomainField(key="cuisine", label="Cuisine",
+                                                           value="grilled", evidence_quote=quote)]),
+                Usage(model="gemini-2.5-pro"))
+    dp = build_domain_profile(prof, caller=caller_grounded)
+    assert dp is not None and dp.vertical == "charcoal grill" and dp.model == "gemini-2.5-pro"
+    assert dp.fields and dp.fields[0].grounded
+
+    def caller_invented(system, user, response_model, group_name="", images=None):
+        return (_RawDomainResponse(vertical="x", fields=[_RawDomainField(
+            key="fake", value="v", evidence_quote="THIS QUOTE IS NOT IN THE EVIDENCE AT ALL")]),
+            Usage(model="gemini-2.5-pro"))
+    assert build_domain_profile(prof, caller=caller_invented) is None   # ungrounded -> dropped -> None
+
+
+def test_too_little_evidence_returns_none():
+    # The <40-char evidence guard fires before any caller is consulted.
     assert build_domain_profile({"name": {"value": "Z"}}) is None

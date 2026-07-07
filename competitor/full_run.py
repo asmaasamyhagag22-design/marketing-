@@ -8,9 +8,9 @@ Lives in competitor/. Run from the PROJECT ROOT. Both styles work:
     python competitor/full_run.py  https://some-clinic.com --no-themes
 
 Needs in your .env (this script loads it before any stage runs):
-    GOOGLE_MAPS_API_KEY   Places discovery            (you confirmed: working)
-    OPENAI_API_KEY        subject BusinessProfile      (the build_profile step)
-    ANTHROPIC_API_KEY     review-theme extraction      (optional; --no-themes skips)
+    GOOGLE_MAPS_API_KEY    Places discovery            (you confirmed: working)
+    GOOGLE_CLOUD_PROJECT   subject BusinessProfile + review-theme extraction (Gemini 2.5 Pro,
+                           Vertex); review themes are optional (--no-themes skips)
 
 Output is forced to UTF-8 so Arabic review text won't crash the Windows console.
 """
@@ -35,7 +35,7 @@ if str(_ROOT) not in sys.path:
 
 def _load_env():
     """Load KEY=VALUE pairs from the project-root .env into os.environ (only
-    for keys not already set in the shell), so OpenAI/Anthropic/Google all see
+    for keys not already set in the shell), so Google/Gemini + any fallback all see
     their keys before any stage runs. Dependency-free."""
     for folder in (_ROOT, *_ROOT.parents, Path.cwd()):
         env_path = folder / ".env"
@@ -65,7 +65,7 @@ from competitor import (
     PlacesClient,
     route_discovery,
     build_matrix,
-    AnthropicThemeExtractor,
+    ReviewThemeExtractor,
     synthesize_swot,
     format_swot,
 )
@@ -124,7 +124,7 @@ def main():
     ap = argparse.ArgumentParser(description="URL -> profile -> competitors -> SWOT")
     ap.add_argument("url", help="subject business URL (use one with a REAL website)")
     ap.add_argument("--no-themes", action="store_true",
-                    help="skip the Anthropic review-theme extraction step")
+                    help="skip the Gemini review-theme extraction step")
     ap.add_argument("--json", action="store_true",
                     help="print the SWOT as JSON to stdout (progress goes to stderr)")
     ap.add_argument("--out", default=None,
@@ -201,8 +201,8 @@ def main():
     if args.no_themes:
         say("[5/5] skipping review themes (--no-themes)")
     else:
-        say("[5/5] extracting grounded review themes (Anthropic)...")
-        themes = AnthropicThemeExtractor()(result.competitors)
+        say("[5/5] extracting grounded review themes (Gemini 2.5 Pro)...")
+        themes = ReviewThemeExtractor()(result.competitors)
         try:
             say("      kept %d grounded theme(s)" % len(themes))
         except TypeError:

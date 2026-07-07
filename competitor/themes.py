@@ -1,4 +1,4 @@
-"""Review-theme extractor (Anthropic SDK).
+"""Review-theme extractor (Gemini 2.5 Pro).
 
 Reads the REAL competitor reviews (from Places, <=5 per place) and asks the model to
 surface recurring praise/complaint themes. The themes feed synthesize_swot() as
@@ -15,15 +15,13 @@ have ~20 reviews. Themes are DIRECTIONAL — say so in the defense.
 
 Injectable, like scrape_fn:
 
-    from competitor.themes import AnthropicThemeExtractor
-    extractor = AnthropicThemeExtractor()          # reads ANTHROPIC_API_KEY
+    from competitor.themes import ReviewThemeExtractor
+    extractor = ReviewThemeExtractor()             # uses the shared Gemini caller
     themes = extractor(result.competitors)          # list[ReviewTheme]
     swot = synthesize_swot(matrix, themes=themes)
 
-If the SDK or key is missing, the extractor returns [] (and records why in
+If no Gemini caller is available, the extractor returns [] (and records why in
 .last_error), so the SWOT still builds without themes.
-
-Requires: anthropic  (pip install anthropic) + ANTHROPIC_API_KEY in the env.
 """
 
 from __future__ import annotations
@@ -33,11 +31,26 @@ import os
 import re
 from typing import Dict, List, Optional
 
+from pydantic import BaseModel
+
 from .models import CompetitorProfile
 from .swot import ReviewTheme
 
 _REVIEW_TEXT_CAP = 400        # chars per review sent to the model (token control)
-_DEFAULT_MODEL = "claude-sonnet-4-6"   # override to claude-haiku-4-5 for lower cost
+_DEFAULT_MODEL = "gemini-2.5-pro"
+
+
+class _ThemeItem(BaseModel):
+    """One raw theme the model returns (before code-enforced citation grounding)."""
+    text: str = ""
+    polarity: str = ""
+    review_ids: List[str] = []
+    is_unmet_need: bool = False
+
+
+class _ThemesResponse(BaseModel):
+    """Top-level structured response (Gemini response_schema needs a BaseModel, not a bare list)."""
+    themes: List[_ThemeItem] = []
 
 
 _PROMPT_TEMPLATE = """You are analyzing real Google reviews of competing local businesses to find recurring customer themes.
@@ -54,31 +67,28 @@ Identify recurring THEMES in what customers say. Rules:
 - Base everything ONLY on the reviews above. Do not invent themes, businesses, or details.
 - Write each theme as a short phrase (<= 8 words), in the language most of its supporting reviews use.
 
-Return ONLY a JSON array, no prose, no markdown fences. Schema:
-[{{"text": "...", "polarity": "praise|complaint", "review_ids": ["R1","R2"], "is_unmet_need": false}}]
-If there are no themes with >=2 supporting reviews, return [].
+Return the recurring themes. Each theme has: text (<= 8 words), polarity ("praise" or "complaint"), review_ids (the exact IDs above whose text expresses it), is_unmet_need (bool).
+If there are no themes with >= 2 supporting reviews, return an empty list.
 """
 
 
-class AnthropicThemeExtractor:
+class ReviewThemeExtractor:
     def __init__(
         self,
         *,
-        api_key: Optional[str] = None,
+        caller=None,
         model: str = _DEFAULT_MODEL,
         max_themes: int = 8,
         min_reviews_total: int = 4,
         min_support_reviews: int = 3,
         min_support_peers: int = 2,
-        max_tokens: int = 1500,
     ):
-        self.api_key = api_key or os.environ.get("ANTHROPIC_API_KEY")
+        self.caller = caller            # injectable; defaults to the shared Gemini caller
         self.model = model
         self.max_themes = max_themes
         self.min_reviews_total = min_reviews_total
         self.min_support_reviews = min_support_reviews
         self.min_support_peers = min_support_peers
-        self.max_tokens = max_tokens
         self.last_error: Optional[str] = None
 
     # ----- public API: call like a function -----
@@ -89,14 +99,18 @@ class AnthropicThemeExtractor:
             self.last_error = (f"only {len(index)} reviews available "
                                f"(need >= {self.min_reviews_total}); skipping theming")
             return []
-        if not self.api_key:
-            self.last_error = "ANTHROPIC_API_KEY not set; skipping theming"
+        caller = self.caller
+        if caller is None:
+            from business_profile.llm import default_caller
+            caller = default_caller(strong=True)      # Gemini 2.5 Pro
+        if caller is None:
+            self.last_error = "no Gemini caller (creds/SDK missing); skipping theming"
             return []
 
-        raw = self._call_llm(self._build_prompt(index))
-        if raw is None:
+        items = self._call_llm(caller, self._build_prompt(index))
+        if items is None:
             return []   # last_error already set
-        return self._parse_and_validate(raw, index)
+        return self._parse_and_validate(items, index)
 
     # ----- steps -----
     def _collect_reviews(self, competitors) -> Dict[str, Dict]:
@@ -126,30 +140,20 @@ class AnthropicThemeExtractor:
             lines.append(f"[{rid}] ({peer}, {rating}) {text}")
         return _PROMPT_TEMPLATE.format(reviews_block="\n".join(lines))
 
-    def _call_llm(self, prompt: str) -> Optional[str]:
+    def _call_llm(self, caller, prompt: str) -> Optional[List[dict]]:
+        """Run the shared Gemini caller with a structured response. Returns the raw theme dicts
+        (one per _ThemeItem) for _parse_and_validate, or None on failure (last_error set)."""
         try:
-            import anthropic
-        except ImportError:
-            self.last_error = "anthropic SDK not installed (pip install anthropic)"
-            return None
-        try:
-            client = anthropic.Anthropic(api_key=self.api_key)
-            resp = client.messages.create(
-                model=self.model,
-                max_tokens=self.max_tokens,
-                messages=[{"role": "user", "content": prompt}],
+            resp, _usage = caller(
+                "You are a review-theme analyst. Obey the rules and return only the requested themes.",
+                prompt, _ThemesResponse, group_name="review_themes",
             )
-            return "".join(b.text for b in resp.content if getattr(b, "type", None) == "text")
-        except Exception as e:
-            self.last_error = f"Anthropic API call failed: {type(e).__name__}: {e}"
+            return [t.model_dump() for t in (getattr(resp, "themes", None) or [])]
+        except Exception as e:  # noqa: BLE001
+            self.last_error = f"Gemini API call failed: {type(e).__name__}: {e}"
             return None
 
-    def _parse_and_validate(self, raw: str, index: Dict[str, Dict]) -> List[ReviewTheme]:
-        data = _safe_json_array(raw)
-        if data is None:
-            self.last_error = "could not parse model output as JSON"
-            return []
-
+    def _parse_and_validate(self, data: List[dict], index: Dict[str, Dict]) -> List[ReviewTheme]:
         valid_ids = set(index.keys())
         kept: List[ReviewTheme] = []
         for item in data:
@@ -187,7 +191,7 @@ class AnthropicThemeExtractor:
 # ---------------------------------------------------------------------------
 def extract_review_themes(competitors: List[CompetitorProfile], **kwargs) -> List[ReviewTheme]:
     """Convenience wrapper: build an extractor and run it."""
-    return AnthropicThemeExtractor(**kwargs)(competitors)
+    return ReviewThemeExtractor(**kwargs)(competitors)
 
 
 # ---------------------------------------------------------------------------

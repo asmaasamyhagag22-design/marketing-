@@ -29,7 +29,7 @@ from .matrix import (
 )
 from .swot import synthesize_swot, SWOT, SWOTItem, ReviewTheme, format_swot
 from .tows import build_tows, TowsResult, TowsStrategy, PriorityAction
-from .themes import AnthropicThemeExtractor, extract_review_themes
+from .themes import ReviewThemeExtractor, extract_review_themes
 from .business_type import classify_business_type, BusinessType, BusinessTypeResult
 from .router import route_discovery, WebDiscoveryEngine, NullWebDiscoveryEngine
 
@@ -63,7 +63,7 @@ __all__ = [
     "TowsResult",
     "TowsStrategy",
     "PriorityAction",
-    "AnthropicThemeExtractor",
+    "ReviewThemeExtractor",
     "extract_review_themes",
     "Candidate",
     "CompetitorProfile",

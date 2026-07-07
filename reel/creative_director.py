@@ -1,7 +1,7 @@
-"""Opus creative director for the reel.
+"""Gemini 2.5 Pro creative director for the reel.
 
 The user wants more than "animate a photo + stamp static text". They want a real
-creative DIRECTOR: send the business identity + the REAL photos to Opus, and
+creative DIRECTOR: send the business identity + the REAL photos to Gemini 2.5 Pro, and
 let it design a complete, engaging reel — for EACH scene a rich Veo 3.1
 image-to-video prompt (cinematic MOTION and life inside the scene: people moving,
 ambient action, camera movement — not just a zoom), a punchy VOICE-OVER line, and
@@ -13,7 +13,7 @@ actually in that photo. Discipline: the VISUALS stay real (real photos) and no
 factual claim may be invented (no fake awards/numbers/certifications) — but the copy
 is allowed to be persuasive and evocative, grounded in the provided identity.
 
-No key / SDK -> None (honest-degrade), never raises.
+No Gemini caller (creds/SDK) -> None (honest-degrade), never raises.
 """
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
 
-_DEFAULT_MODEL = "claude-opus-4-8"
+_DEFAULT_MODEL = "gemini-2.5-pro"
 
 
 class CreativeScene(BaseModel):
@@ -45,9 +45,19 @@ class CreativeReel(BaseModel):
     music_mood: str = ""                    # suggested soundtrack vibe
     cta: str = ""                           # closing call to action (verbatim from brand if possible)
     language: str = "en"
-    images: list[str] = Field(default_factory=list)   # the real photos Opus saw, in index order
+    images: list[str] = Field(default_factory=list)   # the real photos the model saw, in index order
     scenes: list[CreativeScene] = Field(default_factory=list)
     model: str = _DEFAULT_MODEL
+
+
+class _ReelResponse(BaseModel):
+    """The RAW structured shape the director returns (no images/model — those are code-set)."""
+    concept: str = ""
+    hook: str = ""
+    music_mood: str = ""
+    cta: str = ""
+    language: str = ""
+    scenes: list[CreativeScene] = Field(default_factory=list)
 
 
 def _v(profile: dict, key: str) -> str:
@@ -88,13 +98,13 @@ def _identity_block(profile: dict) -> str:
     return "\n".join(lines)
 
 
-def _image_blocks(image_urls: list[str], *, max_images: int, max_side: int = 640) -> tuple[list[dict], list[str]]:
-    """Download + downscale each real photo to an Anthropic image block. Returns
-    (blocks, used_urls) — only the images we could actually fetch, in order."""
-    import base64
+def _image_parts(image_urls: list[str], *, max_images: int, max_side: int = 640) -> tuple[list[tuple[bytes, str]], list[str]]:
+    """Download + downscale each real photo to (jpeg_bytes, mime) for the Gemini caller's
+    `images=` argument. Returns (parts, used_urls) — only the images we could actually fetch,
+    IN ORDER, so parts[i] corresponds to real-photo index i."""
     import io
     from reel.video_provider import _load_reference_image
-    blocks: list[dict] = []
+    parts: list[tuple[bytes, str]] = []
     used: list[str] = []
     for u in image_urls[:max_images]:
         loaded = _load_reference_image(u)
@@ -110,14 +120,9 @@ def _image_blocks(image_urls: list[str], *, max_images: int, max_side: int = 640
             data = buf.getvalue()
         except Exception:
             pass
-        blocks.append({"type": "text", "text": f"REAL PHOTO index {len(used)}:"})
-        blocks.append({
-            "type": "image",
-            "source": {"type": "base64", "media_type": "image/jpeg",
-                       "data": base64.b64encode(data).decode("ascii")},
-        })
+        parts.append((data, "image/jpeg"))
         used.append(u)
-    return blocks, used
+    return parts, used
 
 
 # Vertical/tone modes. The old single prompt hard-coded FOOD dynamics ("steam/smoke, flames,
@@ -338,84 +343,72 @@ def design_creative_reel(
     n_scenes: int = 6,
     language: Optional[str] = None,
     featured_product: Optional[str] = None,
-    api_key: Optional[str] = None,
-    model: str = _DEFAULT_MODEL,
-    max_tokens: int = 2500,
+    caller=None,
 ) -> Optional[CreativeReel]:
-    """Opus designs the full creative reel from the identity + real photos. When `featured_product`
-    is set, the WHOLE reel is about that ONE product (several shots of the same item). Returns None
-    on any failure (no key/SDK/images/parse)."""
+    """Gemini 2.5 Pro designs the full creative reel from the identity + real photos (it SEES the
+    photos — natively multimodal). When `featured_product` is set, the WHOLE reel is about that ONE
+    product (several shots of the same item). Returns None on any failure (no caller/creds/images).
+    `caller` is injectable for tests; it defaults to default_caller(strong=True)."""
     urls = [u for u in (image_urls or []) if isinstance(u, str) and u.startswith(("http://", "https://"))]
     if not urls:
         logger.info("creative_director: no real photos; skipping")
         return None
-    key = api_key or os.environ.get("ANTHROPIC_API_KEY")
-    if not key:
-        logger.info("creative_director: ANTHROPIC_API_KEY not set; skipping")
-        return None
-    try:
-        import anthropic
-    except ImportError:
-        logger.warning("creative_director: anthropic SDK not installed")
+    if caller is None:
+        from business_profile.llm import default_caller
+        caller = default_caller(strong=True)          # Gemini 2.5 Pro (the complex vision/copy step)
+    if caller is None:
+        logger.info("creative_director: no Gemini caller (creds/SDK missing); skipping")
         return None
 
     langs = profile.get("languages") or []
     lang = language or (str(langs[0]) if langs else "en")
 
-    blocks, used = _image_blocks(urls, max_images=n_scenes + 4)
-    if not blocks:
+    parts, used = _image_parts(urls, max_images=n_scenes + 4)
+    if not parts:
         logger.warning("creative_director: could not fetch any real photo")
         return None
 
     feat = (f"\n\nFEATURED PRODUCT (advertise ONLY this): {featured_product}. Every scene is the SAME "
-            "product below — vary the shot/action, not the item." if featured_product else "")
-    content = [{"type": "text", "text":
-                "BUSINESS IDENTITY:\n" + _identity_block(profile) + feat +
-                f"\n\nYou have {len(used)} real photos below. Design the reel."}]
-    content.extend(blocks)
+            "product — vary the shot/action, not the item." if featured_product else "")
+    user = ("BUSINESS IDENTITY:\n" + _identity_block(profile) + feat +
+            f"\n\n{len(used)} real photos are attached in index order 0..{len(used) - 1}. "
+            "Design the reel.")
 
     try:
-        client = anthropic.Anthropic(api_key=key)
-        resp = client.messages.create(
-            model=model, max_tokens=max_tokens,
-            system=_system_prompt(n_scenes, lang, _vertical_mode(profile), featured=featured_product),
-            messages=[{"role": "user", "content": content}],
+        resp, usage = caller(
+            _system_prompt(n_scenes, lang, _vertical_mode(profile), featured=featured_product),
+            user, _ReelResponse, group_name="creative_director", images=parts,
         )
-        raw = "".join(b.text for b in resp.content if getattr(b, "type", None) == "text")
-    except Exception as e:  # noqa: BLE001
-        logger.warning("creative_director: Opus call failed: %s", e)
+    except Exception as e:  # noqa: BLE001 — a call failure must never break the reel pipeline
+        logger.warning("creative_director: Gemini call failed: %s", e)
         return None
 
-    data = _safe_json_object(raw)
-    if not data:
-        return None
     scenes: list[CreativeScene] = []
-    for s in (data.get("scenes") or []):
-        if not isinstance(s, dict):
-            continue
+    for s in (getattr(resp, "scenes", None) or []):
         try:
-            idx = int(s.get("image_index", 0))
+            idx = int(getattr(s, "image_index", 0))
         except (TypeError, ValueError):
             idx = 0
         idx = max(0, min(idx, len(used) - 1))
-        prompt = str(s.get("veo_prompt", "")).strip()
+        prompt = str(getattr(s, "veo_prompt", "")).strip()
         if not prompt:
             continue
         scenes.append(CreativeScene(
             image_index=idx, veo_prompt=prompt,
-            voiceover=str(s.get("voiceover", "")).strip(),
-            voiceover_delivery=str(s.get("voiceover_delivery", "")).strip(),
-            on_screen_text=str(s.get("on_screen_text", "")).strip(),
-            duration_s=float(s.get("duration_s", 4.0) or 4.0),
+            voiceover=str(getattr(s, "voiceover", "")).strip(),
+            voiceover_delivery=str(getattr(s, "voiceover_delivery", "")).strip(),
+            on_screen_text=str(getattr(s, "on_screen_text", "")).strip(),
+            duration_s=float(getattr(s, "duration_s", 4.0) or 4.0),
         ))
     if not scenes:
         return None
     return CreativeReel(
-        concept=str(data.get("concept", "")).strip(),
-        hook=str(data.get("hook", "")).strip(),
-        music_mood=str(data.get("music_mood", "")).strip(),
-        cta=str(data.get("cta", "")).strip(),
-        language=lang, images=used, scenes=scenes, model=model,
+        concept=str(getattr(resp, "concept", "")).strip(),
+        hook=str(getattr(resp, "hook", "")).strip(),
+        music_mood=str(getattr(resp, "music_mood", "")).strip(),
+        cta=str(getattr(resp, "cta", "")).strip(),
+        language=lang, images=used, scenes=scenes,
+        model=getattr(usage, "model", "") or _DEFAULT_MODEL,
     )
 
 

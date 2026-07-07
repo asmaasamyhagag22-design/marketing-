@@ -1,6 +1,6 @@
-"""Opus creative director (reel.creative_director).
+"""Gemini 2.5 Pro creative director (reel.creative_director).
 
-The Opus vision call needs a key + network; these tests cover the deterministic
+The Gemini vision call needs creds + network; these tests cover the deterministic
 parts: identity-block assembly, JSON parsing, and honest-degrade. The "designs a
 real creative reel" behaviour is shown by the live elkbabgi run.
 """
@@ -9,6 +9,11 @@ from __future__ import annotations
 from reel.creative_director import (
     _identity_block, _safe_json_object, _system_prompt, _vertical_mode, design_creative_reel,
 )
+
+
+def _no_gemini_creds(monkeypatch):
+    for k in ("GOOGLE_CLOUD_PROJECT", "GEMINI_API_KEY", "GOOGLE_API_KEY"):
+        monkeypatch.delenv(k, raising=False)
 
 
 def _profile():
@@ -32,14 +37,39 @@ def test_safe_json_object_strips_fences_and_handles_garbage():
     assert _safe_json_object("not json") is None
 
 
-def test_no_key_degrades_to_none(monkeypatch):
-    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
-    assert design_creative_reel(_profile(), ["https://x.com/a.jpg"], api_key=None) is None
+def test_no_caller_degrades_to_none(monkeypatch):
+    # No Gemini caller (bare env) -> honest None even with valid photo URLs.
+    _no_gemini_creds(monkeypatch)
+    assert design_creative_reel(_profile(), ["https://x.com/a.jpg"]) is None
 
 
-def test_no_photos_returns_none(monkeypatch):
-    monkeypatch.setenv("ANTHROPIC_API_KEY", "x")
+def test_no_photos_returns_none():
+    # The no-photos guard fires before any caller is consulted.
     assert design_creative_reel(_profile(), []) is None
+
+
+def test_injected_caller_builds_a_reel_from_scenes(monkeypatch):
+    # A fake caller + a fake image fetch exercise the full parse path hermetically (no network).
+    import reel.creative_director as cd
+    from reel.creative_director import CreativeScene, _ReelResponse
+    from business_profile.llm.caller import Usage
+
+    monkeypatch.setattr(cd, "_image_parts",
+                        lambda urls, *, max_images, max_side=640: ([(b"IMG", "image/jpeg")], list(urls)[:1]))
+
+    captured = {}
+    def caller(system, user, response_model, group_name="", images=None):
+        captured["images"] = images
+        captured["group"] = group_name
+        return (_ReelResponse(concept="c", hook="h", cta="Book now", language="en",
+                              scenes=[CreativeScene(image_index=9, veo_prompt="a person uses it",
+                                                    voiceover="vo", on_screen_text="Book now", duration_s=3.0)]),
+                Usage(model="gemini-2.5-pro"))
+    reel = design_creative_reel(_profile(), ["https://x.com/a.jpg"], caller=caller)
+    assert reel is not None and reel.model == "gemini-2.5-pro" and reel.cta == "Book now"
+    assert reel.scenes[0].image_index == 0            # clamped into range (was 9, only 1 photo)
+    assert captured["images"] == [(b"IMG", "image/jpeg")]   # photos passed as Gemini image parts
+    assert captured["group"] == "creative_director"
 
 
 # ---------------------------------------------------------------------

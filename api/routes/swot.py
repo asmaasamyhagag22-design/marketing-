@@ -75,7 +75,7 @@ def _items(items) -> List[dict]:
 def swot_from_profile(req: SwotFromProfileRequest) -> SwotResponse:
     try:
         from competitor import (
-            AnthropicThemeExtractor, PlacesClient, build_matrix, build_tows,
+            ReviewThemeExtractor, PlacesClient, build_matrix, build_tows,
             find_subject_places, route_discovery, synthesize_swot,
         )
         from competitor.swot import unique_insight_texts
@@ -111,10 +111,10 @@ def swot_from_profile(req: SwotFromProfileRequest) -> SwotResponse:
                               scrape_fn=lite_peer_dims)
 
         # Customer voice: grounded review themes from the peers' real Places
-        # reviews (never raises; [] without an Anthropic key or enough reviews).
+        # reviews (never raises; [] without a Gemini caller or enough reviews).
         themes = []
         try:
-            extractor = AnthropicThemeExtractor()
+            extractor = ReviewThemeExtractor()
             themes = extractor(result.competitors)
         except Exception:
             themes = []

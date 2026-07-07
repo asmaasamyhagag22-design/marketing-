@@ -1,11 +1,11 @@
-"""Domain-adaptive profile schema (Anthropic).
+"""Domain-adaptive profile schema (Gemini 2.5 Pro).
 
 The base BusinessProfile is UNIVERSAL by design — the same fields for every
 business. But "not all restaurants are the same, nor all educational places"
 (user, 2026-06-14): a charcoal grill, a patisserie, and a fine-dining cafe deserve
 DIFFERENT marketing attributes, and so do a coding bootcamp vs a university.
 
-This module asks the Anthropic model to read the (already grounded) scrape result and generate
+This module asks Gemini 2.5 Pro to read the (already grounded) scrape result and generate
 a schema TAILORED to this specific business's vertical + website: the 5-8 attributes
 that actually matter for marketing IT, each filled FROM the evidence with a verbatim
 supporting quote. It is ADDITIVE — it sits beside the base BusinessProfile, never
@@ -28,7 +28,7 @@ from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
 
-_DEFAULT_MODEL = "claude-sonnet-4-6"
+_DEFAULT_MODEL = "gemini-2.5-pro"
 
 
 class DomainField(BaseModel):
@@ -46,6 +46,22 @@ class DomainProfile(BaseModel):
     rationale: str                 # one line: why these attributes for this business
     fields: list[DomainField] = Field(default_factory=list)
     model: str = _DEFAULT_MODEL
+
+
+# The RAW structured shape the model returns (before the code-enforced grounding filter).
+# Tolerant defaults so a partial object still validates. DomainField/DomainProfile above are
+# the POST-filter output (they add code-set `grounded` / `model`).
+class _RawDomainField(BaseModel):
+    key: str = ""
+    label: str = ""
+    value: str = ""
+    evidence_quote: str = ""
+
+
+class _RawDomainResponse(BaseModel):
+    vertical: str = ""
+    rationale: str = ""
+    fields: list[_RawDomainField] = Field(default_factory=list)
 
 
 # ---------------------------------------------------------------------
@@ -138,65 +154,51 @@ Return ONLY a JSON object, no prose, no markdown fences:
 {{"vertical": "...", "rationale": "one line: why these attributes for this business", "fields": [{{"key": "...", "label": "...", "value": "...", "evidence_quote": "..."}}]}}"""
 
 
-def build_domain_profile(
-    profile: dict,
-    *,
-    api_key: Optional[str] = None,
-    model: str = _DEFAULT_MODEL,
-    max_tokens: int = 1500,
-) -> Optional[DomainProfile]:
-    """Generate + fill a domain-tailored schema for this business. None on any
-    failure (no key / SDK / parse / nothing grounded). Never raises."""
+def build_domain_profile(profile: dict, *, caller=None) -> Optional[DomainProfile]:
+    """Generate + fill a domain-tailored schema for this business via Gemini 2.5 Pro (the
+    shared Caller). None on any failure (no caller/creds / call error / nothing grounded).
+    Never raises. `caller` is injectable for tests; it defaults to default_caller(strong=True)."""
     evidence = _evidence_text(profile)
     if len(evidence) < 40:
         logger.info("domain_schema: too little evidence (%d chars); skipping", len(evidence))
         return None
-    key = api_key or os.environ.get("ANTHROPIC_API_KEY")
-    if not key:
-        logger.info("domain_schema: ANTHROPIC_API_KEY not set; skipping")
+    if caller is None:
+        from business_profile.llm import default_caller
+        caller = default_caller(strong=True)      # Gemini 2.5 Pro
+    if caller is None:
+        logger.info("domain_schema: no Gemini caller (creds/SDK missing); skipping")
         return None
     try:
-        import anthropic
-    except ImportError:
-        logger.warning("domain_schema: anthropic SDK not installed")
-        return None
-    try:
-        client = anthropic.Anthropic(api_key=key)
-        resp = client.messages.create(
-            model=model, max_tokens=max_tokens,
-            messages=[{"role": "user", "content": _PROMPT.format(evidence=evidence)}],
+        resp, usage = caller(
+            "You are a marketing-intelligence schema designer. Return only the requested "
+            "structured fields, drawn strictly from the evidence.",
+            _PROMPT.format(evidence=evidence),
+            _RawDomainResponse, group_name="domain_schema",
         )
-        raw = "".join(b.text for b in resp.content if getattr(b, "type", None) == "text")
-    except Exception as e:  # noqa: BLE001
-        logger.warning("domain_schema: Anthropic call failed: %s", e)
+    except Exception as e:  # noqa: BLE001 — a call failure must never break the profile build
+        logger.warning("domain_schema: Gemini call failed: %s", e)
         return None
 
-    data = _safe_json_object(raw)
-    if not data:
-        return None
     fields: list[DomainField] = []
-    for item in (data.get("fields") or []):
-        if not isinstance(item, dict):
-            continue
-        k = str(item.get("key", "")).strip()
-        val = str(item.get("value", "")).strip()
-        quote = str(item.get("evidence_quote", "")).strip()
+    for item in (getattr(resp, "fields", None) or []):
+        k = str(getattr(item, "key", "")).strip()
+        val = str(getattr(item, "value", "")).strip()
+        quote = str(getattr(item, "evidence_quote", "")).strip()
         if not (k and val):
             continue
-        grounded = _is_grounded(quote, evidence)
-        if not grounded:                       # code-enforced: drop unsupported attributes
+        if not _is_grounded(quote, evidence):      # code-enforced: drop unsupported attributes
             logger.info("domain_schema: dropped ungrounded field %r (quote not in evidence)", k)
             continue
         fields.append(DomainField(
-            key=k, label=str(item.get("label", k)).strip() or k,
+            key=k, label=str(getattr(item, "label", "") or k).strip() or k,
             value=val, evidence_quote=quote, grounded=True,
         ))
     if not fields:
         return None
     return DomainProfile(
-        vertical=str(data.get("vertical", "")).strip() or "unknown",
-        rationale=str(data.get("rationale", "")).strip(),
-        fields=fields, model=model,
+        vertical=str(getattr(resp, "vertical", "")).strip() or "unknown",
+        rationale=str(getattr(resp, "rationale", "")).strip(),
+        fields=fields, model=getattr(usage, "model", "") or _DEFAULT_MODEL,
     )
 
 
