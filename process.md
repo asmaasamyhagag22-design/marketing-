@@ -2,8 +2,27 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1133 passed, 0 failed** (2026-07-05/06; grew from 880 as each audit fix
+Test suite: **1137 passed, 0 failed** (2026-07-07; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**Reel pre-render plan-eval + poster service-prop gate + PROMPTS.md catalog (2026-07-07):** three
+landed under the owner's "continue on the best solutions" authority. **(1) evaluate the reel BEFORE it
+comes out** (owner's explicit ask): new `reel/plan_eval.evaluate_reel_plan(reel, profile, featured)`
+scores a plan against the stranger test + caption craft (names the brand −30 / names an
+offering-or-category −20 / CTA on the last scene −15 / caption-driven −15 / captions ≤6 words −10 /
+scene variety for non-featured −10) and returns `ReelPlanVerdict(ok, score, issues)`. Deterministic —
+no LLM/network — so it's a cheap pre-flight: `render_creative_reel` runs it after the Opus design, and
+regenerates the plan ONCE (a cheap call) when it fails, keeping the higher-scoring plan, all BEFORE the
+10-15 min Veo render (the compositor's per-clip scene_qa still runs after). +3 tests. **(2) poster
+service-prop gate** (fixes ITI clutter/framed-face): a whole-brand poster for a SERVICE brand
+(education/clinic/agency/government/…) was compositing its scraped content images as one-shot "product
+props", but those are BUILDINGS and PEOPLE → clutter + a hallucinated framed face. `_gather_product_props`
+now attaches NO whole-brand props for `_SERVICE_NO_PROP_CATS`; product/food brands (and any unknown
+category) keep the prop path; a user-PICKED product always attaches regardless of category. +1 test.
+**(3) `docs/PROMPTS.md`** (owner's explicit ask, "a file with all the project's prompts"): the single
+catalog of all 53 LLM/image/vision prompts across the 5 subsystems, each indexed by file:line
+(clickable), receiving model, kind, purpose, and a representative excerpt, opening with the
+two-truth-domains map (LLM designs, code renders + validates).
 
 **Reel captions DESIGNED + paced + voice not flat (2026-07-07):** owner: "the reel text is written with
 no design, too fast, boring, unlistenable — study how big brands do it." A 3-agent workflow (research
