@@ -30,9 +30,9 @@ from business_profile.llm.extractor import (
     LLMExtractionResult, run_llm_extraction,
 )
 from business_profile.llm.prompts import (
-    AUDIENCE_TYPE_VALUES, CATEGORY_VALUES, PRICING_POSTURE_VALUES,
+    AUDIENCE_TYPE_VALUES, CATEGORY_VALUES, GROUNDING_CONTRACT, PRICING_POSTURE_VALUES,
     SYSTEM_PROMPT, TONE_VALUES,
-    build_identity_prompt, build_offerings_prompt,
+    _shape_for, build_identity_prompt, build_offerings_prompt,
     build_positioning_prompt, build_trust_prompt, offerings_cap_for,
 )
 from business_profile.llm.responses import (
@@ -234,6 +234,68 @@ def test_system_prompt_contains_core_rules():
     assert "verbatim" in SYSTEM_PROMPT.lower()
     assert "null" in SYSTEM_PROMPT.lower()
     assert "invent" in SYSTEM_PROMPT.lower()
+
+
+def test_grounding_contract_is_the_shared_canonical_block():
+    # The grounding rules live ONCE in GROUNDING_CONTRACT, injected into the shared SYSTEM_PROMPT;
+    # the per-group USER prompts inherit it and do not re-litigate the five rules (that duplication
+    # is what let the copies drift). The contract also carries the coverage + specificity rules.
+    assert GROUNDING_CONTRACT in SYSTEM_PROMPT
+    assert "GROUNDING CONTRACT" in GROUNDING_CONTRACT
+    assert "Specificity is the filter." in GROUNDING_CONTRACT      # lifted anti-cliché rule
+    assert "Coverage of the real, evidenced facts" in GROUNDING_CONTRACT  # positive coverage line
+    # rule 2's distinctive wording appears in the shared contract, NOT restated in each user prompt
+    rule2 = "character-exact substring of ONE real block"
+    assert rule2 in SYSTEM_PROMPT
+    pack = _small_pack()
+    for build in (build_identity_prompt, build_positioning_prompt, build_trust_prompt):
+        assert rule2 not in build(pack)                            # inherited, not duplicated
+    assert rule2 not in build_offerings_prompt(pack)
+
+
+def test_offerings_prompt_uses_catalog_shapes_not_vertical_prose():
+    pack = _small_pack()
+    # Every business category resolves to one of four universal SHAPES (unknown/None -> default),
+    # so the documented fail-open None-key bug is impossible and no vertical name drives logic.
+    assert _shape_for("ecommerce") == "broad_catalog"
+    assert _shape_for("retail") == "broad_catalog"
+    assert _shape_for("restaurant") == "named_menu"
+    assert _shape_for("education") == "programs"
+    assert _shape_for("clinic") == "programs"
+    assert _shape_for("beauty") == "default"      # brand-vs-salon duality -> adaptive default
+    assert _shape_for(None) == "default"
+    assert _shape_for("NOT_A_REAL_CATEGORY") == "default"
+    # the hard-won specifics survive inside the shapes
+    assert "DEPARTMENTS FIRST" in build_offerings_prompt(pack, rules_category="ecommerce")
+    assert "SKU" in build_offerings_prompt(pack, rules_category="retail")
+    assert "menu" in build_offerings_prompt(pack, rules_category="restaurant").lower()
+    edu = build_offerings_prompt(pack, rules_category="education")
+    assert "courses" in edu.lower() and "programs" in edu.lower()
+    # None still produces a usable prompt (the adaptive default shape)
+    assert "PRODUCT STORE / MARKETPLACE" in build_offerings_prompt(pack, rules_category=None)
+
+
+def test_offerings_prompt_drops_prose_claim_ban_keeps_own_name_ban():
+    # The prose FORBIDDEN CLAIMS block was redundant with the contract (rule 3) + the validator's
+    # UNSUBSTANTIATED_CLAIM_TOKENS, so it was dropped; the hard-won own-name + honest-empty rules stay.
+    p = build_offerings_prompt(_small_pack())
+    assert "FORBIDDEN CLAIMS" not in p
+    assert "OWN NAME" in p
+    assert "honest-empty" in p
+
+
+def test_identity_prompt_splits_verbatim_tagline_from_composed_description():
+    p = build_identity_prompt(_small_pack())
+    assert "Copy, don't compose." in p          # tagline is copied verbatim
+    assert "Compose, but grounded." in p         # description is synthesized-but-cited
+    assert "never as a shortcut for 'unsure'" in p   # hardened category enum
+
+
+def test_trust_prompt_no_longer_restates_self_praise_rule():
+    # Deleted "Skip vague self-praise" — the contract's specificity rule now covers it globally.
+    p = build_trust_prompt(_small_pack())
+    assert "self-praise" not in p
+    assert "trust_signals" in p and "service_areas" in p
 
 
 def test_identity_prompt_includes_pack_and_fields():

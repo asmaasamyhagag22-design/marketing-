@@ -1,32 +1,41 @@
 """Prompt templates for LLM extraction groups.
 
-Each group's prompt makes the same hard rules explicit:
-
-1. Every claim MUST cite block_ids from the provided pack.
-2. Never invent a block_id; never quote text that's not in the input.
-3. If no evidence exists, return value=null (or [] for lists).
-4. Quotes must be verbatim substrings of the cited block's text.
-
-The system prompt is shared across all groups. The user prompt
-embeds the pack + group-specific instructions.
+The grounding rules are stated ONCE as GROUNDING_CONTRACT and shared via SYSTEM_PROMPT
+across every group, instead of each group re-litigating them (nine copies that had
+drifted — one call ending up stricter than another). SYSTEM_PROMPT is the shared system
+message; each build_* function produces the user message (the pack + that group's
+extraction fields) and assumes the contract is already in force — it does not repeat it.
 """
 from __future__ import annotations
+
+from typing import Optional
 
 from .evidence_pack import EvidencePack
 
 
-SYSTEM_PROMPT = """You are a business profile extractor. You read structured text blocks scraped from a business's website and produce a strictly-evidenced profile.
+# The canonical grounding rules — stated once, injected everywhere (they were duplicated,
+# and drifting, across nine prompts). Every extraction value is bound by this block.
+GROUNDING_CONTRACT = """[GROUNDING CONTRACT — non-negotiable, applies to every value you emit]
+1. Evidence-bound: every value must be supported by a block_id present EXACTLY in the supplied evidence. No support -> value = null (or omit the item). Never guess.
+2. Verbatim quotes: every quote is a character-exact substring of ONE real block — including Arabic diacritics/spelling as printed. Never normalize, translate, or repair.
+3. Invent nothing falsifiable: no number, price, date, ranking, award, certification, or superlative that isn't literally in the evidence. Honest-empty beats padded.
+4. No fabricated ids: never emit a block_id you were not given.
+5. Language integrity: reproduce the source language of each quote; do not switch scripts.
 
-ABSOLUTE RULES:
-1. EVERY value you emit must be backed by evidence from the provided text blocks.
-2. EVERY evidence entry must cite a block_id that appears EXACTLY as written in the input.
-3. EVERY quote must be a verbatim substring of the cited block's text. Do not paraphrase quotes.
-4. NEVER invent block_ids. NEVER quote text that isn't in the input.
-5. If a field has no supporting evidence, return value=null (or an empty list for list fields). Do not guess.
-6. Prefer extracted facts over inferred ones. When a field is inferred from copy rather than directly stated, you may still emit it, but you must cite the blocks that support the inference.
-7. Keep quotes short (under 200 characters). Truncate longer blocks to the most relevant substring.
-8. Be conservative. "We are the best" alone is not a value proposition — it must be paired with specifics.
-"""
+A complete extraction captures every well-supported value and omits the rest. Coverage of the real, evidenced facts is the goal; silence on the unsupported is not a failure but the rule.
+
+Reject the generic: any claim that would be equally true of a random competitor ("high quality," "great service," "trusted") is noise unless the evidence pairs it with a concrete specific. Specificity is the filter."""
+
+
+SYSTEM_PROMPT = (
+    "You are a business profile extractor. You read structured text blocks scraped from a "
+    "business's website and produce a strictly-evidenced profile.\n\n"
+    + GROUNDING_CONTRACT
+    + "\n\nOPERATING NOTES:\n"
+    "- You may emit a value INFERRED from copy rather than directly stated, but only if you cite "
+    "the blocks that support the inference (prefer directly-stated facts to inferred ones).\n"
+    "- Keep quotes short (under 200 characters); truncate a longer block to its most relevant substring."
+)
 
 
 def _format_pack_for_prompt(pack: EvidencePack, max_chars: int = 30_000) -> str:
@@ -59,10 +68,14 @@ def build_identity_prompt(pack: EvidencePack) -> str:
     return (
         _common_header(pack)
         + _format_pack_for_prompt(pack)
-        + "\n\nEXTRACT:\n"
-        + "1. tagline: a single concise self-description, ideally from a homepage h1/h2 above_fold. Verbatim from the page.\n"
-        + "2. description: a 2-3 sentence summary of what the business does, who it serves, and where. Synthesize from multiple blocks; cite all blocks used.\n"
-        + f"3. category: choose ONE from this fixed list: {', '.join(CATEGORY_VALUES)}. Pick the most specific that fits. If none clearly fit, return 'other'.\n"
+        + "\n\nExtract three identity fields (the GROUNDING CONTRACT in your system instructions governs every value):\n"
+        + "1. tagline: the brand's own one-line self-description, copied VERBATIM if one exists "
+        "(ideally a homepage h1/h2 above_fold); null if none is stated. Copy, don't compose.\n"
+        + "2. description: 2-3 sentences you COMPOSE from evidenced facts — what the business does, "
+        "who it serves, and where. Every claim inside it must trace to a block_id. Compose, but grounded.\n"
+        + f"3. category: choose exactly ONE from this fixed list: {', '.join(CATEGORY_VALUES)}. This "
+        "label routes downstream specialization, so choose the closest real fit; use 'other' only "
+        "when no listed category genuinely applies, never as a shortcut for 'unsure'.\n"
         + "\nFor each field, return value, evidence (list of block_id+quote), confidence (high/medium/low/none), and a short reasoning string."
     )
 
@@ -74,153 +87,103 @@ def build_identity_prompt(pack: EvidencePack) -> str:
 PRICING_POSTURE_VALUES = ("budget", "mid", "premium", "unknown")
 
 
-# Per-category guidance — picked at prompt-build time based on the
-# rules-derived category. When category is unknown, the GENERIC block runs.
-# Each block describes what counts as an "offering" for that category.
-# Single prompt, swappable guidance — no per-category code branches.
-_OFFERINGS_GUIDANCE: dict[str, str] = {
-    "clinic": (
-        "This is a CLINIC / MEDICAL CENTER. Offerings include:\n"
-        "  - medical services, treatments, procedures\n"
-        "  - specialties (cardiology, dermatology, etc.)\n"
-        "  - consultations, diagnostic services\n"
-        "  - packages or bundled care plans when named\n"
-        "Look in services pages, treatments pages, and homepage for "
-        "named specialties or service descriptions."
-    ),
-    "hospital": (
-        "This is a HOSPITAL. Offerings include medical services, "
-        "specialty departments, treatments, and care programs."
-    ),
-    "restaurant": (
-        "This is a RESTAURANT or CAFE. Offerings are the SPECIFIC named items the "
-        "page actually lists:\n"
-        "  - named signature dishes / menu items (verbatim from the menu)\n"
-        "  - named menu sections, ONLY when no individual dishes are listed\n"
-        "  - service modes the brand explicitly states: delivery, takeaway, "
-        "catering, dine-in — only if a section mentions it\n"
-        "Do NOT emit a bare cuisine adjective, the word 'menu', or the brand name "
-        "as an offering. Each offering must cite a block_id with its quote."
-    ),
-    "cafe": (
-        "This is a CAFE. Same guidance as restaurants — coffee, drinks, "
-        "pastries, breakfast items, dining experience, delivery, branches."
-    ),
-    "education": (
-        "This is an EDUCATION or TRAINING INSTITUTE. Offerings include:\n"
-        "  - courses (specific titles when listed)\n"
-        "  - programs, diplomas, degrees, certificates\n"
-        "  - training tracks, academies, specializations\n"
-        "  - workshops, bootcamps\n"
-        "  - research or applied-services lines when described\n"
-        "Look in courses, programs, admissions, and academic pages."
-    ),
-    "ecommerce": (
-        "This is an ECOMMERCE / PRODUCT BRAND. Offerings include:\n"
-        "  - product categories (e.g., 'sofas', 'bean bags')\n"
-        "  - collections by name\n"
-        "  - best sellers and signature products when called out\n"
-        "  - bundles, subscriptions\n"
-        "  - explicitly-stated product benefits (only when the page "
-        "asserts them — do not invent benefits)\n"
-        "  - delivery / shipping options when described\n"
-        "HARD RULES for large stores (a marketplace sells thousands of items — the "
-        "offerings must summarize WHAT THE STORE SELLS, not what happened to sit on "
-        "the crawled promo pages):\n"
-        "  1. DEPARTMENTS FIRST: prefer the store's OWN department/category names "
-        "from its navigation/collections evidence (e.g. الأدوية / العناية بالمرأة / "
-        "الأجهزة الطبية) — they define the store.\n"
+# Universal CATALOG SHAPES — the offerings prompt's per-business guidance. REPLACES the old 18
+# vertical keys (process.md rule 5: config keyed by a universal signal + a universal default,
+# never vertical names as logic). The category enum maps to ONE of four shapes; the prompt only
+# ever sees shape rules, and an unknown / None / unmapped category resolves to 'default' BY
+# CONSTRUCTION — so the documented fail-open None-key bug is impossible. The hard-won specifics
+# (DEPARTMENTS-FIRST, SKU != offering, breadth-over-depth, named-menu discipline) are preserved.
+_CATALOG_SHAPES: dict[str, str] = {
+    "broad_catalog": (
+        "This is a PRODUCT STORE / MARKETPLACE (an ecommerce brand or retail chain). A store "
+        "sells many individual items, so the offerings must summarize WHAT THE STORE SELLS, not "
+        "what happened to sit on the crawled promo pages. Offerings include: product categories / "
+        "departments; collections by name; best-selling or signature lines when the page calls "
+        "them out; bundles and subscriptions; store-level services (delivery / shipping) when "
+        "described; and branches. Only assert a product benefit the page explicitly states.\n"
+        "HARD RULES for large stores:\n"
+        "  1. DEPARTMENTS FIRST: prefer the store's OWN department/category names from its "
+        "navigation/collections evidence (e.g. الأدوية / العناية بالمرأة / الأجهزة الطبية) — they "
+        "define the store.\n"
         "  2. A name carrying a pack size, weight, count or flavor variant "
-        "(8 كبسولات, 454 جم, 500mg, 'decaf caramel') is a SKU — NEVER an offering. "
-        "Return its FAMILY or DEPARTMENT once instead.\n"
-        "  3. BREADTH over depth: the list must COVER the range of what the store "
-        "sells; ONE product family may NEVER occupy more than 2 entries.\n"
-        "  4. At most 2-3 individual flagship products, and only when the page "
-        "explicitly presents them as signature items."
+        "(8 كبسولات, 454 جم, 500mg, 'decaf caramel') is a SKU — NEVER an offering. Return its "
+        "FAMILY or DEPARTMENT once instead.\n"
+        "  3. BREADTH over depth: the list must COVER the range of what the store sells; ONE "
+        "product family may NEVER occupy more than 2 entries.\n"
+        "  4. At most 2-3 individual flagship products, and only when the page explicitly presents "
+        "them as signature items."
     ),
-    "retail": (
-        "This is a RETAIL business. Same as ecommerce: product categories, "
-        "collections, signature lines, store-level offerings, branches.\n"
-        "HARD RULES for large stores (a marketplace sells thousands of items — the "
-        "offerings must summarize WHAT THE STORE SELLS, not what happened to sit on "
-        "the crawled promo pages):\n"
-        "  1. DEPARTMENTS FIRST: prefer the store's OWN department/category names "
-        "from its navigation/collections evidence (e.g. الأدوية / العناية بالمرأة / "
-        "الأجهزة الطبية) — they define the store.\n"
+    "named_menu": (
+        "This business presents a MENU of specifically-named items (a restaurant or cafe). "
+        "Offerings are the SPECIFIC named items the page actually lists:\n"
+        "  - named signature dishes / menu items — and for cafes coffee, drinks, pastries, "
+        "breakfast items (verbatim from the menu)\n"
+        "  - a named menu SECTION, ONLY when no individual items are listed under it\n"
+        "  - service modes the brand explicitly states (delivery, takeaway, catering, dine-in) — "
+        "only when a section mentions it\n"
+        "  - branches / locations when listed\n"
+        "Do NOT emit a bare cuisine adjective, the word 'menu', or the brand name as an offering."
+    ),
+    "programs": (
+        "This organization delivers NAMED SERVICES, PROGRAMS or SPECIALTIES (not a product "
+        "catalog). Offerings are the specific named lines the page lists — capture the specific "
+        "name, not the bare category. Look in services / treatments / courses / programs / "
+        "practice-area / booking pages first, homepage second. Depending on the business they "
+        "take the form of:\n"
+        "  - Clinics & hospitals: medical services, treatments, procedures, specialties "
+        "(cardiology, dermatology…), consultations, diagnostics, specialty departments, and named "
+        "care packages / programs.\n"
+        "  - Education & training: courses (specific titles), programs, diplomas, degrees, "
+        "certificates, tracks, academies, specializations, workshops, bootcamps, and applied-"
+        "service lines.\n"
+        "  - Professional / B2B / agency: service lines (consulting, audit, implementation, 'SEO', "
+        "'brand identity'), practice areas, packages / retainers, named expertise, industry "
+        "specializations.\n"
+        "  - Fitness: classes, memberships, personal training, programs, named amenities.\n"
+        "  - Hospitality: room types, packages, experiences, dining options, amenities.\n"
+        "  - Real estate: property listings by type; services (rental, sales, management).\n"
+        "  - Automotive: vehicle categories; services (sales, leasing, maintenance); named brands.\n"
+        "  - Nonprofit / NGO & government: programs, initiatives, named campaigns, services to "
+        "beneficiaries, public services, departments.\n"
+        "Prefer SPECIFIC named offerings; if only broad categories exist capture at most 1-2; if "
+        "nothing concrete is listed return an EMPTY list — honest-empty over padding."
+    ),
+    "default": (
+        "Offerings are anything this organization provides to its audience: services, products, "
+        "courses, programs, menu items, experiences, memberships, locations of service. Pick the "
+        "most prominent set. Each must cite block_id evidence.\n"
+        "IF THE EVIDENCE SHOWS A PRODUCT STORE / MARKETPLACE (many individual products with "
+        "prices), apply these HARD RULES — the offerings must summarize WHAT THE STORE SELLS, not "
+        "what happened to sit on the crawled promo pages (a giant pharmacy must NOT be summarized "
+        "as 'coffee capsules'):\n"
+        "  1. DEPARTMENTS FIRST: prefer the store's OWN department/category names from its "
+        "navigation/collections evidence (e.g. الأدوية / العناية بالمرأة / الأجهزة الطبية) — they "
+        "define the store.\n"
         "  2. A name carrying a pack size, weight, count or flavor variant "
-        "(8 كبسولات, 454 جم, 500mg, 'decaf caramel') is a SKU — NEVER an offering. "
-        "Return its FAMILY or DEPARTMENT once instead.\n"
-        "  3. BREADTH over depth: the list must COVER the range of what the store "
-        "sells; ONE product family may NEVER occupy more than 2 entries.\n"
-        "  4. At most 2-3 individual flagship products, and only when the page "
-        "explicitly presents them as signature items."
+        "(8 كبسولات, 454 جم, 500mg, 'decaf caramel') is a SKU — NEVER an offering. Return its "
+        "FAMILY or DEPARTMENT once instead.\n"
+        "  3. BREADTH over depth: the list must COVER the range of what the store sells; ONE "
+        "product family may NEVER occupy more than 2 entries.\n"
+        "  4. At most 2-3 individual flagship products, and only when explicitly presented as "
+        "signature items."
     ),
-    "beauty": (
-        "This is a BEAUTY / SKINCARE / COSMETICS brand or salon.\n"
-        "  - For salons: services (facials, treatments, manicures, etc.)\n"
-        "  - For brands: product categories (skincare, haircare, makeup), "
-        "collections, signature products\n"
-        "  - Avoid clinical claims unless explicit in the source text."
-    ),
-    "services_b2b": (
-        "This is a B2B SERVICE BUSINESS. Offerings include:\n"
-        "  - service lines (consulting, audit, implementation)\n"
-        "  - packages, retainers, fixed-scope engagements\n"
-        "  - industry specializations when named"
-    ),
-    "professional_services": (
-        "This is a PROFESSIONAL SERVICES firm (legal, accounting, "
-        "consulting). Offerings are practice areas, service lines, "
-        "advisory packages, and named expertise."
-    ),
-    "agency": (
-        "This is an AGENCY. Offerings are service lines, capabilities, "
-        "packages, and named expertise (e.g., 'SEO', 'brand identity')."
-    ),
-    "fitness": (
-        "This is a FITNESS business. Offerings: classes, memberships, "
-        "personal training, programs, and named amenities."
-    ),
-    "hospitality": (
-        "This is a HOSPITALITY business. Offerings: room types, packages, "
-        "experiences, dining options, and amenities."
-    ),
-    "real_estate": (
-        "This is a REAL ESTATE business. Offerings: property listings "
-        "by type, services (rental, sales, management)."
-    ),
-    "automotive": (
-        "This is an AUTOMOTIVE business. Offerings: vehicle categories, "
-        "services (sales, leasing, maintenance), named brands."
-    ),
-    "nonprofit": (
-        "This is a NONPROFIT or NGO. Offerings: programs, initiatives, "
-        "services to beneficiaries, named campaigns."
-    ),
-    "government": (
-        "This is a GOVERNMENT entity. Offerings: public services, "
-        "programs, departments, named initiatives."
-    ),
-    "_generic": (
-        "Offerings are anything this organization provides to its "
-        "audience: services, products, courses, programs, menu items, "
-        "experiences, memberships, locations of service. Pick the most "
-        "prominent set. Each must cite block_id evidence.\n"
-        "IF THE EVIDENCE SHOWS A PRODUCT STORE / MARKETPLACE (many individual "
-        "products with prices), apply these HARD RULES — the offerings must "
-        "summarize WHAT THE STORE SELLS, not what happened to sit on the crawled "
-        "promo pages (a giant pharmacy must NOT be summarized as 'coffee capsules'):\n"
-        "  1. DEPARTMENTS FIRST: prefer the store's OWN department/category names "
-        "from its navigation/collections evidence (e.g. الأدوية / العناية بالمرأة / "
-        "الأجهزة الطبية) — they define the store.\n"
-        "  2. A name carrying a pack size, weight, count or flavor variant "
-        "(8 كبسولات, 454 جم, 500mg, 'decaf caramel') is a SKU — NEVER an offering. "
-        "Return its FAMILY or DEPARTMENT once instead.\n"
-        "  3. BREADTH over depth: the list must COVER the range of what the store "
-        "sells; ONE product family may NEVER occupy more than 2 entries.\n"
-        "  4. At most 2-3 individual flagship products, and only when explicitly "
-        "presented as signature items."
-    ),
+}
+
+
+# Which universal catalog shape each business category uses. Unknown / None / unmapped -> 'default'
+# (see _shape_for). beauty & other map to 'default' deliberately: default's store-detection adapts
+# to a cosmetics BRAND (departments/collections) vs a salon (named services), a duality no single
+# vertical shape captures.
+_CATEGORY_TO_SHAPE: dict[str, str] = {
+    "ecommerce": "broad_catalog", "retail": "broad_catalog",
+    "restaurant": "named_menu", "cafe": "named_menu",
+    "clinic": "programs", "hospital": "programs",
+    "education": "programs", "government": "programs", "agency": "programs",
+    "services_b2b": "programs", "services_b2c": "programs",
+    "professional_services": "programs", "fitness": "programs",
+    "hospitality": "programs", "real_estate": "programs", "automotive": "programs",
+    "nonprofit": "programs",
+    "beauty": "default", "other": "default",
 }
 
 
@@ -244,12 +207,13 @@ UNSUBSTANTIATED_CLAIM_TOKENS = (
 )
 
 
-def _category_key(rules_category: Optional[str]) -> str:
-    """Map a profile category (or None) to a guidance key."""
+def _shape_for(rules_category: Optional[str]) -> str:
+    """Map a business category (or None / unknown) to a universal catalog SHAPE. Unknown, None,
+    empty, and unmapped categories all resolve to 'default' — there is no fail-open None-key path
+    (the old _category_key / _generic trap)."""
     if not rules_category:
-        return "_generic"
-    key = rules_category.lower().strip()
-    return key if key in _OFFERINGS_GUIDANCE else "_generic"
+        return "default"
+    return _CATEGORY_TO_SHAPE.get(rules_category.lower().strip(), "default")
 
 
 # Category-aware offering cap. MEASURED A/B (benchmark/measure_offering_cap_ab.py,
@@ -280,47 +244,38 @@ def build_offerings_prompt(
 ) -> str:
     """Build the universal offerings prompt.
 
-    The prompt is single — only the category guidance block is swapped
-    based on rules_category. Pass the rules-derived category (which may
-    be from schema.org or None). Passing None falls through to generic
-    guidance.
+    The prompt is single — only the catalog-SHAPE guidance block is swapped based on
+    rules_category (via _shape_for -> _CATALOG_SHAPES). Pass the rules-derived category
+    (schema.org or None); None / unknown resolves to the 'default' shape.
 
-    max_offerings caps how many offerings the model returns (default 12).
-    The "honest-empty over padding" rule below still applies, so a higher
-    cap surfaces more REAL offerings on multi-service sites without forcing
-    filler on thin ones.
+    max_offerings caps how many offerings the model returns (default 12). The
+    "honest-empty over padding" rule below still applies, so a higher cap surfaces more
+    REAL offerings on multi-service sites without forcing filler on thin ones.
+
+    The GROUNDING CONTRACT (shared SYSTEM_PROMPT) already forbids invented dietary /
+    health / certification claims; the validator enforces it via UNSUBSTANTIATED_CLAIM_TOKENS,
+    so this prompt no longer re-litigates that ban in prose.
     """
-    guidance = _OFFERINGS_GUIDANCE[_category_key(rules_category)]
+    guidance = _CATALOG_SHAPES[_shape_for(rules_category)]
 
     return (
         _common_header(pack)
         + _format_pack_for_prompt(pack)
         + "\n\nWHAT THIS ORGANIZATION OFFERS TO ITS AUDIENCE\n"
         + "============================================\n"
+        + "Extract the concrete things this business offers — named products, services, programs, "
+        "packages — each with name (short, verbatim or close to verbatim), short_description "
+        "(one sentence when available), price_text (verbatim if shown; null otherwise), and "
+        "evidence (the blocks that support its existence). Prefer SPECIFIC named offerings over "
+        "generic ones; if only broad categories exist, capture at most 1-2 of them; if nothing "
+        "concrete is listed, return an EMPTY list — honest-empty is better than padding. NEVER "
+        "emit the business's OWN NAME as an offering, and never emit vague filler ('menu', 'our "
+        "services', 'diverse menu', 'special menu', 'products', 'offerings') as an offering name.\n\n"
+        + "Then apply the structural selection rules for THIS catalog shape:\n"
         + guidance
-        + "\n\nUNIVERSAL RULES FOR OFFERINGS:\n"
-        + "- Each offering has: name (short, verbatim or close to verbatim), "
-        "short_description (one sentence when available), price_text "
-        "(verbatim if shown; null otherwise), and evidence "
-        "(blocks that support its existence).\n"
-        + "- Look in services/products/menu/pricing/booking/courses/"
-        "programs/branches pages first; homepage second.\n"
-        + "- Skip blog-post titles and generic mentions.\n"
-        + f"- Cap: at most {max_offerings} offerings — pick the most prominent.\n"
-        + "- Prefer SPECIFIC named offerings (actual dish / service / program / "
-        "product names the page lists). If only broad categories exist, capture at "
-        "most 1-2 of them; if nothing concrete is listed, return an EMPTY list — "
-        "honest-empty is better than padding.\n"
-        + "- NEVER emit the business's OWN NAME as an offering, and never emit vague "
-        "filler ('menu', 'our services', 'diverse menu', 'special menu', 'products', "
-        "'offerings') as an offering name.\n\n"
-        + "FORBIDDEN CLAIMS (must NOT be inferred):\n"
-        + "Do not invent dietary, health, certification, or medical-efficacy "
-        "claims. Words like halal, vegan, gluten-free, organic, "
-        "healthy, certified, ISO, clinically proven, dermatologist-approved "
-        "must NEVER appear in an offering's name or description unless "
-        "the cited quote LITERALLY contains them. The validator will "
-        "reject any unsupported claim.\n\n"
+        + "\n\nLook in services/products/menu/pricing/booking/courses/programs/branches pages "
+        "first; homepage second. Skip blog-post titles and generic mentions.\n"
+        + f"- Cap: at most {max_offerings} offerings — pick the most prominent.\n\n"
         + f"PRICING POSTURE: choose one of {', '.join(PRICING_POSTURE_VALUES)}.\n"
         + "  - 'premium' = explicit positioning language "
         "('luxury', 'exclusive', 'world-class') OR high visible prices.\n"
@@ -382,6 +337,6 @@ def build_trust_prompt(pack: EvidencePack) -> str:
         + "   - tenure ('15 years in business', 'founded in 2008')\n"
         + "   - team credentials ('Harvard-trained surgeons')\n"
         + "   - testimonials (only when a real quote with attribution is present)\n"
-        + "   Each is one short phrase. Skip vague self-praise. Cap at 8 items.\n"
+        + "   Each is one short phrase. Cap at 8 items.\n"
         + "2. service_areas: geographic regions the business explicitly serves. Cities, districts, countries. Example: ['Cairo', 'Giza', 'Alexandria']. Skip mailing addresses — only places they say they SERVE. Cap at 10 items."
     )
