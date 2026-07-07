@@ -281,7 +281,10 @@ def _scene_html(scene: ReelScene, storyboard: Storyboard, width: int, height: in
   .cluster>*{{unicode-bidi:plaintext;}}
   .headline{{font-family:{head_family};font-weight:{head_weight};
     font-size:{head_px}px;line-height:1.04;letter-spacing:{head_track};text-transform:{head_transform};
-    text-wrap:balance;text-shadow:{shadow};-webkit-text-stroke:0.4px rgba(0,0,0,.3);}}
+    text-wrap:balance;text-shadow:{shadow};
+    /* READABILITY ARMOR (research): a real black outline BEHIND the fill (paint-order) so heavy
+       display captions survive ANY footage — fixes 'unreadable' plain white text. */
+    -webkit-text-stroke:2px rgba(0,0,0,.92);paint-order:stroke fill;}}
   .headline .hl{{color:var(--accent);font-style:{head_style};}}
   /* designed LOCKUP (poster parity) for the hero scenes: stacked words, gradient fill +
      outline, the last word in the brand-accent gradient. */

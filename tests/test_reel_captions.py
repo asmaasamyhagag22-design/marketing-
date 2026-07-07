@@ -1,0 +1,64 @@
+"""Reel caption DESIGN + pacing + voice (owner: 'the reel text is undesigned, too fast, unlistenable').
+
+Hermetic — no Chromium/ffmpeg/TTS. Covers the routing that unlocks the designed caption styles,
+the reading-speed durations, the readability-armor CSS, and the tone-driven edge voice.
+"""
+from __future__ import annotations
+
+from poster.schemas import PosterBrief
+from reel.creative import build_creative_storyboard
+from reel.creative_director import CreativeReel, CreativeScene
+from reel.schemas import ReelScene, Storyboard
+from reel.textlayer import _scene_html
+
+
+def _reel(caps, durs=None):
+    durs = durs or [2.0] * len(caps)
+    return CreativeReel(
+        concept="c", hook="h", cta="Apply now", language="en",
+        images=["https://x/0.jpg"],
+        scenes=[CreativeScene(image_index=0, veo_prompt=f"scene {i}", on_screen_text=c, duration_s=d)
+                for i, (c, d) in enumerate(zip(caps, durs))],
+    )
+
+
+def test_creative_captions_routed_to_designed_styles_and_readable_durations():
+    reel = _reel(["ITI Institute", "85% get hired", "", "Apply to ITI now"])
+    sb = build_creative_storyboard(reel, PosterBrief(business_name="ITI", headline="ITI"))
+    s = sb.scenes
+    # scene 0 caption -> intro HEADLINE (unlocks the hero lockup + logo), not a plain subline
+    assert s[0].kind == "intro" and s[0].headline == "ITI Institute" and not s[0].sublines
+    # a MIDDLE caption -> gallery HEADLINE (the big designed .headline, not the tiny flat .item)
+    assert s[1].headline == "85% get hired" and not s[1].sublines
+    # an empty caption -> plain gallery, no headline
+    assert (s[2].headline or "") == ""
+    # last caption -> outro CTA CHIP
+    assert s[-1].kind == "outro" and s[-1].cta_text == "Apply to ITI now"
+    # READABLE pacing: a captioned scene now holds >= 3s (was ~2s -> 'too fast')
+    for sc in s:
+        if sc.headline or sc.cta_text:
+            assert sc.duration_s >= 3.0
+
+
+def test_gallery_caption_gets_readability_armor_and_display_type():
+    sc = ReelScene(kind="gallery", duration_s=3.0, visual_prompt="x", headline="85% get hired")
+    sb = Storyboard(business_name="ITI", scenes=[sc], palette_hex=["#9c3c3c"], total_duration_s=3.0)
+    html = _scene_html(sc, sb, 1080, 1920, None)
+    assert "paint-order:stroke fill" in html                  # the black outline armor behind the fill
+    assert "-webkit-text-stroke:2px" in html
+    assert 'class="headline"' in html                         # the designed display caption, not .item
+    assert "85%" in html and "hired" in html                  # verbatim (last word wrapped in the accent span)
+    # the plain body subline style is NOT how this caption renders
+    assert '<div class="items">' not in html
+
+
+def test_edge_prosody_is_tone_driven_not_flat(monkeypatch):
+    import reel.voiceover as vo
+    monkeypatch.delenv("REEL_TTS_EDGE_RATE", raising=False)
+    monkeypatch.delenv("REEL_TTS_EDGE_PITCH", raising=False)
+    assert vo._edge_prosody_for_tone("playful energetic") == ("+9%", "+4Hz")
+    assert vo._edge_prosody_for_tone("luxury") == ("-4%", "-1Hz")
+    assert vo._edge_prosody_for_tone("") == ("+4%", "+2Hz")   # default has LIFT, never a flat +0%/+0Hz
+    # an explicit override still wins
+    monkeypatch.setenv("REEL_TTS_EDGE_RATE", "+0%")
+    assert vo._edge_prosody_for_tone("playful")[0] == "+0%"

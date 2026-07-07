@@ -2,8 +2,25 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1129 passed, 0 failed** (2026-07-05/06; grew from 880 as each audit fix
+Test suite: **1133 passed, 0 failed** (2026-07-05/06; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**Reel captions DESIGNED + paced + voice not flat (2026-07-07):** owner: "the reel text is written with
+no design, too fast, boring, unlistenable — study how big brands do it." A 3-agent workflow (research
+top-brand short-form craft + audit our rendering + synthesize a spec) found the root cause: the CREATIVE
+reel put every caption into `sublines` with `kind="gallery"`, so they rendered with the plainest
+template rule (`.item`: Inter 600, ~50px, flat white, one soft fade) — the rich designed lockup /
+accent-CTA-chip / logo only fired for intro/outro. Fixes: **(1) designed captions** —
+`build_creative_storyboard` routes scene 0's caption → `headline` (kind=intro → hero lockup + logo), the
+last → `cta_text` (kind=outro → accent CTA chip + logo), middle captions → `headline` (the big display
+`.headline`, not the tiny flat `.item`); `.headline` gains readability ARMOR (`-webkit-text-stroke:2px`
++ `paint-order:stroke fill`). **(2) readable pacing** — a captioned scene holds `max(3, words*0.4+1.5)`s
+(was ~2s → the "too fast" flash). **(3) caption-driven** — the director prompt wants a SHORT 2-4 word
+caption on MOST scenes (benefit/proof too), with the reading-speed duration + split-if-over-7-words rule.
+**(4) voice not flat** — the free edge-tts path derives rate/pitch from tone (playful +9%/+4Hz, default
++4%/+2Hz, luxury -4%) instead of a flat +0%/+0Hz monotone. +6 tests. Deferred (needs timing infra):
+word-synced karaoke active-word highlighting. Grounded in research (OpusClip/Blitzcut caption specs,
+3-7 words @ 2-3s, 12-17 CPS, white+black-stroke, 1s hook).
 
 **Reel director — say what the brand DOES, vary the scene, pace the text (2026-07-07):** owner's reel
 feedback (same STRANGER-TEST point as the poster): (1) "in every reel I need to understand what the

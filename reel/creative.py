@@ -48,14 +48,33 @@ def build_creative_storyboard(reel: CreativeReel, brief: PosterBrief) -> Storybo
     real-photo seed + Opus's Veo prompt; on-screen text is a short kinetic caption
     (NOT the old repeating headline)."""
     scenes: list[ReelScene] = []
-    for s in reel.scenes:
+    n = len(reel.scenes)
+    for idx, s in enumerate(reel.scenes):
         seed = reel.images[s.image_index] if 0 <= s.image_index < len(reel.images) else None
+        cap = (s.on_screen_text or "").strip()
+        words = len(cap.split())
+        # READABLE PACING (owner: 'the text goes by too fast'): a captioned scene must hold long
+        # enough to READ — research CPS rule ~ 1.5s + 0.35s/word, hard 3s floor for a phrase.
+        base = max(1.5, min(s.duration_s, 8.0))
+        dur = min(8.0, max(base, 3.0, 1.5 + 0.35 * words)) if cap else base
+        # DESIGNED captions (owner: 'text with no design'): route the caption into the fields that
+        # trigger the template's DESIGNED styles — scene 0 -> the hero LOCKUP + logo (kind=intro),
+        # the last scene -> the accent CTA CHIP + logo (kind=outro), middle captions -> the big
+        # display .headline (NOT the tiny flat .item subline the gallery path used before).
+        kind, headline, cta_text = "gallery", "", ""
+        if cap and idx == 0:
+            kind, headline = "intro", cap
+        elif cap and idx == n - 1:
+            kind, cta_text = "outro", cap
+        elif cap:
+            headline = cap
         scenes.append(ReelScene(
-            kind="gallery",
-            duration_s=max(1.5, min(s.duration_s, 8.0)),
+            kind=kind,
+            duration_s=round(dur, 2),
             visual_prompt=s.veo_prompt,
             seed_image_url=seed,
-            sublines=[s.on_screen_text] if s.on_screen_text else [],
+            headline=headline,
+            cta_text=cta_text,
             source_field="creative",
         ))
     primary_dir = "rtl" if (reel.language.startswith("ar") or is_rtl(reel.hook)

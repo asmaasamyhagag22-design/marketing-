@@ -197,7 +197,21 @@ def _edge_voice_for(text: str, override: Optional[str]) -> str:
     return _EDGE_VOICE_AR if _AR_RE.search(text or "") else _EDGE_VOICE_EN
 
 
-def _edge_segment(text: str, out_mp3: Path, *, voice: str) -> bool:
+def _edge_prosody_for_tone(tone: str) -> tuple[str, str]:
+    """Tone-driven edge-tts rate/pitch so the FREE voice isn't a flat +0%/+0Hz monotone (owner:
+    'unlistenable'). An explicit REEL_TTS_EDGE_RATE/PITCH override still wins."""
+    if os.environ.get("REEL_TTS_EDGE_RATE") or os.environ.get("REEL_TTS_EDGE_PITCH"):
+        return _EDGE_RATE, _EDGE_PITCH
+    t = (tone or "").lower()
+    if any(k in t for k in ("luxury", "premium", "elegant", "refined", "sophisticat")):
+        return "-4%", "-1Hz"                     # unhurried, poised
+    if any(k in t for k in ("playful", "energetic", "bold", "youth", "fun", "vibrant", "dynamic")):
+        return "+9%", "+4Hz"                     # upbeat, energetic
+    return "+4%", "+2Hz"                         # default: warm + a touch of lift (never flat)
+
+
+def _edge_segment(text: str, out_mp3: Path, *, voice: str,
+                  rate: Optional[str] = None, pitch: Optional[str] = None) -> bool:
     """One narration line -> mp3 via edge-tts (free). The lib is async, so we drive it
     with asyncio.run (the reel pipeline is synchronous). Never raises -> False on any
     failure (offline / endpoint error) so the caller degrades to silent filler."""
@@ -208,9 +222,12 @@ def _edge_segment(text: str, out_mp3: Path, *, voice: str) -> bool:
         import asyncio
         import edge_tts
 
+        _rate = rate or _EDGE_RATE
+        _pitch = pitch or _EDGE_PITCH
+
         async def _run() -> None:
             await edge_tts.Communicate(
-                text, voice, rate=_EDGE_RATE, pitch=_EDGE_PITCH
+                text, voice, rate=_rate, pitch=_pitch
             ).save(str(out_mp3))
 
         asyncio.run(_run())
@@ -341,7 +358,8 @@ def synth_voiceover(
             ok = _gemini_segment(gem_client, script, raw, voice=voice, model=model,
                                  instructions=instructions)
         elif chosen == "edge":
-            ok = _edge_segment(script, raw, voice=voice)
+            _e_rate, _e_pitch = _edge_prosody_for_tone(tone)   # tone-driven, never a flat +0%/+0Hz
+            ok = _edge_segment(script, raw, voice=voice, rate=_e_rate, pitch=_e_pitch)
         else:
             ok = _tts_segment(oa_client, script, raw, model=model, voice=voice,
                               instructions=instructions)

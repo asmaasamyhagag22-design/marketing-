@@ -66,14 +66,14 @@ def test_elegant_prompt_shows_the_piece_worn_alive_not_food():
     p = _system_prompt(5, "ar", "elegant")
     assert "WEARS" in p and ("ALIVE" in p or "alive" in p)     # worn + real movement, not a still
     assert "sizzling" not in p.lower() and "steam" not in p.lower()
-    assert "TEXT-FREE" in p
+    assert "CAPTION-DRIVEN" in p
     assert "AD SPINE" in p and "never invent history" in p and "invent NO facts" in p
 
 
 def test_food_prompt_keeps_appetising_motion():
     p = _system_prompt(5, "en", "food")
     assert "steam" in p.lower() or "sizzling" in p.lower()
-    assert "TEXT-FREE" in p
+    assert "CAPTION-DRIVEN" in p
 
 
 def test_every_mode_demands_people_action_and_is_grounded():
