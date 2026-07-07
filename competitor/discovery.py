@@ -353,18 +353,61 @@ def _is_scrapable_site(url: Optional[str]) -> bool:
     return bool(d) and d not in _SOCIAL_HOSTS
 
 
+# Generic registrable-domain labels that are NOT a distinctive brand token — matching one
+# in a competitor's name would wrongly drop a real peer. The brand-label self-check skips these.
+_GENERIC_BRAND_LABELS = {
+    "shop", "store", "online", "web", "app", "site", "home", "group", "company",
+    "official", "the", "your", "best", "top", "new", "info", "page", "portal", "eg",
+}
+
+
+def _subject_brand_label(profile) -> Optional[str]:
+    """The subject's own brand token from its registrable domain (PSL-correct): the FIRST
+    label of the eTLD+1 — 'iti' from iti.gov.eg, 'vodafone' from web.vodafone.com.eg. It's
+    the subject's own web identity, so it's a reliable CROSS-SCRIPT self signal when the
+    Places listing carries the brand acronym in another script ('معهد ... - ITI'). None when
+    the URL has no PSL match or the label is a generic word that would over-match a peer."""
+    for u in (_get(profile, "website", default=None), _get(profile, "url", default=None),
+              _get(profile, "source_url", default=None)):
+        if not u:
+            continue
+        try:
+            from scraper.url_utils import _registrable_domain
+            reg = _registrable_domain(str(u))
+        except Exception:
+            reg = None
+        if not reg:
+            continue
+        label = reg.split(".", 1)[0].strip().lower()
+        if len(label) >= 3 and label not in _GENERIC_BRAND_LABELS:
+            return label
+    return None
+
+
 def _is_self(cand, profile) -> bool:
-    """Best-effort: drop the subject business if Places returned it."""
-    own_site = _get(profile, "website", default=None) or _get(profile, "url", default=None)
+    """Best-effort: drop the subject business if Places returned it — including a DIFFERENT-
+    SCRIPT branch of the same brand. Measured on ITI: the subject 'Information Technology
+    Institute' / iti.gov.eg came back from Places as 'معهد تكنولوجيا المعلومات - ITI' with no
+    website, so both the domain check (candidate has no site) and the exact-name check (English
+    vs Arabic) missed it and the brand was listed as its OWN competitor."""
+    from .peer_match import _domain, normalize_text, tokenize
+    own_site = (_get(profile, "website", default=None) or _get(profile, "url", default=None)
+                or _get(profile, "source_url", default=None))
     if own_site and cand.website:
-        from .peer_match import _domain
         if _domain(own_site) and _domain(own_site) == _domain(cand.website):
             return True
     own_name = _get(profile, "name", default=None)
     if own_name and cand.name:
-        from .peer_match import normalize_text
         if normalize_text(str(own_name)) == normalize_text(cand.name):
             return True
+    # Cross-script same-brand: the subject's own domain brand-label appears as a distinct token
+    # in the candidate's name ('iti' in '...- ITI'). Domain labels are brand-specific, so this
+    # rarely touches a true competitor; when it does (a genuinely different firm sharing the
+    # acronym) dropping the ambiguous peer is the conservative SWOT choice (rule 4: someone
+    # else's numbers are worse than UNKNOWN).
+    label = _subject_brand_label(profile)
+    if label and cand.name and label in tokenize(cand.name):
+        return True
     return False
 
 

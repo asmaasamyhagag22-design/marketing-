@@ -65,3 +65,35 @@ def test_never_raises_and_handles_missing_inputs():
     assert find_subject_places(None, _FakeClient([])) is None
     assert find_subject_places({"name": None}, _FakeClient([])) is None
     assert find_subject_places(_PROFILE, _FakeClient([], raise_on_search=True)) is None
+
+
+# --- _is_self: never list the subject (even a different-script branch) as its own competitor ---
+from competitor.discovery import _is_self  # noqa: E402
+
+# Real measured case: profile name is ENGLISH, source_url is iti.gov.eg, but the Places listing
+# for the same brand is ARABIC with no website — the exact-name and domain checks both miss it.
+_ITI = {"name": {"value": "Information Technology Institute"}, "source_url": "https://iti.gov.eg/"}
+
+
+def test_is_self_drops_a_cross_script_branch_of_the_same_brand():
+    self_branch = _cand("معهد تكنولوجيا المعلومات - ITI", website=None)   # brand acronym, other script
+    assert _is_self(self_branch, _ITI) is True
+
+
+def test_is_self_keeps_a_real_competitor_without_the_brand_token():
+    faculty = _cand("كلية التربية جامعة عين شمس", website=None)           # unrelated peer -> kept
+    assert _is_self(faculty, _ITI) is False
+
+
+def test_is_self_still_matches_by_domain_and_exact_name():
+    by_domain = _cand("ITI Training", website="https://iti.gov.eg/courses")
+    assert _is_self(by_domain, _ITI) is True
+    by_name = _cand("information technology institute", website=None)
+    assert _is_self(by_name, _ITI) is True
+
+
+def test_is_self_brand_label_ignores_generic_hosts():
+    # A generic domain label ('store') must NOT drop a peer that merely has 'store' in its name.
+    generic = {"name": {"value": "Acme"}, "source_url": "https://store.com/"}
+    peer = _cand("Downtown Store", website=None)
+    assert _is_self(peer, generic) is False
