@@ -2,8 +2,30 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1170 passed, 0 failed** (2026-07-07; grew from 880 as each audit fix
+Test suite: **1194 passed, 0 failed** (2026-07-07; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**U1 Media Plan — schemas + builder (the real U1 gate) shipped (2026-07-07):** the priority v2.2 unit
+(the defense asks about the objective, not prompt hygiene). New additive `media_plan/` package
+(INTERFACES.md §F), profile pipeline untouched. **Schemas** (`schemas.py`, strict/PD-5): the 6
+`MetaObjective` (ODAX `.value` = Ads-API string, imports to Ads Manager untranslated) + `FunnelStage`
+/`GeoMode`/`Destination` enums, `KPITarget` (positivity-bounded), `EvidenceRef` (resolution-wrapper — a
+claim is a fact only once Ledger-resolved), `Persona` (every axis an `EvidenceRef` → grounded, not a
+guess), `GeoTargeting` (mode-consistent + mutually-exclusive), `CampaignObjective`
+(funnel_stage/budget_allocation_pct/num_ad_sets/test_budget + `_learning_floor` 3×-CPL gated to
+cost-metrics), `MediaPlan` (allocations sum==100, single-objective auto-100, weakest-link `is_grounded`
+folding in objectives+persona+geo). A 15-agent adversarial review (owner: overkill — 3 lenses next time)
+found+verified 4 real "silent-math" bugs, all fixed (is_grounded ignored persona/geo; negative target
+silently disabled the floor; floor misfired on non-cost metrics; geo modes not mutually exclusive).
+**Builder** (`builder.py`, the gate): `build_campaign_objective(profile, caller)` deduces objective +
+destination TOGETHER from real facts, GROUNDS the destination in actual conversion surfaces
+(`conversion_signals`: WhatsApp/checkout/phone/form/address/site → resolved EvidenceRef); a deduced
+destination with no signal → honest `is_grounded=False` (advisor flags, never fabricates a store); no
+caller/thin profile → None. +19 hermetic tests (MockCaller, offline). Owner decisions: kept 3× (budget
+floor) + ticketed ~50-conversion learning-phase exit as a U3 guardrail (T-4); declined global
+`strict=True` (breaks U6 json-dict round-trip); objective↔destination compat is the builder's job (inferential).
+**Blocker:** Gemini billing still 403 dunning on `image-498715` (106225033713) — the 14-URL baseline
+benchmark waits on the owner's console reactivation; U1 is offline and did not.
 
 **Batch 3 (poster image) — COMPLIANCE_CONTRACT + shared image negative; Batch 5 calendar (2026-07-07):**
 owner's Batches 3–5. Shipped the SAFE, high-leverage core this pass; the vertical→shape restructures +
