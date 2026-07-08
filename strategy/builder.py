@@ -158,6 +158,10 @@ def _llm_plan(profile, caller, *, days, platforms, trends, target) -> list[_Plan
         "calendar for the brand below — a realistic mix of formats, angles, and platforms. "
         "Ground every item in the brand's real persona/offerings; do NOT invent facts, "
         "prices, or claims. Vary content_type and angle so the feed isn't repetitive. "
+        "When current trends are supplied, use them to shape the TIMING and ANGLE of grounded "
+        "content — never to invent a fact or claim the brand can't support. A trend is a reason "
+        "to feature a REAL offering now, not a license to promise something new. Most of the "
+        "calendar stays evergreen-grounded; trends flavor a SUBSET. "
         f"LANGUAGE: {lang}."
     )
     user = (
