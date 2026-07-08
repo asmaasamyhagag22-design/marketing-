@@ -18,11 +18,20 @@ feeds the future Meta Policy Linter (one compliance truth). **(2) `IMAGE_NEGATIV
 `IMAGE_NEGATIVE_TERMS`** — the shared text-free/artefact-free image negative, promoted verbatim from
 art_director's per-call `negative_prompt` (zero-change consolidation). **(3) Batch 5 calendar** — explicit
 trend-weighting in the content-calendar prompt (trends shape timing/angle of GROUNDED content, never invent;
-most stays evergreen). +4 tests. **DEFERRED (next unit, need test rework / config-map decision):** collapse
+most stays evergreen). +4 tests. **Batch 4 keystone — reel persona stripped (2026-07-07):** the owner's "strongest single anti-convergence
+move". The reel `_system_prompt` opened with "SENIOR CREATIVE DIRECTOR with 15 years in performance-
+marketing and TikTok/Reels" — the most homogenizing primer in the catalog (it made a heritage jeweller and
+a discount grocer sound identical). Replaced with `CRAFT_CONTRACT` + a brand-DERIVED register ("a luxury
+house is unhurried; a youth brand is fast; a clinic is calm — do NOT default every brand to high-energy
+TikTok pacing"). The ad-SPINE (HOOK→WHAT-IT-IS→BENEFIT→PROOF→CTA), the SUBJECT+STYLE+CAMERA+LIGHTING+MOTION
+agency formula, BANNED WORDS, FRAMING, and the "OBSESSED with realism" emphasis are ALL kept verbatim.
++de-primed "must feel premium"→"polished". 1 test updated (persona→craft-bar+register).
+
+**DEFERRED (next unit, need config-map decision + heavy test rework):** collapse
 `build_art_direction` 5 vertical prompts → ~3 scene shapes on the Batch-1 category→shape map (reusable —
-`_shape_for` is importable); restructure reel `_MOTION_GUIDANCE` 4 keys → motion shapes; strip the reel
-"15-years-TikTok" persona (test_creative_director:157) → CRAFT_CONTRACT + brand register; promote
-`_MOTION_TAIL` → `MOTION_CONTRACT`; strip "award-winning" primers in `build_design_spec`/`build_llm_concept_prompt`.
+`_shape_for` is importable); restructure reel `_MOTION_GUIDANCE` 4 keys → motion shapes + re-key
+`_DELIVERY_EG`; promote `_MOTION_TAIL` → `MOTION_CONTRACT`; strip "award-winning" primers in
+`build_design_spec`/`build_llm_concept_prompt`; the `build_creative_prompt` surreal-default alignment.
 **Measure-first tickets (blocked by Gemini billing 403):** oneshot negative→positive reframe (B2), scene-QA
 compliance criterion (B4), `bake_text` reachability (B3), cross-lingual RAG recall (B1).
 

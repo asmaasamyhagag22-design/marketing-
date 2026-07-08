@@ -149,13 +149,16 @@ def test_prompt_demands_physically_logical_use_not_impossible_actions():
     assert "sealed pump" in p or "closed bottle" in p         # the forbidden impossible action
 
 
-def test_prompt_uses_the_senior_director_persona_and_agency_formula():
-    # Owner's agency playbook: the director is a senior performance-marketer obsessed with realism,
-    # and each veo_prompt is engineered with the SUBJECT+STYLE+CAMERA+LIGHTING+MOTION formula using
-    # explicit directorial terms (not lazy generic prompts).
+def test_prompt_uses_craft_bar_brand_register_and_agency_formula():
+    # Batch 4: the "15-years-TikTok" persona is replaced by the shared CRAFT BAR + a brand-derived
+    # register (so a luxury house and a clinic don't converge on hype pacing); the realism obsession
+    # and the SUBJECT+STYLE+CAMERA+LIGHTING+MOTION agency formula are KEPT.
     p = _system_prompt(5, "en", "generic")
-    assert "SENIOR CREATIVE DIRECTOR" in p and "15 years" in p
-    assert "OBSESSED with realism" in p
+    assert "CRAFT BAR" in p                                      # de-primed: the shared bar, not a persona
+    assert "SENIOR CREATIVE DIRECTOR" not in p and "15 years" not in p
+    assert "REGISTER must MATCH THIS BRAND" in p                 # register derived from the brand
+    assert "Do NOT default every brand to high-energy TikTok pacing" in p
+    assert "OBSESSED with realism" in p                          # realism emphasis kept
     assert "SUBJECT + STYLE + CAMERA + LIGHTING + MOTION" in p
     assert "Macro close-up" in p or "tracking shot" in p        # explicit camera moves
     assert "soft natural light" in p or "diffused" in p          # explicit lighting

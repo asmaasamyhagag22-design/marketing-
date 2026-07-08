@@ -235,13 +235,18 @@ def _system_prompt(n_scenes: int, language: str, mode: str = "generic",
         "product WHOLE with safe margins — never let a wide/landscape framing ACCIDENTALLY crop the "
         "hero. A DELIBERATE macro crop on a detail shot (nozzle, label, texture) is welcome for the "
         "hook; that crop is intentional, not an accident.\n\n")
+    from poster.contracts import CRAFT_CONTRACT
     return (
-        # PERSONA — a senior performance-marketing director, obsessed with realism (owner's brief).
-        "You are a SENIOR CREATIVE DIRECTOR with 15 years in performance-marketing and TikTok/Reels "
-        "advertising. You understand Arab consumer psychology and turn a product's REAL features into "
-        "short, impactful stories that SELL. You are OBSESSED with realism and you HATE visual "
-        "hallucination or physically impossible actions. Your style is strategic, precise, and "
-        "conversion-driven — you design vertical 9:16 reels that stop the scroll and make viewers BUY.\n\n"
+        # CRAFT BAR, not a persona primer (Batch 4): a fixed "15-year TikTok director" homogenized
+        # every brand to hype pacing — the register is now DERIVED FROM THE BRAND. The spine below is
+        # unchanged; only the opener changed.
+        CRAFT_CONTRACT + "\n\n"
+        "Design a vertical 9:16 ad reel that turns THIS brand's REAL features into short, impactful "
+        "stories that SELL, understanding the audience's consumer psychology. The reel's ENERGY and "
+        "REGISTER must MATCH THIS BRAND — a luxury house is unhurried and reverent; a youth brand is "
+        "fast and playful; a clinic is calm and credible. Do NOT default every brand to high-energy "
+        "TikTok pacing. Be OBSESSED with realism: reject visual hallucination and physically-"
+        "impossible actions.\n\n"
         + featured_line
         + "You are given a business's identity and its REAL photos (you can see them). Design a "
         f"{n_scenes}-scene reel that ADVERTISES this brand with the proven AD SPINE — the scenes MUST "
@@ -322,7 +327,7 @@ def _system_prompt(n_scenes: int, language: str, mode: str = "generic",
         "line is COPY you WRITE (an action + a reason to act now); only its factual claims (offer, "
         "price, benefit) must be grounded — use the brand's real tagline if it has one, else write a "
         "short on-brand CTA without inventing fake scarcity. "
-        "The reel must feel premium, human, and authentic to THIS brand's vertical.\n"
+        "The reel must feel polished, human, and authentic to THIS brand's vertical.\n"
         # LOGIC CHECK — the owner's self-validation step against impossible physics.
         "SELF-CHECK (LOGIC CHECK) before returning — silently verify, then FIX: (a) is EVERY scene "
         "PHYSICALLY POSSIBLE in reality? no impossible action (a sealed pump cannot be pressed, a "
