@@ -124,12 +124,16 @@ Turns scraped page blocks into a structured brand profile. Every extraction call
 
 Two truth domains: an LLM WRITES the concept + brand copy (gated against the Evidence Ledger), then a Gemini IMAGE model RENDERS a finished poster that must print our copy verbatim. A vision OCR read-back + an art-director QA pass reject any render that garbles text, invents labels, or paints the brand name onto objects.
 
+**Two shared contracts** (`poster/contracts.py`, Batch 2 — stated once, injected across the chain):
+- **`CRAFT_CONTRACT`** — the copy craft BAR ("would this brand actually ship it," not "does it sound like an ad"). Bans the empty aesthetic primers (premium / world-class / award-winning / cutting-edge / …) that made every brand's copy converge; states the philosophy: facts gated, form free. Injected into `build_creative_concept (system)` (replaced the "senior creative director" persona).
+- **`VERBATIM_RENDER_CONTRACT`** — the frozen-strings rule (render/read the approved copy character-for-character; Arabic dot-counts ت=2/ث=3, ة vs ه). Shared by `build_oneshot_prompt` (the renderer) and `read_rendered_text` (the OCR reader) so both speak one language.
+
 ### build_creative_concept (system)
 
 - **Where:** [`poster/concept.py`:297](https://github.com/asmaasamyhagag22-design/marketing-/blob/main/poster/concept.py#L297)
 - **Kind:** system
 - **Model:** Injected text caller — GeminiCaller (gemini-2.5-pro/flash) or OpenAICaller; group_name="poster_concept_brief", structured output _ConceptResponse
-- **Does:** Main Creative-Concept brief: turn brand facts into ONE campaign concept + brand-language copy (headline/sub/cta/proof chips) that all express the same message.
+- **Does:** Main Creative-Concept brief: turn brand facts into ONE campaign concept + brand-language copy (headline/sub/cta/proof chips) that all express the same message. Opens with `CRAFT_CONTRACT` (not a director persona); the falsifiable **STRANGER TEST** (WHO / WHAT-THEY-DO / SPECIFIC offer / ONE proof, in a glance) is the positive engine; an anti-convergence line forbids interchangeable concepts across brands.
 
 > You are a senior advertising CREATIVE DIRECTOR. From the brand's real facts, craft ONE coherent campaign concept... THE BAR — the STRANGER TEST: a first-time viewer... must, in one glance, say FOUR things: (1) WHO it is; (2) WHAT THEY DO; (3) the SPECIFIC thing on offer; (4) ONE real proof.
 
@@ -192,9 +196,9 @@ Two truth domains: an LLM WRITES the concept + brand copy (gated against the Evi
 - **Where:** [`poster/vision_qa.py`:87](https://github.com/asmaasamyhagag22-design/marketing-/blob/main/poster/vision_qa.py#L87)
 - **Kind:** system
 - **Model:** Injected multimodal qa_caller (Gemini vision), group_name="poster_vision_qa", structured output _QAResponse, poster PNG passed in
-- **Does:** Art-director vision QA of the FINAL rendered poster — structured verdict on Latin-in-copy, logo integrity, clipping, on-brand color, candid violation, focal/typography/CTA prominence, 1-10 score, overall pass.
+- **Does:** Art-director vision QA of the FINAL rendered poster — structured verdict on Latin-in-copy, **script_wellformed** (Batch 2: Arabic must be correctly shaped/connected with correct dots, not merely "no Latin"), logo integrity, clipping, on-brand color, candid violation, focal/typography/CTA prominence, 1-10 score, overall pass. `overall_pass` re-ANDs `logo_ok` AND `script_wellformed` code-side (hard gates). Composes with the separate OCR character-fidelity gate (pipeline.py:512).
 
-> You are a WORLD-CLASS advertising ART DIRECTOR reviewing a FINAL rendered poster. Your bar: 'Would a top brand actually run this?' Be strict... overall_pass = true ONLY if logo_ok AND no Latin in the copy AND no clipping AND on_brand_color AND no candid violation AND score >= 7.
+> You are a WORLD-CLASS advertising ART DIRECTOR reviewing a FINAL rendered poster. Your bar: 'Would a top brand actually run this?' Be strict... script_wellformed = true ONLY if every rendered copy line is WELL-FORMED for its script (Arabic connected/ligatures/dots)... overall_pass = true ONLY if logo_ok AND script_wellformed AND no Latin in the copy AND no clipping AND on_brand_color AND no candid violation AND score >= 7.
 
 ### poster_vision_qa (user)
 

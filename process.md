@@ -2,8 +2,30 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1161 passed, 0 failed** (2026-07-07; grew from 880 as each audit fix
+Test suite: **1167 passed, 0 failed** (2026-07-07; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**Batch 2 prompt refactor — poster concept/copy/fidelity chain (2026-07-07):** owner's expert 5-lens
+critique of the 11 poster prompts. Two systemic weaknesses: copy-side aesthetic PRIMING that made every
+brand's copy converge on the same imagined award-show ad (finding 3), and judge-side Arabic blindness
+(the QA gate only checked "no Latin", never whether the Arabic was well-formed). Fixes: **(1) two shared
+contracts** in new `poster/contracts.py` (the Batch-1 pattern applied to poster): `CRAFT_CONTRACT` — a
+BAR not a brag ("would this brand actually ship it"), earn attention through the ONE specific real thing,
+bans the empty primers (premium/world-class/award-winning/cutting-edge/…), states the philosophy "facts
+gated, form free"; `VERBATIM_RENDER_CONTRACT` — the frozen-strings rule shared by the one-shot renderer
+AND the OCR read-back reader so both speak one language (Arabic dot-counts ت=2/ث=3, ة vs ه). **(2) concept
+de-primed** — stripped "senior advertising CREATIVE DIRECTOR", injected `CRAFT_CONTRACT`, kept the
+excellent STRANGER TEST verbatim as the positive engine, added an anti-convergence line ("two businesses
+must never produce interchangeable concepts") + a jargon→customer-language instruction; the regenerate
+loop now re-asserts the Stranger Test so a fix doesn't break the glance. **(3) oneshot** — de-primed +
+injected `VERBATIM_RENDER_CONTRACT` (the full negative→positive restructure is TICKETED measure-first:
+confirm OCR pass-rate on the paid benchmark before locking — blocked now by the Gemini billing 403).
+**(4) vision-QA Arabic gate** — new `script_wellformed` criterion: for non-Latin copy the rendered text
+must be correctly SHAPED/CONNECTED with correct dots, not merely "no Latin"; a no-Latin-but-garbled-Arabic
+poster now FAILS (code-side hard gate, re-ANDed like logo_ok). This composes with the existing OCR
+character-fidelity gate (pipeline.py:512, catches wrong CHARACTERS) — together they cover both failure
+modes (wrong chars + visual malformation). KEPT untouched (owner: exemplary): `_grounding_problems`, the
+Arabic OCR dot-counting user prompt, `copy_style_cue`, the variation cues. +6 tests.
 
 **All text/reasoning migrated OFF Anthropic → Gemini 2.5 Pro (2026-07-07):** owner directive —
 "the whole project uses Gemini 2.5 Pro" + "no Claude, don't write the word in any file". Three code
