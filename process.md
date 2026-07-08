@@ -2,8 +2,29 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1167 passed, 0 failed** (2026-07-07; grew from 880 as each audit fix
+Test suite: **1170 passed, 0 failed** (2026-07-07; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**Batch 3 (poster image) — COMPLIANCE_CONTRACT + shared image negative; Batch 5 calendar (2026-07-07):**
+owner's Batches 3–5. Shipped the SAFE, high-leverage core this pass; the vertical→shape restructures +
+persona strip are the next unit (heavy test coupling — the reel `_system_prompt` alone has 50+ substring
+assertions). **(1) `COMPLIANCE_CONTRACT`** (owner's #1 fix — real ad-safety, was buried in 5 aesthetic
+prompts and MISSING on the LLM + reel paths): `poster/contracts.compliance_for(category)` is now the ONE
+source (medical → no patients/before-after/procedures/guaranteed-results; skincare/beauty → no
+before-after/clinical-claims/skin-disease; finance/legal → no guaranteed returns; else empty). Wired into
+`build_llm_concept_prompt` (the LLM image path that had NO compliance) and the reel `_system_prompt` (also
+none) — additive + empty for non-medical, so the 50+ reel assertions + all image tests stay green. It also
+feeds the future Meta Policy Linter (one compliance truth). **(2) `IMAGE_NEGATIVE_CONTRACT` +
+`IMAGE_NEGATIVE_TERMS`** — the shared text-free/artefact-free image negative, promoted verbatim from
+art_director's per-call `negative_prompt` (zero-change consolidation). **(3) Batch 5 calendar** — explicit
+trend-weighting in the content-calendar prompt (trends shape timing/angle of GROUNDED content, never invent;
+most stays evergreen). +4 tests. **DEFERRED (next unit, need test rework / config-map decision):** collapse
+`build_art_direction` 5 vertical prompts → ~3 scene shapes on the Batch-1 category→shape map (reusable —
+`_shape_for` is importable); restructure reel `_MOTION_GUIDANCE` 4 keys → motion shapes; strip the reel
+"15-years-TikTok" persona (test_creative_director:157) → CRAFT_CONTRACT + brand register; promote
+`_MOTION_TAIL` → `MOTION_CONTRACT`; strip "award-winning" primers in `build_design_spec`/`build_llm_concept_prompt`.
+**Measure-first tickets (blocked by Gemini billing 403):** oneshot negative→positive reframe (B2), scene-QA
+compliance criterion (B4), `bake_text` reachability (B3), cross-lingual RAG recall (B1).
 
 **Batch 2 prompt refactor — poster concept/copy/fidelity chain (2026-07-07):** owner's expert 5-lens
 critique of the 11 poster prompts. Two systemic weaknesses: copy-side aesthetic PRIMING that made every

@@ -55,3 +55,44 @@ def test_oneshot_prompt_injects_verbatim_contract_and_is_de_primed():
     assert VERBATIM_RENDER_CONTRACT in p                      # shared frozen-strings contract present
     assert "EXACTLY, character for character" in p            # the existing exact-render line stays
     assert "premium social-media advertising poster" not in p # de-primed opener
+
+
+def test_compliance_for_maps_categories_to_ad_safety_rules():
+    from poster.contracts import compliance_for
+    assert "before/after" in compliance_for("clinic") and "patients" in compliance_for("hospital")
+    assert "before/after" in compliance_for("beauty") and "clinical claims" in compliance_for("beauty")
+    assert "guaranteed" in compliance_for("professional_services")
+    assert compliance_for("restaurant") == "" and compliance_for("education") == ""
+    assert compliance_for(None) == ""
+
+
+def test_llm_image_path_gets_compliance_for_medical_not_restaurant():
+    # The owner's #1 Batch-3 fix: the LLM image path had NO compliance gate. Now a clinic brand's
+    # image prompt carries the ad-safety rules; a restaurant's does not.
+    from poster.art_director import build_llm_concept_prompt
+    from poster.schemas import PosterBrief
+
+    cap = {}
+    class _M:
+        def __call__(self, system, user, response_model, group_name="", images=None):
+            cap["user"] = user
+            return response_model(concept_title="t", image_prompt="p"), None
+
+    clinic = PosterBrief(business_name="DermaCare", category="clinic", headline="Header",
+                         subheadline="Sub", cta_text="Book", palette_hex=["#111111"])
+    build_llm_concept_prompt(clinic, caller=_M())
+    assert "COMPLIANCE (ad-safety" in cap["user"] and "before/after" in cap["user"]
+
+    rest = PosterBrief(business_name="Grill", category="restaurant", headline="Header",
+                       subheadline="Sub", cta_text="Order", palette_hex=["#111111"])
+    build_llm_concept_prompt(rest, caller=_M())
+    assert "COMPLIANCE (ad-safety" not in cap["user"]
+
+
+def test_reel_director_gets_compliance_for_medical_not_restaurant():
+    from reel.creative_director import _system_prompt
+    from poster.contracts import compliance_for
+    clinic = _system_prompt(4, "ar", "generic", compliance=compliance_for("clinic"))
+    rest = _system_prompt(4, "ar", "generic", compliance=compliance_for("restaurant"))
+    assert "COMPLIANCE (ad-safety" in clinic and "before/after" in clinic
+    assert "COMPLIANCE (ad-safety" not in rest

@@ -441,12 +441,8 @@ No text. No words. No logo. No watermark. No readable signage.
 Do not generate typography.
 """.strip()
 
-    negative_prompt = (
-        "text, words, letters, typography, logo, watermark, readable signage, "
-        "price tags, UI screens with readable words, fake certificates with text, "
-        "distorted hands, distorted faces, low quality, blurry, cluttered layout, "
-        "busy overlay zones, overexposed, cartoonish"
-    )
+    from poster.contracts import IMAGE_NEGATIVE_TERMS
+    negative_prompt = IMAGE_NEGATIVE_TERMS   # the ONE shared image negative (Batch 3)
 
     return PosterArtDirection(
         provider_prompt=category_prompt,
@@ -788,10 +784,13 @@ def build_llm_concept_prompt(
             "- Vertical 4:5. Purely visual: no factual claims, prices, or guarantees."
         )
 
+    from poster.contracts import compliance_for
+    _compliance = compliance_for(brief.category)   # ad-safety on the LLM image path (was missing)
     user = (
         f"Business: {brief.business_name}\n"
         f"Category: {brief.category}\n"
-        f"Real offerings: {offerings}\n"
+        + (f"{_compliance}\n" if _compliance else "")
+        + f"Real offerings: {offerings}\n"
         f"Tone: {brief.tone or 'premium'}\n"
         f"Brand palette: {palette}\n"
         + (f"\nThe brand's OWN visual world (from its real photos):\n{style}\n" if style else "")

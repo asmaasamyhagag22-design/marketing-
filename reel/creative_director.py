@@ -204,9 +204,13 @@ _DELIVERY_EG = {
 
 
 def _system_prompt(n_scenes: int, language: str, mode: str = "generic",
-                   featured: Optional[str] = None) -> str:
+                   featured: Optional[str] = None, compliance: str = "") -> str:
     motion = _MOTION_GUIDANCE.get(mode, _MOTION_GUIDANCE["generic"])
     deliveries = _DELIVERY_EG.get(mode, _DELIVERY_EG["generic"])
+    # Ad-safety, ONE source (poster.contracts.compliance_for): a clinic/beauty reel must obey the
+    # same policy as its poster — no before/after, no clinical claims, no guaranteed results. Empty
+    # for categories with no rule beyond brand-safety, so most reels are unchanged.
+    compliance_line = (f"{compliance}\n\n" if compliance else "")
     if featured:                     # ONE picked product: several SHOTS of the SAME item
         featured_line = (
             f"FEATURED PRODUCT: {featured}. This reel advertises ONLY this product — EVERY scene is "
@@ -329,6 +333,7 @@ def _system_prompt(n_scenes: int, language: str, mode: str = "generic",
         "scenes show a real PERSON using/reacting to the product with visible motion (not a camera "
         "move over a still) " + check_seq + ". If ANY of these fails, REWRITE that scene before "
         "returning.\n\n"
+        + compliance_line +
         "Return ONLY a JSON object, no prose, no markdown fences:\n"
         '{"concept":"...","hook":"...","music_mood":"...","cta":"...","language":"' + language + '",'
         '"scenes":[{"image_index":0,"veo_prompt":"...","voiceover":"...","voiceover_delivery":"...",'
@@ -375,8 +380,10 @@ def design_creative_reel(
             "Design the reel.")
 
     try:
+        from poster.contracts import compliance_for
         resp, usage = caller(
-            _system_prompt(n_scenes, lang, _vertical_mode(profile), featured=featured_product),
+            _system_prompt(n_scenes, lang, _vertical_mode(profile), featured=featured_product,
+                           compliance=compliance_for(_v(profile, "category"))),
             user, _ReelResponse, group_name="creative_director", images=parts,
         )
     except Exception as e:  # noqa: BLE001 — a call failure must never break the reel pipeline
