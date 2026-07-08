@@ -294,10 +294,14 @@ def build_creative_concept(
         f"Write all copy in {lang_name}, in the brand's voice."
     )
 
+    from poster.contracts import CRAFT_CONTRACT
     system = (
-        "You are a senior advertising CREATIVE DIRECTOR. From the brand's real facts, craft ONE "
-        "coherent campaign concept for a single poster, then derive the copy FROM it so the "
-        "headline, the chips and the visual all express the SAME idea.\n"
+        CRAFT_CONTRACT + "\n\n"
+        "From the brand's real facts, craft ONE coherent campaign concept for a single poster, "
+        "then derive the copy FROM it so the headline, the chips and the visual all express the "
+        "SAME idea. The concept's distinctiveness must come from THIS brand's specific offer and "
+        "proof, not from a generic 'premium ad' template — two different businesses must never "
+        "produce interchangeable concepts.\n"
         "THE BAR — the STRANGER TEST: a first-time viewer who has never heard of this brand must, "
         "in one glance, be able to say FOUR things: (1) WHO it is; (2) WHAT THEY DO — the category "
         "in plain words (e.g. 'a government tech-training institute', 'a hair-care brand'); (3) the "
@@ -345,7 +349,9 @@ def build_creative_concept(
         f"Brand: {name}\n"
         + (f"Tagline: {tagline}\n" if tagline else "")
         + (f"What they do: {desc[:400]}\n" if desc else "")
-        + (f"Real offerings (raw, may be internal jargon): {', '.join(offers)}\n" if offers else "")
+        + (f"Real offerings (raw — may be internal jargon; render them in the words a real "
+           f"customer would use, but never change what they factually ARE): {', '.join(offers)}\n"
+           if offers else "")
         + (f"Brand tone/style (from its real creatives): {tone_block}\n" if tone_block else "")
         + research_block
         + trend_block
@@ -423,7 +429,9 @@ def build_creative_concept(
                                                 "note": "fabricated proof chip removed"})
             c.remediation = remediation
             return c
-        strict_suffix = "\n\nREGENERATE and fix ALL of these: " + "; ".join(problems) + "."
+        strict_suffix = ("\n\nREGENERATE and fix ALL of these: " + "; ".join(problems) +
+                         ". While fixing these, the four-part STRANGER TEST still must hold — "
+                         "don't fix one line and break the glance.")
 
     # Retries exhausted -> grounded fallback (never ship Latin; keep a proof from the offerings).
     fb = _fallback_concept(profile, arabic)

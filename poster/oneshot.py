@@ -64,8 +64,8 @@ def build_oneshot_prompt(copy: dict, *, brand_name: str = "", palette_names: str
     sub = (copy.get("subheadline") or "").strip()
     cta = (copy.get("cta") or "").strip()
     parts = [
-        "Design a COMPLETE, premium social-media advertising poster (portrait 4:5, 1080x1350):",
-        "a professional ad an agency would ship — intentional layout, strong typographic",
+        "Design a COMPLETE social-media advertising poster (portrait 4:5, 1080x1350):",
+        "an ad this brand would actually ship — intentional layout, strong typographic",
         "hierarchy, a designed background scene, generous negative space. NOT a photo with",
         "text pasted on top.",
     ]
@@ -137,6 +137,8 @@ def build_oneshot_prompt(copy: dict, *, brand_name: str = "", palette_names: str
             f"Brand typography: the website uses '{fonts}' — design the poster's type "
             "in the same typographic character (weight, feel), so it reads as this brand."
         )
+    from poster.contracts import VERBATIM_RENDER_CONTRACT
+    parts.append(VERBATIM_RENDER_CONTRACT)
     parts.append("RENDER THIS TEXT — EXACTLY, character for character, no word added, removed,")
     parts.append("translated or 'improved':")
     if headline:
@@ -235,7 +237,9 @@ def read_rendered_text(image_path: "str | Path | bytes", caller: Any) -> list[st
 
     try:
         data = image_path if isinstance(image_path, bytes) else Path(image_path).read_bytes()
+        from poster.contracts import VERBATIM_RENDER_CONTRACT
         resp, _u = caller(
+            VERBATIM_RENDER_CONTRACT + "\n"
             "You are a CHARACTER-EXACT OCR reader. You copy text pixel-for-pixel; you NEVER "
             "correct spelling, dialect, or grammar.",
             "List EVERY piece of text visible in this poster image, one entry per distinct "

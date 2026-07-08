@@ -32,6 +32,7 @@ class PosterQAVerdict(BaseModel):
     single_focal: bool = True       # one clear focal point, not competing ones
     strong_typography: bool = True  # an intentional display lockup, not a default font
     cta_prominent: bool = True      # a confident button, not a footnote
+    script_wellformed: bool = True  # copy well-formed for its script (Arabic ligatures/dots) — hard gate
     score: int = 7                  # art-director score 1..10
     overall_pass: bool = True
     reason: str = ""
@@ -50,6 +51,7 @@ class _QAResponse(BaseModel):
     single_focal: bool = True
     strong_typography: bool = True
     cta_prominent: bool = True
+    script_wellformed: bool = True
     score: int = 7
 
 
@@ -97,12 +99,17 @@ def poster_vision_qa(
         "headline (false if focal points compete).\n"
         "- strong_typography = true if the headline reads as an intentional display LOCKUP "
         "(deliberate weight/size hierarchy), not a flat default font.\n"
+        "- script_wellformed = true ONLY if every rendered copy line is WELL-FORMED for its "
+        "script — this is stricter than 'no Latin'. For Arabic: letters must be correctly "
+        "SHAPED and CONNECTED (no isolated/disjointed glyphs, no broken ligatures), with correct "
+        "dots (ت=2, ث=3) and ة/ه as intended. A poster with NO Latin but broken/garbled/"
+        "disconnected Arabic is script_wellformed = FALSE (HARD GATE).\n"
         f"- {color_line}\n"
         "- candid_violation = true if the imagery looks candid/documentary or flat natural "
         "lighting (amateur/stock) rather than a polished brand campaign.\n"
         "- score = 1..10 overall creative quality as a premium brand poster.\n"
-        "- overall_pass = true ONLY if logo_ok AND no Latin in the copy AND no clipping AND "
-        "on_brand_color AND no candid violation AND score >= 7.\n"
+        "- overall_pass = true ONLY if logo_ok AND script_wellformed AND no Latin in the copy AND "
+        "no clipping AND on_brand_color AND no candid violation AND score >= 7.\n"
         "- reason = one short sentence naming the biggest problem (or 'clean')."
     )
     user = "Review this rendered poster as an art director and return the verdict."
@@ -122,8 +129,11 @@ def poster_vision_qa(
         single_focal=bool(resp.single_focal),
         strong_typography=bool(resp.strong_typography),
         cta_prominent=bool(resp.cta_prominent),
+        script_wellformed=bool(resp.script_wellformed),
         score=int(resp.score or 0),
-        overall_pass=bool(resp.overall_pass) and bool(resp.logo_ok),
+        # code-side hard gates re-ANDed: a crisp logo AND well-formed script are non-negotiable,
+        # so a model that answers overall_pass=true but flags either still FAILS.
+        overall_pass=bool(resp.overall_pass) and bool(resp.logo_ok) and bool(resp.script_wellformed),
         reason=(resp.reason or "").strip(),
         checked=True,
     )

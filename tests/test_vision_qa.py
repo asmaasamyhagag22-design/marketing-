@@ -32,3 +32,30 @@ def test_qa_parses_a_pass_verdict(tmp_path):
     )
     v = poster_vision_qa(str(p), caller=MockCaller({"poster_vision_qa": resp}))
     assert v.checked is True and v.overall_pass is True
+
+
+def test_malformed_arabic_fails_even_with_no_latin(tmp_path):
+    # Batch 2 fix: a poster with NO Latin but broken/disconnected Arabic (script_wellformed=False)
+    # must FAIL, even if the model over-optimistically returned overall_pass=True. The character-
+    # level OCR gate can't see visual ligature breakage; this vision criterion does.
+    p = tmp_path / "poster.png"
+    p.write_bytes(b"\x89PNG\r\n\x1a\n" + b"0" * 64)
+    resp = _QAResponse(
+        has_latin_text=False, cta_clipped=False, on_brand_color=True, candid_violation=False,
+        script_wellformed=False, overall_pass=True, reason="text looks fine to me",
+    )
+    v = poster_vision_qa(str(p), caller=MockCaller({"poster_vision_qa": resp}), arabic=True)
+    assert v.checked is True
+    assert v.script_wellformed is False
+    assert v.overall_pass is False       # code-side hard gate overrides the model's optimism
+
+
+def test_wellformed_script_still_passes(tmp_path):
+    p = tmp_path / "poster.png"
+    p.write_bytes(b"\x89PNG\r\n\x1a\n" + b"0" * 64)
+    resp = _QAResponse(
+        has_latin_text=False, cta_clipped=False, on_brand_color=True, candid_violation=False,
+        script_wellformed=True, overall_pass=True, reason="clean",
+    )
+    v = poster_vision_qa(str(p), caller=MockCaller({"poster_vision_qa": resp}), arabic=True)
+    assert v.overall_pass is True and v.script_wellformed is True
