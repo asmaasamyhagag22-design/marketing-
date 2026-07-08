@@ -221,7 +221,12 @@ class CampaignObjective(BaseModel):
         """test_budget must clear the LEARNING FLOOR: >= 3 x target_cost x num_ad_sets, so each ad
         set can buy the ~3 conversions a minimum read needs. Enforced ONLY when (a) both the budget
         and the cost target are known (honest-unknown skips it, never fabricates a pass) AND (b) the
-        KPI metric is a per-conversion COST (the floor is meaningless for reach/roas/cpc/ctr)."""
+        KPI metric is a per-conversion COST (the floor is meaningless for reach/roas/cpc/ctr).
+
+        NOTE — this 3x is a BUDGET floor ("have I spent enough to judge this ad at all?"). It is NOT
+        Meta's LEARNING-PHASE exit (~50 conversions/ad-set/7-days), which is a CONVERSION COUNT, not
+        a budget, and lives as a U3 Decision-Engine guardrail (no kill/scale before ~50). See §T T-4.
+        Putting 50 here would fabricate a huge budget; the two thresholds have two homes."""
         kpi = self.kpi_target
         tv = kpi.target_value if kpi else None
         is_cost = bool(kpi) and kpi.metric.strip().lower() in _COST_PER_RESULT_METRICS

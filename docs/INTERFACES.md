@@ -101,6 +101,11 @@ poster/ reel/ strategy/ dashboard/   UNTOUCHED render targets; launch_bundle.clo
 - **T-1** — `benchmark/report.py` names the field `contact` in results but `contact_phone` as SWOT-critical in grading — a reporting naming mismatch. Log only; do not touch during Phase 0.
 - **T-2** — `benchmark/urls.json` + `benchmark/ground_truth.json` are absent (runner expects them). Generate mechanically from `urls.md` on Week 1 Day 1 (D-6), then add `expected_objective`/`expected_destination` (values at W4).
 - **T-3** — Non-LLM stages (rules/evidence-pack/validate/grounding/render) emit no cost/latency/hash today; the `telemetry/` wrap (D-7) closes this.
+- **T-4** — LEARNING-PHASE guardrail (U3 Decision Engine). Meta's learning phase exits at ~50
+  conversions per ad-set per 7-day window; before that, delivery is noise. U3's evaluate() must NOT
+  emit a kill/scale Decision for an ad-set below that conversion count. This is a CONVERSION-COUNT
+  guardrail, distinct from U1's `test_budget` 3×-CPL BUDGET floor (`media_plan.schemas` `_learning_floor`)
+  — two thresholds, two homes. Implement in U3, not U1.
 
 ---
 

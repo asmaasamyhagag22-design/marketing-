@@ -5,6 +5,7 @@ Ledger-verified, with a funnel-ordered budget split. Additive; does not touch th
 profile/render pipeline (INTERFACES.md §F). Schemas are strict (PD-5); the builder runs on the
 shared Caller + MockCaller (PD-4 fixtures-first, offline-testable).
 """
+from .builder import build_campaign_objective, conversion_signals
 from .schemas import (
     CampaignObjective,
     Destination,
@@ -19,6 +20,8 @@ from .schemas import (
 )
 
 __all__ = [
+    "build_campaign_objective",
+    "conversion_signals",
     "MetaObjective",
     "FunnelStage",
     "Destination",
