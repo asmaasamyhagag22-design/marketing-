@@ -1,0 +1,24 @@
+{
+  "_doc": "Generated from benchmark/urls.md (the locked 14-URL grid, T-2/D-6). `urls` drives extraction + the metadata-based structural grading (brand/vertical/tier/expected_languages). `thresholds` are the SWOT-unlock gates from urls.md. Fuzzy-field ground truth lives in ground_truth.json (currently minimal — needs labeling, T-2 W4).",
+  "thresholds": {
+    "min_ready_fraction": 0.786,
+    "min_avg_swot_critical_score": 0.85,
+    "per_vertical_min_swot_critical_score": 0.70
+  },
+  "urls": [
+    {"id": "mcdonalds_eg", "brand": "McDonald's", "url": "https://www.mcdonalds.eg", "vertical": "restaurant", "tier": "typical", "platform": "custom", "expected_languages": ["ar", "en"]},
+    {"id": "buffalo_burger", "brand": "Buffalo Burger", "url": "https://buffaloburger.com/", "vertical": "restaurant", "tier": "typical", "platform": "nextjs", "expected_languages": ["ar", "en"]},
+    {"id": "zooba", "brand": "Zooba", "url": "https://zoobaeats.com", "vertical": "restaurant", "tier": "messy", "platform": "nuxt", "expected_languages": ["ar", "en"]},
+    {"id": "alameda", "brand": "Alameda", "url": "https://alameda-hc.com", "vertical": "clinic", "tier": "clean", "platform": "wordpress", "expected_languages": ["ar", "en"]},
+    {"id": "assalam", "brand": "As-Salam", "url": "https://www.assih.com", "vertical": "clinic", "tier": "clean", "platform": "squarespace", "expected_languages": ["ar", "en"]},
+    {"id": "andalusia", "brand": "Andalusia", "url": "https://andalusiaegypt.com", "vertical": "clinic", "tier": "messy", "platform": "nuxt", "expected_languages": ["ar"]},
+    {"id": "eva_cosmetics", "brand": "EVA Cosmetics", "url": "https://shop.eva-cosmetics.com", "vertical": "skincare", "tier": "clean", "platform": "shopify", "expected_languages": ["ar", "en"]},
+    {"id": "hair_addict", "brand": "The Hair Addict", "url": "https://thehairaddict.net", "vertical": "skincare", "tier": "clean", "platform": "wordpress", "expected_languages": ["ar", "en"]},
+    {"id": "raw_african", "brand": "Raw African", "url": "https://rawafrican.net", "vertical": "skincare", "tier": "clean", "platform": "shopify", "expected_languages": ["ar", "en"]},
+    {"id": "norshek", "brand": "Norshek", "url": "https://norshek.com", "vertical": "skincare", "tier": "clean", "platform": "wordpress", "expected_languages": ["ar", "en"]},
+    {"id": "glamira", "brand": "Glamira", "url": "https://www.glamira.com", "vertical": "ecommerce", "tier": "messy", "platform": "unknown", "expected_languages": ["en"]},
+    {"id": "almentor", "brand": "Almentor", "url": "https://www.almentor.net", "vertical": "education", "tier": "typical", "platform": "custom", "expected_languages": ["ar", "en"]},
+    {"id": "auc_sce", "brand": "AUC SCE", "url": "https://sce.aucegypt.edu", "vertical": "education", "tier": "typical", "platform": "custom", "expected_languages": ["en"]},
+    {"id": "mumm", "brand": "Mumm", "url": "https://mumm.io", "vertical": "education", "tier": "messy", "platform": "unknown", "expected_languages": ["ar", "en"]}
+  ]
+}

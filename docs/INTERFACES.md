@@ -99,7 +99,7 @@ poster/ reel/ strategy/ dashboard/   UNTOUCHED render targets; launch_bundle.clo
 ## §T — Tickets (logged in Phase 0, NOT fixed now)
 
 - **T-1** — `benchmark/report.py` names the field `contact` in results but `contact_phone` as SWOT-critical in grading — a reporting naming mismatch. Log only; do not touch during Phase 0.
-- **T-2** — `benchmark/urls.json` + `benchmark/ground_truth.json` are absent (runner expects them). Generate mechanically from `urls.md` on Week 1 Day 1 (D-6), then add `expected_objective`/`expected_destination` (values at W4).
+- **T-2** — PARTIAL (2026-07-07): `benchmark/urls.json` generated from `urls.md` (the 14-URL grid + SWOT-unlock thresholds) → the metadata-based STRUCTURAL grading (8 fields) + freeze-gate now run. `benchmark/ground_truth.json` is MINIMAL (doc-only) → the 3 fuzzy SWOT-critical fields (audience/value_propositions/tone_of_voice) stay UNGRADED until human-labeled per URL (do NOT fabricate — an invented ground truth makes the baseline lie). Still to add: `expected_objective`/`expected_destination` for U1 (values at W4).
 - **T-3** — Non-LLM stages (rules/evidence-pack/validate/grounding/render) emit no cost/latency/hash today; the `telemetry/` wrap (D-7) closes this.
 - **T-4** — LEARNING-PHASE guardrail (U3 Decision Engine). Meta's learning phase exits at ~50
   conversions per ad-set per 7-day window; before that, delivery is noise. U3's evaluate() must NOT

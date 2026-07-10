@@ -136,9 +136,13 @@ def main():
     def say(msg=""):
         print(msg, file=sys.stderr if args.json else sys.stdout)
 
-    if not os.getenv("OPENAI_API_KEY"):
-        print("!! OPENAI_API_KEY not found (not in shell env, not in project .env).", file=sys.stderr)
-        print("   add it to your .env (next to GOOGLE_MAPS_API_KEY) and re-run.", file=sys.stderr)
+    # The profile build needs a working LLM caller. Gemini/Vertex is the PRIMARY (default_caller,
+    # via GOOGLE_CLOUD_PROJECT), OpenAI is only the fallback — so require EITHER, not OPENAI_API_KEY
+    # specifically (a stale gate from before the all-Gemini migration blocked runs on Gemini-only .env).
+    if not (os.getenv("GOOGLE_CLOUD_PROJECT") or os.getenv("GEMINI_API_KEY")
+            or os.getenv("GOOGLE_API_KEY") or os.getenv("OPENAI_API_KEY")):
+        print("!! No LLM credentials found. Set GOOGLE_CLOUD_PROJECT (Gemini/Vertex, primary) "
+              "or OPENAI_API_KEY (fallback) in your .env and re-run.", file=sys.stderr)
         return 2
 
     say("[1/5] scraping subject site: %s" % args.url)
