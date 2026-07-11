@@ -1,0 +1,8 @@
+[
+  {"author": "Mona A.", "rating": 5, "text": "خدمة ممتازة والدكتور محترم جدًا", "lang": "ar",
+   "review_date": "2026-05-02", "source_url": "https://maps.example/r/1"},
+  {"author": "Ahmed S.", "rating": 2, "text": "الانتظار طويل جدًا رغم الحجز المسبق", "lang": "ar",
+   "review_date": "2026-06-11", "source_url": "https://maps.example/r/2"},
+  {"author": "Sara", "rating": 4, "text": "Clean place, friendly staff, a bit pricey", "lang": "en",
+   "review_date": "2026-04-19", "source_url": "https://maps.example/r/3"}
+]

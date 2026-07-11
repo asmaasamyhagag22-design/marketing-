@@ -2,8 +2,20 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1251 passed, 0 failed** (2026-07-11; grew from 880 as each audit fix
+Test suite: **1254 passed, 0 failed** (2026-07-11; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**U8a SHIPPED (fixtures-first, 2026-07-11, suite 1254):** new `reviews/` package — strict
+`Review` schema (privacy rule: `author_hash` NEVER a raw name; the one blessed fingerprint is
+telemetry.payload_hash per D-3), `ReviewProvider` protocol (a provider-per-source is universal,
+D-8; empty result = VALID -> advisor flag), and the FIXTURE provider every downstream unit
+(ABSA -> SWOT v2) develops against (PD-3). Real Google-Maps/Vezeeta pulls land later behind
+scripts/ (PD-4, the only network paths) as separate measured steps. +3 hermetic tests (privacy,
+empty-is-valid, malformed-row skip). **THE OWNER'S FULL QUEUE IS NOW COMPLETE**: baseline v2 ->
+U1 gate (93%/85% PASS) -> U7 telemetry (skeleton + runner stitching) -> stale-gate sweep ->
+R1b/R2/R2b -> re-gate -> MarketDefinition -> U1 assembly CLOSED -> U8a. Next in line per owner:
+the deferred art/motion restructure (queue #3 post-U1, op_shoes as the before/after case) +
+owner-review flags: assalam destination label; TTS dialect listen test verdict.
 
 **U1 CLOSED — config + full MediaPlan assembly SHIPPED (2026-07-11 evening, suite 1251):** the
 two pieces the owner held "until the gate number exists" (gate: 93% PASS, twice). `media_plan/
