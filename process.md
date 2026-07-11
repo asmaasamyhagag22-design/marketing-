@@ -75,6 +75,22 @@ gate; evidence is still validated + attached when present. Live verification: no
 suite 1210. NOTE: norshek's remaining thinness (2/165 pages, 62s budget kill) is a separate
 ticketed scraper defect (crawl budget vs JS-render latency), NOT bundled here.
 
+**FIX-2b DONE + measured (2026-07-11) — U1 journey COMPLETE: 57% → 93% PASS at the theoretical
+ceiling.** alameda re-scraped with the current PSL-aware crawler (zero new code — the
+`same_registrable_host` fix had landed after the stale 2026-05-30 scrape): the crawler finally
+entered the *.alameda-hc.com hospital subdomains → **7 forms** (was 0) + hotlines **19885/16370** +
++201099569334 in the new profile → signals [phone, contact_form, website]. Final gate: **objective
+93% (13/14) STABLE** — alameda LEADS ✓ + lead_form ✓ on real surfaces (no more LLM variance),
+**destination 77%** (69%→77%). The only objective miss is mumm (bot protection, no profile) —
+13/14 IS the ceiling. Remaining dest misses are non-defects: assalam (lead-surface degeneracy),
+andalusia (owner label=website vs deduced lead surface — label nuance), almentor (no offerings
+extracted; part of the thin-crawl follow-up). Operational notes: (a) `run_scrape`'s 300s subprocess
+timeout is too tight post-PSL for subdomain-rich sites (alameda took ~6min direct) — bump when next
+touching the runner; (b) alameda's new profile flags `low_evidence_coverage` (3020 blocks dwarf the
+extracted evidence) — structural-score follow-up, not a U1 concern; (c) a partial
+`alameda-hc_com_20260711_071618/` dir (killed scrape, no manifest) is inert — never deleted per
+policy, superseded by `_072238`.
+
 **BASELINE (post-audit, new project, 2026-07-10):** first full 14-URL benchmark on the fresh GCP
 project (`radiant-octane-501919-v1`, Vertex ADC — old `image-498715` was dunning-suspended). This is
 the REFERENCE POINT for every measured change from here. `benchmark/runs/20260711_055349/`:
