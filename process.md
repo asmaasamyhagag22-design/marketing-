@@ -2,8 +2,22 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1194 passed, 0 failed** (2026-07-07; grew from 880 as each audit fix
+Test suite: **1199 passed, 0 failed** (2026-07-10; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**BASELINE (post-audit, new project, 2026-07-10):** first full 14-URL benchmark on the fresh GCP
+project (`radiant-octane-501919-v1`, Vertex ADC — old `image-498715` was dunning-suspended). This is
+the REFERENCE POINT for every measured change from here. `benchmark/runs/20260711_055349/`:
+**13 graded** (mumm excluded — bot protection, expected), **11/13 ready (85%)** (> 0.786 gate ✅),
+**avg SWOT-critical 0.846** (JUST under the 0.85 gate — marginal FAIL by rounding). Per-vertical: clinic
+0.92 · ecommerce 1.00 · restaurant 0.83 · skincare 0.81 · education 0.75 (all > 0.70 floor). Two
+outliers drag it: **norshek 0.50 + almentor 0.50** (both not-ready — investigate as a quality follow-up,
+NOT the U1 gate). CAVEAT: this is a **STRUCTURAL-only** average — the 3 fuzzy SWOT-critical fields
+(audience/value_propositions/tone_of_voice) are UNGRADED until `ground_truth.json` is labelled; the real
+SWOT-critical number will differ once they are. Headline: the prompt audit + Gemini migration did NOT
+regress extraction (11/13 ready, most URLs 0.75–1.0). **Quota diagnosis: per-MINUTE** — the first run
+429'd on rapid cached re-extraction; this run (fresh scrapes pacing it, quota reset between runs)
+completed with 0 backoff events. The `run_extract` backoff is the safety net for fast re-extraction.
 
 **U1 Media Plan — schemas + builder (the real U1 gate) shipped (2026-07-07):** the priority v2.2 unit
 (the defense asks about the objective, not prompt hygiene). New additive `media_plan/` package
