@@ -16,6 +16,15 @@ def _obj(objective=MetaObjective.SALES, destination=Destination.ONLINE_STORE, gr
                               evidence=[EvidenceItem(page_url="https://x", extractor="rule:x")])])
 
 
+def test_load_env_never_overrides_existing(monkeypatch):
+    """_load_env (entrypoint-only) must not clobber an already-set var and must not raise
+    even if python-dotenv or the .env file is absent."""
+    import os
+    monkeypatch.setenv("GOOGLE_CLOUD_PROJECT", "sentinel-project")
+    g._load_env()
+    assert os.environ["GOOGLE_CLOUD_PROJECT"] == "sentinel-project"
+
+
 def test_match_objective_accepts_value_name_and_label():
     assert g.match_objective(MetaObjective.SALES, "OUTCOME_SALES")   # API value
     assert g.match_objective(MetaObjective.SALES, "SALES")           # enum name

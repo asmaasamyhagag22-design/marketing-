@@ -134,7 +134,18 @@ def _fmt(x: Optional[float]) -> str:
     return "n/a" if x is None else f"{x:.0%}"
 
 
+def _load_env() -> None:
+    """Entrypoint-only: load repo-root .env so default_caller sees the Gemini creds (same idiom as
+    every other __main__ in the repo). Library imports of this module never touch the environment."""
+    try:
+        from dotenv import load_dotenv
+        load_dotenv(BENCHMARK_DIR.parent / ".env", override=False)
+    except ImportError:
+        pass
+
+
 def main() -> int:
+    _load_env()
     grades = grade_u1()
     if not grades:
         print("U1 gate: N/A — no expected_objective labels in benchmark/ground_truth.json yet.")

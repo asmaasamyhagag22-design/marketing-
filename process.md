@@ -2,8 +2,27 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1199 passed, 0 failed** (2026-07-10; grew from 880 as each audit fix
+Test suite: **1200 passed, 0 failed** (2026-07-11; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**U1 GATE — first measured number (2026-07-11): objective 57% / destination 46% — FAIL vs ≥80%.**
+Owner ratified all 14 `expected_objective`/`expected_destination` labels in `ground_truth.json`;
+`python -m benchmark.grade_u1` now prints a real number. (First run read 0% — a wiring bug, not
+deduction: `grade_u1` was the ONE entrypoint in the repo not loading `.env`, so `default_caller`
+saw no creds and the builder honest-degraded to None on all 13. Fixed: `_load_env()` at
+entrypoint-only + hermetic never-overrides test.) **Miss decomposition (offline signal dump, no
+LLM):** 8/14 objective-correct. The 6 misses are ~all SIGNAL COVERAGE, not reasoning: (a) the
+`online_store` signal requires ecom-category OR cart-ish URL hints, so **buffalo_burger** (22 priced
+offerings on `/menu`) and **norshek** (12 priced on homepage, category='') expose NO store surface →
+the LLM obeys the hard rule and picks Leads; (b) **mcdonalds_eg** (11 offerings, 0 priced) +
+**zooba** (2 offerings, 0 priced) — prices never extracted → Traffic; (c) **alameda** profile exposes
+ONLY `website` (no phone/form for a hospital — extraction gap) → Awareness; (d) **mumm** = no profile
+(bot protection, permanent unless re-scraped) → ceiling is 13/14 = 93%. **andalusia** is a label
+nuance (deduced LEADS ✓ via phone/form surface; owner label says dest=website). Proposed fix order
+(ONE at a time, measured): FIX-1 broaden `online_store` signal universally (N≥3 priced offerings on
+own domain OR order-ish URL hints) → predicted +2 = 71%; FIX-2 extraction gaps (mcdonalds/zooba
+prices, alameda contact channels, norshek category — overlaps the norshek/almentor 0.50 outliers) →
+predicted ceiling ~93%. Awaiting owner approval.
 
 **BASELINE (post-audit, new project, 2026-07-10):** first full 14-URL benchmark on the fresh GCP
 project (`radiant-octane-501919-v1`, Vertex ADC — old `image-498715` was dunning-suspended). This is
