@@ -24,7 +24,12 @@ from .schemas import CampaignObjective, Destination, EvidenceRef, FunnelStage, M
 logger = logging.getLogger(__name__)
 
 _ECOM_CATEGORIES = {"ecommerce", "retail"}
-_ECOM_URL_HINTS = ("cart", "checkout", "/product", "/products", "/shop", "/collections", "add-to-cart")
+_ECOM_URL_HINTS = ("cart", "checkout", "/product", "/products", "/shop", "/collections", "add-to-cart",
+                   "order", "/menu", "/store", "/buy")
+# FIX-1 (universal): this many priced offerings on the brand's OWN domain = an online catalog the
+# brand transacts through, even when no URL matches a cart pattern and the category isn't ecom
+# (a priced /menu, products priced on the homepage). >=3 guards against a lone incidental price.
+_PRICED_CATALOG_MIN = 3
 
 
 # ---------------------------------------------------------------------
@@ -64,6 +69,20 @@ def _offerings(profile: Any) -> List[dict]:
 
 def _contact(profile: Any) -> Any:
     return _get(profile, "contact_channels")
+
+
+def _same_site(url: str, src: str) -> bool:
+    """True when `url` lives on the brand's own host (www-insensitive). An offering with NO
+    page_url counts as on-site — it was scraped from the brand's own pages."""
+    if not url:
+        return True
+    try:
+        from urllib.parse import urlparse
+        h_url, h_src = urlparse(url).netloc.lower(), urlparse(src).netloc.lower()
+    except ValueError:
+        return False
+    strip = lambda h: h[4:] if h.startswith("www.") else h  # noqa: E731
+    return bool(h_src) and strip(h_url) == strip(h_src)
 
 
 # ---------------------------------------------------------------------
@@ -106,14 +125,24 @@ def conversion_signals(profile: Any) -> List[Tuple[str, Destination, EvidenceRef
         out.append(("address", Destination.PHYSICAL_STORE,
                     _ref("the brand has a physical location", src, str(addresses[0]), "rule:address")))
 
-    # online store: an ecommerce/retail category, OR a priced offering on a cart/shop URL
+    # online store: an ecommerce/retail category, OR a priced offering on a cart/order URL, OR
+    # (FIX-1) a priced catalog — >= _PRICED_CATALOG_MIN priced offerings on the brand's own domain
     category = _fv(p, "category").lower()
     store_url, store_quote = "", ""
+    priced_on_site, first_on_site = 0, None
     for off in _offerings(p):
+        if not off.get("price_text"):
+            continue
         url = (off.get("page_url") or "")
-        if off.get("price_text") and (any(h in url.lower() for h in _ECOM_URL_HINTS) or category in _ECOM_CATEGORIES):
+        if not store_url and (any(h in url.lower() for h in _ECOM_URL_HINTS) or category in _ECOM_CATEGORIES):
             store_url, store_quote = url or src, f"{off.get('name')} — {off.get('price_text')}"
-            break
+        if _same_site(url, src):
+            priced_on_site += 1
+            if first_on_site is None:
+                first_on_site = (url or src, f"{off.get('name')} — {off.get('price_text')}")
+    if not store_url and priced_on_site >= _PRICED_CATALOG_MIN and first_on_site:
+        store_url = first_on_site[0]
+        store_quote = f"{priced_on_site} priced offerings on the brand's own site — e.g. {first_on_site[1]}"
     if store_url or category in _ECOM_CATEGORIES:
         out.append(("online_store", Destination.ONLINE_STORE,
                     _ref("the brand sells products through an online store", store_url or src,

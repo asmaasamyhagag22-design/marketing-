@@ -2,7 +2,7 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1200 passed, 0 failed** (2026-07-11; grew from 880 as each audit fix
+Test suite: **1204 passed, 0 failed** (2026-07-11; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
 
 **U1 GATE — first measured number (2026-07-11): objective 57% / destination 46% — FAIL vs ≥80%.**
@@ -23,6 +23,20 @@ nuance (deduced LEADS ✓ via phone/form surface; owner label says dest=website)
 own domain OR order-ish URL hints) → predicted +2 = 71%; FIX-2 extraction gaps (mcdonalds/zooba
 prices, alameda contact channels, norshek category — overlaps the norshek/almentor 0.50 outliers) →
 predicted ceiling ~93%. Awaiting owner approval.
+
+**FIX-1 SHIPPED + measured (2026-07-11): 57% → 71% objective — prediction exact (+2: buffalo,
+norshek).** Universal change in `media_plan/builder.conversion_signals`: (a) order-ish URL hints
+added to the cart patterns (`order`, `/menu`, `/store`, `/buy`); (b) NEW priced-catalog rule —
+`_PRICED_CATALOG_MIN=3` priced offerings on the brand's OWN domain (`_same_site`, www-insensitive;
+marketplace URLs don't count; a lone/duo price like a delivery fee stays below threshold) emits the
+`online_store` surface even with no cart URL and no ecom category. Offline signal dump confirmed
+zero false surfaces (all 4 clinics unchanged). +4 hermetic edge tests (catalog≥3 / menu-hint /
+below-threshold / offsite). Destination 46% → 54%. NOTE: assalam's destination flipped phone→(other
+lead surface) across runs — objective is stable, but the destination choice among a brand's several
+equivalent LEAD surfaces (whatsapp/phone/form) is degenerate + nondeterministic; the U1 gate is
+objective-accuracy by design, destination stays secondary. Remaining 4 misses = extraction-side
+(mcdonalds/zooba unpriced offerings, alameda missing contact surfaces) + mumm (no profile). FIX-2
+predicted: 12/14 = 86% > gate.
 
 **BASELINE (post-audit, new project, 2026-07-10):** first full 14-URL benchmark on the fresh GCP
 project (`radiant-octane-501919-v1`, Vertex ADC — old `image-498715` was dunning-suspended). This is

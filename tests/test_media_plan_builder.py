@@ -56,6 +56,49 @@ def test_conversion_signals_reads_real_surfaces_only():
     assert all(ref.is_grounded for _n, _d, ref in conversion_signals(_clinic_profile()))
 
 
+def _priced(n, base="https://tasty.example", path=""):
+    return [{"name": f"Item {i}", "price_text": f"EGP {50 + i}", "page_url": f"{base}{path}"}
+            for i in range(n)]
+
+
+def _catalog_profile(offerings, category="restaurant"):
+    return {"name": {"value": "Tasty"}, "category": {"value": category},
+            "description": {"value": "A brand with priced offerings."},
+            "source_url": "https://tasty.example/", "offerings": offerings,
+            "contact_channels": {"whatsapp_numbers": [], "phones": [], "has_contact_form": False,
+                                 "physical_addresses": []}}
+
+
+def test_priced_catalog_on_own_site_grounds_online_store():
+    # FIX-1: >=3 priced offerings on the brand's OWN domain = a store surface, even with no
+    # cart-ish URL and a non-ecom category (norshek: 12 priced on the homepage, category '')
+    names = {n for n, _d, _r in conversion_signals(_catalog_profile(_priced(3), category=""))}
+    assert "online_store" in names
+    ref = next(r for n, _d, r in conversion_signals(_catalog_profile(_priced(3), category=""))
+               if n == "online_store")
+    assert ref.is_grounded and "3 priced offerings" in (ref.evidence[0].quote or "")
+
+
+def test_order_and_menu_urls_count_as_store_hints():
+    # FIX-1: a priced offering on an order/menu URL is a store even below the catalog threshold
+    # (buffalo_burger: priced offerings on /menu)
+    offs = _priced(1, path="/branches/all/menu")
+    assert "online_store" in {n for n, _d, _r in conversion_signals(_catalog_profile(offs))}
+
+
+def test_two_priced_offerings_stay_below_catalog_threshold():
+    # a lone/duo price (e.g. a delivery fee) must NOT fabricate a store
+    names = {n for n, _d, _r in conversion_signals(_catalog_profile(_priced(2)))}
+    assert "online_store" not in names
+
+
+def test_offsite_priced_offerings_do_not_count_toward_the_catalog():
+    # 3 priced offerings that live on a MARKETPLACE domain are not the brand's own store
+    offs = _priced(3, base="https://marketplace.example", path="/sellers/tasty")
+    names = {n for n, _d, _r in conversion_signals(_catalog_profile(offs))}
+    assert "online_store" not in names
+
+
 def test_store_brand_deduces_grounded_sales_objective():
     caller = MockCaller({"media_plan_objective": _dedux(MetaObjective.SALES, Destination.ONLINE_STORE,
                                                         alts=[MetaObjective.TRAFFIC])})
