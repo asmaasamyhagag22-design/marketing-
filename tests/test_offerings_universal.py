@@ -1094,3 +1094,21 @@ def test_llm_silent_failure_when_all_groups_error():
     assert final.llm_silent_failure is True
     assert final.quality.ready_for_poster is False
     assert "llm_silent_failure" in final.quality.poster_blockers
+
+def test_boutique_size_check_precedes_departments_rule():
+    # R2b (rawafrican: 8 category-level unpriced offerings despite 11 priced product pages
+    # in evidence): the DEPARTMENTS-FIRST rule was written for giant marketplaces and was
+    # collapsing boutiques. Both store shapes now open with the SIZE CHECK: a boutique
+    # catalog (~<=40 products) lists INDIVIDUAL products with verbatim price_text.
+    from business_profile.llm.evidence_pack import EvidenceBlock, EvidencePack
+    from business_profile.llm.prompts import build_offerings_prompt
+    pack = EvidencePack(source_url="https://b.com/", languages=["en"],
+                        blocks=[EvidenceBlock(block_id="b1", page_url="https://b.com/",
+                                              page_type="homepage", section="main", tag="p",
+                                              above_fold=True, text="Hair Oil EGP 250")],
+                        block_count=1, block_ids=["b1"])
+    for cat in ("ecommerce", None):
+        p = build_offerings_prompt(pack, rules_category=cat)
+        assert "SIZE CHECK FIRST" in p
+        assert p.index("SIZE CHECK FIRST") < p.index("DEPARTMENTS FIRST")
+        assert "price_text VERBATIM" in p
