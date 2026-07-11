@@ -2,7 +2,7 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1223 passed, 0 failed** (2026-07-11; grew from 880 as each audit fix
+Test suite: **1231 passed, 0 failed** (2026-07-11; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
 
 **CREATIVE-QUALITY CAMPAIGN (2026-07-11, owner's 2-month pain, 5 diagnosed fronts):** evidence run
@@ -45,6 +45,26 @@ prices (incl. Arabic: مبادرة تمويل اللاب توب) + the six modal
 (picker refinement: an 'other'-typed page qualifies when its URL is offering-shaped
 (is_leaf_detail) AND it announces itself with a heading — the JS-modal course pages classify
 as 'other').
+
+**FIX-C SHIPPED (poster: white plate + structural vagueness + locale, suite 1231):** three fixes in
+one front. **C1 white plate**: the killer was the prompt's own sentence "the brand's real logo is
+placed into that space afterward" → the model painted a literal white placeholder slot (the plate
+the owner fought for 2 months). New corner clause = "plain, low-detail CONTINUATION of the SAME
+background artwork" + explicit ban ("no white or blank box, panel, rectangle…"); plus a
+DETERMINISTIC tile-based corner gate (`_corner_placeholder_detected`, 12×2 luminance tiles, a
+near-uniform tile far from the band median on the logo side ⇒ retry BEFORE compositing —
+legitimately light full-width headers don't trip it, verified by synthetic tests). **C2 place
+assets**: `_gather_product_props` now returns (props, allowed, ROLE) — service categories attach
+their REAL premises photos as role='place' (post-FIX-B these are the real campus/facility shots)
+with a REAL PLACE prompt block ("set THE SCENE inside this real place"), instead of the old hard
+bail-out that attached NOTHING and condemned every service poster to stock; product brands keep
+role='prop' unchanged; a picked product is always a prop. **C3 locale**: new shared
+`poster/locale.py` — `brand_locale(profile)` derives the country from EVIDENCE (ccTLD table
+worldwide → service_areas → phone e164 → language cue → honest ('','')) and the proven anti-drift
+primer wording; injected into `build_oneshot_prompt(locale_line=)` AND the concept builder
+(Country/market in the user block + "scene is set in {country}" in the visual_idea spec). Nothing
+hardcoded: a .sa Arabic brand renders Saudi (regression test), unknown locale injects nothing.
++10 hermetic tests. Live visual before/after on nti recorded below when the render completes.
 
 **FIX-B SHIPPED + measured (from_visual projection — feeds poster AND reel):** two silent killers
 in `business_profile/rules/from_visual.py`: (1) `_logo_basenames` swallowed the ENTIRE

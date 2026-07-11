@@ -25,9 +25,11 @@ def test_oneshot_prompt_carries_copy_verbatim_with_the_contract():
         assert f'"{text}"' in p                                      # verbatim, quoted
     assert "EXACTLY, character for character" in p                   # the exact-render contract
     assert "right-to-left" in p and "SHAPED AND CONNECTED" in p      # Arabic clause
-    # The model must NOT draw the logo (it garbles Arabic script) — it reserves a clean corner
-    # and the real logo asset is composited in deterministically afterward.
-    assert "CLEAN" in p and "composited" in p                        # reserve-corner contract
+    # The model must NOT draw the logo (it garbles Arabic script) — the reserved corner is a
+    # CONTINUATION of the background with an explicit placeholder ban (FIX-C1: the old wording
+    # "the real logo is placed into that space afterward" made the model paint a white slot).
+    assert "CONTINUATION" in p and "Do NOT paint any placeholder" in p
+    assert "no white or blank box" in p
     assert "Do NOT draw the brand's logo" in p
     assert "NO other text" in p                                      # no invented labels
     assert "deep purple" in p and "light streaks" in p               # brand grounding

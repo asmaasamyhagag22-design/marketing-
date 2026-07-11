@@ -55,7 +55,8 @@ def build_oneshot_prompt(copy: dict, *, brand_name: str = "", palette_names: str
                          dna_lines: str = "", rtl: bool = False, has_logo: bool = False,
                          heading_font: str = "", body_font: str = "",
                          single_message: str = "", visual_idea: str = "",
-                         n_products: int = 0) -> str:
+                         n_products: int = 0, n_places: int = 0,
+                         locale_line: str = "") -> str:
     """The one-shot design brief. The copy fields are OUR gated text and must be rendered
     EXACTLY — the prompt forbids inventing, translating or 'improving' any word, and forbids
     ANY other text in the image (the TrendPulse render lets the model add stray labels;
@@ -98,6 +99,22 @@ def build_oneshot_prompt(copy: dict, *, brand_name: str = "", palette_names: str
             "restyle, relabel, translate or 'improve' them. NO other products, boxes or "
             "packaging may appear in the scene."
         )
+    if n_places:
+        # FIX-C2: SERVICE brands (education/clinic/government/...) get their REAL premises
+        # attached as the scene's PLACE instead of desk props — the anchor that stops the
+        # render collapsing into interchangeable stock offices (measured on nti: real campus
+        # photos existed and never reached generation).
+        parts.append(
+            f"REAL PLACE: the {n_places} image(s) attached AFTER the logo are this brand's "
+            "REAL premises/environment, photographed on site. Set THE SCENE inside this real "
+            "place — match its architecture, interiors, equipment, furniture and lighting so "
+            "the poster unmistakably happens THERE. Do NOT invent a different location, and do "
+            "NOT paste the photo as-is — compose a fresh scene that clearly lives in it."
+        )
+    if locale_line:
+        # FIX-C3: evidence-derived country/culture primer (poster/locale.brand_locale) — the
+        # anchor that stops generic-Western casting for a brand with a known market.
+        parts.append(locale_line)
     parts.append(
         "BRAND INTEGRITY (mandatory): do NOT draw the brand's logo or name yourself — the real "
         "logo asset is composited onto the poster afterward"
@@ -155,12 +172,19 @@ def build_oneshot_prompt(copy: dict, *, brand_name: str = "", palette_names: str
         )
     if has_logo:
         # The image model re-draws an attached logo (garbling Arabic script — measured on Azza
-        # Fahmy: "عزة فهمي" came out "ةفهمص"). So we do NOT ask it to render the logo at all: it
-        # leaves a CLEAN corner and the REAL logo asset is composited in deterministically after.
+        # Fahmy: "عزة فهمي" came out "ةفهمص"). So we do NOT ask it to render the logo at all; the
+        # REAL logo asset is composited in deterministically after. FIX-C1 (2026-07-11): the old
+        # wording ("...the brand's real logo is placed into that space afterward") made the model
+        # paint a literal PLACEHOLDER — a hard white rectangle — into the corner (measured on nti:
+        # a white panel from the canvas edge, narrower than the composited logo). The corner is now
+        # described as CONTINUOUS background and the placeholder failure mode is explicitly banned;
+        # a deterministic corner gate in the pipeline retries any render that still paints a slot.
         corner = "top-left" if not rtl else "top-right"
         parts.append(
-            f"Leave the {corner} area CLEAN and uncluttered — no logo, no brand mark, no text, "
-            f"no busy detail there: the brand's real logo is placed into that space afterward. "
+            f"Keep the {corner} corner as a plain, low-detail CONTINUATION of the same background "
+            f"artwork — no logo, no brand mark, no text, no busy detail there. Do NOT paint any "
+            f"placeholder in that corner: no white or blank box, no panel, rectangle, frame, badge "
+            f"or color patch that differs from the surrounding background. "
             f"Do NOT draw the brand's logo or wordmark anywhere in the image."
         )
     parts.append(

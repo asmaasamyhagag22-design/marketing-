@@ -332,6 +332,36 @@ def _overlay_real_logo(poster_path: Path, logo_bytes: bytes, *, rtl: bool,
         return False
 
 
+def _corner_placeholder_detected(poster_path, *, rtl: bool) -> bool:
+    """FIX-C1 deterministic gate: True when the RAW one-shot render painted a literal
+    placeholder 'slot' for the logo — a near-uniform rectangle in the reserved corner that
+    sharply differs from the rest of the top band (measured on nti: a hard white panel,
+    canvas-edge to y≈125, narrower than the composited logo). Tile-based: the top band
+    (y 0..12%H) is split into 12 columns; a slot = a tile in the LOGO-side half that is
+    near-uniform AND far from the band's median tile luminance. A legitimately light
+    full-width header keeps a light median -> no false positive. Never raises."""
+    try:
+        from PIL import Image, ImageStat
+        im = Image.open(poster_path).convert("L")
+        W, H = im.size
+        band_h = max(8, int(H * 0.12))
+        n = 12
+        tw, th = W // n, band_h // 2                 # 12 cols x 2 rows: a tile fits INSIDE a slot
+        means, stds = [], []                          # index = row * n + col
+        for r in range(2):
+            for i in range(n):
+                t = im.crop((i * tw, r * th, (i + 1) * tw, (r + 1) * th))
+                st = ImageStat.Stat(t)
+                means.append(st.mean[0])
+                stds.append(st.stddev[0])
+        median = sorted(means)[len(means) // 2]
+        cols = range(n // 2, n) if rtl else range(0, n // 2)    # the logo-side half
+        return any(stds[r * n + i] < 16 and abs(means[r * n + i] - median) > 48
+                   for r in range(2) for i in cols)
+    except Exception:  # noqa: BLE001 — the gate must never break generation
+        return False
+
+
 def _image_bytes_from_url(url: Optional[str]) -> tuple[Optional[bytes], str]:
     """Fetch ONE remote image via the renderer's SSRF-guarded fetch -> (bytes, mime)."""
     if not url:
@@ -364,32 +394,32 @@ def _profile_category(profile) -> str:
     return str(getattr(cat, "value", cat) or "").lower()
 
 
-def _gather_product_props(profile, caller, log, product_image: Optional[str] = None) -> tuple[list, list[str]]:
-    """The brand's REAL product photos as scene props for the one-shot composite (the
-    owner's radical fix: a real product photo carries its REAL, correct label — like
-    the logo, the model composites an attached asset instead of inventing packaging).
+def _gather_product_props(profile, caller, log,
+                          product_image: Optional[str] = None) -> tuple[list, list[str], str]:
+    """The brand's REAL photos attached to the one-shot composite, with their ROLE (the
+    owner's radical fix: a real asset composites correctly — like the logo — instead of the
+    model inventing packaging or a stock office).
 
-    `product_image` (set when the user PICKED a product) becomes the PRIMARY prop — so the
-    poster SHOWS that exact product (parallels the reel's featured image), kept even if the
-    quality gate would drop it (the user chose it); the second slot fills from the gated rest.
+    role='prop'  — product/food brands: content images are the PRODUCTS, placed as props.
+    role='place' — SERVICE brands (education/clinic/government/...): content images are the
+    brand's REAL premises (post FIX-B they actually are: campus/facility photos, not junk),
+    attached as the scene's PLACE. FIX-C2 replaces the old hard bail-out that attached
+    NOTHING for services — the mechanism that condemned every service poster to stock.
 
-    Quality-gated (reel.image_quality), max 2, SSRF-guarded fetch. Each photo's REAL
-    label text is OCR'd once so those lines become ALLOWED extras in the fidelity gate
-    (invented labels stay junk). ([], []) on any failure — never raises."""
+    `product_image` (user-PICKED product) is always the primary prop regardless of category.
+    Quality-gated (reel.image_quality), max 2, SSRF-guarded fetch. Each photo's REAL text is
+    OCR'd so those lines become ALLOWED extras in the fidelity gate. ([], [], role) on any
+    failure — never raises."""
+    role = "prop"
     try:
         picked = [product_image] if product_image else []
-        # A WHOLE-BRAND poster only composites content images as product props for a PRODUCT / food
-        # brand (retail / ecommerce / beauty / restaurant). For a SERVICE brand (education, clinic,
-        # agency, government…) the content images are BUILDINGS and PEOPLE, and composing them as
-        # desk objects produces clutter + a hallucinated framed face (owner: the ITI poster). A
-        # PICKED product always attaches (the user chose it); only the whole-brand path is gated.
         if not picked and _profile_category(profile) in _SERVICE_NO_PROP_CATS:
-            return [], []
+            role = "place"
         urls = list(((profile or {}).get("visual") or {}).get("content_images") or [])
         if picked:
             urls = [u for u in urls if u != product_image]     # de-dup; picked leads
         if not urls and not picked:
-            return [], []
+            return [], [], role
         from reel.image_quality import filter_usable_photos
         gated = filter_usable_photos(urls, max_keep=2) if urls else []
         keep = (picked + gated)[:2]                            # picked product first, then best other
@@ -404,11 +434,11 @@ def _gather_product_props(profile, caller, log, product_image: Optional[str] = N
             if caller is not None:
                 allowed += oneshot.read_rendered_text(data, caller)
         if props:
-            log(f"[oneshot] {len(props)} real product prop(s) attached "
-                f"({len(allowed)} real label lines allowed)")
-        return props, allowed
+            log(f"[oneshot] {len(props)} real {role} photo(s) attached "
+                f"({len(allowed)} real text lines allowed)")
+        return props, allowed, role
     except Exception:  # noqa: BLE001
-        return [], []
+        return [], [], role
 
 
 def _try_oneshot(profile, brief, concept, brand_dna, caller, *, arabic, audit,
@@ -449,10 +479,12 @@ def _try_oneshot(profile, brief, concept, brand_dna, caller, *, arabic, audit,
                 if v:
                     vals.append(v if isinstance(v, str) else ", ".join(map(str, v)))
             dna_lines = "; ".join(vals)[:800]
-        # The brand's REAL products as composited props (real, correct labels) —
-        # their OCR'd label lines become ALLOWED extras below.
-        product_imgs, allowed_lines = _gather_product_props(profile, caller, log,
-                                                            product_image=product_image)
+        # The brand's REAL photos as composited assets (products as props, or the brand's
+        # premises as the scene's PLACE) — their OCR'd text lines become ALLOWED extras below.
+        product_imgs, allowed_lines, asset_role = _gather_product_props(
+            profile, caller, log, product_image=product_image)
+        from poster.locale import brand_locale
+        _country, locale_line = brand_locale(profile)
 
         prompt = oneshot.build_oneshot_prompt(
             copy, brand_name=brief.business_name or "",
@@ -461,7 +493,9 @@ def _try_oneshot(profile, brief, concept, brand_dna, caller, *, arabic, audit,
             heading_font=(brief.heading_font or ""), body_font=(brief.body_font or ""),
             single_message=(concept.single_message or ""),
             visual_idea=(concept.visual_idea or ""),
-            n_products=len(product_imgs))
+            n_products=(len(product_imgs) if asset_role == "prop" else 0),
+            n_places=(len(product_imgs) if asset_role == "place" else 0),
+            locale_line=locale_line)
         cue = concept_variation_cue(variation)
         if cue:
             prompt += "\n" + cue   # per-run design diversity (mood/lighting/composition)
@@ -488,6 +522,11 @@ def _try_oneshot(profile, brief, concept, brand_dna, caller, *, arabic, audit,
                                                 product_images=product_imgs)
             except Exception as e:  # noqa: BLE001
                 log(f"[oneshot] attempt {attempt} generation failed: {type(e).__name__}: {e}")
+                continue
+            # FIX-C1: reject a render whose reserved corner carries a painted placeholder
+            # slot (the white box the owner has fought for 2 months) BEFORE compositing.
+            if logo_bytes and _corner_placeholder_detected(out_path, rtl=arabic):
+                log(f"[oneshot] attempt {attempt}: corner placeholder slot detected -> retry")
                 continue
             if logo_bytes and _overlay_real_logo(out_path, logo_bytes, rtl=arabic):
                 log("[oneshot] real logo composited (deterministic, crisp)")

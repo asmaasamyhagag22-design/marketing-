@@ -244,6 +244,13 @@ def build_creative_concept(
     desc = _fv(profile, "description")
     tagline = _fv(profile, "tagline")
     offers = _offering_names(profile, 8)
+    # FIX-C3: the brand's evidence-derived country conditions the CONCEPT itself (the
+    # visual_idea used to be written with no market context -> generic-Western scenes).
+    try:
+        from poster.locale import country_of
+        country = country_of(profile)
+    except Exception:  # noqa: BLE001
+        country = ""
     tone_block = _dna_tone_lines(brand_dna)
     lang_name = "Egyptian Arabic (فصحى-قريبة / عامية مصرية راقية)" if arabic else "English"
     vary = ""
@@ -322,7 +329,9 @@ def build_creative_concept(
         "GROUND it in this brand's world, not a stock cliché. FORBIDDEN: a random model staring at "
         "the camera holding a laptop; ANY text, logo, UI, or a face/photo rendered INSIDE a screen "
         "or sign (the image tool garbles these into artefacts); a scene generic enough to sell any "
-        "company. Write visual_idea in ENGLISH — a production brief, no words in the image.\n"
+        "company. Write visual_idea in ENGLISH — a production brief, no words in the image."
+        + (f" The scene is set in {country} with authentic local people from {country} — "
+           f"say so explicitly in the visual_idea." if country else "") + "\n"
         "- proof_points: 2-3 SHORT consumer-language points that support single_message (these "
         "become on-poster chips). Each must serve the message — drop anything unrelated. NOT a "
         "dump of internal/B2B product names.\n"
@@ -347,6 +356,7 @@ def build_creative_concept(
     )
     user = (
         f"Brand: {name}\n"
+        + (f"Country/market: {country}\n" if country else "")
         + (f"Tagline: {tagline}\n" if tagline else "")
         + (f"What they do: {desc[:400]}\n" if desc else "")
         + (f"Real offerings (raw — may be internal jargon; render them in the words a real "
