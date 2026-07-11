@@ -22,9 +22,11 @@ completed with 0 backoff events. The `run_extract` backoff is the safety net for
 (Quotas → Configurations → Enable; auto-raises adjustable quotas gradually from usage). Two nets now:
 runner backoff (code) + adjuster (console). Future-429 map: the "…**with audio input**…" rows are System
 limits (`Adjustable=No`, dim `base_model_id_and_resolution`) — NOT the throttle; the tokens quota (10^10)
-is never it; the real one is Type=Quota / Adjustable=Yes "Generate content **requests** per minute" on
-dim `base_model:gemini-2.5-flash-ga` (& `-pro`). If it reads large + ~0 usage → Dynamic Shared Quota (no
-number to raise; only lever is backoff + paid Provisioned Throughput).
+is never it. **CONFIRMED it's DSQ:** filtering dim `base_model:gemini-2.5-flash-ga` returns only two token
+rows — per-**minute** input tokens = "Unlimited", per-**day** = 10^10 (~0% used); there is **no
+requests/min quota row**. So the 429 was transient Dynamic-Shared-Quota contention, not exhaustion —
+nothing to raise, the adjuster is a no-op here, and the only levers are backoff (have it) + paid
+Provisioned Throughput if a 0-429 SLA is ever needed.
 
 **U1 Media Plan — schemas + builder (the real U1 gate) shipped (2026-07-07):** the priority v2.2 unit
 (the defense asks about the objective, not prompt hygiene). New additive `media_plan/` package
