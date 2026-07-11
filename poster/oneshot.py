@@ -184,7 +184,9 @@ def build_oneshot_prompt(copy: dict, *, brand_name: str = "", palette_names: str
             f"Keep the {corner} corner as a plain, low-detail CONTINUATION of the same background "
             f"artwork — no logo, no brand mark, no text, no busy detail there. Do NOT paint any "
             f"placeholder in that corner: no white or blank box, no panel, rectangle, frame, badge "
-            f"or color patch that differs from the surrounding background. "
+            f"or color patch that differs from the surrounding background — not even a "
+            f"SLIGHTLY lighter or darker zone; that corner must be IDENTICAL in color and "
+            f"tone to the artwork around it. "
             f"Do NOT draw the brand's logo or wordmark anywhere in the image."
         )
     parts.append(

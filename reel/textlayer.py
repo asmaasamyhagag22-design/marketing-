@@ -49,6 +49,30 @@ def _is_elegant_tone(tone: Optional[str]) -> bool:
     return any(k in (tone or "").lower() for k in _ELEGANT_TONES)
 
 
+def _knockout_if_dark(data: bytes) -> bytes:
+    """FIX (topshoes reel frame: dark crest invisible on dark footage): the broadcast
+    watermark rule — a DARK logo becomes its WHITE-KNOCKOUT variant for the reel overlay
+    (exact silhouette, near-white fill; reads on shifting footage with the CSS shadow).
+    A light/colorful-readable logo passes through untouched. Never raises."""
+    try:
+        import io as _io
+        from PIL import Image
+        im = Image.open(_io.BytesIO(data)).convert("RGBA")
+        px = [q for q in im.getdata() if q[3] > 40]
+        if not px:
+            return data
+        lum = sum((0.2126 * q[0] + 0.7152 * q[1] + 0.0722 * q[2]) / 255 for q in px) / len(px)
+        if lum >= 0.5:
+            return data
+        white = Image.new("RGBA", im.size, (250, 250, 252, 0))
+        white.putalpha(im.split()[3])
+        buf = _io.BytesIO()
+        white.save(buf, format="PNG")
+        return buf.getvalue()
+    except Exception:  # noqa: BLE001
+        return data
+
+
 def _logo_data_uri(url: Optional[str]) -> Optional[str]:
     """SSRF-guarded fetch of the brand logo -> data URI for inlining. None on any
     failure or non-raster source (the reel renders fine without it)."""
@@ -71,11 +95,15 @@ def _logo_data_uri(url: Optional[str]) -> Optional[str]:
         if low.endswith(".svg"):
             mime = "image/svg+xml"
         else:
-            for ext, m in ((".jpg", "image/jpeg"), (".jpeg", "image/jpeg"),
-                           (".webp", "image/webp"), (".png", "image/png")):
-                if ext in low:
-                    mime = m
-                    break
+            knocked = _knockout_if_dark(data)
+            if knocked is not data:
+                data, mime = knocked, "image/png"      # white variant re-encodes as PNG
+            else:
+                for ext, m in ((".jpg", "image/jpeg"), (".jpeg", "image/jpeg"),
+                               (".webp", "image/webp"), (".png", "image/png")):
+                    if ext in low:
+                        mime = m
+                        break
         return f"data:{mime};base64,{base64.b64encode(data).decode('ascii')}"
     except Exception:
         return None
@@ -313,7 +341,7 @@ def _scene_html(scene: ReelScene, storyboard: Storyboard, width: int, height: in
   .cta{{display:inline-block;font-family:'Space Grotesk','Cairo',sans-serif;font-weight:700;
     font-size:{cta_px}px;background:{accent};color:{chip_text};padding:0.54em 1.5em;
     border-radius:999px;letter-spacing:0.3px;box-shadow:0 10px 30px rgba(0,0,0,.55);}}
-  .logo{{position:absolute;top:64px;}}
+  .logo{{position:absolute;top:64px;filter:drop-shadow(0 2px 10px rgba(0,0,0,.65));}}
   .logo img{{height:{logo_h}px;max-width:42%;object-fit:contain;
     filter:drop-shadow(0 2px 14px rgba(0,0,0,.6));}}
   /* Kinetic entrance: every animated element starts hidden; __seek(t) drives it. */

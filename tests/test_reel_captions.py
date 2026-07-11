@@ -62,3 +62,27 @@ def test_edge_prosody_is_tone_driven_not_flat(monkeypatch):
     # an explicit override still wins
     monkeypatch.setenv("REEL_TTS_EDGE_RATE", "+0%")
     assert vo._edge_prosody_for_tone("playful")[0] == "+0%"
+
+
+def test_dark_logo_becomes_white_knockout_for_the_reel_overlay():
+    # topshoes reel frame: the dark crest was invisible on dark footage. The broadcast
+    # watermark rule: a DARK logo ships as its white-knockout variant (same silhouette);
+    # a light logo passes through untouched.
+    import io as _io
+    from PIL import Image
+    from reel.textlayer import _knockout_if_dark
+
+    def _logo(color):
+        im = Image.new("RGBA", (200, 80), (0, 0, 0, 0))
+        for x in range(10, 190):
+            for y in range(10, 70):
+                im.putpixel((x, y), (*color, 255))
+        b = _io.BytesIO(); im.save(b, format="PNG")
+        return b.getvalue()
+
+    dark_out = _knockout_if_dark(_logo((25, 27, 48)))
+    im = Image.open(_io.BytesIO(dark_out)).convert("RGBA")
+    opaque = [p for p in im.getdata() if p[3] > 40]
+    assert opaque and all(p[0] > 240 for p in opaque)          # white variant
+    light = _logo((250, 250, 250))
+    assert _knockout_if_dark(light) is light                   # untouched

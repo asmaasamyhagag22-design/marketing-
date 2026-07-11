@@ -387,7 +387,10 @@ def _corner_placeholder_detected(poster_path, *, rtl: bool) -> bool:
                 stds.append(st.stddev[0])
         median = sorted(means)[len(means) // 2]
         cols = range(n // 2, n) if rtl else range(0, n // 2)    # the logo-side half
-        return any(stds[r * n + i] < 16 and abs(means[r * n + i] - median) > 48
+        # 30 (was 48): the model learned to paint a SUBTLE grey-purple panel a few tones
+        # off the navy (measured on topshoes — visible, ugly, under the old bar). The
+        # band-median rule still protects legitimately light full-width headers.
+        return any(stds[r * n + i] < 16 and abs(means[r * n + i] - median) > 30
                    for r in range(2) for i in cols)
     except Exception:  # noqa: BLE001 — the gate must never break generation
         return False
