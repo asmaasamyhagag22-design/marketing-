@@ -5,6 +5,26 @@ change-log. Read this before acting in this repo. Last full revision: 2026-07-04
 Test suite: **1233 passed, 0 failed** (2026-07-11; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
 
+**R-SERIES CLOSED + U1 RE-GATE 93%/85% PASS (2026-07-11 evening, autonomous mode):** the owner's
+three report-back items, each measured. **R1b** (6d322f0): the real root was UPSTREAM of the
+frontier — _process_fetched_page classified links against the REQUESTED url, so a cross-domain
+homepage redirect made every link born-external; links now anchor to the FINAL host. LIVE: assih
+1 page -> **41 pages / 20 phones / 8 forms** (a proper Alameda-group portal profile, 21 medical
+departments). **R2 chain**: pack leaf-boost (1ebbd62; product blocks 29->60, priced 53->67) was
+NOT sufficient — the binding constraint was the PROMPT: both store shapes hard-ruled
+"DEPARTMENTS FIRST", collapsing boutiques; R2b (3d6cb5d) adds rule 0 SIZE CHECK (a ~<=40-product
+boutique lists INDIVIDUAL products with verbatim price_text; departments-first is for
+marketplaces). LIVE: rawafrican offerings 8-categories/0-priced -> **15 products / 15 priced** and
+the online_store signal returned. **U1 RE-GATE on fresh profiles: objective 93% (13/14),
+destination 85% (best ever) — PASS.** 3-way taxonomy: builder-errors ZERO; profile-weakness = mumm
+only (bot wall, known ceiling); label-uncertainty = assalam destination (pre-tagged; FLAGGED for
+owner review — post-migration the phone_call label likely becomes lead_form, exactly as the owner
+predicted). **U7 full wiring** (c6634df): the benchmark runner mints one RunTelemetry and exports
+TELEMETRY_RUN_ID to every scrape/extract subprocess — a whole benchmark = ONE stitched
+runs/<run_id>/telemetry.jsonl. Also shipped: REEL_ARABIC_DIALECT=masri|fusha owner option; logo
+legibility bundle (reel white-knockout watermark, poster subtle-panel gate 48->30, prompt tone
+ban). Queue continues: MarketDefinition -> U1 assembly close -> U8a.
+
 **BASELINE v2 (2026-07-11, benchmark/runs/20260711_132224 — the new-crawler reference point):**
 full 14-URL fresh run per owner directive 1, judged by the PRE-REGISTERED criteria. (a) REGRESSION:
 6/7 of the 1.0 URLs held; assalam fell 1.00→0.50 — diagnosed NOT-FIX-A: assih.com now REDIRECTS to
