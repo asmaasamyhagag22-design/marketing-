@@ -87,7 +87,7 @@ def _scene_prompts(brief: Any, n: int) -> list[str]:
     prompts = [
         f"{base}: a confident hero portrait of a real person, genuine expression, natural light.",
         f"{base}: friends or family together, authentically connected and happy, a warm real moment.",
-        f"{base}: a person out in a vibrant modern Egyptian city street, dynamic urban energy.",
+        f"{base}: a person out in a vibrant modern city street of the brand's own country, dynamic urban energy.",
         f"{base}: a relaxed aspirational lifestyle moment at home or a cafe, real and unposed.",
         f"{base}: a cinematic wide establishing shot of a modern city skyline at golden hour.",
     ]
@@ -119,14 +119,17 @@ def _onbrand_context(profile: dict, brief: Any) -> str:
     palette + a HARD no-text clause. With no ad references there is no text to copy, so the scene
     stays clean while the prompt keeps it on-brand."""
     url = ""
-    try:
-        url = str(profile.get("source_url") or "").lower() if isinstance(profile, dict) else ""
-    except Exception:
-        url = ""
+    # FIX-D5: evidence-derived country (was: a ".eg"-only branch hardcoding Egypt —
+    # anti-universal and blind to every other market).
     region = ""
-    if ".eg" in url:
-        region = ("Set in EGYPT with authentic local Egyptian people and real Egyptian "
-                  "surroundings — NOT Western, NOT Gulf/Khaleeji. ")
+    try:
+        from poster.locale import country_of
+        _country = country_of(profile)
+        if _country:
+            region = (f"Set in {_country} with authentic local people and real {_country} "
+                      "surroundings — NOT Western, NOT Gulf/Khaleeji. ")
+    except Exception:  # noqa: BLE001
+        region = ""
     # DELIBERATELY no brand-palette instruction: telling the model to use the (purple) brand
     # colour produced a monochromatic purple DYE over people + scene ("purple-people"). Brand
     # identity comes from the persistent LOGO overlay, NOT from tinting the footage.

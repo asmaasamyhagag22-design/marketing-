@@ -78,6 +78,35 @@ def _system_prompt(business_name: str, category: str, description: str) -> str:
     )
 
 
+def _image_jpeg_bytes(url: str, *, max_side: int = 640) -> Optional[bytes]:
+    """Fetched + downscaled JPEG bytes for the vision caller. None on any failure."""
+    import io
+    from reel.video_provider import _load_reference_image
+    loaded = _load_reference_image(url)
+    if not loaded:
+        return None
+    data, _mime = loaded
+    try:
+        from PIL import Image
+        img = Image.open(io.BytesIO(data)).convert("RGB")
+        img.thumbnail((max_side, max_side))
+        buf = io.BytesIO()
+        img.save(buf, format="JPEG", quality=80)
+        return buf.getvalue()
+    except Exception:  # noqa: BLE001
+        return data
+
+
+def _fail_closed(pairs: list[tuple[str, bytes]], max_keep: int) -> list[str]:
+    """FIX-D1: the no-caller / call-failure fallback. The old 'keep all' fallback is what
+    let banners + logo-walls through for the whole all-Gemini era (the curator hard-required
+    the now-empty OPENAI_API_KEY and silently became a no-op). With no model verdict we now
+    keep only images that pass the DETERMINISTIC suspicious screens (collage/logo-grid ban);
+    the technical size/ratio gate runs separately in image_quality.filter_usable_photos."""
+    from reel.image_quality import is_collage_bytes
+    return [u for u, d in pairs if not is_collage_bytes(d)][:max_keep]
+
+
 def select_brand_photos(
     image_urls: list[str],
     *,
@@ -85,14 +114,20 @@ def select_brand_photos(
     category: str = "",
     description: str = "",
     max_keep: int = 12,
-    model: str = "gpt-4o-mini",
-    api_key: Optional[str] = None,
-    timeout_s: float = 90.0,
+    caller: Optional[object] = None,
+    fetch: Optional[object] = None,    # fetch(url)->jpeg bytes|None; injectable for tests
+    api_key: Optional[str] = None,     # legacy, unused (OpenAI removed 2026-07)
+    model: str = "",                   # legacy, unused
+    timeout_s: float = 90.0,           # legacy, unused
 ) -> list[str]:
-    """Return the subset of `image_urls` that are real, on-brand photographs,
-    ordered best-first. Falls back to the input list on any failure (never raises)."""
-    # Drop tracking-beacon / non-image hosts up front (defense-in-depth; they also
-    # 400 the vision fetch). The scraper excludes these too — belt and suspenders.
+    """Return the subset of `image_urls` that are real, on-brand photographs, ordered
+    best-first. FIX-D1 (2026-07-11): runs on the LIVE model stack — the shared Gemini
+    caller (`caller` injectable for tests; default `default_caller(strong=False)`), the
+    same interface the creative director uses. The old implementation hard-required
+    OPENAI_API_KEY (empty since the all-Gemini migration) and silently kept EVERYTHING —
+    the mechanism behind the screwdriver-macro / TRAINING-banner / partner-logo-wall reel.
+    Never raises; with no caller or a failed call it fails CLOSED via the deterministic
+    collage screen instead of keeping junk."""
     _bad_hosts = ("facebook.com/tr", "/tr?", "google-analytics", "googletagmanager",
                   "doubleclick", "/pixel", "analytics.")
     urls = [u for u in (image_urls or [])
@@ -100,66 +135,59 @@ def select_brand_photos(
             and not any(b in u.lower() for b in _bad_hosts)]
     if len(urls) <= 1:
         return urls
-    key = api_key or os.environ.get("OPENAI_API_KEY")
-    if not key:
-        logger.info("image_select: no OPENAI_API_KEY; keeping all %d images", len(urls))
-        return urls[:max_keep]
 
     # Download + downscale each image OURSELVES; keep only the ones we could fetch
     # (a site that blocks the model's fetcher still works because we send bytes).
-    fetched: list[str] = []          # urls we have data for, in order
-    data_urls: list[str] = []
+    _fetch = fetch or _image_jpeg_bytes
+    pairs: list[tuple[str, bytes]] = []
     for u in urls:
-        d = _image_data_url(u)
+        d = _fetch(u)
         if d:
-            fetched.append(u)
-            data_urls.append(d)
-    if len(fetched) <= 1:
-        logger.info("image_select: only %d images fetchable; keeping them", len(fetched))
-        return fetched or urls[:max_keep]
+            pairs.append((u, d))
+    if len(pairs) <= 1:
+        logger.info("image_select: only %d images fetchable; keeping them", len(pairs))
+        return [u for u, _ in pairs] or urls[:max_keep]
+
+    if caller is None:
+        try:
+            from business_profile.llm import default_caller
+            caller = default_caller(strong=False)
+        except Exception:  # noqa: BLE001
+            caller = None
+    if caller is None:
+        logger.info("image_select: no vision caller; failing CLOSED on suspicious classes")
+        return _fail_closed(pairs, max_keep)
 
     try:
-        from openai import OpenAI
-        client = OpenAI(api_key=key, timeout=timeout_s)
-
-        content: list[dict] = [{"type": "text", "text": (
-            "Classify every image below. Reply with one verdict per image (by index)."
-        )}]
-        for i, d in enumerate(data_urls):
-            content.append({"type": "text", "text": f"Image index {i}:"})
-            content.append({"type": "image_url", "image_url": {"url": d, "detail": "low"}})
-
-        completion = client.beta.chat.completions.parse(
-            model=model,
-            messages=[
-                {"role": "system", "content": _system_prompt(business_name, category, description)},
-                {"role": "user", "content": content},
-            ],
-            response_format=PhotoSelection,
-            temperature=0.0,
+        user = (
+            f"The {len(pairs)} images are attached IN ORDER — the first attached image is "
+            "index 0, the second is index 1, and so on. Classify every image; reply with "
+            "exactly one verdict per image, using its index."
         )
-        parsed = completion.choices[0].message.parsed
-        urls = fetched                  # indices below refer to the fetched list
+        parsed, _usage = caller(
+            _system_prompt(business_name, category, description), user, PhotoSelection,
+            group_name="reel_image_select", images=[(d, "image/jpeg") for _, d in pairs],
+        )
+        fetched = [u for u, _ in pairs]
         if parsed is None:
-            return urls[:max_keep]
+            return _fail_closed(pairs, max_keep)
 
         kept: list[tuple[int, str]] = []   # (quality, url)
         dropped: list[str] = []
         for v in parsed.verdicts:
-            if not (0 <= v.index < len(urls)):
+            if not (0 <= v.index < len(fetched)):
                 continue
             if v.kind == _KEEP_KIND and v.on_brand:
-                kept.append((v.quality, urls[v.index]))
+                kept.append((v.quality, fetched[v.index]))
             else:
                 dropped.append(f"{v.kind}:{v.subject}")
         kept.sort(key=lambda kv: -kv[0])
         result = [u for _, u in kept][:max_keep]
         logger.info("image_select: kept %d/%d (dropped: %s)",
-                    len(result), len(urls), "; ".join(dropped[:8]))
-        # If the model rejected everything (over-strict / all-logos site), don't
-        # leave the reel with zero photos — that's the caller's honest "logo-only"
-        # signal, so return empty and let the caller decide.
+                    len(result), len(fetched), "; ".join(dropped[:8]))
+        # If the model rejected everything (over-strict / all-logos site), that's the
+        # caller's honest "logo-only" signal — return empty and let the caller decide.
         return result
     except Exception as e:  # noqa: BLE001
-        logger.warning("image_select failed (%s); keeping all images", e)
-        return urls[:max_keep]
+        logger.warning("image_select failed (%s); failing CLOSED on suspicious classes", e)
+        return _fail_closed(pairs, max_keep)

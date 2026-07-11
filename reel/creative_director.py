@@ -85,6 +85,17 @@ def _identity_block(profile: dict) -> str:
     if vps:
         lines.append("Value props: " + "; ".join(vps))
 
+    # FIX-D4: the brand's evidence-derived country reaches the director — the reel used to be
+    # cast with ZERO locale (generic-Western people for a .eg government institute).
+    try:
+        from poster.locale import country_of
+        _country = country_of(profile)
+        if _country:
+            lines.append(f"Country/market: {_country} — people, features, dress and settings "
+                         f"authentic to {_country}; never default to generic Western casting.")
+    except Exception:  # noqa: BLE001
+        pass
+
     # Domain-adaptive attributes (model-generated, grounded) — the richest signal.
     try:
         from business_profile.domain_schema import build_domain_profile
@@ -255,7 +266,12 @@ def _system_prompt(n_scenes: int, language: str, mode: str = "generic",
         "common mistake, 3 reasons, a bold before/after, stop-doing-X, or a provocative question), the "
         "product ON SCREEN within 2s, a person's FACE reacting, AND a punchy MACRO detail of the "
         "product's hero feature (label, cap, texture) — this DELIBERATE macro is the one place a tight "
-        "crop belongs; it stops the scroll.\n"
+        "crop belongs; it stops the scroll. The macro must come from a REAL PHOTOGRAPH of the brand's "
+        "world; a hardware/repair close-up that misreads the business (a screwdriver on a circuit "
+        "board for a TRAINING institute) is a failed hook.\n"
+        "IMAGE BANS (absolute): NEVER select an image that is a text banner, a poster, a screenshot, "
+        "a diagram, or a logo collage / partners wall — those are not footage; prefer the real "
+        "photographs of the brand's people, space and work.\n"
         "(2) WHAT IT IS — the STRANGER TEST: by scene 2 the VOICEOVER must make a first-time viewer "
         "understand WHO the brand is, WHAT IT DOES in plain words (the category — 'a tech-training "
         "institute', 'a hair-care brand'), AND the SPECIFIC named product OR service this reel is "
@@ -370,8 +386,24 @@ def design_creative_reel(
         logger.info("creative_director: no Gemini caller (creds/SDK missing); skipping")
         return None
 
+    # FIX-D4: the DOMINANT site language, not languages[0] — that list is often sorted
+    # alphabetically, so 'en' beat 'ar' and an Egyptian brand got ENGLISH captions.
     langs = profile.get("languages") or []
-    lang = language or (str(langs[0]) if langs else "en")
+
+    def _lang_key(entry) -> tuple[str, float]:
+        if isinstance(entry, dict):
+            return str(entry.get("code") or ""), float(entry.get("proportion") or 0.0)
+        code = str(getattr(entry, "code", None) or entry or "")
+        return code, float(getattr(entry, "proportion", 0.0) or 0.0)
+
+    dominant = ""
+    if langs:
+        pairs = [_lang_key(x) for x in langs]
+        pairs = [(c, p) for c, p in pairs if c]
+        if pairs:
+            dominant = max(pairs, key=lambda cp: cp[1])[0] if any(p > 0 for _, p in pairs) \
+                else pairs[0][0]
+    lang = language or dominant or "en"
 
     parts, used = _image_parts(urls, max_images=n_scenes + 4)
     if not parts:

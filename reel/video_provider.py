@@ -147,7 +147,17 @@ def _to_vertical_seed(data: bytes, *, width: int = 768, height: int = 1366) -> t
             bg.paste(fg, ((width - fg.width) // 2, (height - fg.height) // 2))
             canvas = bg
         else:  # cover
-            canvas = ImageOps.fit(img, (width, height), method=Image.LANCZOS)
+            # FIX-D3 crop safety: a STRONGLY-landscape source (banner-ish, often carrying
+            # baked text) center-cropped to 9:16 keeps ~1/3 of its width and truncates words
+            # mid-letter (measured on nti: 'TRAINING' rendered as 'TRAING'). Those CONTAIN
+            # over the image's own edge color instead; real photos keep the sharp cover look.
+            if img.width / max(1, img.height) > 1.6:
+                fg = img.copy()
+                fg.thumbnail((width, height), Image.LANCZOS)
+                canvas = Image.new("RGB", (width, height), _edge_bg_color(img))
+                canvas.paste(fg, ((width - fg.width) // 2, (height - fg.height) // 2))
+            else:
+                canvas = ImageOps.fit(img, (width, height), method=Image.LANCZOS)
         buf = io.BytesIO()
         canvas.save(buf, format="JPEG", quality=88)
         return buf.getvalue(), "image/jpeg"
@@ -455,6 +465,10 @@ class KenBurnsProvider:
             return self._gradient_fallback(out_path, duration_s, width, height, palette)
 
         data, mime = loaded
+        # FIX-D3: normalize the seed to 9:16 FIRST (strongly-landscape sources contain
+        # instead of center-cropping, so baked text is never truncated mid-word); the
+        # vf's cover-crop then becomes a no-op scale for those frames.
+        data, mime = _to_vertical_seed(data, width=width, height=height)
         ext = {"image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp",
                "image/gif": ".gif"}.get(mime, ".jpg")
         img_path = out_path.with_suffix(ext + ".src")

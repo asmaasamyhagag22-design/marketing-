@@ -171,6 +171,29 @@ class _BrandSceneResponse(BaseModel):
     character: str = ""
 
 
+def _culture_line(profile, ground: str, *, scene_scope: bool) -> str:
+    """FIX-D5: evidence-derived culture line (poster.locale) — the old lines hardcoded
+    'Egyptian' for ANY Arabic/MENA-signal brand (wrong for a Saudi/Moroccan brand; the
+    owner works universal). Country from evidence -> that country; Arabic signal with no
+    country -> honest regional wording; nothing known -> ''."""
+    try:
+        from poster.locale import country_of
+        country = country_of(profile)
+    except Exception:  # noqa: BLE001
+        country = ""
+    langs = [str(l).lower()[:2] for l in ((profile or {}).get("languages") or [])]
+    is_mena = ("ar" in langs) or any(t in ground for t in _MENA_TOKENS)
+    if country:
+        scope = ("every scene shows authentic people and real settings from " + country
+                 if scene_scope else "depict authentic people and setting from " + country)
+        return (f"The brand is from {country}: {scope}, culturally accurate "
+                f"(NOT Western, NOT Gulf/Khaleeji, no cliches). ")
+    if is_mena:
+        return ("The brand is from an Arabic-speaking region: depict authentic regional "
+                "people and setting, culturally accurate, no cliches. ")
+    return ""
+
+
 def build_brand_scene(
     brief: PosterBrief, profile: Optional[dict], caller: Optional[Any]
 ) -> tuple[Optional[str], Optional[str]]:
@@ -191,10 +214,7 @@ def build_brand_scene(
     except Exception:
         persona = ""
     ground = _ground_text(brief, profile)
-    langs = [str(l).lower()[:2] for l in ((profile or {}).get("languages") or [])]
-    is_mena = ("ar" in langs) or any(t in ground for t in _MENA_TOKENS)
-    culture = ("The brand is Egyptian / Middle Eastern: depict authentic regional people and "
-               "setting, culturally accurate, no clichés. " if is_mena else "")
+    culture = _culture_line(profile, ground, scene_scope=False)
     system = (
         "You are an award-winning art director for premium vertical (9:16) marketing REELS. "
         "Invent ONE photoreal, TEXT-FREE b-roll scene for THIS specific brand: the setting, the "
@@ -319,10 +339,7 @@ def build_brand_story(
     except Exception:
         persona = ""
     ground = _ground_text(brief, profile)
-    langs = [str(l).lower()[:2] for l in ((profile or {}).get("languages") or [])]
-    is_mena = ("ar" in langs) or any(t in ground for t in _MENA_TOKENS)
-    culture = ("The brand is Egyptian: every scene shows authentic Egyptian people and real "
-               "Egyptian settings, culturally accurate (NOT Western, NOT Gulf). " if is_mena else "")
+    culture = _culture_line(profile, ground, scene_scope=True)
     # The brand's learned VISUAL LANGUAGE (from its real ads) — themes/mood only, NOT colour/text.
     dna_lines = ""
     for attr in ("imagery_style", "mood", "photography_style", "motifs", "positioning"):
@@ -443,12 +460,9 @@ def build_scene_prompt(
     tone = (brief.tone or "").strip().lower()
     tone_phrase = f"{tone} mood, " if tone else ""
 
-    languages = [str(l).lower()[:2] for l in ((profile or {}).get("languages") or [])]
-    # Regional cue ONLY (no food) — so an Egyptian education/clinic brand gets
-    # Egyptian PEOPLE + setting, never food. Food lives only in the restaurant base.
-    is_mena = ("ar" in languages) or any(t in ground for t in _MENA_TOKENS)
-    culture = ("Authentic Egyptian / Middle Eastern people and setting, culturally accurate. "
-               if is_mena else "Culturally authentic to the brand. ")
+    # Regional cue ONLY (no food) — evidence-derived country (FIX-D5), so an education/
+    # clinic brand gets ITS country's people + setting, never food and never a hardcoded one.
+    culture = _culture_line(profile, ground, scene_scope=False) or "Culturally authentic to the brand. "
 
     # CONTINUITY: repeat the recurring protagonist + lock the look in EVERY scene, so a
     # text-to-video reel reads as one coherent story (same person, same grade) rather than

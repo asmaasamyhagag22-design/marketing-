@@ -75,6 +75,42 @@ def measure_bytes(data: bytes) -> Optional[tuple[int, int, float, float]]:
         return None
 
 
+def is_collage_bytes(data: bytes) -> bool:
+    """FIX-D2 deterministic screen: does this image look like a LOGO GRID / partner collage
+    (many items separated by white gutters on a light ground)? The vision curator bans these
+    by CONTENT; this is the fail-closed net for when no caller is available (measured: the
+    nti reel zoomed a 1000x2252 partner logo-wall because the curator was a no-op). Signal:
+    a light image whose 96x96 grayscale shows >=3 alternating white/non-white ROW bands and
+    >=2 column bands — full-width white gutters that real photographs essentially never have.
+    Pure; False on any decode failure (never blocks a real photo by accident)."""
+    if not data:
+        return False
+    try:
+        from PIL import Image
+        small = Image.open(io.BytesIO(data)).convert("L").resize((96, 96))
+        px = list(small.getdata())
+        white_pct = sum(1 for v in px if v >= 235) / len(px) * 100.0
+        if white_pct < 45.0:
+            return False
+
+        def bands(line_means: list[float]) -> int:
+            """Count alternating non-white bands separated by near-white gutters."""
+            n = 0
+            in_band = False
+            for m in line_means:
+                if m < 225 and not in_band:
+                    n, in_band = n + 1, True
+                elif m >= 235 and in_band:
+                    in_band = False
+            return n
+
+        rows = [sum(px[r * 96:(r + 1) * 96]) / 96.0 for r in range(96)]
+        cols = [sum(px[r * 96 + c] for r in range(96)) / 96.0 for c in range(96)]
+        return bands(rows) >= 3 and bands(cols) >= 2
+    except Exception:  # noqa: BLE001
+        return False
+
+
 def _default_fetch(url: str) -> Optional[bytes]:
     """SSRF-guarded http(s) fetch (same discipline as the poster/reel logo fetch)."""
     try:
@@ -101,10 +137,13 @@ def filter_usable_photos(
     for u in (urls or []):
         if not isinstance(u, str) or not u.startswith(("http://", "https://")):
             continue
-        m = measure_bytes(fetch(u))
+        data = fetch(u)
+        m = measure_bytes(data)
         if not m:
             continue
         ok, _why = assess_photo(*m)
+        if ok and data is not None and is_collage_bytes(data):
+            ok = False                                 # FIX-D2: logo grids never animate
         if ok:
             out.append(u)
         if len(out) >= max_keep:

@@ -2,8 +2,29 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1231 passed, 0 failed** (2026-07-11; grew from 880 as each audit fix
+Test suite: **1233 passed, 0 failed** (2026-07-11; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**FIX-D SHIPPED + verified live (reel, suite 1233) — the 5-front campaign is code-complete.**
+(D1) `reel/image_select` runs on the SHARED GEMINI CALLER (was: hard-required the empty
+OPENAI_API_KEY since the all-Gemini migration → a silent NO-OP that kept every banner/logo-wall —
+the mechanism of the broken reels); no-caller/failure now fails CLOSED through (D2)
+`image_quality.is_collage_bytes` (white-gutter band detection — logo grids never animate; wired
+into filter_usable_photos too, protecting the poster path as well). (D3) crop safety: >1.6:1
+landscape sources CONTAIN over their own edge color instead of center-cropping (no more 'TRAING'
+mid-word truncation), both in `_to_vertical_seed` and the Ken Burns path (seed normalized first).
+(D4) creative director: evidence-derived Country/market line in the identity brief; hook rule
+fixed ("the macro must come from a REAL photograph… a screwdriver-on-circuit-board for a TRAINING
+institute is a failed hook") + absolute image bans (banner/poster/screenshot/diagram/logo-collage);
+caption language = the DOMINANT site language by proportion (was languages[0] → 'en' beat 'ar').
+(D5) hardcoded-Egypt hacks replaced by `_culture_line` via poster.locale (a Saudi brand renders
+Saudi; unknown stays honest) in reel/art_director + reel/generate. LIVE VERDICT (nti, $0.0014
+Flash call): curator kept 0/6 — CORRECTLY: the four 'about' photos are program LOGOS (Digital
+Egypt Youth, Wazeefa-Tech…), sprogram1/3 are the holographic-TRAINING stock banners, and the real
+campus photos are 300px thumbnails (tech-gate honest reject) → nti's reel now routes to generated
+b-roll WITH Egyptian casting instead of zooming a logo wall; photo-rich brands keep their real
+photos junk-free. Residual (ticketed, not bundled): nti thumbnails need T-7-style larger-original
+discovery; plan_eval image-suitability check + storyboard quality-ordered seeds = small follow-ups.
 
 **CREATIVE-QUALITY CAMPAIGN (2026-07-11, owner's 2-month pain, 5 diagnosed fronts):** evidence run
 nti.sci.eg. Root causes (5 parallel investigators, all file:line-verified): (1) logo white plate =
@@ -64,7 +85,15 @@ worldwide → service_areas → phone e164 → language cue → honest ('','')) 
 primer wording; injected into `build_oneshot_prompt(locale_line=)` AND the concept builder
 (Country/market in the user block + "scene is set in {country}" in the visual_idea spec). Nothing
 hardcoded: a .sa Arabic brand renders Saudi (regression test), unknown locale injects nothing.
-+10 hermetic tests. Live visual before/after on nti recorded below when the render completes.
++10 hermetic tests. **LIVE VISUAL VERDICT (nti, outputs/posters/nti_fixc_after.png vs
+nti_sci_eg_poster.png):** white plate GONE (logo direct on the navy header — the 2-month defect is
+dead; the corner gate never even fired, the prompt fix alone prevented the slot); person reads
+authentically Egyptian (was Western stock); copy concrete ("خليك مدير نفسك" + freelance-career
+programs + "سجّل دلوقتي في برامجنا"); log confirms "2 real place photo(s) attached" and the
+art-critic REJECTED attempt 1 as "generic stock photography" then passed attempt 2 (fidelity 1.0).
+HONEST remainder: the scene is a bright plausible office, not yet unmistakably the NTI campus —
+the model draws on the attached place photos loosely; that refinement belongs to the HELD
+art-direction restructure, no longer a structural defect.
 
 **FIX-B SHIPPED + measured (from_visual projection — feeds poster AND reel):** two silent killers
 in `business_profile/rules/from_visual.py`: (1) `_logo_basenames` swallowed the ENTIRE
