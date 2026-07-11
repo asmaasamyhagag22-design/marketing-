@@ -5,7 +5,27 @@ change-log. Read this before acting in this repo. Last full revision: 2026-07-04
 Test suite: **1233 passed, 0 failed** (2026-07-11; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
 
-**STALE-GATE SWEEP (owner directive 4, 2026-07-11):** one grep sweep for OpenAI-era gates after
+**BASELINE v2 (2026-07-11, benchmark/runs/20260711_132224 — the new-crawler reference point):**
+full 14-URL fresh run per owner directive 1, judged by the PRE-REGISTERED criteria. (a) REGRESSION:
+6/7 of the 1.0 URLs held; assalam fell 1.00→0.50 — diagnosed NOT-FIX-A: assih.com now REDIRECTS to
+alameda-hc.com (As-Salam merged into the Alameda group portal), the crawler anchors internality to
+the ORIGINAL host so every link classified external → 1-page scrape (persistent across a re-scrape;
+universal gap: re-anchor site_url on a cross-domain homepage redirect — proposed fix). (b)
+HYPOTHESIS CONFIRMED: norshek 0.50→0.75 ready, almentor 0.50→0.75 ready — the shallow-crawl class
+healed exactly as predicted. (c) Bonus: mcdonalds 0.75→1.00, alameda 0.75→1.00; zero other moves.
+AGGREGATE: avg SWOT-critical **0.846→0.885** (first time over the 0.85 gate), ready 11/13→12/13.
+Console "THRESHOLD CHECK: FAIL" = the fail-closed completeness rule (mumm errored as BOT_PROTECTION
+instead of clean exclusion); results.json quality gates: passed=true, failures=[].
+
+**U1 GATE on the FRESH v2 profiles (owner directive 2): objective 79% (11/14), destination 83% —
+FAIL by exactly one URL, with the 3-way miss taxonomy showing ZERO builder-errors.** assalam =
+profile-weakness (+ the owner's pre-registered label-uncertainty tag vindicated: the site itself
+migrated); mumm = profile-weakness (bot wall, permanent); raw_african = profile-weakness on the
+EXTRACTION side — the NEW crawl captured 11 /products/ leaf pages (old crawl: 0) yet the offerings
+extraction returned 8 category-level unpriced items, so conversion_signals saw no store and the
+builder HONESTLY deduced Leads. On healthy-signal profiles the builder went 11/11. NEXT MEASURED
+FIX (proposed): make offerings extraction exploit the leaf product pages the crawler now delivers;
+then re-gate (projected ≥86%). assalam benchmark entry needs an owner review (entity merged). one grep sweep for OpenAI-era gates after
 the third relic (full_run gate, curator, and now): REMOVED dead `api/jobs/runner.has_openai_key()`
 (no callers); api/schemas.py stopped lying (`model` default "gpt-4o-mini" → advisory-empty,
 "no OpenAI calls" → "no LLM calls"); `business_profile/__main__._make_caller` auto-mode now
