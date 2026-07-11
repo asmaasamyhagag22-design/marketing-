@@ -111,7 +111,10 @@ def run_scrape(url: str) -> Path:
         text=True,
         encoding="utf-8",
         env=_utf8_env(),
-        timeout=300,  # 5 minutes per URL max
+        # 12 min: the post-PSL multi-depth crawl legitimately runs to the store budget
+        # (ECOMMERCE_BUDGET_SECONDS=560 + render overhead; MEASURED 2026-07-11: a store took
+        # 592s, alameda's subdomain crawl ~360s — the old 300s killed them mid-scrape).
+        timeout=720,
     )
     if result.returncode != 0:
         raise RuntimeError(

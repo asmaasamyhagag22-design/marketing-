@@ -66,11 +66,11 @@ class RunRequest(BaseModel):
         return value
     skip_llm: bool = Field(
         default=False,
-        description="If true, run rules-only (no OpenAI calls).",
+        description="If true, run rules-only (no LLM calls).",
     )
     model: str = Field(
-        default="gpt-4o-mini",
-        description="OpenAI model name. Ignored if skip_llm=true.",
+        default="",
+        description="Advisory only — the pipeline runs on the configured Gemini stack.",
     )
     persist_to_disk: bool = Field(
         default=True,

@@ -70,7 +70,7 @@ def run_pipeline_job(
     store: JobStore,
     *,
     skip_llm: bool = False,
-    model: str = "gpt-4o-mini",
+    model: str = "",   # advisory only — the pipeline uses the configured Gemini stack
     persist_to_disk: bool = True,
     caller_factory: Optional[Any] = None,  # for tests: callable returning a Caller
     scraper_fn: Optional[Any] = None,      # for tests: callable replacing scraper.scrape
@@ -328,11 +328,6 @@ def _infer_failed_stage(store: JobStore, job_id: str) -> Stage:
         if ev.status == StageStatus.STARTED:
             return ev.stage
     return Stage.SCRAPE
-
-
-def has_openai_key() -> bool:
-    """True if an OpenAI key is configured."""
-    return bool(os.environ.get("OPENAI_API_KEY"))
 
 
 def has_llm() -> bool:

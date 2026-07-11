@@ -46,7 +46,9 @@ def _make_caller(provider: str, model: str):
     OpenAI gpt-4o-mini. Override with --provider gemini|openai and --model."""
     prov = (provider or "auto").lower()
     if prov == "auto":
-        prov = "gemini" if os.getenv("GOOGLE_CLOUD_PROJECT") else "openai"
+        has_google = (os.getenv("GOOGLE_CLOUD_PROJECT") or os.getenv("GEMINI_API_KEY")
+                      or os.getenv("GOOGLE_API_KEY"))
+        prov = "gemini" if has_google else "openai"
     if prov == "gemini":
         from .llm.caller import GeminiCaller
         return GeminiCaller(model=model or "gemini-2.5-flash")

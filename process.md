@@ -5,6 +5,18 @@ change-log. Read this before acting in this repo. Last full revision: 2026-07-04
 Test suite: **1233 passed, 0 failed** (2026-07-11; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
 
+**STALE-GATE SWEEP (owner directive 4, 2026-07-11):** one grep sweep for OpenAI-era gates after
+the third relic (full_run gate, curator, and now): REMOVED dead `api/jobs/runner.has_openai_key()`
+(no callers); api/schemas.py stopped lying (`model` default "gpt-4o-mini" → advisory-empty,
+"no OpenAI calls" → "no LLM calls"); `business_profile/__main__._make_caller` auto-mode now
+honors ANY Google credential (was: GOOGLE_CLOUD_PROJECT or bust → OpenAI); build.py docstring
+example → default_caller. OpenAICaller class itself KEPT (documented legacy fallback, not a gate).
+Runner `run_scrape` timeout 300→720s (post-PSL/BFS stores measured 592s — 300s killed them).
+**OPERATIONAL FINDING (owner decision pending): reel/voiceover.py is a REAL OpenAI dependency
+(gpt-audio-1.5 TTS) and the new .env has no OPENAI_API_KEY → reels currently render WITHOUT
+voice-over.** Options: re-add the key for TTS only, or migrate to Google Cloud TTS (~a day,
+unifies billing). Suite 1233 green.
+
 **FIX-D SHIPPED + verified live (reel, suite 1233) — the 5-front campaign is code-complete.**
 (D1) `reel/image_select` runs on the SHARED GEMINI CALLER (was: hard-required the empty
 OPENAI_API_KEY since the all-Gemini migration → a silent NO-OP that kept every banner/logo-wall —

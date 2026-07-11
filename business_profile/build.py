@@ -16,11 +16,11 @@ Two callers:
 Typical usage:
 
     from business_profile.build import build_profile
-    from business_profile.llm.caller import OpenAICaller
+    from business_profile.llm import default_caller
 
     profile = build_profile(
         "scrapes/spclinic_net_.../manifest.json",
-        caller=OpenAICaller(model="gpt-4o-mini"),
+        caller=default_caller(strong=False),   # Gemini (the live stack)
     )
 """
 from __future__ import annotations
