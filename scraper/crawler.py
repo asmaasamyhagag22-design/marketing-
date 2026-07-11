@@ -847,8 +847,20 @@ def scrape(input_url: str, output_root: str = "scrapes", *, light: bool = False)
                 # Build the frontier at the ECOMMERCE max cap so a mid-crawl store upgrade
                 # (H1) has candidates to fetch; `page_cap` (below) bounds how many we
                 # actually consume and stays at the small default until the signal flips.
+                # FIX-R1 (measured on assih.com -> alameda-hc.com): when the homepage
+                # REDIRECTS to a different registrable host (the canonical "site moved /
+                # merged" signal), internality must re-anchor to the FINAL host — otherwise
+                # every link on the landed page classifies EXTERNAL and the crawl dies at
+                # 1 page with NO_INTERNAL_LINKS_FOUND. Universal: any brand, any migration.
+                anchor_url = normalized
+                if (home_result.final_url
+                        and not same_registrable_host(home_result.final_url, normalized)):
+                    anchor_url = home_result.final_url
+                    manifest.notes.append(
+                        f"cross_domain_redirect: internality re-anchored to "
+                        f"{home_result.final_url} (requested {normalized})")
                 subpages = _select_subpages_to_fetch(
-                    home_links, normalized, home_result.final_url,
+                    home_links, anchor_url, home_result.final_url,
                     extra_urls=sitemap_result.urls, cap=ECOMMERCE_MAX_INTERNAL_PAGES,
                 )
                 # Re-anchored to the root -> ensure the ORIGINAL deep seed is fetched
@@ -1027,7 +1039,7 @@ def scrape(input_url: str, output_root: str = "scrapes", *, light: bool = False)
                         if (not light and _cur_depth < MAX_CRAWL_DEPTH
                                 and _bfs_added_total < BFS_MAX_NEW_CANDIDATES):
                             _new = _bfs_new_candidates(
-                                sub_links, normalized, frontier_norms,
+                                sub_links, anchor_url, frontier_norms,
                                 max_new=BFS_MAX_NEW_CANDIDATES - _bfs_added_total)
                             if _new:
                                 for cand in _new:

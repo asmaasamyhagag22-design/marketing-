@@ -50,23 +50,31 @@ def _content_images(manifest: dict) -> list[dict]:
         low = (src + " " + str(im.get("alt") or "")).lower()
         if not src.startswith("http") or any(k in low for k in _IMG_SKIP):
             continue
-        out.append({"src": src, "alt": str(im.get("alt") or "")})
+        out.append({"src": src, "alt": str(im.get("alt") or ""),
+                    "page": str(im.get("page_url") or "")})
     return out
 
 
-def _best_image(name: str, images: list[dict], used: set) -> str:
-    """Pick the image whose alt/filename best matches the line name; else the next unused one."""
-    words = [w for w in re.findall(r"[a-z0-9]+", name.lower()) if len(w) >= 3]
+def _best_image(name: str, images: list[dict], used: set, item_url: str = "") -> str:
+    """FIX-R3 (op-shoes: a SNEAKER image landed on every category incl. 'الحقائب', then the
+    poster/reel inherited it): grounded matching only. (1) an image found ON the item's own
+    page wins (language-proof — Shopify CDN hashes carry no words); (2) else an alt/filename
+    word match; (3) else NO image — an honest empty beats a wrong sneaker, and downstream
+    generation treats empty as 'feature by name only', never a random unused photo."""
+    if item_url:
+        target = item_url.rstrip("/").lower()
+        for im in images:
+            page = (im.get("page") or "").rstrip("/").lower()
+            if page and page == target and im["src"] not in used:
+                used.add(im["src"])
+                return im["src"]
+    words = [w for w in re.findall(r"[\w؀-ۿ]+", name.lower()) if len(w) >= 3]
     for im in images:
         blob = (im["src"] + " " + im["alt"]).lower()
         if im["src"] not in used and any(w in blob for w in words):
             used.add(im["src"])
             return im["src"]
-    for im in images:                       # fall back to any unused real image
-        if im["src"] not in used:
-            used.add(im["src"])
-            return im["src"]
-    return images[0]["src"] if images else ""
+    return ""
 
 
 # Offering-type pages whose LEAF entries are pickable products (FIX-A: universal, not Shopify-only)
@@ -100,7 +108,7 @@ def _offering_products(profile: dict | None, images: list[dict], used: set, seen
         seen.add(name.lower())
         price = o.get("price_text")
         out.append({"name": name[:90], "url": str(o.get("page_url") or ""),
-                    "image": _best_image(name, images, used),
+                    "image": _best_image(name, images, used, str(o.get("page_url") or "")),
                     "price_text": price if isinstance(price, str) and price.strip() else None})
         if len(out) >= limit:
             break
@@ -142,7 +150,7 @@ def products_from_manifest(manifest: dict, *, limit: int = 12,
             if not name or name.lower() in seen:
                 continue
             seen.add(name.lower())
-            out.append({"name": name, "url": url, "image": _best_image(name, images, used)})
+            out.append({"name": name, "url": url, "image": _best_image(name, images, used, url)})
 
     for page in (manifest.get("pages") or []):
         if len(out) >= limit:
@@ -152,7 +160,7 @@ def products_from_manifest(manifest: dict, *, limit: int = 12,
         if not name or name.lower() in seen:
             continue
         seen.add(name.lower())
-        out.append({"name": name, "url": url, "image": _best_image(name, images, used)})
+        out.append({"name": name, "url": url, "image": _best_image(name, images, used, url)})
     return out
 
 

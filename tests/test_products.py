@@ -118,3 +118,21 @@ def test_save_product_scrape_writes_grounded_snapshot(tmp_path):
 def test_save_product_scrape_none_when_no_scrape(tmp_path):
     from dashboard.products import save_product_scrape
     assert save_product_scrape("nobody", "Anything", scrapes_dir=str(tmp_path)) is None
+
+
+def test_best_image_grounds_by_page_association_not_random(tmp_path):
+    # FIX-R3 (op-shoes): Arabic name + Shopify hash filenames -> word match impossible.
+    # An image found ON the item's own page wins; with no grounded match the image is
+    # EMPTY (honest) — never "the next unused sneaker".
+    from dashboard.products import _best_image
+    images = [
+        {"src": "https://cdn/x-0cfc.png", "alt": "", "page": "https://s.com/collections/shoes"},
+        {"src": "https://cdn/y-d413.jpg", "alt": "", "page": "https://s.com/collections/bags"},
+    ]
+    used: set = set()
+    assert _best_image("الحقائب", images, used,
+                       "https://s.com/collections/bags") == "https://cdn/y-d413.jpg"
+    assert _best_image("الأحذية", images, used,
+                       "https://s.com/collections/shoes") == "https://cdn/x-0cfc.png"
+    # no page match + no word match -> EMPTY, not a random leftover
+    assert _best_image("عطور", images, set(), "https://s.com/collections/perfume") == ""
