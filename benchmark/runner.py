@@ -24,8 +24,10 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import re
 import subprocess
 import sys
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
@@ -141,8 +143,27 @@ def _looks_like_quota_error(text: str) -> bool:
         "exceeded your current quota",
         "429 too many requests",
         "error code: 429",
+        "resource_exhausted",
+        "permission_denied. {'error': {'code': 429",
+        "'code': 429",
     )
     return any(s in lowered for s in signals)
+
+
+# Backoff schedule (seconds) for a 429: short-then-longer, capped at 3 min. A per-MINUTE rate
+# limit recovers within one of these waits; a hard/daily cap survives all of them and parks.
+_QUOTA_BACKOFF = (15, 45, 120, 180)
+
+
+def _parse_retry_after(text: str) -> Optional[float]:
+    """Seconds the provider asked us to wait, if a 429 body carried one (Gemini `retryDelay: '30s'`,
+    or an HTTP `Retry-After`). None when absent — the caller then uses the fixed backoff schedule."""
+    if not text:
+        return None
+    m = re.search(r"retry[\s_-]*(?:after|delay)[\"'\s:=]*(\d+(?:\.\d+)?)\s*s", text, re.IGNORECASE)
+    if not m:
+        m = re.search(r"retry[\s_-]*(?:after|delay)[\"'\s:=]*(\d+(?:\.\d+)?)", text, re.IGNORECASE)
+    return float(m.group(1)) if m else None
 
 
 def run_extract(manifest_path: Path) -> None:
@@ -162,23 +183,32 @@ def run_extract(manifest_path: Path) -> None:
     """
     profile_path = manifest_path.parent / "business_profile.json"
     logger.info(f"Extracting profile from {manifest_path.parent.name} ...")
-    result = subprocess.run(
-        [sys.executable, "-m", "business_profile", str(manifest_path)],
-        cwd=REPO_ROOT,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        env=_utf8_env(),
-        timeout=600,  # 10 minutes — LLM calls can be slow
-    )
 
-    # Quota errors are detected regardless of exit code / file state.
-    combined = (result.stdout or "") + "\n" + (result.stderr or "")
-    if _looks_like_quota_error(combined):
-        raise QuotaExhausted(
-            "LLM provider returned insufficient_quota / 429. "
-            "Top up the API account (or switch keys) and re-run."
+    # Retry a 429/quota error with backoff (Retry-After if the body gives one, else the fixed
+    # schedule) BEFORE parking. A per-MINUTE rate limit recovers inside one wait so the run
+    # continues; a hard/daily cap survives every wait and raises QuotaExhausted so the completed
+    # URLs are still graded and the rest run after the reset. The backoff behaviour is itself the
+    # per-minute-vs-daily diagnosis.
+    result = None
+    for attempt in range(len(_QUOTA_BACKOFF) + 1):
+        result = subprocess.run(
+            [sys.executable, "-m", "business_profile", str(manifest_path)],
+            cwd=REPO_ROOT, capture_output=True, text=True, encoding="utf-8",
+            env=_utf8_env(), timeout=600,  # 10 minutes — LLM calls can be slow
         )
+        combined = (result.stdout or "") + "\n" + (result.stderr or "")
+        if not _looks_like_quota_error(combined):
+            break
+        if attempt >= len(_QUOTA_BACKOFF):
+            raise QuotaExhausted(
+                "insufficient_quota / 429 persisted after backoff — parking. Raise the project's "
+                "Gemini quota (or wait for the daily reset), then re-run; completed URLs are graded "
+                "and cached scrapes are reused."
+            )
+        delay = min(_parse_retry_after(combined) or _QUOTA_BACKOFF[attempt], 300)
+        logger.warning("quota 429 on %s — backing off %.0fs then retrying (%d/%d)",
+                       manifest_path.parent.name, delay, attempt + 1, len(_QUOTA_BACKOFF))
+        time.sleep(delay)
 
     # exit code 2 == "profile built but not ready_for_strategy" (NOT a crash).
     # Any non-zero exit is only a real failure if NO profile file was

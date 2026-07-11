@@ -1,3 +1,17 @@
 {
-  "_doc": "Ground truth for the FUZZY fields (audience, value_propositions, tone_of_voice, ...). Keyed by fuzzy field name; a missing key leaves that field UNGRADED (score None), so the 8 STRUCTURAL/SWOT-critical fields (name, category, offerings, pricing, phone, email, languages, locations) still grade from benchmark/urls.json metadata. This file is intentionally minimal (T-2 / D-6): the structural baseline runs without it; the fuzzy fields need human labeling per URL (T-2 W4) before they contribute to the SWOT-critical average. Do NOT fabricate fuzzy expectations — an invented ground truth makes the baseline lie."
+  "_doc": "Ground truth for grading. STRUCTURAL SWOT-critical fields (name/category/offerings/languages/...) grade from benchmark/urls.json metadata and need nothing here. Per-URL entries below hold labels the OWNER fills: `expected_objective` (a MetaObjective — 'Sales'/'OUTCOME_SALES'/'SALES') + `expected_destination` (a Destination value — 'online_store','whatsapp',...) drive the U1 gate via `python -m benchmark.grade_u1`. Leave null = unlabelled (skipped, never fabricated). Fuzzy fields (audience/value_propositions/tone_of_voice) are a separate labelling pass (T-2 W4).",
+  "mcdonalds_eg": {"expected_objective": null, "expected_destination": null},
+  "buffalo_burger": {"expected_objective": null, "expected_destination": null},
+  "zooba": {"expected_objective": null, "expected_destination": null},
+  "alameda": {"expected_objective": null, "expected_destination": null},
+  "assalam": {"expected_objective": null, "expected_destination": null},
+  "andalusia": {"expected_objective": null, "expected_destination": null},
+  "eva_cosmetics": {"expected_objective": null, "expected_destination": null},
+  "hair_addict": {"expected_objective": null, "expected_destination": null},
+  "raw_african": {"expected_objective": null, "expected_destination": null},
+  "norshek": {"expected_objective": null, "expected_destination": null},
+  "glamira": {"expected_objective": null, "expected_destination": null},
+  "almentor": {"expected_objective": null, "expected_destination": null},
+  "auc_sce": {"expected_objective": null, "expected_destination": null},
+  "mumm": {"expected_objective": null, "expected_destination": null}
 }
