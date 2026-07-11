@@ -199,3 +199,54 @@ def test_website_only_brand_can_still_ground_traffic():
                                  "physical_addresses": []}}
     obj = build_campaign_objective(prof, caller=caller)
     assert obj.objective is MetaObjective.TRAFFIC and obj.is_grounded is True   # the live site backs it
+
+
+def test_build_media_plan_assembles_grounded_plan(monkeypatch):
+    # U1 ASSEMBLY (unblocked by the 93% gate): objective + category KPI prior + evidence-backed
+    # persona + address-anchored RADIUS geo + MarketDefinition ref, in ONE MediaPlan.
+    from media_plan.builder import build_media_plan
+    caller = MockCaller({"media_plan_objective": _dedux(MetaObjective.LEADS, Destination.WHATSAPP)})
+    profile = {
+        "source_url": "https://clinic.example.eg/",
+        "category": {"value": "clinic"},
+        "audience_type": {"value": "b2c", "evidence": [
+            {"block_id": "b1", "page_url": "https://clinic.example.eg/", "quote": "للسيدات"}]},
+        "offerings": [{"name": {"value": "Laser"}}],
+        "contact_channels": {
+            "whatsapp_numbers": ["+201000000000"], "phones": [], "has_contact_form": False,
+            "physical_addresses": [{"value": "12 Tahrir St, Dokki, Giza", "evidence": [
+                {"block_id": "b2", "page_url": "https://clinic.example.eg/contact", "quote": "Dokki"}]}]},
+    }
+    plan = build_media_plan(profile, caller=caller, run_id="test_run")
+    assert plan is not None and plan.run_id == "test_run"
+    assert plan.market_definition_ref == "https://clinic.example.eg/"
+    obj = plan.objectives[0]
+    assert obj.objective is MetaObjective.LEADS and obj.budget_allocation_pct == 100.0
+    assert obj.kpi_target is not None and obj.kpi_target.metric == "cost_per_lead"   # config prior
+    assert plan.base_geo.mode.value == "radius"
+    assert plan.base_geo.center_address.startswith("12 Tahrir")
+    assert plan.base_geo.radius_km == 10.0            # clinic-class config radius
+    assert plan.base_geo.address_ref is not None and plan.base_geo.address_ref.is_grounded
+    assert plan.base_persona.interests and plan.base_persona.interests[0].is_grounded
+    assert plan.is_grounded                            # the weakest-link fold passes end-to-end
+
+
+def test_build_media_plan_national_fallback_and_honest_none(monkeypatch):
+    from media_plan.builder import build_media_plan
+    caller = MockCaller({"media_plan_objective": _dedux(MetaObjective.SALES, Destination.ONLINE_STORE)})
+    plan = build_media_plan(_ecom_profile(), caller=caller)
+    assert plan is not None and plan.base_geo.mode.value == "national"   # no address -> national
+    assert plan.objectives[0].kpi_target.metric == "cost_per_purchase"
+    # no caller -> honest None (never a fabricated plan)
+    import media_plan.builder as mb
+    monkeypatch.setattr("business_profile.llm.default_caller", lambda strong=True: None)
+    assert build_media_plan(_ecom_profile(), caller=None) is None
+
+
+def test_channel_weights_config_by_category_with_default():
+    from media_plan.config import channel_weights
+    beauty = channel_weights("beauty")
+    assert abs(sum(beauty.values()) - 1.0) < 1e-6 and beauty["instagram"] > beauty["facebook"]
+    default = channel_weights(None)
+    assert abs(sum(default.values()) - 1.0) < 1e-6 and set(default) == {"facebook", "instagram",
+                                                                        "tiktok", "youtube"}

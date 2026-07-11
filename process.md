@@ -2,8 +2,24 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1233 passed, 0 failed** (2026-07-11; grew from 880 as each audit fix
+Test suite: **1251 passed, 0 failed** (2026-07-11; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**U1 CLOSED — config + full MediaPlan assembly SHIPPED (2026-07-11 evening, suite 1251):** the
+two pieces the owner held "until the gate number exists" (gate: 93% PASS, twice). `media_plan/
+config.py`: channel weights CONFIG by category with a universal default (always sums to 1.0) +
+`default_kpi(objective, category)` planning priors whose metric names align with the schema's
+cost-metric set so the 3xCPL learning floor engages automatically; NO invented target values.
+`build_media_plan(profile, caller, manifest, run_id)`: deduced objective (+KPI prior) +
+`build_persona` (ONLY evidenced axes; location from evidenced service_areas or the REAL address
+as a structural fact — never a URL dressed as a location) + `build_geo` (real address -> RADIUS
+anchored with a resolved address_ref + category-class radius; else honest NATIONAL) +
+MarketDefinition ref; run_id adopts TELEMETRY_RUN_ID when present (U7). Hardened `_offerings`
+against EvidencedField-shaped names (dict name crashed the deduction join). LIVE: rawafrican ->
+SALES/online_store/bofu, cost_per_purchase, national, plan honestly ungrounded on the persona
+axis (advisor flag) — outputs/rawafrican_media_plan.json. Also U8b slice: `competitor/
+market_definition.py` (pure grounded projection: geo from evidenced addresses + locale ccTLD,
+category-class radius config, bilingual query seeds; 4 hermetic tests + live smoke).
 
 **R-SERIES CLOSED + U1 RE-GATE 93%/85% PASS (2026-07-11 evening, autonomous mode):** the owner's
 three report-back items, each measured. **R1b** (6d322f0): the real root was UPSTREAM of the

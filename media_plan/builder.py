@@ -20,7 +20,8 @@ from pydantic import BaseModel, Field
 
 from business_profile.schemas import Confidence, EvidenceItem
 
-from .schemas import CampaignObjective, Destination, EvidenceRef, FunnelStage, MetaObjective
+from .schemas import (CampaignObjective, Destination, EvidenceRef, FunnelStage, GeoMode,
+                      GeoTargeting, MetaObjective, Persona)
 
 logger = logging.getLogger(__name__)
 
@@ -71,9 +72,13 @@ def _offerings(profile: Any) -> List[dict]:
     out = []
     for o in (_get(profile, "offerings", []) or []):
         name = o.get("name") if isinstance(o, dict) else getattr(o, "name", None)
+        if isinstance(name, dict):                     # EvidencedField-shaped name
+            name = name.get("value")
+        name = getattr(name, "value", name)
         price = o.get("price_text") if isinstance(o, dict) else getattr(o, "price_text", None)
         url = o.get("page_url") if isinstance(o, dict) else getattr(o, "page_url", None)
-        out.append({"name": name, "price_text": price, "page_url": url})
+        out.append({"name": (str(name).strip() if name else None),
+                    "price_text": price, "page_url": url})
     return out
 
 
@@ -298,3 +303,114 @@ def build_campaign_objective(profile: Any, caller: Any = None,
         confidence=dedux.confidence,
         alternatives=list(dedux.alternatives)[:3],
     )
+
+
+# ---------------------------------------------------------------------
+# U1 ASSEMBLY (unblocked by the measured gate: 93% objective, 2026-07-11)
+# ---------------------------------------------------------------------
+
+def _field_ref(profile: Any, key: str, claim: str) -> Optional[EvidenceRef]:
+    """An EvidenceRef built from a profile EvidencedField: value + its real evidence items.
+    None when the field has no value (an honestly-unknown axis); resolved=False when the
+    value exists but carries no evidence (asserted-but-ungrounded, the advisor flags it)."""
+    p = _root(profile)
+    v = _get(p, key)
+    if isinstance(v, dict):
+        value = v.get("value")
+        ev = v.get("evidence") or []
+    else:
+        value = getattr(v, "value", v)
+        ev = list(getattr(v, "evidence", None) or [])
+    value = str(value).strip() if value else ""
+    if not value:
+        return None
+    items = []
+    for e in ev[:3]:
+        page = e.get("page_url") if isinstance(e, dict) else getattr(e, "page_url", "")
+        quote = e.get("quote") if isinstance(e, dict) else getattr(e, "quote", None)
+        items.append(EvidenceItem(page_url=str(page or ""), quote=(str(quote)[:200] if quote else None),
+                                  extractor="llm"))
+    return EvidenceRef(claim=f"{claim}: {value}"[:300], resolved=bool(items), evidence=items)
+
+
+def build_persona(profile: Any) -> Persona:
+    """The base persona — ONLY axes the profile evidences; everything else honestly None."""
+    interests = []
+    r = _field_ref(profile, "audience_type", "the brand's audience")
+    if r is not None:
+        interests.append(r)
+    # location: the evidenced service_areas field, else the brand's REAL physical address
+    # (a structural fact -> resolved by construction), else honestly None — never a URL
+    # dressed up as a location.
+    loc = _field_ref(profile, "service_areas", "serves")
+    if loc is None:
+        p = _root(profile)
+        cc = _contact(p)
+        for a in (_get(cc, "physical_addresses", []) or []) if cc is not None else []:
+            val = a.get("value") if isinstance(a, dict) else getattr(a, "value", a)
+            val = str(val or "").strip()
+            if val:
+                loc = _ref(f"located at {val}"[:300], _fv(p, "source_url"), val, "rule:address")
+                break
+    return Persona(location_summary=loc, interests=interests)
+
+
+def build_geo(profile: Any) -> GeoTargeting:
+    """WHERE: a real physical address -> RADIUS anchored to it (category-class radius from
+    the MarketDefinition config); else NATIONAL (mode-consistent, nothing invented)."""
+    p = _root(profile)
+    cc = _contact(p)
+    addr = ""
+    addr_ref: Optional[EvidenceRef] = None
+    for a in (_get(cc, "physical_addresses", []) or []) if cc is not None else []:
+        val = a.get("value") if isinstance(a, dict) else getattr(a, "value", a)
+        val = str(val or "").strip()
+        if val:
+            addr = val
+            ev = (a.get("evidence") if isinstance(a, dict) else getattr(a, "evidence", None)) or []
+            items = [EvidenceItem(page_url=str((e.get("page_url") if isinstance(e, dict)
+                                                else getattr(e, "page_url", "")) or ""),
+                                  quote=addr[:200], extractor="rule:address")
+                     for e in ev[:1]] or [EvidenceItem(page_url=_fv(p, "source_url"),
+                                                       quote=addr[:200], extractor="rule:address")]
+            addr_ref = EvidenceRef(claim=f"physical location: {addr}"[:300],
+                                   resolved=True, evidence=items)
+            break
+    if addr:
+        from competitor.market_definition import build_market_definition
+        md = build_market_definition(p)
+        return GeoTargeting(mode=GeoMode.RADIUS, center_address=addr,
+                            radius_km=md.geo.radius_km or 15.0, address_ref=addr_ref)
+    return GeoTargeting(mode=GeoMode.NATIONAL)
+
+
+def build_media_plan(profile: Any, caller: Any = None, manifest: Any = None,
+                     run_id: str = "") -> Optional["MediaPlan"]:
+    """U1's final artifact: ONE grounded MediaPlan — the deduced single objective (with its
+    category KPI prior), the evidence-backed persona, the address-anchored geo, and the
+    MarketDefinition reference. None on honest-degrade (no objective could be grounded)."""
+    from media_plan.schemas import MediaPlan
+    obj = build_campaign_objective(profile, caller=caller, manifest=manifest)
+    if obj is None:
+        return None
+    from media_plan.config import default_kpi
+    p = _root(profile)
+    obj = obj.model_copy(update={"kpi_target": default_kpi(obj.objective, _fv(p, "category"))})
+    from competitor.market_definition import build_market_definition
+    md = build_market_definition(p)
+    rid = run_id
+    if not rid:
+        import os
+        rid = os.environ.get("TELEMETRY_RUN_ID") or f"u1_{uuid_hex()}"
+    return MediaPlan(
+        run_id=rid,
+        market_definition_ref=md.brand_ref or _fv(p, "source_url") or "unknown",
+        objectives=[obj],
+        base_persona=build_persona(p),
+        base_geo=build_geo(p),
+    )
+
+
+def uuid_hex() -> str:
+    import uuid
+    return uuid.uuid4().hex[:10]
