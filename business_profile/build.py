@@ -153,13 +153,24 @@ def build_profile(
     """
     manifest, path, digest = _load_manifest(source)
 
+    # U7 telemetry (D-7): run_id minted here (or adopted from TELEMETRY_RUN_ID so the
+    # benchmark runner / studio can stitch subprocess stages into one run record). Each
+    # pipeline stage below appends one crash-safe JSONL line to runs/<run_id>/telemetry.jsonl.
+    from telemetry import RunTelemetry
+    tele = RunTelemetry()
+
     # 1. Rules
-    rules_profile = apply_rules(manifest, manifest_path=path)
-    if digest:
-        rules_profile.extraction_meta.manifest_hash = digest
+    with tele.stage("rules", input_obj=digest or str(path)) as t:
+        rules_profile = apply_rules(manifest, manifest_path=path)
+        if digest:
+            rules_profile.extraction_meta.manifest_hash = digest
+        t["output_obj"] = rules_profile.extraction_meta.manifest_hash or "rules"
 
     # 2. Pack
-    pack = build_evidence_pack(manifest, rules_profile)
+    with tele.stage("evidence_pack") as t:
+        pack = build_evidence_pack(manifest, rules_profile)
+        t["output_obj"] = pack.block_ids
+        t["note"] = f"{pack.block_count} blocks"
     logger.info(
         "Evidence pack: %d blocks (from %d in manifest, %d after filter)",
         pack.block_count, pack.blocks_total_in_manifest, pack.blocks_after_filter,
@@ -188,9 +199,14 @@ def build_profile(
         if rules_profile.category.value is not None
         else None
     )
-    llm_result = run_llm_extraction(
-        pack, caller, rules_category=rules_category_value, retriever=retriever,
-    )
+    with tele.stage("llm_extraction", input_obj=pack.block_ids) as t:
+        llm_result = run_llm_extraction(
+            pack, caller, rules_category=rules_category_value, retriever=retriever,
+        )
+        t.update(model=llm_result.model, cost_usd=llm_result.total_cost_usd,
+                 tokens_in=llm_result.total_input_tokens,
+                 tokens_out=llm_result.total_output_tokens,
+                 note=f"{llm_result.total_calls}/4 calls ok")
     logger.info(
         "LLM extraction: %d/4 calls ok, $%.4f, %d input + %d output tokens",
         llm_result.total_calls, llm_result.total_cost_usd,
@@ -198,7 +214,10 @@ def build_profile(
     )
 
     # 4. Validate (against the full pack when RAG is on — superset of `pack`)
-    payload = validate_llm_extraction(llm_result, validation_pack)
+    with tele.stage("validate") as t:
+        payload = validate_llm_extraction(llm_result, validation_pack)
+        t.update(decision=f"rejections={payload.diagnostics.total_rejections}",
+                 note=f"dropped_fields={len(payload.diagnostics.fields_dropped)}")
     logger.info(
         "Validation: %d rejections, %d fields dropped, %d items dropped",
         payload.diagnostics.total_rejections,
@@ -207,12 +226,16 @@ def build_profile(
     )
 
     # 5. Merge
-    final_profile = merge_profile(
-        rules_profile, payload, llm_result, expected_llm=True,
-        scrape_diagnostics=_diagnostics_from_manifest(manifest),
-    )
-    if digest:
-        final_profile.extraction_meta.manifest_hash = digest
+    with tele.stage("merge") as t:
+        final_profile = merge_profile(
+            rules_profile, payload, llm_result, expected_llm=True,
+            scrape_diagnostics=_diagnostics_from_manifest(manifest),
+        )
+        if digest:
+            final_profile.extraction_meta.manifest_hash = digest
+        t["output_obj"] = final_profile.extraction_meta.manifest_hash or "profile"
+        t["decision"] = ("ready" if getattr(final_profile.readiness, "ready_for_strategy", False)
+                         else "not_ready")
 
     if return_details:
         return BuildResult(

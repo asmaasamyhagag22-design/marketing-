@@ -72,3 +72,5 @@ phone_diagnostic.txt
 /profile_buf.json
 /elkbabgi_profile_fresh.json
 /_prompt_diag.py
+# U7 telemetry run-records (JSONL per pipeline run)
+runs/
