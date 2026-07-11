@@ -122,6 +122,16 @@ poster/ reel/ strategy/ dashboard/   UNTOUCHED render targets; launch_bundle.clo
   JS-render latency (or raise it for sitemap-rich sites). Separate from, and prerequisite to, the
   fuzzy-label pass giving meaningful numbers on those URLs. Also: `run_scrape`'s 300s subprocess
   timeout is too tight post-PSL for subdomain-rich sites (alameda needed ~6min).
+- **T-8** — TTS DIALECT QUALITY (owner-ratified 2026-07-11). CURRENT LIVE PATH (verified): all
+  voice-over resolves via `reel/voiceover._resolve_backend` auto → **Gemini TTS**
+  (`gemini-2.5-flash-preview-tts`, voice Kore, auto-detects Arabic) whenever GCP creds exist;
+  OpenAI `gpt-audio-1.5` is an optional backend behind OPENAI_API_KEY (owner may restore the key
+  for it, §10); free keyless `edge` (native-Egyptian voice) is the final fallback — reels are
+  NEVER silent. T-8 upgrade target: **instruction-driven, dialect-capable Gemini TTS on Vertex**
+  (NOT classic Cloud TTS — MSA-only voices would flatten the Egyptian-Arabic emotive read),
+  GATED on a dialect-quality LISTEN TEST of the current Kore voice vs gpt-audio-1.5 vs edge on
+  the same Egyptian-Arabic lines. Does not jump the queue (after U7 wiring → MarketDefinition →
+  U1 assembly → U8a).
 
 ---
 
