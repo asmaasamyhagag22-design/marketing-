@@ -484,6 +484,41 @@ def test_identity_invalid_enum_value_drops_field():
     assert "category" in payload.diagnostics.fields_dropped
 
 
+def test_identity_category_survives_missing_evidence():
+    # FIX-2a (norshek regression): category is a whole-pack CLASSIFICATION — a valid enum
+    # member must not die for an empty/invalid evidence list (tagline/description keep the
+    # strict gate; see test_identity_invalid_evidence_drops_value).
+    pack = _pack_with_blocks()
+    resp = IdentityResponse(
+        category_value="ecommerce",
+        category_evidence=[],                       # LLM returned no block refs
+        category_confidence=Confidence.MEDIUM,
+    )
+    payload = validate_llm_extraction(_wrap_in_result(identity=resp), pack)
+    assert payload.identity.category.value == BusinessCategory.ECOMMERCE
+    assert payload.identity.category.evidence == []
+    assert payload.identity.category.inferred is True
+    assert "category" not in payload.diagnostics.fields_dropped
+
+
+def test_identity_enum_miss_records_raw_string():
+    # FIX-2a: an enum-coercion miss must leave a TRACE carrying the raw LLM string —
+    # 'LLM said null' vs 'non-enum string' are distinguishable, never a silent drop.
+    from business_profile.llm.validator import RejectionCode
+    pack = _pack_with_blocks()
+    resp = IdentityResponse(
+        category_value="skincare boutique",          # not a BusinessCategory member
+        category_evidence=[LLMEvidenceRef(block_id="home_h1_0001", quote="Premium Foot Care")],
+        category_confidence=Confidence.HIGH,
+    )
+    payload = validate_llm_extraction(_wrap_in_result(identity=resp), pack)
+    assert payload.identity.category.value is None
+    assert "category" in payload.diagnostics.fields_dropped
+    recs = payload.diagnostics.rejections_by_group["identity"]
+    miss = [r for r in recs if r.code == RejectionCode.ENUM_COERCION_MISS]
+    assert miss and "skincare boutique" in (miss[0].quote or "")
+
+
 def test_identity_enum_case_insensitive_coercion():
     pack = _pack_with_blocks()
     resp = IdentityResponse(

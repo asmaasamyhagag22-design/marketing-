@@ -130,6 +130,7 @@ class RejectionCode:
     NULL_QUOTE = "null_quote"
     EMPTY_QUOTE = "empty_quote"
     QUOTE_NOT_IN_BLOCK = "quote_not_in_block"
+    ENUM_COERCION_MISS = "enum_coercion_miss"
 
 
 @dataclass
@@ -401,12 +402,24 @@ def _validate_identity(
         inferred=True,
     )
 
-    # category: enum-coerced; LLM-inferred but high-confidence on schema match
+    # category: enum-coerced; LLM-inferred but high-confidence on schema match.
+    # FIX-2a: two silent-drop paths closed. (1) An enum-coercion miss now RECORDS the raw LLM
+    # string — 'LLM said null' vs 'non-enum string' vs 'no evidence' are distinguishable in
+    # diagnostics instead of an untraceable fields_dropped entry. (2) category is a whole-pack
+    # CLASSIFICATION (inferred=True, enum-constrained), so a valid member must not die for
+    # missing/invalid block refs -> require_evidence=False; evidence is still validated and
+    # attached when present. tagline/description keep the strict gate.
     coerced_cat = _coerce_enum(resp.category_value, BusinessCategory)
+    if coerced_cat is None and resp.category_value and str(resp.category_value).strip():
+        bucket.append(RejectionRecord(
+            code=RejectionCode.ENUM_COERCION_MISS, block_id=None,
+            quote=str(resp.category_value)[:200],
+            note="category_value is not a BusinessCategory member (raw LLM string preserved)"))
     category = _validate_scalar(
         resp.category_evidence, coerced_cat,
         resp.category_confidence, lookup, bucket,
         inferred=True,
+        require_evidence=False,
     )
 
     if tagline.value is None:

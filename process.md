@@ -2,7 +2,7 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1208 passed, 0 failed** (2026-07-11; grew from 880 as each audit fix
+Test suite: **1210 passed, 0 failed** (2026-07-11; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
 
 **U1 GATE — first measured number (2026-07-11): objective 57% / destination 46% — FAIL vs ≥80%.**
@@ -61,6 +61,19 @@ zero touch on the frozen profile schema (PD-1). mcdonalds ✓✓ + zooba ✓✓ 
 only miss is mumm (no profile — 13/14 is the ceiling). Destination 54% → 69%. HONESTY CAVEAT:
 alameda's LEADS this run is LLM VARIANCE, not a fix (prior run deduced AWARENESS on the same
 [website]-only signals) — FIX-2b re-scrape is what stabilizes it. +4 hermetic tests; suite 1208.
+
+**FIX-2a SHIPPED + verified live (2026-07-11): the validator's silent category drop is closed.**
+Two paths fixed in `business_profile/llm/validator._validate_identity`: (1) an enum-coercion miss
+now appends a `RejectionRecord(code=enum_coercion_miss)` carrying the RAW LLM string — 'LLM said
+null' vs 'non-enum string' vs 'no evidence' are finally distinguishable in diagnostics (norshek's
+drop was untraceable: rejections=0, raw string discarded); (2) category validates with
+`require_evidence=False` — it is a whole-pack enum-constrained CLASSIFICATION (inferred=True), so a
+valid member no longer dies for missing/invalid block refs; tagline/description keep the strict
+gate; evidence is still validated + attached when present. Live verification: norshek re-extracted
+(Gemini) → `category="ecommerce"` WITH grounded evidence ("Shop Now" blocks), zero fields_dropped.
++2 hermetic tests (classification survives empty evidence; enum miss leaves a raw-string trace);
+suite 1210. NOTE: norshek's remaining thinness (2/165 pages, 62s budget kill) is a separate
+ticketed scraper defect (crawl budget vs JS-render latency), NOT bundled here.
 
 **BASELINE (post-audit, new project, 2026-07-10):** first full 14-URL benchmark on the fresh GCP
 project (`radiant-octane-501919-v1`, Vertex ADC — old `image-498715` was dunning-suspended). This is
