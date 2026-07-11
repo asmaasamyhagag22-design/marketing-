@@ -310,20 +310,23 @@ def test_low_contrast_logo_gets_frosted_scrim_high_contrast_does_not(tmp_path):
         buf = io.BytesIO(); im.save(buf, format="PNG")
         return buf.getvalue()
 
-    def scrim_band_mean(path):
-        # the PAD band just left of the logo box — inside the scrim, outside the mark itself
+    margin = int(W * 0.045)                           # 41
+    tw = int(W * 0.22)                                # logo target width 204
+    px = W - margin - tw                              # rtl -> right corner
+
+    def mean(path, box):
         im = Image.open(path).convert("L")
-        margin = int(W * 0.045)                       # 41
-        tw = int(W * 0.22)                            # logo target width 204
-        px = W - margin - tw                          # rtl -> right corner
-        band = im.crop((px - 14, margin + 4, px - 2, margin + 54))
-        data = list(band.getdata())
+        data = list(im.crop(box).getdata())
         return sum(data) / len(data)
 
+    # dark crest on dark canvas -> WHITE-KNOCKOUT variant: the mark itself turns light...
     dark = tmp_path / "dark_logo.png"; _poster(dark)
-    assert pl._overlay_real_logo(dark, _logo_bytes((25, 27, 48)), rtl=True)   # near-navy crest
-    assert scrim_band_mean(dark) > 100   # frosted LIGHT badge lifted the band (canvas was ~22)
+    assert pl._overlay_real_logo(dark, _logo_bytes((25, 27, 48)), rtl=True)
+    assert mean(dark, (px + 60, margin + 15, px + 140, margin + 45)) > 140   # was ~30 unfixed
+    # ...and NO rectangle of any kind appears around it (the pad band stays navy)
+    assert mean(dark, (px - 14, margin + 4, px - 2, margin + 54)) < 80
 
+    # a light logo already reads -> untouched look, still no box
     light = tmp_path / "light_logo.png"; _poster(light)
     assert pl._overlay_real_logo(light, _logo_bytes((250, 250, 250)), rtl=True)
-    assert scrim_band_mean(light) < 80   # high contrast -> NO badge; band stays navy-dark
+    assert mean(light, (px - 14, margin + 4, px - 2, margin + 54)) < 80

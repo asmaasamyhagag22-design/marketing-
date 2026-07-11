@@ -334,20 +334,21 @@ def _overlay_real_logo(poster_path: Path, logo_bytes: bytes, *, rtl: bool,
             small.thumbnail((40, 40))
             bpx = list(small.getdata())
             bg_lum = (sum(_luminance(p) for p in bpx) / len(bpx)) if bpx else None
-            if logo_lum is not None and bg_lum is not None and abs(logo_lum - bg_lum) < 0.28:
-                from PIL import ImageDraw
-                frosted = region.filter(ImageFilter.GaussianBlur(7)).convert("RGBA")
-                tone = (12, 15, 22, 130) if logo_lum >= 0.5 else (236, 238, 243, 165)
-                frosted.alpha_composite(Image.new("RGBA", frosted.size, tone))
-                mask = Image.new("L", frosted.size, 0)
-                ImageDraw.Draw(mask).rounded_rectangle(
-                    (0, 0, frosted.width - 1, frosted.height - 1), radius=14, fill=255)
-                poster.paste(frosted.convert("RGB"), (bx0, by0), mask)
+            low_contrast_dark_logo = (logo_lum is not None and bg_lum is not None
+                                      and abs(logo_lum - bg_lum) < 0.28 and logo_lum < 0.5)
         except Exception:  # noqa: BLE001 — legibility aid must never break compositing
-            pass
+            low_contrast_dark_logo = False
+        if low_contrast_dark_logo:
+            # NO rectangle, NO glow soup (owner rejected the grey badge; a halo dies on
+            # thin ornate marks). The real-designer move: the WHITE KNOCKOUT variant —
+            # the mark's exact silhouette filled near-white (what brand kits ship for
+            # dark grounds). Crisp, premium, box-free; the normal soft shadow adds depth.
+            knockout = Image.new("RGBA", logo.size, (250, 250, 252, 0))
+            knockout.putalpha(logo.split()[3])
+            logo = knockout
 
-        # Soft drop-shadow ONLY (no plate): a blurred dark copy of the logo's OWN shape, so the
-        # mark reads on a light corner without a box around it.
+        # Soft drop-shadow ONLY (no plate): a blurred dark copy of the logo's OWN shape, so
+        # the mark reads without a box around it (and gives the knockout variant depth).
         alpha = logo.split()[3]
         shadow = Image.new("RGBA", (logo.width + 44, logo.height + 44), (0, 0, 0, 0))
         tint = Image.new("RGBA", logo.size, (0, 0, 0, 165))
