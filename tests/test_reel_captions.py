@@ -86,3 +86,16 @@ def test_dark_logo_becomes_white_knockout_for_the_reel_overlay():
     assert opaque and all(p[0] > 240 for p in opaque)          # white variant
     light = _logo((250, 250, 250))
     assert _knockout_if_dark(light) is light                   # untouched
+
+
+def test_arabic_dialect_is_an_option_not_a_hardcode(monkeypatch):
+    # Owner (2026-07-11): "خليها اوبشن — عامية ولا عربية". REEL_ARABIC_DIALECT switches the
+    # copy + spoken register; default stays Egyptian colloquial for the pilot market.
+    from reel.art_director import _copy_language_label, _spoken_language_label
+    monkeypatch.delenv("REEL_ARABIC_DIALECT", raising=False)
+    assert "مصرية" in _copy_language_label("ar")               # default: عامية
+    monkeypatch.setenv("REEL_ARABIC_DIALECT", "fusha")
+    assert "فصحى" in _copy_language_label("ar")                # option: فصحى
+    assert "Standard Arabic" in _spoken_language_label("ar")
+    monkeypatch.setenv("REEL_ARABIC_DIALECT", "masri")
+    assert "Masri" in _spoken_language_label("ar")

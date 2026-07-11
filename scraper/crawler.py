@@ -452,11 +452,14 @@ def _process_fetched_page(
 
         next_data_result = NextDataResult()
 
-    # Links
+    # Links — R1b: internality anchors to the FINAL (post-redirect) host, not the requested
+    # one. assih.com now redirects to alameda-hc.com (the group portal); anchoring to the
+    # requested host classified EVERY link on the landed page as external -> a 1-page scrape
+    # with NO_INTERNAL_LINKS_FOUND. The landed page itself is the canonical site anchor.
     links = extract_links_from_html(
         fetch_result.html,
         fetch_result.final_url,
-        fetch_result.url,
+        fetch_result.final_url,
         text_blocks,
     )
 

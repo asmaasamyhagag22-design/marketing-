@@ -300,15 +300,29 @@ def _diverse_offering_sample(profile, brief, k: int = 6) -> list[str]:
     return out
 
 
+def arabic_dialect() -> str:
+    """OWNER OPTION (2026-07-11): the Arabic register is a CHOICE, not a hardcode.
+    REEL_ARABIC_DIALECT = 'masri' (Egyptian colloquial, the default for the pilot market)
+    or 'fusha' (Modern Standard Arabic). Universal: other dialects can join the map."""
+    import os
+    return (os.environ.get("REEL_ARABIC_DIALECT") or "masri").strip().lower()
+
+
 def _copy_language_label(language: str) -> str:
     """The on-screen caption language instruction for the story prompt. 'auto' keeps the
     old behavior (the brand's audience language, inferred by the model)."""
+    if arabic_dialect() == "fusha":
+        return {"ar": "Modern Standard Arabic (فصحى معاصرة سلسة وقريبة)",
+                "en": "English"}.get(language[:2], language)
     return {"ar": "Egyptian Arabic (عامية مصرية راقية)",
             "en": "English"}.get(language, "the brand's audience language")
 
 
 def _spoken_language_label(language: str) -> str:
     """The voiceover language/dialect instruction. 'auto' -> the audience's own dialect."""
+    if arabic_dialect() == "fusha":
+        return {"ar": "clear, warm Modern Standard Arabic (fusha)",
+                "en": "natural conversational English"}.get(language[:2], language)
     return {"ar": "natural spoken Egyptian Arabic (Masri)",
             "en": "natural conversational English"}.get(language, "the audience's OWN dialect")
 

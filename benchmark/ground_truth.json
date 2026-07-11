@@ -1,17 +1,59 @@
 {
-  "_doc": "Ground truth for grading. STRUCTURAL SWOT-critical fields grade from benchmark/urls.json metadata. expected_objective/expected_destination drive the U1 gate via `python -m benchmark.grade_u1`. Labels researched + evidence-backed by the media-buying reviewer, RATIFIED BY OWNER on 2026-07-11. Fuzzy fields (audience/value_propositions/tone_of_voice) are a separate labelling pass (T-2 W4).",
-  "mcdonalds_eg": {"expected_objective": "SALES", "expected_destination": "online_store"},
-  "buffalo_burger": {"expected_objective": "SALES", "expected_destination": "online_store"},
-  "zooba": {"expected_objective": "SALES", "expected_destination": "online_store"},
-  "alameda": {"expected_objective": "LEADS", "expected_destination": "lead_form"},
-  "assalam": {"expected_objective": "LEADS", "expected_destination": "phone_call"},
-  "andalusia": {"expected_objective": "LEADS", "expected_destination": "website"},
-  "eva_cosmetics": {"expected_objective": "SALES", "expected_destination": "online_store"},
-  "hair_addict": {"expected_objective": "SALES", "expected_destination": "online_store"},
-  "raw_african": {"expected_objective": "SALES", "expected_destination": "online_store"},
-  "norshek": {"expected_objective": "SALES", "expected_destination": "online_store"},
-  "glamira": {"expected_objective": "SALES", "expected_destination": "online_store"},
-  "almentor": {"expected_objective": "SALES", "expected_destination": "online_store"},
-  "auc_sce": {"expected_objective": "LEADS", "expected_destination": "lead_form"},
-  "mumm": {"expected_objective": "LEADS", "expected_destination": "lead_form"}
+  "_doc": "Ground truth for grading. STRUCTURAL SWOT-critical fields grade from benchmark/urls.json metadata. expected_objective/expected_destination drive the U1 gate via `python -m benchmark.grade_u1`. Labels researched + evidence-backed by the media-buying reviewer, RATIFIED BY OWNER on 2026-07-11. Fuzzy fields (audience/value_propositions/tone_of_voice) are a separate labelling pass (T-2 W4). NOTE: assih.com migrated to the alameda-hc.com group portal mid-2026 — kept as the permanent regression case for redirect re-anchoring (owner decision 2026-07-11); its labels are FLAGGED for owner review after R1b (destination may shift to lead_form like alameda).",
+  "mcdonalds_eg": {
+    "expected_objective": "SALES",
+    "expected_destination": "online_store"
+  },
+  "buffalo_burger": {
+    "expected_objective": "SALES",
+    "expected_destination": "online_store"
+  },
+  "zooba": {
+    "expected_objective": "SALES",
+    "expected_destination": "online_store"
+  },
+  "alameda": {
+    "expected_objective": "LEADS",
+    "expected_destination": "lead_form"
+  },
+  "assalam": {
+    "expected_objective": "LEADS",
+    "expected_destination": "phone_call"
+  },
+  "andalusia": {
+    "expected_objective": "LEADS",
+    "expected_destination": "website"
+  },
+  "eva_cosmetics": {
+    "expected_objective": "SALES",
+    "expected_destination": "online_store"
+  },
+  "hair_addict": {
+    "expected_objective": "SALES",
+    "expected_destination": "online_store"
+  },
+  "raw_african": {
+    "expected_objective": "SALES",
+    "expected_destination": "online_store"
+  },
+  "norshek": {
+    "expected_objective": "SALES",
+    "expected_destination": "online_store"
+  },
+  "glamira": {
+    "expected_objective": "SALES",
+    "expected_destination": "online_store"
+  },
+  "almentor": {
+    "expected_objective": "SALES",
+    "expected_destination": "online_store"
+  },
+  "auc_sce": {
+    "expected_objective": "LEADS",
+    "expected_destination": "lead_form"
+  },
+  "mumm": {
+    "expected_objective": "LEADS",
+    "expected_destination": "lead_form"
+  }
 }
