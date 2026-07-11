@@ -2,8 +2,37 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1212 passed, 0 failed** (2026-07-11; grew from 880 as each audit fix
+Test suite: **1221 passed, 0 failed** (2026-07-11; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**CREATIVE-QUALITY CAMPAIGN (2026-07-11, owner's 2-month pain, 5 diagnosed fronts):** evidence run
+nti.sci.eg. Root causes (5 parallel investigators, all file:line-verified): (1) logo white plate =
+the oneshot MODEL paints a placeholder slot (prompt says "logo placed there afterward"); (2) vague
+posters = oneshot (forced for all Arabic+logo brands) bans real-photo attachment for service
+categories + no locale line + imagen-edit conditioning dead on that path; (3) leaf hierarchy =
+depth-1 frontier (built once; sub-page links never re-seed) + Shopify-only leaf notion + picker
+ignoring profile offerings (NTI picker = 0 items); (4) reel broken = image_select curator NO-OP
+since the Gemini migration (hard-requires the now-empty OPENAI_API_KEY, fail-OPEN keeps junk) +
+from_visual discards real photos into logo_candidates + any-alt→rank-0 + cover-crop truncates text
+banners + "punchy MACRO" hook rule picked a screwdriver; (5) culture = locale primer wired only to
+the unused classic path; reel hardcodes ANY-Arabic→"Egyptian" (anti-universal) + languages[0] is
+ALPHABETICAL so 'en' beat 'ar' (English captions on an Egyptian reel). Fix order: A scraper/picker →
+B from_visual projection → C poster → D reel; every fix measured; owner authorized larger crawls.
+
+**FIX-A SHIPPED (leaf discovery + picker, 2026-07-11): NTI picker 0 → 10 real named+priced items
+instantly.** (a) `is_leaf_detail` (page_type.py) — universal leaf shapes: offering segment + slug
+(/courses/x, /services/x, /menu/x) OR offering-named CMS file + id query (courses.php?catID=601;
+?page= excluded); Shopify rule untouched. (b) Multi-depth crawl (crawler.py): `_bfs_new_candidates`
+(pure, hermetic) re-seeds the frontier from every fetched page's links — leaf-first, HIGH/MEDIUM
+only, deduped, depth≤3 (config MAX_CRAWL_DEPTH), ≤120 new candidates, same page-cap/time budget
+(spends what depth-1 left on the table: NTI wasted 370s/13 slots); `_reserve_product_quota` now
+uses is_leaf_detail so course/service/menu leaves get the diversified budget share. The EXISTING
+ajax-modal resolver (built for NTI's url-less course popovers — learns the JS `.load(prefix +
+data-attr + suffix)` template and reconstructs real detail URLs) now actually fires: BFS finally
+reaches the category pages that host the popovers. (c) Picker (dashboard/products.py) priority
+sources: profile offerings (names+prices, any vertical) → leaf pages named by their own h1/h2 →
+Shopify slug fallback (byte-compatible for stores); server passes out_dir. +9 hermetic tests; suite
+1221. Re-scrape measurement of NTI (BFS reach + modal pages) recorded below when complete.
 
 **Studio: product-only scrape snapshot (owner feature, 2026-07-11):** the moment a PRODUCT-specific
 poster/reel generation starts in the studio (picker → Generate), `dashboard.products.save_product_scrape`

@@ -40,6 +40,30 @@ ECOMMERCE_PRODUCT_URL_MIN = 15        # >= this many PRODUCTS-type URLs (homepag
 # for stopping a long tail, not preventing the start.
 MIN_SUBPAGE_ATTEMPTS = 5
 
+# --- Multi-depth crawl (FIX-A, 2026-07-11) ---------------------------
+# The frontier used to be built ONCE from homepage links + sitemap, making every crawl
+# structurally depth-1: the leaf layer (individual courses/services/menu items) that only
+# appears on category pages was discovered but NEVER fetched (MEASURED on nti.sci.eg: the
+# crawl stopped at 169s of its 540s budget with 13 page slots unused while courses.php?catID=…
+# sat in links.internal). Links found on each fetched page now RE-SEED the frontier up to
+# this depth (homepage=0). Bounded by the same page cap + time budget as before — the crawl
+# just spends the budget it used to leave on the table. Owner OK'd larger crawls (latency).
+MAX_CRAWL_DEPTH = 3
+BFS_MAX_NEW_CANDIDATES = 120          # frontier-list growth bound per crawl (fetches still capped)
+
+# Offering segments that mark an INDIVIDUAL leaf item (see classify.page_type.is_leaf_detail):
+# a segment from this list followed by a slug (/courses/<x>), or an offering-named CMS file with
+# an id-bearing query param (courses.php?catID=601). UNIVERSAL default — covers stores,
+# restaurants, clinics, education, services; extend per-category only with owner sign-off.
+LEAF_DETAIL_SEGMENTS = (
+    "products", "product", "pdp",                    # stores (existing behavior, unchanged)
+    "courses", "course", "programs", "program",      # education
+    "tracks", "track", "modules", "module", "diplomas", "diploma",
+    "services", "service", "treatments", "treatment",  # services / clinics
+    "packages", "package", "plans", "plan",
+    "menu", "item", "items", "dishes", "dish",       # restaurants
+)
+
 PAGE_TIMEOUT_MS = 20_000
 NAV_TIMEOUT_MS = 25_000
 INTER_PAGE_DELAY_SECONDS = 1.0

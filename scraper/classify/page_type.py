@@ -144,6 +144,30 @@ def is_product_detail(url: str) -> bool:
     return False
 
 
+def is_leaf_detail(url: str) -> bool:
+    """UNIVERSAL leaf-detail check: True when this URL points at an individual OFFERING item —
+    a product, a course, a service, a program/track, a menu item — rather than a category list.
+    Two grounded shapes (MEASURED on nti.sci.eg, whose course layer sat unfetched):
+      1. an offering segment followed by a slug: /products/<x>, /courses/<x>, /services/<x> ...
+      2. an offering-named path carrying an id-bearing query param: courses.php?catID=601,
+         track.php?trackID=4 — the classic non-rewritten CMS shape.
+    Faceted-browse params (?page=, ?sort=) do NOT count — only keys ending in 'id'. The crawl
+    frontier reads this to reserve budget for leaves in EVERY vertical, exactly as it already
+    did for Shopify-style products (is_product_detail remains for backward compatibility)."""
+    from ..config import LEAF_DETAIL_SEGMENTS
+    path, segments, query = _normalized_path(url)
+    for i in range(len(segments) - 1):
+        if segments[i] in LEAF_DETAIL_SEGMENTS and segments[i + 1]:
+            return True
+    if segments:
+        # strip a CMS extension so 'courses.php' / 'track.aspx' match the segment list
+        last = segments[-1].rsplit(".", 1)[0]
+        if (last in LEAF_DETAIL_SEGMENTS
+                and any(k.lower().endswith("id") for k in query.keys())):
+            return True
+    return False
+
+
 def classify_url(url: str, anchor_text: str = "") -> tuple[PageType, PageTier]:
     """Return (page_type, tier) for this URL.
 

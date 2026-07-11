@@ -25,17 +25,19 @@ from typing import Optional
 from playwright.sync_api import sync_playwright
 
 from .config import (
+    BFS_MAX_NEW_CANDIDATES,
     ECOMMERCE_BUDGET_SECONDS,
     ECOMMERCE_MAX_INTERNAL_PAGES,
     ECOMMERCE_PRODUCT_URL_MIN,
     INTER_PAGE_DELAY_SECONDS,
+    MAX_CRAWL_DEPTH,
     MAX_INTERNAL_PAGES,
     MIN_SUBPAGE_ATTEMPTS,
     TOTAL_BUDGET_SECONDS,
     VIEWPORT_HEIGHT,
     VIEWPORT_WIDTH,
 )
-from .classify.page_type import classify_homepage, classify_url, is_product_detail
+from .classify.page_type import classify_homepage, classify_url, is_leaf_detail, is_product_detail  # noqa: F401
 from .errors import ErrorCode
 from .extractors.contact import extract_contact, fill_addresses_from_schema_org
 from .extractors.forms import extract_forms
@@ -229,6 +231,52 @@ def _select_subpages_to_fetch(
     return _reserve_product_quota(candidates, cap)
 
 
+def _bfs_new_candidates(
+    sub_links,
+    site_url: str,
+    frontier_norms: set,
+    *,
+    max_new: int,
+) -> list[tuple[str, PageType, PageTier, str]]:
+    """FIX-A: classify the links found on ONE fetched page and return the NEW frontier
+    candidates they reveal — this is what makes the crawl multi-depth instead of
+    structurally depth-1 (MEASURED: nti's course layer was discovered on category pages
+    and never fetched, while 370s/13 slots of budget went unused).
+
+    Pure + hermetically testable: no fetching here. Internal/CTA same-host links only,
+    SKIP tier excluded, LOW tier excluded (peripheral galleries/blogs must not eat leaf
+    budget), deduped against everything already planned. Ordered: leaf-detail first
+    (the individual course/product/service pages the owner needs), then HIGH, then
+    MEDIUM. The caller appends these at the frontier TAIL, so the original plan keeps
+    its priority and the page cap + time budget still bound the crawl."""
+    tier_rank = {PageTier.HIGH: 0, PageTier.MEDIUM: 1}
+    out: list[tuple[str, PageType, PageTier, str]] = []
+    for link in (sub_links or []):
+        if len(out) >= max_new:
+            break
+        if getattr(link, "category", None) not in (LinkCategory.INTERNAL, LinkCategory.CTA):
+            continue
+        href = getattr(link, "href", "") or ""
+        if not href or not same_registrable_host(href, site_url):
+            continue
+        try:
+            norm = normalize_url(href)
+        except Exception:
+            continue
+        if norm in frontier_norms:
+            continue
+        try:
+            pt, tier = classify_url(href, getattr(link, "anchor_text", "") or "")
+        except Exception:
+            continue
+        if tier not in tier_rank:
+            continue
+        frontier_norms.add(norm)
+        out.append((norm, pt, tier, getattr(link, "anchor_text", "") or ""))
+    out.sort(key=lambda c: (0 if is_leaf_detail(c[0]) else 1, tier_rank[c[2]]))
+    return out
+
+
 def _diversify_by_parent(products: list, n: int) -> list:
     """Round-robin across the products' PARENT paths so we pick a SPREAD of the catalogue (a few from
     each collection), not 30 variants of one family."""
@@ -261,10 +309,12 @@ def _reserve_product_quota(candidates: list, cap: int) -> list:
     collections, 0 individual products). No product-detail URLs -> unchanged (non-store safe)."""
     if cap <= 0:
         return []
-    products = [c for c in candidates if is_product_detail(c[0])]
+    # FIX-A: leaves are UNIVERSAL now — individual courses/services/menu items get the same
+    # diversified budget share that Shopify-style /products/<slug> pages always got.
+    products = [c for c in candidates if is_leaf_detail(c[0])]
     if not products:
         return candidates[:cap]
-    others = [c for c in candidates if not is_product_detail(c[0])]
+    others = [c for c in candidates if not is_leaf_detail(c[0])]
     # keep up to ~35% for the top-ranked landing/collection/contact pages (offerings tree + key pages);
     # give the REST of the budget to a diverse spread of individual products.
     chosen_others = others[: round(cap * 0.35)]
@@ -827,6 +877,10 @@ def scrape(input_url: str, output_root: str = "scrapes", *, light: bool = False)
                 _ajax_added = 0
                 _AJAX_MAX = 40
                 frontier_norms = {normalize_url(s[0]) for s in subpages}
+                # FIX-A: depth per frontier URL (homepage=0, its links=1). Links found on a
+                # depth-d page re-seed the frontier at d+1, up to MAX_CRAWL_DEPTH.
+                depth_by_norm = {normalize_url(s[0]): 1 for s in subpages}
+                _bfs_added_total = 0
 
                 def _add_ajax_details(page_html: str, page_final_url: str, insert_at: int = 0) -> int:
                     """Resolve JS-built detail URLs on a page and splice them into the frontier at
@@ -965,6 +1019,24 @@ def scrape(input_url: str, output_root: str = "scrapes", *, light: bool = False)
                         if _sub_ajax:
                             manifest.notes.append(
                                 f"ajax_modal_details({sub_url}): +{_sub_ajax} JS-built detail URLs")
+                        # FIX-A (multi-depth crawl): the links THIS page revealed re-seed the
+                        # frontier tail — category pages surface their leaf items (courses,
+                        # services, menu dishes) which the old build-once frontier never fetched.
+                        # Bounded by the same live page_cap/time checks + BFS_MAX_NEW_CANDIDATES.
+                        _cur_depth = depth_by_norm.get(normalize_url(sub_url), 1)
+                        if (not light and _cur_depth < MAX_CRAWL_DEPTH
+                                and _bfs_added_total < BFS_MAX_NEW_CANDIDATES):
+                            _new = _bfs_new_candidates(
+                                sub_links, normalized, frontier_norms,
+                                max_new=BFS_MAX_NEW_CANDIDATES - _bfs_added_total)
+                            if _new:
+                                for cand in _new:
+                                    depth_by_norm[cand[0]] = _cur_depth + 1
+                                subpages.extend(_new)
+                                _bfs_added_total += len(_new)
+                                manifest.notes.append(
+                                    f"bfs_reseed({sub_url}): +{len(_new)} depth-{_cur_depth + 1} "
+                                    f"candidates ({sum(1 for c in _new if is_leaf_detail(c[0]))} leaf)")
                         # H1: re-evaluate the store signal over the ACCUMULATED links as
                         # subpages reveal more product URLs, and upgrade the budget ONCE if
                         # it crosses the threshold — the one-shot homepage detection above

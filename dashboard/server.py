@@ -507,7 +507,7 @@ class _Handler(BaseHTTPRequestHandler):
             return
         try:
             from dashboard.products import products_for_slug
-            items = products_for_slug(slug)
+            items = products_for_slug(slug, out_dir=self.out_dir)
         except Exception:
             items = []
         self._send(200, json.dumps({"products": items}).encode("utf-8"),

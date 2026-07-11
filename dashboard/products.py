@@ -69,21 +69,84 @@ def _best_image(name: str, images: list[dict], used: set) -> str:
     return images[0]["src"] if images else ""
 
 
-def products_from_manifest(manifest: dict, *, limit: int = 12) -> list[dict]:
-    """Grounded pickable products from one scrape manifest: [{name, image, url}]."""
+# Offering-type pages whose LEAF entries are pickable products (FIX-A: universal, not Shopify-only)
+_OFFERING_PAGE_TYPES = {"products", "courses", "services", "menu", "programs", "pricing"}
+
+
+def _first_heading(page: dict) -> str:
+    """The page's own display name: its first h1/h2 text block (a course page's title), trimmed."""
+    for b in (page.get("text_blocks") or []):
+        if isinstance(b, dict) and str(b.get("tag") or "").lower() in ("h1", "h2"):
+            t = str(b.get("text") or "").strip()
+            if 2 <= len(t) <= 90:
+                return t
+    return ""
+
+
+def _offering_products(profile: dict | None, images: list[dict], used: set, seen: set,
+                       limit: int) -> list[dict]:
+    """Pickable products from the PROFILE's extracted offerings — the best-named source (real
+    item names + prices, any vertical), which the picker used to ignore entirely."""
+    out: list[dict] = []
+    for o in ((profile or {}).get("offerings") or []):
+        if not isinstance(o, dict):
+            continue
+        name = o.get("name")
+        if isinstance(name, dict):
+            name = name.get("value")
+        name = str(name or "").strip()
+        if not name or name.lower() in seen:
+            continue
+        seen.add(name.lower())
+        price = o.get("price_text")
+        out.append({"name": name[:90], "url": str(o.get("page_url") or ""),
+                    "image": _best_image(name, images, used),
+                    "price_text": price if isinstance(price, str) and price.strip() else None})
+        if len(out) >= limit:
+            break
+    return out
+
+
+def products_from_manifest(manifest: dict, *, limit: int = 12,
+                           profile: dict | None = None) -> list[dict]:
+    """Grounded pickable products: [{name, image, url, price_text?}]. Sources in priority order
+    (FIX-A — the old picker understood ONLY Shopify URL slugs and returned [] for education/
+    services/clinics, verified on nti):
+      1. the profile's extracted offerings (real names + prices, every vertical);
+      2. manifest pages of an offering type that are LEAF items, named by their own h1/h2;
+      3. the Shopify-style URL-slug rule (existing behavior, kept as the fallback)."""
     images = _content_images(manifest)
     seen: set[str] = set()
     used: set[str] = set()
-    out: list[dict] = []
+    out: list[dict] = _offering_products(profile, images, used, seen, limit)
+
+    if len(out) < limit:
+        try:
+            from scraper.classify.page_type import is_leaf_detail  # lazy: no heavy deps
+        except Exception:  # noqa: BLE001
+            def is_leaf_detail(_u: str) -> bool:
+                return False
+        for page in (manifest.get("pages") or []):
+            if len(out) >= limit:
+                break
+            url = page.get("final_url") or page.get("url") or ""
+            if str(page.get("page_type") or "") not in _OFFERING_PAGE_TYPES or not is_leaf_detail(url):
+                continue
+            name = _first_heading(page) or _line_name_from_url(url) or ""
+            if not name or name.lower() in seen:
+                continue
+            seen.add(name.lower())
+            out.append({"name": name, "url": url, "image": _best_image(name, images, used)})
+
     for page in (manifest.get("pages") or []):
+        if len(out) >= limit:
+            break
         url = page.get("final_url") or page.get("url") or ""
         name = _line_name_from_url(url)
         if not name or name.lower() in seen:
             continue
         seen.add(name.lower())
         out.append({"name": name, "url": url, "image": _best_image(name, images, used)})
-        if len(out) >= limit:
-            break
     return out
 
 
@@ -95,13 +158,34 @@ def _latest_manifest(slug: str, scrapes_dir: str = "scrapes") -> Path | None:
     return Path(max(hits, key=os.path.getmtime))
 
 
-def products_for_slug(slug: str, *, scrapes_dir: str = "scrapes", limit: int = 12) -> list[dict]:
-    """Pickable products for a brand slug — reads its freshest manifest. [] if none/unreadable."""
+def _profile_for_slug(slug: str, scrapes_dir: str, out_dir: str) -> dict | None:
+    """The freshest extracted profile for a brand: the studio's outputs/<slug>_profile.json,
+    else the scrape-dir sibling business_profile.json. None when neither exists."""
+    candidates = [Path(out_dir) / f"{slug}_profile.json"]
+    mp = _latest_manifest(slug, scrapes_dir)
+    if mp:
+        candidates.append(mp.parent / "business_profile.json")
+    for p in candidates:
+        try:
+            if p.is_file():
+                data = json.loads(p.read_text(encoding="utf-8"))
+                if isinstance(data, dict):
+                    return data.get("profile") if isinstance(data.get("profile"), dict) else data
+        except Exception:  # noqa: BLE001
+            continue
+    return None
+
+
+def products_for_slug(slug: str, *, scrapes_dir: str = "scrapes", limit: int = 12,
+                      out_dir: str = "outputs") -> list[dict]:
+    """Pickable products for a brand slug — freshest manifest + extracted profile offerings.
+    [] if no scrape exists/unreadable."""
     mp = _latest_manifest(slug, scrapes_dir)
     if not mp:
         return []
     try:
-        return products_from_manifest(json.loads(mp.read_text(encoding="utf-8")), limit=limit)
+        return products_from_manifest(json.loads(mp.read_text(encoding="utf-8")), limit=limit,
+                                      profile=_profile_for_slug(slug, scrapes_dir, out_dir))
     except Exception:
         return []
 
