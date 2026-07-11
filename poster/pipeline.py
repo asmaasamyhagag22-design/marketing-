@@ -316,6 +316,36 @@ def _overlay_real_logo(poster_path: Path, logo_bytes: bytes, *, rtl: bool,
         px = margin if left else (W - margin - logo.width)
         py = margin
 
+        # FIX-C1b (measured on topshoes: a dark crest on the dark navy header = INVISIBLE
+        # logo): the classic path's adaptive contrast rule, ported. High contrast -> no
+        # plate, shadow only (unchanged). LOW contrast (|Δlum| < 0.28) -> a soft FROSTED
+        # contrasting badge behind the mark (blurred glass + muted tint + rounded corners)
+        # — never a hard white box (the owner's 2-month plate stays dead).
+        try:
+            from poster.template import _luminance
+            opix = [p for p in logo.getdata() if p[3] > 40]
+            logo_lum = (sum(_luminance(p[:3]) for p in opix) / len(opix)) if opix else None
+            pad = 16
+            bx0, by0 = max(0, px - pad), max(0, py - pad)
+            bx1 = min(W, px + logo.width + pad)
+            by1 = min(H, py + logo.height + pad)
+            region = poster.crop((bx0, by0, bx1, by1)).convert("RGB")
+            small = region.copy()
+            small.thumbnail((40, 40))
+            bpx = list(small.getdata())
+            bg_lum = (sum(_luminance(p) for p in bpx) / len(bpx)) if bpx else None
+            if logo_lum is not None and bg_lum is not None and abs(logo_lum - bg_lum) < 0.28:
+                from PIL import ImageDraw
+                frosted = region.filter(ImageFilter.GaussianBlur(7)).convert("RGBA")
+                tone = (12, 15, 22, 130) if logo_lum >= 0.5 else (236, 238, 243, 165)
+                frosted.alpha_composite(Image.new("RGBA", frosted.size, tone))
+                mask = Image.new("L", frosted.size, 0)
+                ImageDraw.Draw(mask).rounded_rectangle(
+                    (0, 0, frosted.width - 1, frosted.height - 1), radius=14, fill=255)
+                poster.paste(frosted.convert("RGB"), (bx0, by0), mask)
+        except Exception:  # noqa: BLE001 — legibility aid must never break compositing
+            pass
+
         # Soft drop-shadow ONLY (no plate): a blurred dark copy of the logo's OWN shape, so the
         # mark reads on a light corner without a box around it.
         alpha = logo.split()[3]

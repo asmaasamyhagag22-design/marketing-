@@ -288,3 +288,42 @@ def test_corner_placeholder_gate_detects_slot_not_light_headers(tmp_path):
             im3.putpixel((x, y), ((x * 7) % 256, (y * 5) % 256, 120))
     p3 = tmp_path / "busy.png"; im3.save(p3)
     assert pl._corner_placeholder_detected(p3, rtl=True) is False
+
+
+def test_low_contrast_logo_gets_frosted_scrim_high_contrast_does_not(tmp_path):
+    # FIX-C1b (topshoes: dark crest on dark navy header = invisible). A low-contrast
+    # logo gets a soft light frosted badge behind it; a high-contrast (white) logo keeps
+    # the plate-free look. Never a hard white box.
+    import io
+    from PIL import Image
+    import poster.pipeline as pl
+
+    W, H = 928, 1152
+    def _poster(path):
+        Image.new("RGB", (W, H), (18, 20, 40)).save(path)          # dark navy canvas
+
+    def _logo_bytes(color):
+        im = Image.new("RGBA", (400, 180), (0, 0, 0, 0))
+        for x in range(40, 360):
+            for y in range(40, 140):
+                im.putpixel((x, y), (*color, 255))
+        buf = io.BytesIO(); im.save(buf, format="PNG")
+        return buf.getvalue()
+
+    def scrim_band_mean(path):
+        # the PAD band just left of the logo box — inside the scrim, outside the mark itself
+        im = Image.open(path).convert("L")
+        margin = int(W * 0.045)                       # 41
+        tw = int(W * 0.22)                            # logo target width 204
+        px = W - margin - tw                          # rtl -> right corner
+        band = im.crop((px - 14, margin + 4, px - 2, margin + 54))
+        data = list(band.getdata())
+        return sum(data) / len(data)
+
+    dark = tmp_path / "dark_logo.png"; _poster(dark)
+    assert pl._overlay_real_logo(dark, _logo_bytes((25, 27, 48)), rtl=True)   # near-navy crest
+    assert scrim_band_mean(dark) > 100   # frosted LIGHT badge lifted the band (canvas was ~22)
+
+    light = tmp_path / "light_logo.png"; _poster(light)
+    assert pl._overlay_real_logo(light, _logo_bytes((250, 250, 250)), rtl=True)
+    assert scrim_band_mean(light) < 80   # high contrast -> NO badge; band stays navy-dark
