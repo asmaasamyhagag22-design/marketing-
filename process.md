@@ -18,6 +18,13 @@ SWOT-critical number will differ once they are. Headline: the prompt audit + Gem
 regress extraction (11/13 ready, most URLs 0.75–1.0). **Quota diagnosis: per-MINUTE** — the first run
 429'd on rapid cached re-extraction; this run (fresh scrapes pacing it, quota reset between runs)
 completed with 0 backoff events. The `run_extract` backoff is the safety net for fast re-extraction.
+**Quota resolution (2026-07-11):** no manual increase — owner enabled the Vertex **Quota adjuster**
+(Quotas → Configurations → Enable; auto-raises adjustable quotas gradually from usage). Two nets now:
+runner backoff (code) + adjuster (console). Future-429 map: the "…**with audio input**…" rows are System
+limits (`Adjustable=No`, dim `base_model_id_and_resolution`) — NOT the throttle; the tokens quota (10^10)
+is never it; the real one is Type=Quota / Adjustable=Yes "Generate content **requests** per minute" on
+dim `base_model:gemini-2.5-flash-ga` (& `-pro`). If it reads large + ~0 usage → Dynamic Shared Quota (no
+number to raise; only lever is backoff + paid Provisioned Throughput).
 
 **U1 Media Plan — schemas + builder (the real U1 gate) shipped (2026-07-07):** the priority v2.2 unit
 (the defense asks about the objective, not prompt hygiene). New additive `media_plan/` package
