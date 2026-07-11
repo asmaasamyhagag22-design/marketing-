@@ -106,6 +106,22 @@ poster/ reel/ strategy/ dashboard/   UNTOUCHED render targets; launch_bundle.clo
   emit a kill/scale Decision for an ad-set below that conversion count. This is a CONVERSION-COUNT
   guardrail, distinct from U1's `test_budget` 3×-CPL BUDGET floor (`media_plan.schemas` `_learning_floor`)
   — two thresholds, two homes. Implement in U3, not U1.
+- **T-5** — T-2 UPDATE (2026-07-11): `expected_objective`/`expected_destination` LABELED (owner-ratified,
+  all 14) → the U1 gate is LIVE and PASSING (93% objective, `python -m benchmark.grade_u1`). The 3 fuzzy
+  SWOT-critical fields remain the open half of T-2.
+- **T-6** — IMAGE-ONLY MENUS (OCR/vision extraction class). Some restaurants publish their menu as
+  PHOTOGRAPHS (e.g. Kababgy-style menu scans) — no text, no prices in HTML; text extraction can never
+  see them. Needs a vision pass: detect menu-like images in the scrape → OCR via the Gemini caller's
+  `images=[(bytes,mime)]` path → priced offerings with image evidence refs. NOTE: verified NOT the cause
+  for mcdonalds_eg/zooba (their first-party domains publish no prices at all — FIX-2 diagnosis,
+  process.md 2026-07-11); this ticket is for the genuinely-photographed-menu class. Universal rule
+  (menu-image detection), no vertical hack.
+- **T-7** — THIN-CRAWL DEFECT (scraper budget vs JS-render latency). norshek: 2/165 discovered pages
+  scraped ("Budget exceeded after 1 subpages, elapsed 62.1s") → single-page evidence drove the 0.50
+  structural score + empty fields; almentor similar (0 offerings). Decouple the crawl budget from
+  JS-render latency (or raise it for sitemap-rich sites). Separate from, and prerequisite to, the
+  fuzzy-label pass giving meaningful numbers on those URLs. Also: `run_scrape`'s 300s subprocess
+  timeout is too tight post-PSL for subdomain-rich sites (alameda needed ~6min).
 
 ---
 
