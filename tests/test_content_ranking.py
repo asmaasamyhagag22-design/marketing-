@@ -47,3 +47,37 @@ def test_cap_keeps_products_when_stores_would_overflow():
     imgs += [_im("https://b/cdn/prod-a.png", "Hair Mist"), _im("https://b/cdn/prod-b.png", "Face Wash")]
     out = _content_images(SimpleNamespace(visual=None, images_of_interest=imgs), )
     assert "https://b/cdn/prod-a.png" in out and "https://b/cdn/prod-b.png" in out
+
+
+def test_ui_and_partner_alts_no_longer_lead():
+    # FIX-B (nti regression): 'ANY non-empty alt -> rank 0' let a help screenshot, a partners
+    # logo-wall and a 3-char alt LEAD content_images. A rank-0 alt must read like an item NAME.
+    assert _content_rank("https://b/img/help.png", "Create User Profile") == 1
+    assert _content_rank("https://b/img/partners-6m-1.png", "Industry Partners") == 1
+    assert _content_rank("https://b/img/eme1.jpg", "eme") == 1                # too short
+    assert _content_rank("https://b/img/oil.png", "Hair Growth Oil") == 0     # real name still leads
+
+
+def test_unknown_logo_candidates_survive_as_content_photos():
+    # FIX-B (nti regression): real facility photos sat in visual.logo_candidates as low-score
+    # 'unknown_candidate' entries and were silently dropped from content_images. Only candidates
+    # CLASSIFIED as logos are excluded now.
+    visual = SimpleNamespace(
+        primary_logo=SimpleNamespace(src="https://b/images/logo.png"),
+        logo=None, partner_logos=[], authority_logos=[],
+        logo_candidates=[
+            SimpleNamespace(src="https://b/images/about/acadmy.jpg",
+                            classification="unknown_candidate", score=20.0),
+            SimpleNamespace(src="https://b/images/logo-alt.png",
+                            classification="primary_brand_logo", score=90.0),
+        ],
+    )
+    manifest = SimpleNamespace(visual=visual, images_of_interest=[
+        _im("https://b/images/about/acadmy.jpg", "students in the academy lab"),
+        _im("https://b/images/logo-alt.png", "brand logo"),
+        _im("https://b/images/logo.png", ""),
+    ])
+    out = _content_images(manifest)
+    assert "https://b/images/about/acadmy.jpg" in out          # the real photo SURVIVES
+    assert "https://b/images/logo-alt.png" not in out          # classified logo excluded
+    assert "https://b/images/logo.png" not in out              # primary logo excluded

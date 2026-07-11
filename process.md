@@ -2,7 +2,7 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1221 passed, 0 failed** (2026-07-11; grew from 880 as each audit fix
+Test suite: **1223 passed, 0 failed** (2026-07-11; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
 
 **CREATIVE-QUALITY CAMPAIGN (2026-07-11, owner's 2-month pain, 5 diagnosed fronts):** evidence run
@@ -33,6 +33,29 @@ reaches the category pages that host the popovers. (c) Picker (dashboard/product
 sources: profile offerings (names+prices, any vertical) → leaf pages named by their own h1/h2 →
 Shopify slug fallback (byte-compatible for stores); server passes out_dir. +9 hermetic tests; suite
 1221. Re-scrape measurement of NTI (BFS reach + modal pages) recorded below when complete.
+
+**FIX-A MEASURED (nti re-scrape with the multi-depth crawler): the owner's url-less popups are now
+scraped pages.** OLD: 26 pages / 169s / 0 bfs-ajax events. NEW: **45 pages / 302s / 17 bfs+ajax
+notes** — BFS reached `eta/courses.php?catID=601` (the course-category leaf) and the EXISTING ajax
+resolver then reconstructed the six JS-modal course URLs (`eta/pages/modules/10001-10006.html`),
+each scraped WITH full content (Huawei Big Data Associate 80h, Cloud Computing 70h, HCIA-Security,
+5G, AI, Datacom — 22-59 text blocks each). Plus the Tracks pages (dey/cat4m.php, catcr.php...).
+Budget still not exceeded (302s < 540s). **Picker: 0 → 14 real items** — profile offerings with
+prices (incl. Arabic: مبادرة تمويل اللاب توب) + the six modal courses named by their own h1
+(picker refinement: an 'other'-typed page qualifies when its URL is offering-shaped
+(is_leaf_detail) AND it announces itself with a heading — the JS-modal course pages classify
+as 'other').
+
+**FIX-B SHIPPED + measured (from_visual projection — feeds poster AND reel):** two silent killers
+in `business_profile/rules/from_visual.py`: (1) `_logo_basenames` swallowed the ENTIRE
+logo_candidates bucket ("a real photo is never a logo candidate" — FALSE: the scraper scores every
+prominent image, so nti's real facility photos sat there as score-20 'unknown_candidate' entries
+and were dropped from content_images); only candidates whose classification says logo count now.
+(2) `_content_rank`'s "ANY non-empty alt → rank 0" let help.png ('Create User Profile'), partner
+logo-walls ('Industry Partners') and the screwdriver macro ('eme') LEAD; rank-0 now requires a
+product-like alt (≥2 words, ≥8 chars, no UI/partner/logo token). MEASURED on the fresh nti
+extract: content_images went from junk-led to **the real facility photos leading** (about/eme2,
+dey2, acadmy, wazefa2 + nasr_city 01-03 + smart campus). +2 hermetic tests; suite 1223.
 
 **Studio: product-only scrape snapshot (owner feature, 2026-07-11):** the moment a PRODUCT-specific
 poster/reel generation starts in the studio (picker → Generate), `dashboard.products.save_product_scrape`

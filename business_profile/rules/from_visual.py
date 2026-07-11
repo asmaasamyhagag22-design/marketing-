@@ -120,9 +120,13 @@ def _logo_srcs(v) -> set[str]:
 
 def _logo_basenames(v) -> set[str]:
     """Logo filenames (basename, lowercased, query-stripped) across primary/legacy/
-    candidates/partner/authority. For CONTENT photos we DO use logo_candidates (a
-    real photo is never a logo candidate), so the brand's crest variants are dropped
-    while real photos survive."""
+    partner/authority + candidates ACTUALLY CLASSIFIED as logos. FIX-B (2026-07-11):
+    the old code swallowed the ENTIRE logo_candidates bucket on the premise that 'a
+    real photo is never a logo candidate' — FALSE: the scraper scores every prominent
+    image, so nti's real facility photos sat there as low-score 'unknown_candidate'
+    entries and were silently dropped from content_images (the reel then animated
+    banners and logo-walls instead). A candidate only counts as a logo when its
+    classification says so."""
     out: set[str] = set()
 
     def add(src):
@@ -133,9 +137,13 @@ def _logo_basenames(v) -> set[str]:
         add(v.primary_logo.src)
     if getattr(v, "logo", None):
         add(getattr(v.logo, "src", None))
-    for bucket in ("logo_candidates", "partner_logos", "authority_logos"):
+    for bucket in ("partner_logos", "authority_logos"):
         for c in (getattr(v, bucket, None) or []):
             add(getattr(c, "src", None))
+    for c in (getattr(v, "logo_candidates", None) or []):
+        cls = str(getattr(c, "classification", "") or "").lower()
+        if "logo" in cls:                     # primary_brand_logo / partner_logo / ...
+            add(getattr(c, "src", None))      # 'unknown_candidate' = NOT a logo -> keep as photo
     out.discard("")
     return out
 
@@ -152,6 +160,27 @@ _LOCATION_TOKENS = (
 )
 
 
+# UI/nav/social-proof alt words that mark an image as NOT a product photo (a partners collage,
+# a help screenshot, an award badge). FIX-B: the old "ANY non-empty alt -> rank 0" rule let
+# help.png (alt='Create User Profile') and partner logo-walls (alt='Industry Partners') LEAD
+# content_images on nti while the real facility photos were dropped. Universal tokens only.
+_NON_PRODUCT_ALT_TOKENS = (
+    "partner", "partners", "sponsor", "client", "clients", "help", "icon", "login", "user",
+    "profile", "create", "award", "awards", "certificate", "accreditation", "screenshot",
+    "chart", "diagram", "logo",
+)
+
+
+def _alt_is_product_like(alt: str) -> bool:
+    """An alt qualifies an image for rank-0 only when it reads like a real item NAME:
+    at least two words, >=8 chars, and no UI/partner/help token."""
+    a = (alt or "").strip()
+    if len(a) < 8 or len(a.split()) < 2:
+        return False
+    low = a.lower()
+    return not any(t in low for t in _NON_PRODUCT_ALT_TOKENS)
+
+
 def _content_rank(src: str, alt: str) -> int:
     """Product-first ranking (0=product, 1=neutral, 2=store/banner). Replaces the old extension sort
     that promoted webp/jpg — which happened to be the store photos — over the .png product mockups."""
@@ -159,8 +188,8 @@ def _content_rank(src: str, alt: str) -> int:
     if any(t in blob for t in _LOCATION_TOKENS):
         return 2                                       # store/stockist/banner -> LAST
     s = src.lower()
-    if "/products/" in s or "/collections/" in s or "/product/" in s or (alt or "").strip():
-        return 0                                       # product page OR a product alt -> FIRST
+    if "/products/" in s or "/collections/" in s or "/product/" in s or _alt_is_product_like(alt):
+        return 0                                       # product page OR a product-NAME alt -> FIRST
     return 1
 
 

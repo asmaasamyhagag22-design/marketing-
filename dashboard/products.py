@@ -130,7 +130,13 @@ def products_from_manifest(manifest: dict, *, limit: int = 12,
             if len(out) >= limit:
                 break
             url = page.get("final_url") or page.get("url") or ""
-            if str(page.get("page_type") or "") not in _OFFERING_PAGE_TYPES or not is_leaf_detail(url):
+            if not is_leaf_detail(url):
+                continue
+            pt = str(page.get("page_type") or "")
+            # an offering-typed leaf always qualifies; an 'other'-typed page qualifies only
+            # when BOTH its URL is offering-shaped (is_leaf_detail above) AND it announces
+            # itself with a heading (nti's JS-modal course pages classify as 'other')
+            if pt not in _OFFERING_PAGE_TYPES and not (pt == "other" and _first_heading(page)):
                 continue
             name = _first_heading(page) or _line_name_from_url(url) or ""
             if not name or name.lower() in seen:
@@ -159,18 +165,20 @@ def _latest_manifest(slug: str, scrapes_dir: str = "scrapes") -> Path | None:
 
 
 def _profile_for_slug(slug: str, scrapes_dir: str, out_dir: str) -> dict | None:
-    """The freshest extracted profile for a brand: the studio's outputs/<slug>_profile.json,
-    else the scrape-dir sibling business_profile.json. None when neither exists."""
+    """The FRESHEST extracted profile for a brand (by file mtime): the studio's
+    outputs/<slug>_profile.json vs the scrape-dir sibling business_profile.json — a re-scraped
+    + re-extracted brand must not keep serving last week's offerings. None when neither exists."""
     candidates = [Path(out_dir) / f"{slug}_profile.json"]
     mp = _latest_manifest(slug, scrapes_dir)
     if mp:
         candidates.append(mp.parent / "business_profile.json")
-    for p in candidates:
+    existing = [p for p in candidates if p.is_file()]
+    existing.sort(key=lambda p: os.path.getmtime(p), reverse=True)
+    for p in existing:
         try:
-            if p.is_file():
-                data = json.loads(p.read_text(encoding="utf-8"))
-                if isinstance(data, dict):
-                    return data.get("profile") if isinstance(data.get("profile"), dict) else data
+            data = json.loads(p.read_text(encoding="utf-8"))
+            if isinstance(data, dict):
+                return data.get("profile") if isinstance(data.get("profile"), dict) else data
         except Exception:  # noqa: BLE001
             continue
     return None
