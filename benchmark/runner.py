@@ -41,6 +41,11 @@ from .report import aggregate, write_report_md, write_results_json
 
 logger = logging.getLogger("benchmark.runner")
 
+# U7: the benchmark's run-record handle. main() mints it; _utf8_env() exports it to every
+# subprocess so all per-URL stages stitch into ONE runs/<run_id>/telemetry.jsonl. None when
+# the runner is used as a library (grade_u1, tests) — telemetry stays opt-in at the entry.
+_TELE = None
+
 
 # ---------------------------------------------------------------------
 # Path resolution
@@ -98,6 +103,12 @@ def _utf8_env() -> dict:
     import os
     env = dict(os.environ)
     env["PYTHONIOENCODING"] = "utf-8"
+    # U7 full wiring: when the runner minted a run record, every subprocess (scrape +
+    # extract, one per URL) adopts the SAME run_id via TELEMETRY_RUN_ID and appends its
+    # stage lines to the one runs/<run_id>/telemetry.jsonl — the whole benchmark becomes
+    # a single stitched run record (INTERFACES D-7).
+    if _TELE is not None:
+        env.update(_TELE.export_env())
     return env
 
 
@@ -349,6 +360,13 @@ def evaluate_url(
 # ---------------------------------------------------------------------
 
 def main():
+    global _TELE
+    try:
+        from telemetry import RunTelemetry
+        _TELE = RunTelemetry()
+        _TELE.record("benchmark_start", note="14-URL benchmark run")
+    except Exception:  # noqa: BLE001 — telemetry never blocks the benchmark
+        _TELE = None
     parser = argparse.ArgumentParser(description="Run the scraper benchmark")
     parser.add_argument(
         "--scrape-fresh", action="store_true",
