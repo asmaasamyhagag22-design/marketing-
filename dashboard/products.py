@@ -14,6 +14,7 @@ import glob
 import json
 import os
 import re
+from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -103,6 +104,90 @@ def products_for_slug(slug: str, *, scrapes_dir: str = "scrapes", limit: int = 1
         return products_from_manifest(json.loads(mp.read_text(encoding="utf-8")), limit=limit)
     except Exception:
         return []
+
+
+def _name_words(name: str) -> list[str]:
+    """The product name's significant words (>=3 chars), lowercase — the matching key everywhere."""
+    return [w for w in re.findall(r"[\w؀-ۿ]+", (name or "").lower()) if len(w) >= 3]
+
+
+def save_product_scrape(slug: str, product_name: str, *, product_image: str | None = None,
+                        kind: str = "", scrapes_dir: str = "scrapes",
+                        out_asset: str = "") -> Path | None:
+    """OWNER FEATURE: the moment a product-specific ad is generated, persist a PRODUCT-ONLY scrape
+    snapshot into the brand's scrape dir — `product_scrape_<product>.json` — so the owner can open
+    the scrapes folder and see exactly how far the crawl reached for THAT product: which pages
+    matched it, which images, which priced offerings, how many text blocks mention it. Everything
+    is read from the existing manifest + profile (grounded, nothing invented). Never raises; None
+    when the brand has no saved scrape."""
+    mp = _latest_manifest(slug, scrapes_dir)
+    if not mp:
+        return None
+    try:
+        m = json.loads(mp.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+    words = _name_words(product_name)
+
+    # pages the crawl fetched that MATCH the product (url or any text block mentions it)
+    pages_matched, mention_blocks = [], 0
+    for p in (m.get("pages") or []):
+        if not isinstance(p, dict):
+            continue
+        url = str(p.get("final_url") or p.get("url") or "")
+        blocks = [str(b.get("text") or "") if isinstance(b, dict) else str(b)
+                  for b in (p.get("text_blocks") or [])]
+        hits = sum(1 for t in blocks if any(w in t.lower() for w in words))
+        mention_blocks += hits
+        url_match = any(w in url.lower() for w in words)
+        if url_match or hits:
+            pages_matched.append({"url": url, "url_match": url_match,
+                                  "blocks_mentioning_product": hits, "total_blocks": len(blocks)})
+
+    images_matched = [im for im in _content_images(m)
+                      if any(w in (im["src"] + " " + im["alt"]).lower() for w in words)]
+
+    # priced offerings from the profile that match the product name
+    offerings_matched = []
+    prof_path = mp.parent / "business_profile.json"
+    if prof_path.is_file():
+        try:
+            prof = json.loads(prof_path.read_text(encoding="utf-8"))
+            for o in (prof.get("offerings") or []):
+                nm = str((o.get("name") if isinstance(o, dict) else "") or "")
+                if any(w in nm.lower() for w in words):
+                    offerings_matched.append({"name": nm,
+                                              "price_text": o.get("price_text"),
+                                              "page_url": o.get("page_url")})
+        except Exception:
+            pass
+
+    snapshot = {
+        "_doc": "Product-only scrape snapshot — written when a product-specific ad is generated, "
+                "so the owner can see how far the crawl reached for THIS product. Grounded: every "
+                "entry is a real crawled page / real site image / extracted offering.",
+        "product": {"name": product_name, "image": product_image or "",
+                    "picked_from": str(mp)},
+        "generation": {"kind": kind, "requested_at": datetime.now(timezone.utc).isoformat(),
+                       "out_asset": out_asset},
+        "coverage": {
+            "reached_product_page": any(p["url_match"] for p in pages_matched),
+            "text_blocks_mentioning_product": mention_blocks,
+            "images_matched": len(images_matched),
+            "priced_offering_found": any(o.get("price_text") for o in offerings_matched),
+        },
+        "pages_matched": pages_matched[:25],
+        "images_matched": images_matched[:12],
+        "offerings_matched": offerings_matched[:12],
+    }
+    fname = "product_scrape_" + (re.sub(r"[^\w؀-ۿ]+", "-", product_name.lower()).strip("-")
+                                 or "product") + ".json"
+    out_path = mp.parent / fname
+    try:
+        out_path.write_text(json.dumps(snapshot, ensure_ascii=False, indent=2), encoding="utf-8")
+    except Exception:
+        return None
+    return out_path
 
 
 # Notes worth surfacing in the Scraper-QA panel (capabilities/limits the owner cares about).

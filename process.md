@@ -2,8 +2,18 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1210 passed, 0 failed** (2026-07-11; grew from 880 as each audit fix
+Test suite: **1212 passed, 0 failed** (2026-07-11; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**Studio: product-only scrape snapshot (owner feature, 2026-07-11):** the moment a PRODUCT-specific
+poster/reel generation starts in the studio (picker → Generate), `dashboard.products.save_product_scrape`
+writes `scrapes/<brand>_<ts>/product_scrape_<product>.json` — a grounded snapshot of how far the crawl
+reached for THAT product: `coverage` at a glance (reached_product_page / text_blocks_mentioning_product /
+images_matched / priced_offering_found) + the matched pages/images/offerings themselves (from the
+existing manifest + profile — nothing invented). Whole-brand generations write nothing; failures never
+block generation (try/except + progress line shows the file path in the studio stream). Suite 1212
+(+2 hermetic). Also: session launch.json now pins the studio's cwd to the MAIN repo (the worktree has
+no .env/scrapes/outputs).
 
 **U1 GATE — first measured number (2026-07-11): objective 57% / destination 46% — FAIL vs ≥80%.**
 Owner ratified all 14 `expected_objective`/`expected_destination` labels in `ground_truth.json`;

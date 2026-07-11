@@ -670,6 +670,20 @@ class _Handler(BaseHTTPRequestHandler):
                 return
             _INFLIGHT.add(key)
         try:
+            # OWNER FEATURE: a product-specific generation drops a product-only scrape snapshot
+            # into the brand's scrape dir (scrapes/<brand>_<ts>/product_scrape_<product>.json) so
+            # the owner can inspect how far the crawl reached for THAT product. Whole-brand
+            # generations (no picked product) write nothing. Never blocks generation.
+            if product_name:
+                try:
+                    from dashboard.products import save_product_scrape
+                    snap = save_product_scrape(slug, product_name, product_image=product_image,
+                                               kind=kind)
+                    if snap is not None:
+                        on_progress("stage", "Product scrape",
+                                    f"* product scrape snapshot -> {snap}\n")
+                except Exception:
+                    pass
             fn = _run_mod.generate_poster if kind == "poster" else _run_mod.generate_reel
             try:
                 asset = fn(slug, out_dir=self.out_dir, on_progress=on_progress,

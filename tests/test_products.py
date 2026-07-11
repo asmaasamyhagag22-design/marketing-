@@ -83,3 +83,38 @@ def test_scrape_qa_summarizes_the_freshest_manifest(tmp_path):
 
 def test_scrape_qa_none_when_no_manifest(tmp_path):
     assert scrape_qa_for_slug("nobody", scrapes_dir=str(tmp_path)) is None
+
+
+def test_save_product_scrape_writes_grounded_snapshot(tmp_path):
+    # OWNER FEATURE: generating an ad for a picked product drops product_scrape_<product>.json
+    # into the brand's scrape dir — pages/images/offerings that matched, so the owner sees how
+    # far the crawl reached for THAT product.
+    from dashboard.products import save_product_scrape
+    m = _manifest()
+    m["pages"][1]["text_blocks"] = [{"text": "Hair Growth Oil nourishes roots"},
+                                    {"text": "unrelated block"}]
+    d = tmp_path / "acme_20260706_120000"
+    d.mkdir(parents=True)
+    (d / "manifest.json").write_text(json.dumps(m), encoding="utf-8")
+    (d / "business_profile.json").write_text(json.dumps({
+        "offerings": [{"name": "Hair Growth Oil", "price_text": "EGP 250",
+                       "page_url": "https://b.com/collections/hair-growth"},
+                      {"name": "Face Wash", "price_text": None, "page_url": None}],
+    }), encoding="utf-8")
+
+    out = save_product_scrape("acme", "Hair Growth", product_image="https://b.com/hair-growth-oil.jpg",
+                              kind="poster", scrapes_dir=str(tmp_path))
+    assert out is not None and out.parent == d and out.name == "product_scrape_hair-growth.json"
+    snap = json.loads(out.read_text(encoding="utf-8"))
+    assert snap["coverage"]["reached_product_page"] is True          # /collections/hair-growth
+    assert snap["coverage"]["text_blocks_mentioning_product"] == 1   # one real mention
+    assert snap["coverage"]["priced_offering_found"] is True         # EGP 250
+    assert snap["offerings_matched"][0]["price_text"] == "EGP 250"
+    assert any("hair-growth" in p["url"] for p in snap["pages_matched"])
+    assert all(im["src"].startswith("http") for im in snap["images_matched"])
+    assert snap["generation"]["kind"] == "poster"
+
+
+def test_save_product_scrape_none_when_no_scrape(tmp_path):
+    from dashboard.products import save_product_scrape
+    assert save_product_scrape("nobody", "Anything", scrapes_dir=str(tmp_path)) is None
