@@ -99,6 +99,57 @@ def test_offsite_priced_offerings_do_not_count_toward_the_catalog():
     assert "online_store" not in names
 
 
+def _manifest(external):
+    return {"links": {"external": external, "internal": [], "cta_candidates": []}}
+
+
+def test_order_anchor_outbound_link_grounds_online_ordering():
+    # FIX-2c, mcdonalds shape: "Order" -> mcdelivery.eg (order CTA to a sister ordering domain)
+    man = _manifest([{"href": "https://www.mcdelivery.eg/eg/", "anchor_text": "Order",
+                      "page_url": "https://www.mcdonalds.example/"}])
+    sigs = {n: r for n, _d, r in conversion_signals(_catalog_profile([]), manifest=man)}
+    assert "online_ordering" in sigs
+    ref = sigs["online_ordering"]
+    assert ref.is_grounded and "mcdelivery" in (ref.evidence[0].quote or "")
+    assert ref.evidence[0].page_url == "https://www.mcdonalds.example/"   # the BRAND's page, not the third party
+
+
+def test_platform_links_match_on_host_and_path_tokens():
+    # FIX-2c, zooba shape: platform-name anchors, but instashop host / #popup-order-now path
+    man = _manifest([
+        {"href": "https://instashop.example-cdn.com/en-eg", "anchor_text": "InstaShop",
+         "page_url": "https://zooba.example/"},
+        {"href": "https://mrsool.example/home/#popup-order-now", "anchor_text": "Mrsool",
+         "page_url": "https://zooba.example/"},
+    ])
+    names = {n for n, _d, _r in conversion_signals(_catalog_profile([]), manifest=man)}
+    assert "online_ordering" in names
+
+
+def test_ordering_link_boundary_traps_do_not_match():
+    # 'workshop' path, 'borderline' anchor, App Store listing — none is an ordering surface
+    man = _manifest([
+        {"href": "https://partner.example/events/workshop.html", "anchor_text": "Our partners",
+         "page_url": "https://brand.example/"},
+        {"href": "https://blog.example/post", "anchor_text": "borderline cases",
+         "page_url": "https://brand.example/"},
+        {"href": "https://play.google.com/store/apps/details?id=x", "anchor_text": "App Store",
+         "page_url": "https://brand.example/"},
+    ])
+    names = {n for n, _d, _r in conversion_signals(_catalog_profile([]), manifest=man)}
+    assert "online_ordering" not in names
+
+
+def test_no_manifest_and_no_duplicate_store_surface():
+    # manifest=None -> behavior unchanged; with an on-site priced catalog the ordering-link
+    # fallback must NOT add a second store-class surface
+    assert "online_ordering" not in {n for n, _d, _r in conversion_signals(_catalog_profile([]))}
+    man = _manifest([{"href": "https://www.mcdelivery.eg/eg/", "anchor_text": "Order",
+                      "page_url": "https://tasty.example/"}])
+    names = [n for n, _d, _r in conversion_signals(_catalog_profile(_priced(3)), manifest=man)]
+    assert names.count("online_store") == 1 and "online_ordering" not in names
+
+
 def test_store_brand_deduces_grounded_sales_objective():
     caller = MockCaller({"media_plan_objective": _dedux(MetaObjective.SALES, Destination.ONLINE_STORE,
                                                         alts=[MetaObjective.TRAFFIC])})

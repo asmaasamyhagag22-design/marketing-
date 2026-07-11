@@ -74,11 +74,10 @@ def test_grade_u1_scores_deduction_and_flags_missing_profile(monkeypatch):
     monkeypatch.setattr(g, "_profile_for",
                         lambda url: None if "noprof" in url else {"name": {"value": "X"}})
 
-    def fake_build(profile, caller=None):
-        # deduce SALES for the store, but WRONG (TRAFFIC) for the clinic
-        return _obj(MetaObjective.SALES, Destination.ONLINE_STORE) if profile else None
+    monkeypatch.setattr(g, "_manifest_for", lambda url: None)
     monkeypatch.setattr(g, "build_campaign_objective",
-                        lambda profile, caller=None: _obj(MetaObjective.SALES, Destination.ONLINE_STORE))
+                        lambda profile, caller=None, manifest=None: _obj(MetaObjective.SALES,
+                                                                         Destination.ONLINE_STORE))
 
     grades = {gr.url_id: gr for gr in g.grade_u1()}
     assert grades["store"].objective_match is True and grades["store"].destination_match is True

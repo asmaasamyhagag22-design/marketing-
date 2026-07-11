@@ -62,17 +62,26 @@ def _labels() -> dict:
             if not k.startswith("_") and isinstance(v, dict) and v.get("expected_objective")}
 
 
-def _profile_for(url: str) -> Optional[dict]:
+def _scrape_json(url: str, filename: str) -> Optional[dict]:
     scrape_dir = find_latest_scrape_dir(url)
     if scrape_dir is None:
         return None
-    path = scrape_dir / "business_profile.json"
+    path = scrape_dir / filename
     if not path.exists():
         return None
     try:
         return json.loads(path.read_text(encoding="utf-8"))
     except Exception:
         return None
+
+
+def _profile_for(url: str) -> Optional[dict]:
+    return _scrape_json(url, "business_profile.json")
+
+
+def _manifest_for(url: str) -> Optional[dict]:
+    """The scrape manifest (optional) — carries link-level surfaces the profile doesn't."""
+    return _scrape_json(url, "manifest.json")
 
 
 def grade_u1(caller: Any = None) -> List[U1Grade]:
@@ -91,7 +100,8 @@ def grade_u1(caller: Any = None) -> List[U1Grade]:
                                   "no cached profile (scrape+extract this URL first)"))
             continue
         try:
-            obj = build_campaign_objective(profile, caller=caller)
+            obj = build_campaign_objective(profile, caller=caller,
+                                           manifest=_manifest_for(meta["url"]))
         except Exception as e:  # noqa: BLE001
             grades.append(U1Grade(url_id, exp_obj, exp_dest, None, None, False, None, False,
                                   f"build_campaign_objective raised: {type(e).__name__}"))

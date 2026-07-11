@@ -2,7 +2,7 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1204 passed, 0 failed** (2026-07-11; grew from 880 as each audit fix
+Test suite: **1208 passed, 0 failed** (2026-07-11; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
 
 **U1 GATE — first measured number (2026-07-11): objective 57% / destination 46% — FAIL vs ≥80%.**
@@ -37,6 +37,30 @@ equivalent LEAD surfaces (whatsapp/phone/form) is degenerate + nondeterministic;
 objective-accuracy by design, destination stays secondary. Remaining 4 misses = extraction-side
 (mcdonalds/zooba unpriced offerings, alameda missing contact surfaces) + mumm (no profile). FIX-2
 predicted: 12/14 = 86% > gate.
+
+**FIX-2 diagnosis (3 parallel read-only investigators, 2026-07-11) — evidence overturned two
+assumptions:** (a) mcdonalds/zooba prices are NOT an extraction bug and NOT image-menus (screenshots
+verified price-free): the first-party domains genuinely publish no prices — mcdonalds.eg's menu is
+names+calories (prices live on the never-followed mcdelivery.eg), zoobaeats.com is a brand-story
+site delegating orders to Talabat/InstaShop/Mrsool/elmenus. OCR would recover nothing HERE (the
+image-menu class — e.g. Kababgy-style photographed menus — remains a real future ticket, separate).
+(b) alameda's hotlines/booking forms live on *.alameda-hc.com SUBDOMAINS that the 2026-05-30 scrape
+classified EXTERNAL under the old pre-PSL host check — the PSL fix already landed since, so a
+RE-SCRAPE alone should recover them (FIX-2b, no code). (c) norshek category was silently nulled by
+the validator (enum-coercion miss / evidence gate drop with ZERO rejection records — the raw LLM
+string is discarded untraceably); its OTHER empties share a scraper budget kill (2/165 pages in
+62s) — separate ticketed defect.
+
+**FIX-2c SHIPPED + measured (2026-07-11): 71% → 93% objective — U1 GATE PASS (≥80%).** Universal
+`_ordering_links(manifest)` in the builder: order-intent OUTBOUND links on the brand's own pages =
+online-ordering surface (anchor whole-word EN+AR / host substring / delimited path tokens;
+`workshop`/`borderline`/App-Store traps excluded; evidence cites the BRAND's page, never the third
+party — no third-party scraping). Manifest enters as an OPTIONAL param through
+`conversion_signals(profile, manifest=None)` + `build_campaign_objective(..., manifest=None)` —
+zero touch on the frozen profile schema (PD-1). mcdonalds ✓✓ + zooba ✓✓ exactly as predicted; the
+only miss is mumm (no profile — 13/14 is the ceiling). Destination 54% → 69%. HONESTY CAVEAT:
+alameda's LEADS this run is LLM VARIANCE, not a fix (prior run deduced AWARENESS on the same
+[website]-only signals) — FIX-2b re-scrape is what stabilizes it. +4 hermetic tests; suite 1208.
 
 **BASELINE (post-audit, new project, 2026-07-10):** first full 14-URL benchmark on the fresh GCP
 project (`radiant-octane-501919-v1`, Vertex ADC — old `image-498715` was dunning-suspended). This is

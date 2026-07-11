@@ -13,6 +13,7 @@ builders). PD-4: this module never hits the network itself.
 from __future__ import annotations
 
 import logging
+import re
 from typing import Any, List, Optional, Tuple
 
 from pydantic import BaseModel, Field
@@ -30,6 +31,15 @@ _ECOM_URL_HINTS = ("cart", "checkout", "/product", "/products", "/shop", "/colle
 # brand transacts through, even when no URL matches a cart pattern and the category isn't ecom
 # (a priced /menu, products priced on the homepage). >=3 guards against a lone incidental price.
 _PRICED_CATALOG_MIN = 3
+
+# FIX-2c (universal): order-intent OUTBOUND links on the brand's OWN pages = the brand transacts
+# online even when fulfilment lives on an ordering platform (mcdonalds.eg -> "Order" -> mcdelivery;
+# zooba -> instashop/#popup-order-now). We read only the brand's own page — never the third party.
+_ORDER_ANCHOR_TOKENS = {"order", "shop", "buy", "delivery", "store", "menu", "menus",
+                        "اطلب", "اشتري", "تسوق", "توصيل", "دليفري"}
+_ORDER_HOST_TOKENS = ("order", "delivery", "shop", "store", "menu", "cart", "checkout")
+_ORDER_PATH_RE = re.compile(r"(?:^|[/?#&_.\-])(order|orders|delivery|checkout|cart|buy)(?:$|[/?#&_.\-])")
+_APP_STORE_HOSTS = ("play.google.com", "apps.apple.com", "itunes.apple.com", "appgallery.huawei.com")
 
 
 # ---------------------------------------------------------------------
@@ -97,10 +107,39 @@ def _ref(claim: str, url: str, quote: str, extractor: str) -> EvidenceRef:
                                               extractor=extractor)])
 
 
-def conversion_signals(profile: Any) -> List[Tuple[str, Destination, EvidenceRef]]:
+def _ordering_links(manifest: Any) -> List[dict]:
+    """External links on the brand's own pages whose anchor or URL carries order/purchase intent.
+    Anchor matches on WHOLE words (so 'workshop'/'borderline' never match), hosts on substring
+    (mcdelivery.eg, instashop.com, elmenus.com), paths on delimited tokens ('#popup-order-now'
+    matches, '/workshop.html' does not). App-store links are excluded — an app listing is an APP
+    surface, not an online store."""
+    links = _get(manifest, "links", {}) if manifest else {}
+    out: List[dict] = []
+    for e in (links.get("external") or []) if isinstance(links, dict) else []:
+        if not isinstance(e, dict):
+            continue
+        href = str(e.get("href") or "").lower()
+        if not href or any(h in href for h in _APP_STORE_HOSTS):
+            continue
+        anchor_words = set(re.findall(r"[\w؀-ۿ]+", str(e.get("anchor_text") or "").lower()))
+        try:
+            from urllib.parse import urlparse
+            parsed = urlparse(href)
+            host, path = parsed.netloc, (parsed.path or "") + "?" + (parsed.query or "") + "#" + (parsed.fragment or "")
+        except ValueError:
+            host, path = "", href
+        if (anchor_words & _ORDER_ANCHOR_TOKENS
+                or any(t in host for t in _ORDER_HOST_TOKENS)
+                or _ORDER_PATH_RE.search(path)):
+            out.append(e)
+    return out
+
+
+def conversion_signals(profile: Any, manifest: Any = None) -> List[Tuple[str, Destination, EvidenceRef]]:
     """Every REAL conversion surface the scrape found, each paired with the Destination it enables
     and the resolved evidence that proves it. This is the ground truth the objective is anchored to;
-    the deduction may only pick a destination that appears here."""
+    the deduction may only pick a destination that appears here. `manifest` (optional, the scrape
+    manifest dict) adds structural link evidence the profile itself doesn't carry."""
     p = _root(profile)
     src = _fv(p, "source_url") or _fv(p, "url") or _fv(p, "website") or ""
     out: List[Tuple[str, Destination, EvidenceRef]] = []
@@ -147,6 +186,18 @@ def conversion_signals(profile: Any) -> List[Tuple[str, Destination, EvidenceRef
         out.append(("online_store", Destination.ONLINE_STORE,
                     _ref("the brand sells products through an online store", store_url or src,
                          store_quote or category, "rule:online_store")))
+    else:
+        # FIX-2c: no on-site store — an order-intent outbound link on the brand's own page is
+        # still structural proof the brand takes online orders (evidence = the brand's page + the
+        # anchor/href we found there, not the third-party site)
+        olinks = _ordering_links(manifest)
+        if olinks:
+            e = olinks[0]
+            out.append(("online_ordering", Destination.ONLINE_STORE,
+                        _ref("the brand takes online orders via an ordering link on its site",
+                             str(e.get("page_url") or src),
+                             f"{e.get('anchor_text') or 'order link'} -> {e.get('href')}",
+                             "rule:ordering_link")))
 
     # the website itself always exists when we scraped one — a grounded baseline for TRAFFIC/AWARENESS
     if src:
@@ -211,11 +262,13 @@ def _ground_destination(dest: Destination,
                        evidence=[], resolved=False)
 
 
-def build_campaign_objective(profile: Any, caller: Any = None) -> Optional[CampaignObjective]:
+def build_campaign_objective(profile: Any, caller: Any = None,
+                             manifest: Any = None) -> Optional[CampaignObjective]:
     """Deduce the single grounded CampaignObjective for a brand. None on honest-degrade (no caller /
     creds, or a profile too thin to expose ANY surface). An objective whose destination lacks a real
     signal comes back with `is_grounded == False` — a valid honest output the advisor flags, not a
-    fabricated one. `caller` is injectable for tests; defaults to default_caller(strong=True)."""
+    fabricated one. `caller` is injectable for tests; defaults to default_caller(strong=True).
+    `manifest` (optional scrape-manifest dict) adds link-level surfaces (see conversion_signals)."""
     if caller is None:
         from business_profile.llm import default_caller
         caller = default_caller(strong=True)
@@ -223,7 +276,7 @@ def build_campaign_objective(profile: Any, caller: Any = None) -> Optional[Campa
         logger.info("media_plan: no Gemini caller (creds/SDK); skipping objective deduction")
         return None
 
-    signals = conversion_signals(profile)
+    signals = conversion_signals(profile, manifest=manifest)
     if not signals:
         logger.info("media_plan: no conversion surface / website found; too thin to deduce")
         return None
