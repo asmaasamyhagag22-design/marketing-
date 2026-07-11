@@ -449,8 +449,19 @@ def build_evidence_pack(
 
     # 3. Score (PR-3: with optional vertical bump when category is known)
     vertical_bumps = _vertical_bumps_for(rules_profile)
+    # R2 (measured on rawafrican: 11 /products/ pages carried 1715 blocks / 310 priced, yet
+    # only 29 reached the 180-block pack -> offerings extracted CATEGORY-level, unpriced,
+    # and U1 lost the store signal): blocks from LEAF-DETAIL pages (individual products /
+    # courses / services — the same universal notion the crawler reserves budget for) get
+    # a score boost so the items the brand actually SELLS out-rank nav/collection chrome.
+    try:
+        from scraper.classify.page_type import is_leaf_detail
+        _leaf_urls = {b.page_url for b, _pt in filtered if is_leaf_detail(b.page_url or "")}
+    except Exception:  # noqa: BLE001
+        _leaf_urls = set()
     scored = [
-        (_score_block(b, pt, vertical_bumps=vertical_bumps), b, pt)
+        (_score_block(b, pt, vertical_bumps=vertical_bumps)
+         + (3 if b.page_url in _leaf_urls else 0), b, pt)
         for b, pt in filtered
     ]
     # Stable sort by score desc; preserve insertion order for ties so we get

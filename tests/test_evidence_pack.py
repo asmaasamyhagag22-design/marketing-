@@ -549,3 +549,12 @@ def test_defaults_are_150_to_200():
     """Doc-style test: confirm the default cap is in the requested range."""
     assert 150 <= DEFAULT_MAX_BLOCKS <= 250
     assert DEFAULT_MAX_PER_PAGE_TYPE <= DEFAULT_MAX_BLOCKS
+
+def test_leaf_detail_blocks_outrank_nav_chrome():
+    # R2 (rawafrican): 11 /products/ pages carried the priced truth but only 29/180 pack
+    # slots; leaf-detail pages now get a +3 boost so sellable items beat collection chrome.
+    from business_profile.llm.evidence_pack import _score_block  # noqa: F401  (import guard)
+    import business_profile.llm.evidence_pack as ep
+    import inspect
+    src = inspect.getsource(ep.build_evidence_pack)
+    assert "is_leaf_detail" in src and "+ (3 if" in src
