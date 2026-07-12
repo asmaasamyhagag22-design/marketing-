@@ -129,7 +129,8 @@ def _product_args(product_name: str | None, product_image: str | None) -> list[s
 
 
 def generate_poster(slug: str, *, out_dir: str = "outputs", on_progress=None,
-                    product_name: str | None = None, product_image: str | None = None) -> Path | None:
+                    product_name: str | None = None, product_image: str | None = None,
+                    use_hitl: bool = False) -> Path | None:
     """On-demand: (re)generate the one-shot poster from the saved profile, optionally FEATURING a
     picked product. Returns its path."""
     py = sys.executable
@@ -140,15 +141,20 @@ def generate_poster(slug: str, *, out_dir: str = "outputs", on_progress=None,
     # No --research on the studio path (deep web research pushed it past 420s). 900s: the one-shot
     # engine regenerates the slow image model on a QA-gate fail (bounded retries), so a legitimately
     # retrying poster needs room (MEASURED: rawafrican exceeded 600s). Still profile-grounded.
-    ok, _ = _run([py, "-m", "poster", str(P["profile"]), "--engine", "oneshot",
-                  "--out", str(P["poster"])] + _product_args(product_name, product_image),
-                 timeout=900, label="Poster (one-shot)", on_progress=on_progress)
+    args = [py, "-m", "poster", str(P["profile"]), "--engine", "oneshot",
+            "--out", str(P["poster"])] + _product_args(product_name, product_image)
+    # HITL: an EXECUTE-approved prompt (saved by hitl_preview/hitl_refine) overrides the brief.
+    pfile = P["out"] / f"{slug}_poster_prompt.txt"
+    if use_hitl and pfile.is_file():
+        args += ["--prompt-file", str(pfile)]
+    ok, _ = _run(args, timeout=900, label="Poster (one-shot)", on_progress=on_progress)
     return P["poster"] if (ok and P["poster"].is_file()) else None
 
 
 def generate_reel(slug: str, *, out_dir: str = "outputs", on_progress=None,
                  product_name: str | None = None, product_image: str | None = None,
-                 language: str | None = None, dialect: str | None = None) -> Path | None:
+                 language: str | None = None, dialect: str | None = None,
+                 use_hitl: bool = False) -> Path | None:
     """On-demand reel. OWNER RULE (2026-07-11): the output LANGUAGE (ar/en) and the Arabic
     register (fusha/masri) are the USER's explicit choices from the studio UI — passed as
     --language + the REEL_ARABIC_DIALECT env (which also routes the ratified TTS backend:
@@ -162,6 +168,10 @@ def generate_reel(slug: str, *, out_dir: str = "outputs", on_progress=None,
     args = [py, "-m", "reel", str(P["profile"]), "--creative", "--out", str(P["reel"])]
     if language in ("ar", "en"):
         args += ["--language", language]
+    # HITL: an EXECUTE-approved plan (saved by hitl_preview/hitl_refine) replaces the director.
+    plan = P["out"] / f"{slug}_reel_plan.json"
+    if use_hitl and plan.is_file():
+        args += ["--plan-file", str(plan)]
     env = dict(os.environ)
     if dialect in ("masri", "fusha"):
         env["REEL_ARABIC_DIALECT"] = dialect
@@ -227,3 +237,139 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
+
+# ---------------------------------------------------------------------
+# HITL prompt gate (owner token-economics law, 2026-07-12): preview -> refine -> EXECUTE.
+# Everything here is TEXT-ONLY (cheap Gemini calls); no image/video API is ever touched.
+# ---------------------------------------------------------------------
+
+def _hitl_env() -> None:
+    from dotenv import load_dotenv
+    load_dotenv(".env")
+
+
+def _arabic_rendering(text: str) -> str:
+    """Best-effort Arabic rendering of a generation prompt/plan for the user's review.
+    One cheap Flash call; empty string on any failure (the English pane always shows)."""
+    try:
+        from pydantic import BaseModel
+
+        class _T(BaseModel):
+            arabic: str = ""
+
+        from business_profile.llm import default_caller
+        caller = default_caller(strong=False)
+        if caller is None:
+            return ""
+        out, _u = caller(
+            "ترجمي بريف التوليد التالي إلى العربية بأمانة كاملة (للعرض على المستخدم فقط — "
+            "بدون إضافة أو حذف أي تعليمات). أعيدي النص العربي في الحقل arabic.",
+            text[:6000], _T, group_name="hitl_arabic")
+        return (out.arabic or "").strip()
+    except Exception:  # noqa: BLE001
+        return ""
+
+
+def hitl_preview(slug: str, kind: str, *, out_dir: str = "outputs",
+                 product_name: str | None = None, product_image: str | None = None,
+                 language: str | None = None, dialect: str | None = None) -> dict:
+    """Build the EXACT generation brief (poster prompt / reel plan) with zero paid renders.
+    Saves the artifact; returns {text, arabic, file}. {'error': ...} on failure."""
+    import json as _json
+    import os
+    _hitl_env()
+    P = paths(slug, out_dir)
+    if not P["profile"].is_file():
+        return {"error": "no profile — run Analyze first"}
+    profile = _json.loads(P["profile"].read_text(encoding="utf-8"))
+    if kind == "poster":
+        from poster.pipeline import build_generation_preview
+        prev = build_generation_preview(profile, product_image=product_image,
+                                        language=(language or "auto"))
+        text = prev["prompt"]
+        path = P["out"] / f"{slug}_poster_prompt.txt"
+        path.write_text(text, encoding="utf-8")
+    else:
+        if dialect in ("masri", "fusha"):
+            os.environ["REEL_ARABIC_DIALECT"] = dialect
+        from reel.creative_director import design_creative_reel
+        photos = (profile.get("visual") or {}).get("content_images") or []
+        creative = design_creative_reel(profile, photos, n_scenes=6,
+                                        language=(language or None),
+                                        featured_product=product_name)
+        if creative is None or not creative.scenes:
+            return {"error": "the director could not design a plan (no usable photos/creds)"}
+        path = P["out"] / f"{slug}_reel_plan.json"
+        path.write_text(creative.model_dump_json(indent=2), encoding="utf-8")
+        lines = [f"CONCEPT: {creative.concept}", f"HOOK: {creative.hook}",
+                 f"CTA: {creative.cta}", f"LANGUAGE: {creative.language}", ""]
+        for i, sc in enumerate(creative.scenes, 1):
+            lines += [f"SCENE {i} ({sc.duration_s:.0f}s, photo #{sc.image_index}):",
+                      f"  MOTION: {sc.veo_prompt}",
+                      f"  VOICE-OVER: {sc.voiceover}",
+                      f"  CAPTION: {sc.on_screen_text or '—'}", ""]
+        text = "\n".join(lines)
+    return {"text": text, "arabic": _arabic_rendering(text), "file": str(path)}
+
+
+def hitl_refine(slug: str, kind: str, instruction: str, *, out_dir: str = "outputs",
+                product_name: str | None = None, language: str | None = None,
+                dialect: str | None = None) -> dict:
+    """Apply the user's change request and return the UPDATED brief for re-approval.
+    Poster: a text-only revision that must preserve the verbatim copy lines (and the
+    render-side fidelity gate enforces them regardless). Reel: the director re-plans
+    WITH the request (user_note) — grounding rules unchanged."""
+    import json as _json
+    import os
+    _hitl_env()
+    P = paths(slug, out_dir)
+    if kind == "poster":
+        path = P["out"] / f"{slug}_poster_prompt.txt"
+        if not path.is_file():
+            return {"error": "no previewed prompt to refine"}
+        current = path.read_text(encoding="utf-8")
+        try:
+            from pydantic import BaseModel
+
+            class _R(BaseModel):
+                revised_prompt: str = ""
+
+            from business_profile.llm import default_caller
+            caller = default_caller(strong=False)
+            out, _u = caller(
+                "You revise an image-generation brief per the user's change request. "
+                "HARD RULES: never remove, translate or alter the quoted verbatim copy lines "
+                "(HEADLINE/SUBHEADLINE/CALL-TO-ACTION) or the BRAND INTEGRITY / compliance "
+                "clauses; apply the request to the creative aspects only. Return the FULL "
+                "revised brief in revised_prompt.",
+                f"CURRENT BRIEF:\n{current}\n\nUSER CHANGE REQUEST:\n{instruction}",
+                _R, group_name="hitl_refine")
+            revised = (out.revised_prompt or "").strip()
+            if not revised:
+                return {"error": "refine returned empty"}
+            path.write_text(revised, encoding="utf-8")
+            return {"text": revised, "arabic": _arabic_rendering(revised), "file": str(path)}
+        except Exception as e:  # noqa: BLE001
+            return {"error": f"refine failed: {type(e).__name__}"}
+    # reel: re-plan with the note
+    if dialect in ("masri", "fusha"):
+        os.environ["REEL_ARABIC_DIALECT"] = dialect
+    profile = _json.loads(P["profile"].read_text(encoding="utf-8"))
+    from reel.creative_director import design_creative_reel
+    photos = (profile.get("visual") or {}).get("content_images") or []
+    creative = design_creative_reel(profile, photos, n_scenes=6, language=(language or None),
+                                    featured_product=product_name, user_note=instruction)
+    if creative is None or not creative.scenes:
+        return {"error": "the director could not apply the request"}
+    path = P["out"] / f"{slug}_reel_plan.json"
+    path.write_text(creative.model_dump_json(indent=2), encoding="utf-8")
+    lines = [f"CONCEPT: {creative.concept}", f"HOOK: {creative.hook}",
+             f"CTA: {creative.cta}", f"LANGUAGE: {creative.language}", ""]
+    for i, sc in enumerate(creative.scenes, 1):
+        lines += [f"SCENE {i} ({sc.duration_s:.0f}s, photo #{sc.image_index}):",
+                  f"  MOTION: {sc.veo_prompt}",
+                  f"  VOICE-OVER: {sc.voiceover}",
+                  f"  CAPTION: {sc.on_screen_text or '—'}", ""]
+    text = "\n".join(lines)
+    return {"text": text, "arabic": _arabic_rendering(text), "file": str(path)}

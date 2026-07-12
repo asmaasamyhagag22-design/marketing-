@@ -501,6 +501,8 @@ class _Handler(BaseHTTPRequestHandler):
             self._stream_generate(q, "poster")
         elif route == "/generate/reel":
             self._stream_generate(q, "reel")
+        elif route == "/hitl/preview":
+            self._serve_hitl_preview(q)
         elif route == "/asset":
             self._serve_asset(q)
         elif route == "/dashboard":
@@ -509,6 +511,50 @@ class _Handler(BaseHTTPRequestHandler):
             self._send(204, b"", "image/x-icon")
         else:
             self._send(404, b"not found", "text/plain; charset=utf-8")
+
+    def do_POST(self):
+        parsed = urlparse(self.path)
+        if parsed.path != "/hitl/refine":
+            self._send(404, b"not found", "text/plain; charset=utf-8")
+            return
+        try:
+            length = int(self.headers.get("Content-Length") or 0)
+            body = json.loads(self.rfile.read(length).decode("utf-8")) if length else {}
+        except Exception:  # noqa: BLE001
+            self._send(400, b"bad body", "text/plain; charset=utf-8")
+            return
+        slug = str(body.get("slug") or "")
+        if not _ok_slug(slug):
+            self._send(400, b"bad slug", "text/plain; charset=utf-8")
+            return
+        try:
+            out = _run_mod.hitl_refine(
+                slug, str(body.get("kind") or "poster"),
+                str(body.get("instruction") or ""), out_dir=self.out_dir,
+                product_name=(body.get("pname") or None),
+                language=(body.get("lang") or None), dialect=(body.get("dialect") or None))
+        except Exception as exc:  # noqa: BLE001
+            out = {"error": f"{type(exc).__name__}: {exc}"}
+        self._send(200, json.dumps(out, ensure_ascii=False).encode("utf-8"),
+                   "application/json; charset=utf-8")
+
+    def _serve_hitl_preview(self, q: dict):
+        """HITL step 1 (owner law): assemble + show the EXACT brief; zero paid renders."""
+        slug = (q.get("slug") or [""])[0]
+        if not _ok_slug(slug):
+            self._send(400, b"bad slug", "text/plain; charset=utf-8")
+            return
+        try:
+            out = _run_mod.hitl_preview(
+                slug, (q.get("kind") or ["poster"])[0], out_dir=self.out_dir,
+                product_name=((q.get("pname") or [""])[0].strip() or None),
+                product_image=((q.get("pimg") or [""])[0].strip() or None),
+                language=((q.get("lang") or [""])[0].strip() or None),
+                dialect=((q.get("dialect") or [""])[0].strip() or None))
+        except Exception as exc:  # noqa: BLE001
+            out = {"error": f"{type(exc).__name__}: {exc}"}
+        self._send(200, json.dumps(out, ensure_ascii=False).encode("utf-8"),
+                   "application/json; charset=utf-8")
 
     # ---- pages ----
     def _serve_studio(self, q: dict):
@@ -713,15 +759,17 @@ class _Handler(BaseHTTPRequestHandler):
                 except Exception:
                     pass
             try:
+                use_hitl = (q.get("hitl") or ["0"])[0] == "1"
                 if kind == "poster":
                     asset = _run_mod.generate_poster(
                         slug, out_dir=self.out_dir, on_progress=on_progress,
-                        product_name=product_name, product_image=product_image)
+                        product_name=product_name, product_image=product_image,
+                        use_hitl=use_hitl)
                 else:
                     asset = _run_mod.generate_reel(
                         slug, out_dir=self.out_dir, on_progress=on_progress,
                         product_name=product_name, product_image=product_image,
-                        language=lang, dialect=dialect)
+                        language=lang, dialect=dialect, use_hitl=use_hitl)
             except Exception as exc:
                 self._sse_write(sse("failed", {"msg": f"{type(exc).__name__}: {exc}"}))
                 return

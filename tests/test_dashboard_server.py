@@ -75,9 +75,11 @@ def live(tmp_path, monkeypatch):
 
     captured: dict = {}
 
-    def fake_poster(slug, *, out_dir="outputs", on_progress=None, product_name=None, product_image=None):
+    def fake_poster(slug, *, out_dir="outputs", on_progress=None, product_name=None,
+                    product_image=None, **kw):          # use_hitl / future flags ride through
         captured["product_name"] = product_name
         captured["product_image"] = product_image
+        captured.update(kw)
         on_progress("stage_start", "Poster (one-shot)", "  -> Poster ...")
         P = srv._run_mod.paths(slug, out_dir)
         P["poster"].parent.mkdir(parents=True, exist_ok=True)
@@ -226,7 +228,8 @@ def test_concurrent_generate_runs_only_one_subprocess(live, monkeypatch):
     calls = {"n": 0}
     lock = threading.Lock()
 
-    def slow_poster(slug, *, out_dir="outputs", on_progress=None, product_name=None, product_image=None):
+    def slow_poster(slug, *, out_dir="outputs", on_progress=None, product_name=None,
+                    product_image=None, **kw):
         with lock:
             calls["n"] += 1
         on_progress("stage_start", "Poster (one-shot)", "  -> Poster ...")
