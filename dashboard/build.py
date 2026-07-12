@@ -10,6 +10,7 @@ import base64
 import html
 import json
 import mimetypes
+import re
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional
@@ -134,6 +135,89 @@ def _calendar_row(it: dict) -> str:
       <div class="cal-plat"><span class="cal-ic">{ic}</span>{_esc(plat)} · {_esc(ctype)}</div>
       <div class="cal-body"><div class="cal-topic">{topic}</div>{hook_html}</div>
     </div>"""
+
+
+_OBJ_L = {"OUTCOME_SALES": "مبيعات · Sales",
+          "OUTCOME_LEADS": "عملاء محتملون · Leads",
+          "OUTCOME_TRAFFIC": "زيارات · Traffic",
+          "OUTCOME_AWARENESS": "وعي · Awareness",
+          "OUTCOME_ENGAGEMENT": "تفاعل · Engagement",
+          "OUTCOME_APP_PROMOTION": "تطبيق · App"}
+_DEST_L = {"online_store": "المتجر الإلكتروني", "lead_form": "نموذج تواصل",
+           "whatsapp": "واتساب", "phone_call": "مكالمة هاتفية", "messenger": "ماسنجر",
+           "app_store": "متجر التطبيقات", "website": "الموقع"}
+_FUN_L = {"tofu": "وعي · TOFU", "mofu": "تفكير · MOFU", "bofu": "تحويل · BOFU"}
+
+
+_POSTURE = {
+    "leverage": ("وضعك التنافسي قوي — هاجم بنقاط قوتك",
+                 "Strong position — press your advantages"),
+    "defense": ("وضع دفاعي — حصّن نفسك ضد التهديدات",
+                "Defensive — shield against the threats"),
+    "improvement": ("تحتاج تطوير — عالج نقاط ضعفك أولاً",
+                    "Needs work — fix the weaknesses first"),
+    "contingency": ("وضع حسّاس — تحرّك بحذر وخطوة بخطوة",
+                    "Contingency — move carefully, step by step"),
+    "balanced": ("وضع متوازن — نمِّ قوتك واحتَرِس",
+                 "Balanced — grow strengths, watch threats"),
+}
+_HORIZON = {"now": ("ابدأ الآن", "start now"), "next": ("الخطوة التالية", "next"),
+            "later": ("لاحقاً", "later")}
+
+
+def _one_sentence(text: str) -> str:
+    """The first clean sentence of a description — the 'what they do' line."""
+    t = str(text or "").strip().replace("\n", " ")
+    for sep in (". ", "؟ ", "! ", "؛ "):
+        if sep in t:
+            t = t.split(sep)[0]
+            break
+    return t[:200]
+
+
+def _executive_summary(name: str, category: str, prof: dict, swot: dict, tows: dict,
+                       n_competitors: int, mp_obj: dict) -> str:
+    """RUBRIC A — the first-screen story: in 10 seconds, WHO the brand is, its MARKET POSITION,
+    and THE one recommended move. Pure composition from already-computed intelligence."""
+    desc = _one_sentence(_val(prof.get("description")))
+    strengths = swot.get("strengths") or []
+    weaknesses = swot.get("weaknesses") or []
+    posture = str(tows.get("posture") or "").lower()
+    pos_ar, pos_en = _POSTURE.get(posture, ("", ""))
+    # THE one move: the rank-1 priority action, its "Leverage:/Fix:" prefix stripped to a verb.
+    actions = tows.get("priority_actions") or []
+    move, hz = "", ""
+    if actions:
+        a0 = actions[0]
+        move = re.sub(r"^(Leverage|Fix|Address|Defend|Exploit)\s*:\s*", "",
+                      str(a0.get("action") or "")).strip()
+        hz = str(a0.get("horizon") or "now").lower()
+    obj_ar = _OBJ_L.get(str(mp_obj.get("objective") or ""), "").split(" · ")[0]
+
+    who = f"{_esc(name)}"
+    if category:
+        who += f' <span class="ex-cat">{_esc(category)}</span>'
+    pos_line = (f'<div class="ex-pos"><b>{_esc(pos_ar)}</b><span>{_esc(pos_en)}</span></div>'
+                if pos_ar else "")
+    stat = (f'<span class="ex-stat"><b>{len(strengths)}</b> نقطة قوة · strengths</span>'
+            f'<span class="ex-stat"><b>{len(weaknesses)}</b> نقطة ضعف · weaknesses</span>'
+            f'<span class="ex-stat"><b>{n_competitors}</b> منافس · competitors</span>')
+    move_html = ""
+    if move:
+        hz_ar, hz_en = _HORIZON.get(hz, ("ابدأ الآن", "start now"))
+        obj_line = (f' — والهدف: {_esc(obj_ar)}' if obj_ar else "")
+        move_html = (f'<div class="ex-move"><div class="ex-move-h">✦ الخطوة المُوصى بها الآن '
+                     f'· Your recommended first move</div>'
+                     f'<div class="ex-move-b">{_esc(move)}{obj_line}</div>'
+                     f'<span class="ex-move-hz">{_esc(hz_ar)} · {_esc(hz_en)}</span></div>')
+    return f"""<div class="sec ex"><div class="ex-card">
+      <div class="ex-eyebrow">الخلاصة التنفيذية · Executive summary</div>
+      <div class="ex-who">{who}</div>
+      {f'<p class="ex-desc">{_esc(desc)}</p>' if desc else ''}
+      {pos_line}
+      <div class="ex-stats">{stat}</div>
+      {move_html}
+    </div></div>"""
 
 
 def _css() -> str:
@@ -277,6 +361,30 @@ def _css() -> str:
       font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;}}
     .act-row b{{font-size:13.5px;color:{c['ink']};}}
     .act-h{{font-size:12px;color:{c['muted']};margin-top:2px;}}
+    /* RUBRIC A — executive summary */
+    .ex{{margin-top:4px;}}
+    .ex-card{{background:linear-gradient(135deg,{c['surface']},{c['blush50']});
+      border:1px solid {c['line']};border-radius:18px;padding:26px 30px;
+      box-shadow:0 6px 22px rgba(168,69,107,.07);}}
+    .ex-eyebrow{{font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+      color:{c['blush600']};font-weight:700;margin-bottom:10px;}}
+    .ex-who{{font-family:var(--serif);font-size:26px;font-weight:600;color:{c['ink']};
+      line-height:1.2;}}
+    .ex-cat{{font-family:var(--sans);font-size:13px;font-weight:600;color:{c['blush700']};
+      background:{c['blush100']};padding:3px 11px;border-radius:20px;margin-inline-start:10px;
+      vertical-align:middle;white-space:nowrap;}}
+    .ex-desc{{font-size:14px;color:{c['inkSoft']};margin-top:10px;line-height:1.65;max-width:64ch;}}
+    .ex-pos{{margin-top:14px;display:flex;flex-direction:column;gap:1px;}}
+    .ex-pos b{{font-size:16px;color:{c['sage700']};}}
+    .ex-pos span{{font-size:12px;color:{c['muted']};}}
+    .ex-stats{{display:flex;flex-wrap:wrap;gap:10px 20px;margin-top:14px;}}
+    .ex-stat{{font-size:12.5px;color:{c['inkSoft']};}}
+    .ex-stat b{{font-size:17px;color:{c['ink']};font-family:var(--serif);margin-inline-end:4px;}}
+    .ex-move{{margin-top:18px;padding:14px 18px;background:{c['ink']};border-radius:14px;color:#fff;}}
+    .ex-move-h{{font-size:11px;letter-spacing:.06em;color:{c['blush200']};font-weight:700;text-transform:uppercase;}}
+    .ex-move-b{{font-size:16px;font-weight:600;margin-top:6px;line-height:1.4;}}
+    .ex-move-hz{{display:inline-block;margin-top:9px;font-size:11.5px;font-weight:700;
+      background:{c['sage']};color:#fff;padding:3px 12px;border-radius:20px;}}
     @media (max-width:760px){{.mp-grid{{grid-template-columns:1fr 1fr;}}}}
     @media (max-width:760px){{.swot,.creative{{grid-template-columns:1fr;}}.cal-row{{grid-template-columns:1fr;gap:3px;}}}}
     </style>"""
@@ -361,21 +469,6 @@ def build_dashboard_html(
     # suppresses it (the STUDIO embeds this report and has its own richer Arabic card —
     # the duplication was part of the mess).
     mp_html = ""
-    _OBJ_L = {"OUTCOME_SALES": "مبيعات · Sales",
-              "OUTCOME_LEADS": "عملاء محتملون · Leads",
-              "OUTCOME_TRAFFIC": "زيارات · Traffic",
-              "OUTCOME_AWARENESS": "وعي · Awareness",
-              "OUTCOME_ENGAGEMENT": "تفاعل · Engagement",
-              "OUTCOME_APP_PROMOTION": "تطبيق · App"}
-    _DEST_L = {"online_store": "المتجر الإلكتروني",
-               "lead_form": "نموذج تواصل",
-               "whatsapp": "واتساب",
-               "phone_call": "مكالمة هاتفية",
-               "messenger": "ماسنجر",
-               "app_store": "متجر التطبيقات",
-               "website": "الموقع"}
-    _FUN_L = {"tofu": "وعي · TOFU", "mofu": "تفكير · MOFU",
-              "bofu": "تحويل · BOFU"}
     mp_path = media_plan_path
     if include_media_plan and not mp_path and competitor_path \
             and str(competitor_path).endswith("_result.json"):
@@ -423,6 +516,10 @@ def build_dashboard_html(
 
     # TOWS PRIORITY ACTIONS — already inside result.json, silently dropped before
     # (owner: everything must show). rank IS a real sequence, so numbering carries meaning.
+    # RUBRIC A — the first-screen story (composed once the objective is known).
+    exec_html = _executive_summary(name, category, prof, swot, tows,
+                                   int(comp.get("competitor_count") or len(competitors)), obj)
+
     actions = (tows.get("priority_actions") or [])[:6]
     actions_html = ""
     if actions:
@@ -530,7 +627,7 @@ def build_dashboard_html(
         {(' · <b>' + _esc(category) + '</b>') if category else ''}{(' · tone: ' + _esc(tone)) if tone else ''}</p>
         <div class="kpis">{kpis}</div>
       </div></div>
-      {swot_html}{voice_html}{mp_html}{comp_html}{tows_html}{actions_html}{cal_html}{creative_html}{qa_html}
+      {exec_html}{swot_html}{voice_html}{mp_html}{comp_html}{tows_html}{actions_html}{cal_html}{creative_html}{qa_html}
       <div class="foot">Generated by <b>Baseera</b> · {_esc(gen)} · every factual line carries its source (the Evidence Ledger).</div>
     </div></div>"""
 

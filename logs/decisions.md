@@ -24,3 +24,12 @@ FLAG where the owner should review. Newest first.
   the queue continues.
 
 <!-- new decisions appended below -->
+
+## Phase 3 — dashboard rebuild
+
+- **D-3.1 — Browser-preview visual check unavailable.** `preview_start` on the local
+  file:// render timed out (300s) with the studio dev server already bound to :8770.
+  Per never-halt, I verify the dashboard STRUCTURALLY (render succeeds + grep the composed
+  copy in the HTML) instead of by screenshot, and rely on the deliberately-authored CSS for
+  the design bar. FLAG: owner may want a screenshot pass in an interactive session; the
+  rendered HTML files are in the scratchpad for direct opening.

@@ -2,8 +2,19 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1323 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
+Test suite: **1326 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**PHASE 3 · SECTION A — EXECUTIVE SUMMARY (first-screen story) SHIPPED (suite 1326).** The
+STEP-0 census (logs/mission_inventory.md, logs/_census_raw.json) confirmed the owner's verdict:
+52 of 79 computed-intelligence items are hidden or shown as raw enums; scorecard v0 = 0/9
+sections pass. Rubric A was joint-lowest (score 1: no executive summary — the first screen was a
+product pitch). `_executive_summary()`: in 10 seconds it tells WHO the brand is (name + category
++ first sentence of the real description), its MARKET POSITION (TOWS posture translated to plain
+bilingual words + strength/weakness/competitor counts), and THE one recommended move (rank-1
+priority action, prefix stripped, + horizon + media-plan objective). Pure composition, zero new
+computation, zero fabrication; degrades cleanly. Rendered on BOTH real brands. +3 hermetic tests.
+Section A: 1 -> 4.
 
 **CLIENT-DELIVERABLE MISSION — PHASE 0 (logs as a product) SHIPPED (2026-07-12, suite 1323).**
 The dashboard is now framed as a PAID deliverable, not a debug view. New `logs/` product:
