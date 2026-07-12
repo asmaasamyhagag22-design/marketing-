@@ -357,6 +357,16 @@ function pick(el,prod){{
   document.querySelectorAll('.cst-chip').forEach(c=>c.classList.remove('sel'));
   el.classList.add('sel'); SEL=prod;
   document.getElementById('pick-sel').textContent = prod ? ('— '+prod.name) : '— whole brand';
+  // OWNER (2026-07-12): switching the product (or scraping a new one) must NOT keep showing
+  // the LAST poster/reel as if they were this product's. Reset both stages to the honest
+  // placeholder — but never clobber a render that is in flight.
+  ['poster','reel'].forEach(k=>{{
+    const st=document.getElementById(k+'-stage');
+    if(!st||st.classList.contains('is-gen'))return;
+    setEmpty(st,k, prod?('for “'+esc(prod.name)+'” — not generated yet'):'Not generated yet',
+             k==='poster'?'press Generate — a few minutes':'press Generate — Veo takes ~10–20 min');
+    const b=document.getElementById(k+'-btn'); if(b){{b.textContent='Generate '+k;}}
+  }});
 }}
 function loadProducts(){{
   const row=document.getElementById('product-picker'); if(!row)return;

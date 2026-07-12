@@ -26,6 +26,19 @@ def _load_env() -> None:
         pass
 
 
+def _fail_reason(exc: Exception) -> str:
+    """ONE readable line for the studio log tail (owner's screenshot 2026-07-12 showed a raw
+    google.genai traceback fragment — useless to a non-engineer). Names the quota case."""
+    code = getattr(exc, "status_code", None) or getattr(exc, "code", None) or ""
+    s = str(exc)
+    if str(code) == "429" or "RESOURCE_EXHAUSTED" in s or "429" in s[:80]:
+        return ("Google image quota is busy (429) — usually a reel rendering on the same "
+                "project at the same time. Press Regenerate in a minute or two.")
+    if str(code) in ("500", "503") or "UNAVAILABLE" in s:
+        return "Google's image service hiccuped (server error). Press Regenerate."
+    return f"{type(exc).__name__}{f' {code}' if code else ''}: {s[:200]}"
+
+
 def main() -> int:
     # Windows consoles default to cp1252 and crash on Arabic in print(); force UTF-8.
     for _stream in (sys.stdout, sys.stderr):
@@ -214,14 +227,18 @@ def main() -> int:
             print(f"      HITL prompt override loaded ({len(prompt_override)} chars)")
         except Exception as exc:
             print(f"      (could not read --prompt-file: {type(exc).__name__})", file=sys.stderr)
-    res = generate_poster(
-        profile, caller=caller, variation=variation, brand_dna=brand_dna,
-        no_image=args.no_image, headline_override=headline_override,
-        trend_context=trend_context or None, engine=args.engine,
-        out_dir=str(Path(args.out).parent or "."),
-        product_image=args.product_image,
-        prompt_override=prompt_override,
-    )
+    try:
+        res = generate_poster(
+            profile, caller=caller, variation=variation, brand_dna=brand_dna,
+            no_image=args.no_image, headline_override=headline_override,
+            trend_context=trend_context or None, engine=args.engine,
+            out_dir=str(Path(args.out).parent or "."),
+            product_image=args.product_image,
+            prompt_override=prompt_override,
+        )
+    except Exception as exc:  # noqa: BLE001 — the studio shows the log TAIL: make it readable
+        print(f"[X] poster failed: {_fail_reason(exc)}", file=sys.stderr)
+        return 3
 
     # Place the result at the requested --out path.
     out_path = Path(args.out)

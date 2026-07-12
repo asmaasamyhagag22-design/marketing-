@@ -210,6 +210,14 @@ def _client(location: str):
     return _CLIENTS[location]
 
 
+def _is_retryable(e: Exception) -> bool:
+    """Transient Google API failures worth waiting out: 429 quota bursts (Dynamic Shared
+    Quota — a concurrent Veo render on the same project starves image calls) and 5xx."""
+    code = getattr(e, "status_code", None) or getattr(e, "code", None)
+    s = str(e)
+    return code in (429, 500, 503) or "RESOURCE_EXHAUSTED" in s or "UNAVAILABLE" in s
+
+
 def generate_oneshot_poster(prompt: str, out_path: str | Path, *,
                             model: str = DEFAULT_ONESHOT_MODEL,
                             location: str = DEFAULT_LOCATION,
@@ -231,11 +239,25 @@ def generate_oneshot_poster(prompt: str, out_path: str | Path, *,
     for data, mime in (product_images or [])[:2]:
         if data:
             contents.append(types.Part.from_bytes(data=data, mime_type=mime or "image/jpeg"))
-    resp = cl.models.generate_content(
-        model=model,
-        contents=contents,
-        config=types.GenerateContentConfig(response_modalities=["IMAGE", "TEXT"]),
-    )
+    # QUOTA-AWARE RETRY (owner's failed studio run 2026-07-12): with Dynamic Shared Quota a
+    # concurrent Veo reel render on the SAME project starves the image call into a 429 — the
+    # old code died instantly instead of waiting out a burst that passes in ~1-2 minutes.
+    import time as _time
+    delays_s = (0, 20, 45, 90)
+    resp = None
+    for i, delay_s in enumerate(delays_s):
+        if delay_s:
+            _time.sleep(delay_s)
+        try:
+            resp = cl.models.generate_content(
+                model=model,
+                contents=contents,
+                config=types.GenerateContentConfig(response_modalities=["IMAGE", "TEXT"]),
+            )
+            break
+        except Exception as e:  # noqa: BLE001
+            if not _is_retryable(e) or i == len(delays_s) - 1:
+                raise
     for cand in (resp.candidates or []):
         for part in (cand.content.parts or []):
             inline = getattr(part, "inline_data", None)
