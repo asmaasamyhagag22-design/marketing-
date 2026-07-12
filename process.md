@@ -2,8 +2,22 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1311 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
+Test suite: **1314 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**U9 INSTAGRAM (Tier-1, OFFICIAL) SHIPPED + LIVE-VALIDATED (2026-07-12):** the owner created
+her Meta app; `scripts/refresh_meta_token.py` exchanged her short-lived token for a 60-DAY
+one (auto-written to .env). Probed live: identity OK; **IG Business Discovery WORKS** (her
+page has a linked IG business account); ads_archive still needs the one-time identity
+confirmation at facebook.com/ID (code=10 until then — ads_intel live waits on that).
+`scripts/pull_instagram.py` (the only network path): --own = her media + customer COMMENTS
+(ABSA own-brand voice), --peer = a competitor's public captions/engagement via
+business_discovery (marketing voice; the API exposes no peer comments — honest limit).
+`social_intel/providers/ig_business.py` parses snapshots only: comment authors hashed AT
+INGESTION, usernames never survive serialization; peer captions flagged is_own_brand=False
+(O/T side, never S/W). LIVE SMOKE: business_discovery pull on a public brand (3 media,
+291.8M followers) → provider parsed 3 caption signals. The rejected Tier-4 scraper is now
+fully replaced by the official door. +3 hermetic tests.
 
 **ADS INTEL (Phase-2 #8) — FIRST SLICE SHIPPED, fixtures-first (2026-07-12, suite 1311):**
 new `ads_intel/` package for competitor live-ads intelligence via the OFFICIAL Meta Ad
