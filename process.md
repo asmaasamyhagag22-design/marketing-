@@ -2,8 +2,28 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1279 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
+Test suite: **1283 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**CUSTOMER VOICE + MEDIA PLAN ON THE DASHBOARD (owner: "عايزة الشغل كله يترند... بعرض على
+الدكتور", 2026-07-12, suite 1283).** Constraint honored: the studio server was NOT restarted
+(owner mid-demo) — both wirings live on SUBPROCESS paths, so they take effect on her next
+Analyze/Dashboard click with the running server untouched. **(1) competitor/full_run.py:**
+own-brand customer voice — `_voice_files_for` matches saved review data to the subject by
+normalized-slug prefix (>=5 chars: alameda_hc ↔ alameda-hc.com; demo/gold fixtures can't
+false-hit) across reviews/fixtures + runs/review_snapshots + social_intel/fixtures;
+`_own_voice_themes` feeds the rows through ABSA (verbatim-quote gate + >=2 threshold intact)
+and appends to `synthesize_swot(themes=)` — own praise lands in Strengths, own complaints in
+Weaknesses, each citation carrying its «quote»; independent of --no-themes (that flag governs
+PEER Places themes); any failure degrades silently. **(2) dashboard/build.py (exported HTML —
+what the client sees):** a dedicated bilingual "Customer voice — صوت العملاء" section
+(filters SWOT items whose evidence is own-brand customer voice; polarity chips + verbatim
+quotes) + the U1 "Media plan — خطة الشراء الإعلاني" card (objective/destination/funnel/KPI/
+geo/evidence badge + rationale), AUTO-DISCOVERED from the sibling <slug>_media_plan.json so
+no caller changes were needed. Smoke on real NTI artifacts: card renders (OUTCOME_LEADS /
+cost_per_lead / مؤكد بالأدلة). +4 hermetic tests. Demo path for the doctor: pull the clinic's
+reviews with brand-ref = its slug → Analyze → the dashboard shows SWOT + voice + plan +
+poster + reel in one page.
 
 **LIVE REVIEW PULLS (Google Maps) SHIPPED — code complete, live pull BLOCKED on one owner
 click (2026-07-12, suite 1279).** Mirrors the ratified Facebook-wrap governance exactly:

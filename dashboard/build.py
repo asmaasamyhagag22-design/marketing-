@@ -253,6 +253,20 @@ def _css() -> str:
     .creative .cap{{font-size:11.5px;color:{c['muted']};margin-top:8px;text-align:center;}}
     .foot{{text-align:center;color:{c['muted']};font-size:11.5px;margin-top:34px;}}
     .foot b{{color:{c['blush600']};}}
+    .voice-row{{display:flex;gap:10px;padding:10px 4px;border-bottom:1px solid {c['line']};align-items:flex-start;}}
+    .voice-row:last-child{{border-bottom:none;}}
+    .voice-k{{flex:0 0 auto;font-size:16px;line-height:1.2;padding:4px 8px;border-radius:10px;}}
+    .voice-s{{background:{c['sage100']};}}
+    .voice-w{{background:{c['gold100']};}}
+    .voice-row b{{font-size:13.5px;color:{c['ink']};}}
+    .voice-q{{font-size:12px;color:{c['inkSoft']};margin-top:4px;line-height:1.55;}}
+    .mp-grid{{display:grid;grid-template-columns:repeat(3,1fr);gap:12px 18px;}}
+    .mp-l{{display:block;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:{c['muted']};margin-bottom:2px;}}
+    .mp-grid b{{font-size:13.5px;color:{c['ink']};}}
+    .mp-ok{{font-size:12px;color:{c['ok']};font-weight:700;}}
+    .mp-warn{{font-size:12px;color:{c['warn']};font-weight:700;}}
+    .mp-r{{font-size:12.5px;color:{c['inkSoft']};margin-top:12px;line-height:1.6;}}
+    @media (max-width:760px){{.mp-grid{{grid-template-columns:1fr 1fr;}}}}
     @media (max-width:760px){{.swot,.creative{{grid-template-columns:1fr;}}.cal-row{{grid-template-columns:1fr;gap:3px;}}}}
     </style>"""
 
@@ -264,6 +278,7 @@ def build_dashboard_html(
     plan_path: Optional[str] = None,
     poster_path: Optional[str] = None,
     reel_path: Optional[str] = None,
+    media_plan_path: Optional[str] = None,
     standalone: bool = True,
     generated_at: Optional[str] = None,
 ) -> str:
@@ -306,6 +321,57 @@ def build_dashboard_html(
             {_swot_quad('Opportunities', '✦', swot.get('opportunities'), 'o')}
             {_swot_quad('Threats', '⚡', swot.get('threats'), 't')}
           </div></div>"""
+
+    # CUSTOMER VOICE (owner directive 2026-07-12 — "the review work must SHOW"): the ABSA
+    # own-brand themes already live INSIDE the SWOT quadrants; this section makes them
+    # unmissable for a client demo — each theme with its verbatim «quotes» as the receipts.
+    voice_items = []
+    for quad in ("strengths", "weaknesses"):
+        for it in (swot.get(quad) or []):
+            if "customer voice" in str(it.get("evidence") or ""):
+                voice_items.append((quad, it))
+    voice_html = ""
+    if voice_items:
+        rows = ""
+        for quad, it in voice_items[:8]:
+            icon, klass = ("💬", "s") if quad == "strengths" else ("⚠", "w")
+            quotes = "".join(f'<div class="voice-q">{_esc(c)}</div>'
+                             for c in (it.get("citation") or [])[:3])
+            rows += (f'<div class="voice-row"><span class="voice-k voice-{klass}">{icon}</span>'
+                     f'<div><b>{_esc(it.get("text") or "")}</b>{quotes}</div></div>')
+        voice_html = f"""<div class="sec"><div class="sec-h"><span class="bar"></span>
+          <h2>Customer voice — صوت العملاء</h2><span class="cnt">{len(voice_items)} grounded themes · verbatim quotes</span></div>
+          <div class="card">{rows}</div></div>"""
+
+    # MEDIA PLAN (U1) — auto-discovered next to the result file, so the exported dashboard
+    # carries the buying plan without any caller changes.
+    mp_html = ""
+    mp_path = media_plan_path
+    if not mp_path and competitor_path and str(competitor_path).endswith("_result.json"):
+        cand = Path(str(competitor_path).replace("_result.json", "_media_plan.json"))
+        mp_path = str(cand) if cand.is_file() else None
+    mp = _load(mp_path)
+    obj = (mp.get("objectives") or [{}])[0] if mp else {}
+    if obj.get("objective"):
+        kpi = obj.get("kpi_target") or {}
+        geo = mp.get("base_geo") or {}
+        n_ev = sum(1 for e in (obj.get("evidence") or []) if e.get("resolved"))
+        badge = ("<span class='mp-ok'>مؤكد بالأدلة ✓</span>" if n_ev
+                 else "<span class='mp-warn'>للمراجعة ⚠</span>")
+        geo_txt = geo.get("mode") or ""
+        if geo.get("center_address"):
+            geo_txt += f" · {geo.get('center_address')} ({geo.get('radius_km')} km)"
+        mp_html = f"""<div class="sec"><div class="sec-h"><span class="bar"></span>
+          <h2>Media plan — خطة الشراء الإعلاني</h2><span class="cnt">deduced from evidence · U1</span></div>
+          <div class="card"><div class="mp-grid">
+            <div><span class="mp-l">Objective</span><b>{_esc(obj.get('objective') or '')}</b></div>
+            <div><span class="mp-l">Destination</span><b>{_esc(obj.get('destination') or '')}</b></div>
+            <div><span class="mp-l">Funnel</span><b>{_esc(obj.get('funnel_stage') or '')}</b></div>
+            <div><span class="mp-l">KPI</span><b>{_esc(kpi.get('metric') or '')}</b></div>
+            <div><span class="mp-l">Geo</span><b>{_esc(geo_txt)}</b></div>
+            <div><span class="mp-l">Evidence</span>{badge}</div>
+          </div>
+          <p class="mp-r">{_esc(obj.get('rationale') or '')}</p></div></div>"""
 
     comp_html = ""
     if competitors:
@@ -376,7 +442,7 @@ def build_dashboard_html(
         {(' · <b>' + _esc(category) + '</b>') if category else ''}{(' · tone: ' + _esc(tone)) if tone else ''}</p>
         <div class="kpis">{kpis}</div>
       </div></div>
-      {swot_html}{comp_html}{tows_html}{cal_html}{creative_html}
+      {swot_html}{voice_html}{mp_html}{comp_html}{tows_html}{cal_html}{creative_html}
       <div class="foot">Generated by <b>Baseera</b> · {_esc(gen)} · every factual line carries its source (the Evidence Ledger).</div>
     </div></div>"""
 
@@ -395,6 +461,7 @@ def build_dashboard(
     plan_path: Optional[str] = None,
     poster_path: Optional[str] = None,
     reel_path: Optional[str] = None,
+    media_plan_path: Optional[str] = None,
     out_path: str = "outputs/dashboard.html",
     standalone: bool = True,
     generated_at: Optional[str] = None,
@@ -402,8 +469,8 @@ def build_dashboard(
     """Build the dashboard and write it to out_path (returns the Path)."""
     content = build_dashboard_html(
         competitor_path, profile_path=profile_path, plan_path=plan_path,
-        poster_path=poster_path, reel_path=reel_path, standalone=standalone,
-        generated_at=generated_at,
+        poster_path=poster_path, reel_path=reel_path, media_plan_path=media_plan_path,
+        standalone=standalone, generated_at=generated_at,
     )
     out = Path(out_path)
     out.parent.mkdir(parents=True, exist_ok=True)

@@ -118,6 +118,61 @@ def _category_str(profile):
     return getattr(val, "value", val)             # unwrap an enum
 
 
+def _voice_files_for(url: str, dirs=None) -> list:
+    """Saved review/signal files that belong to THIS subject, matched by normalized-slug
+    prefix (alameda_hc matches alameda-hc.com; >=5 chars so demo fixtures never false-hit)."""
+    import re as _re
+    from pathlib import Path
+    from urllib.parse import urlparse
+    key = _re.sub(r"[^a-z0-9]", "", _re.sub(r"^www\.", "", (urlparse(url).netloc or "").lower()))
+    hits, seen = [], set()
+    for d in (dirs or [Path("reviews/fixtures"), Path("runs/review_snapshots"),
+                       Path("social_intel/fixtures")]):
+        if not Path(d).is_dir():
+            continue
+        for f in sorted(Path(d).glob("*.json")):
+            stem = _re.sub(r"[^a-z0-9]", "", f.stem.lower())
+            if len(stem) >= 5 and (key.startswith(stem) or stem.startswith(key)) \
+                    and f.stem not in seen:
+                seen.add(f.stem)                  # fixtures win over same-name raw snapshots
+                hits.append(f)
+    return hits
+
+
+def _own_voice_themes(url: str, profile_dict, say, *, caller=None) -> list:
+    """SWOT-ready ReviewThemes from the subject's OWN saved customer voice (Google-Maps
+    reviews + Facebook signals). Parse-only; hashing already happened at ingestion."""
+    import json as _json
+    rows = []
+    for f in _voice_files_for(url):
+        try:
+            data = _json.loads(f.read_text(encoding="utf-8"))
+        except Exception:  # noqa: BLE001
+            continue
+        if isinstance(data, dict) and "reviews" in data:      # raw Maps snapshot
+            from reviews.providers.google_maps import reviews_from_snapshot
+            own = bool(data.get("is_own_brand", True))
+            rows += [{"id": f"V{len(rows) + i + 1}", "text": r.text, "is_own_brand": own}
+                     for i, r in enumerate(reviews_from_snapshot(data))]
+        elif isinstance(data, list):                          # sanitized fixture (Maps or FB)
+            for r in data:
+                if isinstance(r, dict) and str(r.get("text") or "").strip():
+                    rows.append({"id": f"V{len(rows) + 1}", "text": str(r["text"]),
+                                 "is_own_brand": bool(r.get("is_own_brand", True))})
+    if not rows:
+        return []
+    if caller is None:
+        caller = _make_caller()
+    cat = None
+    if isinstance(profile_dict, dict):
+        c = profile_dict.get("category")
+        cat = c.get("value") if isinstance(c, dict) else c
+    from reviews.absa import extract_aspect_themes, themes_for_swot
+    found = extract_aspect_themes(rows, category=str(cat or ""), caller=caller)
+    say("      customer voice: %d saved rows -> %d grounded theme(s)" % (len(rows), len(found)))
+    return themes_for_swot(found)
+
+
 def main():
     _load_env()
 
@@ -216,6 +271,17 @@ def main():
     # proof, Ledger-gated) and TOWS reuses it downstream.
     profile_dict = (profile.model_dump(mode="json")
                     if hasattr(profile, "model_dump") else (profile if isinstance(profile, dict) else None))
+
+    # OWN-BRAND CUSTOMER VOICE (owner directive 2026-07-12 — the review work must SHOW on the
+    # dashboard): saved review snapshots/fixtures of the SUBJECT feed ABSA (verbatim-quote gate,
+    # >=2 threshold) and enter the SWOT as evidence-quoted Strengths/Weaknesses (R-5). Parse-only
+    # (PD-4): reads what scripts/pull_reviews.py already saved; no saved data -> nothing, silently.
+    try:
+        voice = _own_voice_themes(args.url, profile_dict, say)
+        if voice:
+            themes = list(themes) + voice
+    except Exception as exc:  # noqa: BLE001 — customer voice never blocks an analyze
+        say("      customer voice skipped (%s)" % type(exc).__name__)
 
     # On-topic market trends -> brand-level Opportunities/Threats (esp. for online brands with no
     # Places peers). Best-effort: any failure (offline / no key) degrades to [] — never blocks.
