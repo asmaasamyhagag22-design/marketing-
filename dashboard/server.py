@@ -166,10 +166,27 @@ def _panel(kind: str, icon: str, title: str, sub: str, has_asset: bool, slug: st
         inner = (f'<div class="cst-empty">{icon}<span>Not generated yet</span>'
                  f'<small>{hint}</small></div>')
     btn = "Regenerate" if has_asset else f"Generate {kind}"
+    # OWNER RULE (2026-07-11): the reel's LANGUAGE and Arabic REGISTER are the user's
+    # explicit choices — selects live next to the button and ride the /generate URL.
+    controls = ""
+    if kind == "reel":
+        controls = (
+            '<div class="cst-opts">'
+            '<label>اللغة <select id="reel-lang">'
+            '<option value="ar" selected>العربية</option>'
+            '<option value="en">English</option></select></label>'
+            '<label id="reel-dialect-wrap">اللهجة <select id="reel-dialect">'
+            '<option value="masri" selected>عامية مصرية</option>'
+            '<option value="fusha">فصحى</option></select></label>'
+            '</div>'
+            '<script>document.getElementById("reel-lang").addEventListener("change",function(){'
+            'document.getElementById("reel-dialect-wrap").style.display='
+            'this.value==="ar"?"inline-flex":"none";});</script>')
     return f"""<div class="cst-panel" id="{kind}-panel">
       <div class="cst-head">{icon} {title} <span class="cst-sub">{sub}</span></div>
       <div class="{stage_cls}" id="{kind}-stage">{inner}</div>
       <div class="cst-log" id="{kind}-log"></div>
+      {controls}
       <button class="cst-btn" id="{kind}-btn" onclick="gen('{kind}')">{btn}</button>
     </div>"""
 
@@ -178,6 +195,11 @@ def _studio_css() -> str:
     c = _C
     return f"""<style>
     .cst-wrap{{max-width:1180px;margin:0 auto;}}
+    .cst-opts{{display:flex;gap:14px;margin:8px 0 6px;flex-wrap:wrap;}}
+    .cst-opts label{{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;
+      color:{c['inkSoft']};font-weight:600;}}
+    .cst-opts select{{padding:7px 10px;border:1.5px solid {c['line']};border-radius:9px;
+      background:#fff;color:{c['ink']};font-family:inherit;font-size:13px;}}
     .cst-grid{{display:grid;grid-template-columns:1fr 1fr;gap:18px;}}
     @media(max-width:760px){{.cst-grid{{grid-template-columns:1fr;}}}}
     .cst-pick{{margin-bottom:18px;}}
@@ -367,6 +389,8 @@ function gen(kind){{
     +(kind==='reel'?'this usually takes 10–20 minutes (Veo) — you can leave it running':'this usually takes a few minutes — you can leave it running')+'</small></div>';
   let gu='/generate/'+kind+'?slug='+encodeURIComponent(SLUG);
   if(SEL){{gu+='&product='+encodeURIComponent(SEL.url)+'&pimg='+encodeURIComponent(SEL.image)+'&pname='+encodeURIComponent(SEL.name);}}
+  if(kind==='reel'){{const L=document.getElementById('reel-lang'),D=document.getElementById('reel-dialect');
+    if(L)gu+='&lang='+L.value; if(D&&L&&L.value==='ar')gu+='&dialect='+D.value;}}
   const es=new EventSource(gu);
   const line=(t,cls)=>{{const d=document.createElement('div');if(cls)d.className=cls;d.textContent=t;
     log.appendChild(d);log.scrollTop=log.scrollHeight;}};
