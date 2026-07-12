@@ -293,7 +293,11 @@ def _product_raw_facts(slug: str, product_name: str | None,
                        product_url: str | None = None, limit_chars: int = 1800) -> str:
     """The picked product's RAW text (verbatim manifest blocks) — the owner's
     raw-data-first rule: generation grounds in the page's actual words, not only the
-    capped profile projection. Pages match by URL first, then by name words."""
+    capped profile projection. PRECISION-FIRST: the product's OWN page (URL match, or
+    its full name in the page — strongest when the name OPENS the page) is taken WHOLE
+    before any single-word mention elsewhere; measured on the real NTI manifest, any-word
+    matching let campus pages that merely say 'fiber' eat the whole budget and the popup
+    course's actual description/hours never reached generation."""
     if not (product_name or product_url):
         return ""
     try:
@@ -306,17 +310,38 @@ def _product_raw_facts(slug: str, product_name: str | None,
         m = _json.loads(mp.read_text(encoding="utf-8"))
         words = [w for w in _re.findall(r"[\w؀-ۿ]+", (product_name or "").lower())
                  if len(w) >= 3]
+        phrase = " ".join(words)
         tgt = (product_url or "").rstrip("/").lower()
-        out: list[str] = []
+        ranked: list[tuple[int, list[str], list[str]]] = []
         for pg in (m.get("pages") or []):
             u = str(pg.get("final_url") or "").rstrip("/").lower()
+            blocks = [t for t in (str((b.get("text") if isinstance(b, dict) else b) or "").strip()
+                                  for b in (pg.get("text_blocks") or [])) if t]
+            if not blocks:
+                continue
+            lows = [t.lower() for t in blocks]
             url_hit = bool(tgt) and (u == tgt or (tgt in u))
-            for b in (pg.get("text_blocks") or []):
-                t = str((b.get("text") if isinstance(b, dict) else b) or "").strip()
-                if not t:
-                    continue
-                if url_hit or (words and any(w in t.lower() for w in words)):
+            first_hit = bool(phrase) and phrase in lows[0]
+            phrase_hit = bool(phrase) and any(phrase in t for t in lows)
+            score = (4 if url_hit else 0) + (2 if first_hit else 0) + (1 if phrase_hit else 0)
+            ranked.append((score, blocks, lows))
+        ranked.sort(key=lambda r: -r[0])   # stable: manifest order within equal scores
+        any_own_page = bool(ranked) and ranked[0][0] > 0
+        out: list[str] = []
+        seen: set[str] = set()   # manifests repeat nested container text — don't spend budget twice
+
+        def _take(ts) -> None:
+            for t in ts:
+                if t not in seen:
+                    seen.add(t)
                     out.append(t)
+
+        for score, blocks, lows in ranked:
+            if score > 0:
+                _take(blocks)   # the product's own page: description/hours/prereqs all belong
+            elif not any_own_page and words:
+                # nothing names the product exactly — honest best-effort any-word fallback
+                _take(t for t, tl in zip(blocks, lows) if any(w in tl for w in words))
             if sum(len(x) for x in out) > limit_chars:
                 break
         return "\n".join(out)[:limit_chars]

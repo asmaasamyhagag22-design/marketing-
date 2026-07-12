@@ -2,8 +2,29 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1254 passed, 0 failed** (2026-07-11; grew from 880 as each audit fix
+Test suite: **1262 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**OWNER ROUND LOCKED (2026-07-12, suite 1262):** three rulings executed. **(1) RAG-to-creative
+regression PINNED — with a measured fix first:** on the real NTI manifest the owner's popup course
+text never actually reached generation — `_product_raw_facts` any-word matching let campus pages
+that merely say "fiber" eat the whole 1800-char budget (measured pre-fix: `(72 Hours)` and the
+description ABSENT, Smart Village noise present). Fix: PRECISION-FIRST page ranking (URL match 4 /
+full-name-OPENS-page 2 / full-name-anywhere 1; a scored page is the product's OWN page and is
+taken WHOLE; any-word matching is now only the honest fallback when nothing names the product;
+nested-container duplicate blocks deduped so the budget buys unique text). Measured after: the
+modal detail page leads — hours + description verbatim in, noise out. One fixture, two guarantees
+(the owner's design): `tests/fixtures/nti_popup_manifest.json` is a VERBATIM trim of the real
+coursesev.php?catID=205 popup-family manifest — it documents the modal-resolved modules/2631.html
+page shape AND drives the single regression test (manifest → `_product_raw_facts` → concept
+prompt: popup verbatim asserted present, 'fiber'-only noise asserted absent) so no refactor
+silently re-orphans the manifest. **(2) BRAND-COHERENCE honestly classified: PROMPT-LAYER**
+(same class as pre-U4 compliance) — the model usually obeys; the deterministic guard is the HITL
+gate, NOT this rule; never read it as a hard gate. **T-9 (candidate criterion, NOT a build
+item):** if a coherence-violating hook ever passes HITL unnoticed, that is the trigger to
+consider a cheap LLM-judge coherence check at U4 time. **(3) Apify monthly cap ON RECORD:
+$20/month** (owner message 2026-07-12) — the last outstanding §10 condition; facebook_collector
+integration unblocked (recon → hashed fixtures → provider wrap, in that order).
 
 **POPUP BUG CLOSED (owner URL dey/coursesev.php?catID=205, 2026-07-12) — three measured loops:**
 the ajax resolver was INNOCENT (run directly on the page it reconstructed all 6 modal URLs).

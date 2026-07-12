@@ -1,0 +1,56 @@
+{
+  "_doc": "Verbatim trim of scrapes/nti_sci_eg_20260712_065034/manifest.json — the coursesev.php?catID=205 POPUP FAMILY (owner ratified 2026-07-12). One fixture, two guarantees: (1) the popup-resolved modules/2631.html page shape survives in manifests; (2) RAG-to-creative wiring — its verbatim text must reach the concept prompt, and the single-word 'fiber' noise page must NOT crowd it out (the measured pre-fix failure).",
+  "pages": [
+    {
+      "final_url": "https://nti.sci.eg/nti_sites.html",
+      "page_type": "branches_locations",
+      "text_blocks": [
+        {
+          "text": "The Smart Village campus encompasses several state-of-art of telecommunications facilities. The campus includes one of the most important fiber optic centers (FOC) in the region. NTI's FOC is utilized for providing different activities such as consultations, training, and applied research for technicians who are working in the construction, operation, and maintenance of fiber optic networks fields."
+        }
+      ]
+    },
+    {
+      "final_url": "https://nti.sci.eg/dey/coursesev.php?catID=205",
+      "page_type": "courses",
+      "text_blocks": [
+        {
+          "text": "Category: Fiber Optics"
+        },
+        {
+          "text": "Fiber Networks Essentials\n(Registration closed for this track)"
+        }
+      ]
+    },
+    {
+      "final_url": "https://nti.sci.eg/dey/pages/modules/2631.html",
+      "page_type": "other",
+      "text_blocks": [
+        {
+          "text": "Fiber Networks Essentials - Module Details"
+        },
+        {
+          "text": "Module Name: Fiber Networks Essentials (72 Hours)"
+        },
+        {
+          "text": "Module Level: 1"
+        },
+        {
+          "text": "Technical Module Duration: 60 Hours."
+        },
+        {
+          "text": "Optical Fiber Network Planning course is designed for Telecom Engineers who are interested or working in optical Fiber networks, It will offer a broad base of knowledge around Optical Fiber components and technologies for different applications like OLAN, Data centers, FTTH Networks."
+        },
+        {
+          "text": "Trainers will be familiar with:\nTypes and Standards of the Optical Fiber network components.\nPlanning and designing of FTTH network, and its components, architectures, deployment and testing."
+        },
+        {
+          "text": "Target Audience\nCommunication and Network Engineers.\nThose who wish to join the field of fiber network planning."
+        },
+        {
+          "text": "Module Prerequisites\nThere is no prerequisite module for this course, but learners are encouraged to have the basic knowledge of fiber communications and components."
+        }
+      ]
+    }
+  ]
+}
