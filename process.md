@@ -2,8 +2,32 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1271 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
+Test suite: **1276 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**REEL REGRESSION — OWNER ROUND (2026-07-12 "الريل البشع", suite 1276): four roots found by
+forensics on HER actual run (outputs/nti_sci_eg_reel_plan.json + reel/), each fixed measured.**
+**(1) HITL BETRAYAL (the "prompt never executed"):** reel/creative.py's pre-render eval ran on
+the EXECUTE-approved plan and, on a weak (or even TIED — `>=`) score, silently swapped in a
+freshly regenerated plan the user never saw. Now: on plan_override the eval is ADVISORY-ONLY
+(logged); the approved plan renders verbatim — gates may veto/log, never substitute. **(2) SPEED
+("منلحقش نفهم"):** her plan carried 3.2-3.3 words/sec scenes (13 Arabic words in 4.0s) and the
+whole track was atempo-squeezed up to 1.35x. Three-layer fix: director PACE BUDGET hard rule
+(<=2 words/sec of duration_s), storyboard LISTENABLE PACING (a narrated scene stretches to
+0.3s + words/2.2, cap 8s — the VIDEO stretches, never the audio squeezed), atempo cap 1.35 ->
+1.12 (extracted `_fit_filter`, unit-tested). **(3) EMOTION LOST:** voiceover.py used only the
+FIRST scene's voiceover_delivery for the whole film — her reel was narrated entirely as
+"slightly frustrated". Now the full per-line ARC goes into the single-call performance brief
+(order-preserved; works for gpt-audio system prompt + Gemini directive; edge stays direction-
+less, documented), plus an anti-rush pace line in every mood. **(4) ONE PHOTO x6:** with a
+featured product the director rule forced image_index ALWAYS 0 — valid only when the product's
+real photo anchors the pool (CLI substitutes selected=[product_image]); her photo-less course
+got a generic about-photo seeded into all 6 scenes. Now ALWAYS-0 requires
+product_photo_anchored (pool==1); a photo-less offering locks the MESSAGE on the product while
+visuals move through DIFFERENT real photos. +5 hermetic tests (test_reel_owner_round_0712) +
+the featured-product test amended to the new truthful spec; all 151 reel/voice/creative tests
+green. NOTE: investigation ran in-loop — the 4-agent workflow died on the session subagent
+limit (resets 13:40); findings were reproduced first-hand.
 
 **ABSA SHIPPED (owner-APPROVED design, fixtures-first, 2026-07-12, suite 1271):** `reviews/
 absa.py` — the customer-voice layer, grounded by CODE not model trust: every mention must cite

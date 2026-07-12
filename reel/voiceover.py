@@ -37,12 +37,17 @@ _SPEECH_VOICE = "onyx"          # valid /audio/speech voice for the fallback pat
 _AR_RE = re.compile(r"[؀-ۿݐ-ݿﭐ-﷿ﹰ-﻿]")
 
 
-def _instructions_for(lines: list[str], delivery: str = "", tone: str = "") -> str:
+def _instructions_for(lines: list[str], delivery: "str | list[str] | None" = "",
+                      tone: str = "") -> str:
     """Performance brief for the narration. ONE consistent narrator, warm and expressive but
     controlled — never flat/robotic and never a news reader. Adapts to the brand TONE (a
     luxury brand reads refined & unhurried; a playful one reads bright & energetic) so the
     voice fits the brand instead of a hardcoded 'appetizing food ad' (that was a vertical
-    leak — wrong for jewelry, clinics, telecom …). `tone` comes from the brand profile."""
+    leak — wrong for jewelry, clinics, telecom …). `tone` comes from the brand profile.
+
+    `delivery` may be the director's PER-LINE list — the reel's emotional ARC. The old code
+    kept only the FIRST entry, so a frustrated hook directed the whole film (owner, 2026-07-12:
+    'الاحساس راح'); now every line carries its own direction, in one single-call performance."""
     env = os.environ.get("REEL_TTS_INSTRUCTIONS")
     if env:
         base = env
@@ -64,9 +69,16 @@ def _instructions_for(lines: list[str], delivery: str = "", tone: str = "") -> s
             "You are ONE consistent, professional human voice-over artist narrating a premium "
             f"brand film. Keep the SAME voice, character and energy from the first word to the "
             f"last — do NOT change persona between lines. {dialect}Perform it {mood}. "
-            "Never flat, never robotic, never a news anchor."
+            "Never flat, never robotic, never a news anchor. PACE: measured and clear — a "
+            "first-time listener must catch every word; never rush, even when energetic."
         )
-    if delivery:
+    if isinstance(delivery, (list, tuple)):
+        arc = [f"{i}) {str(d).strip().rstrip('.')}" for i, d in enumerate(delivery, 1)
+               if d and str(d).strip()]
+        if arc:
+            base += (" The script's sentences follow this emotional ARC, in order — perform "
+                     "each sentence with its direction: " + "; ".join(arc) + ".")
+    elif delivery:
         base += f" Emotional direction for this passage: {delivery}."
     return base
 
@@ -273,6 +285,20 @@ def _resolve_backend(backend: Optional[str]) -> str:
     return "edge"
 
 
+def _fit_filter(raw_dur: float, total: float) -> str:
+    """The ffmpeg audio filter that lays the read over the footage. HARD PACING RULE (owner,
+    2026-07-12: the sped-up narration was unintelligible): atempo is a last-mile polish capped
+    at 1.12x — beyond that the words themselves must get more screen time (the storyboard's
+    listenable-pacing stretch), never the audio squeezed to fit."""
+    speak = max(0.5, total - 0.25)
+    af = "adelay=250|250"
+    speed = raw_dur / speak
+    if speed > 1.02:
+        af += f",atempo={min(1.12, speed):.3f}"
+    af += ",apad"
+    return af
+
+
 def _audio_dur(path: Path) -> Optional[float]:
     """Seconds of an audio file, parsed from ffmpeg's stderr (no ffprobe needed)."""
     try:
@@ -352,8 +378,7 @@ def synth_voiceover(
     joiner = "،  " if is_ar else ".  "
     script = joiner.join(p.rstrip(" ،.!؟?") for p in parts)
     total = sum(max(0.5, float(d)) for d in durations) or 10.0
-    seed_delivery = next((d for d in (deliveries or []) if d), "")
-    instructions = _instructions_for(lines, seed_delivery, tone)
+    instructions = _instructions_for(lines, list(deliveries or []), tone)
 
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -376,15 +401,10 @@ def synth_voiceover(
             return None
 
         # Time-fit to the footage. 0.25s lead-in keeps the read off the hard cut; if the read
-        # runs long, speed it JUST enough to fit (capped so it never sounds sped-up); then pad
-        # trailing silence to the full length. `-t total` trims only that trailing silence.
+        # runs long, speed it JUST enough to fit; then pad trailing silence to the full length.
+        # `-t total` trims only that trailing silence.
         raw_dur = _audio_dur(raw) or total
-        speak = max(0.5, total - 0.25)
-        af = "adelay=250|250"
-        speed = raw_dur / speak
-        if speed > 1.02:
-            af += f",atempo={min(1.35, speed):.3f}"
-        af += ",apad"
+        af = _fit_filter(raw_dur, total)
         run_ffmpeg([
             "-i", str(raw), "-af", af,
             "-t", f"{total:.2f}", "-ar", "44100", "-ac", "2",

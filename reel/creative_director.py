@@ -215,14 +215,16 @@ _DELIVERY_EG = {
 
 
 def _system_prompt(n_scenes: int, language: str, mode: str = "generic",
-                   featured: Optional[str] = None, compliance: str = "") -> str:
+                   featured: Optional[str] = None, compliance: str = "",
+                   product_photo_anchored: bool = False) -> str:
     motion = _MOTION_GUIDANCE.get(mode, _MOTION_GUIDANCE["generic"])
     deliveries = _DELIVERY_EG.get(mode, _DELIVERY_EG["generic"])
     # Ad-safety, ONE source (poster.contracts.compliance_for): a clinic/beauty reel must obey the
     # same policy as its poster — no before/after, no clinical claims, no guaranteed results. Empty
     # for categories with no rule beyond brand-safety, so most reels are unchanged.
     compliance_line = (f"{compliance}\n\n" if compliance else "")
-    if featured:                     # ONE picked product: several SHOTS of the SAME item
+    if featured and product_photo_anchored:
+        # ONE picked product WITH its real photo anchoring the pool: SHOTS of the SAME item.
         featured_line = (
             f"FEATURED PRODUCT: {featured}. This reel advertises ONLY this product — EVERY scene is "
             "the SAME product (REAL PHOTO index 0), varied by SHOT and ACTION (macro detail, in-hand "
@@ -231,6 +233,22 @@ def _system_prompt(n_scenes: int, language: str, mode: str = "generic",
         seq_rule = ("Anchor EVERY scene on the ONE featured product (index 0); vary the SHOT and the "
                     "ACTION, not the item — a fast sequence of different angles/uses of the SAME product.")
         check_seq = "on the SAME featured product with varied shots"
+    elif featured:
+        # A picked product/offering with NO dedicated photo (a course, a service): the MESSAGE
+        # stays locked on it, but the visuals move through DIFFERENT real brand photos — the
+        # owner's NTI reel (2026-07-12) seeded one generic 'about' photo into all 6 scenes
+        # because the old rule forced index 0 even when photo 0 was not the product.
+        featured_line = (
+            f"FEATURED OFFERING: {featured}. This reel advertises ONLY this offering — every line "
+            "of copy is about it. No dedicated product photo exists, so ground each scene in a "
+            "DIFFERENT attached real photo whose content fits that scene's message.\n\n")
+        image_rule = ("- image_index: the real photo whose content fits THIS scene — use a "
+                      "DIFFERENT photo per scene when several exist; never repeat one photo for "
+                      "every scene.\n")
+        seq_rule = ("Keep every scene's MESSAGE locked on the featured offering while the visuals "
+                    "move through the brand's real photos — a varied, alive sequence, never one "
+                    "static image repeated.")
+        check_seq = "message-locked on the featured offering across varied real photos"
     else:                            # whole-brand: a distinct product per scene
         featured_line = ""
         image_rule = ("- image_index: which REAL photo to bring to life — a different SHOT/angle of the "
@@ -324,7 +342,9 @@ def _system_prompt(n_scenes: int, language: str, mode: str = "generic",
         + image_rule
         + motion + "\n"
         f"- voiceover: one short, natural narration line in {language} that carries the story and "
-        "sells the moment.\n"
+        "sells the moment. PACE BUDGET (hard rule — a rushed narration is unintelligible): the line "
+        "must fit its scene at a natural speaking pace, AT MOST 2 words per second of duration_s "
+        "(a 4s scene fits ~8 words). Count your words; trim the LINE, never rush the listener.\n"
         "- voiceover_delivery: the EMOTION/performance in a few words "
         f"(e.g. {deliveries}). REAL, warm, HUMAN feeling — but MEASURED: never flat/robotic and never "
         "melodramatic or over-acted (owner: 'no over-the-top emotion'). Vary it across scenes.\n"
@@ -428,7 +448,8 @@ def design_creative_reel(
         from poster.contracts import compliance_for
         resp, usage = caller(
             _system_prompt(n_scenes, lang, _vertical_mode(profile), featured=featured_product,
-                           compliance=compliance_for(_v(profile, "category"))),
+                           compliance=compliance_for(_v(profile, "category")),
+                           product_photo_anchored=bool(featured_product) and len(used) == 1),
             user, _ReelResponse, group_name="creative_director", images=parts,
         )
     except Exception as e:  # noqa: BLE001 — a call failure must never break the reel pipeline

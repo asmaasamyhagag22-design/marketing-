@@ -57,6 +57,12 @@ def build_creative_storyboard(reel: CreativeReel, brief: PosterBrief) -> Storybo
         # enough to READ — research CPS rule ~ 1.5s + 0.35s/word, hard 3s floor for a phrase.
         base = max(1.5, min(s.duration_s, 8.0))
         dur = min(8.0, max(base, 3.0, 1.5 + 0.35 * words)) if cap else base
+        # LISTENABLE PACING (owner, 2026-07-12: 'سرعة الصوت صعبة أوي منلحقش نفهم'): a narrated
+        # scene must hold long enough to SAY its line at a natural pace (~2.2 words/sec + a
+        # breath). The VIDEO stretches to fit the words — never the audio sped to fit the video.
+        vo_words = len((s.voiceover or "").split())
+        if vo_words:
+            dur = min(8.0, max(dur, round(0.3 + vo_words / 2.2, 2)))
         # DESIGNED captions (owner: 'text with no design'): route the caption into the fields that
         # trigger the template's DESIGNED styles — scene 0 -> the hero LOCKUP + logo (kind=intro),
         # the last scene -> the accent CTA CHIP + logo (kind=outro), middle captions -> the big
@@ -133,10 +139,16 @@ def render_creative_reel(
     # stranger test + caption rules BEFORE the 10-15 min Veo render. A weak plan is regenerated once
     # (a cheap Opus call) rather than rendered; the compositor's scene_qa still checks each rendered
     # clip afterwards. Deterministic, so it never adds a network dependency.
+    # HITL SANCTITY (owner, 2026-07-12 — "you wrote a prompt that was never executed"): a
+    # user-APPROVED plan is FINAL creative. Gates may check and LOG it, but NOTHING may swap in
+    # a regenerated plan the user never saw — that is exactly the betrayal the law forbids.
     try:
         from reel.plan_eval import evaluate_reel_plan
         verdict = evaluate_reel_plan(creative, profile=profile, featured=bool(featured_product))
-        if not verdict.ok:
+        if not verdict.ok and plan_override:
+            logger.info("reel plan eval on APPROVED plan: score=%d issues=%s -> advisory only, "
+                        "the user's plan renders verbatim", verdict.score, verdict.issues)
+        elif not verdict.ok:
             logger.info("reel plan eval: score=%d issues=%s -> regenerating once",
                         verdict.score, verdict.issues)
             retry = design_creative_reel(profile, photos, n_scenes=n_scenes, language=language,

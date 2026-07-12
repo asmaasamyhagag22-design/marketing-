@@ -225,12 +225,19 @@ def test_prompt_has_a_physics_logic_check_and_fast_cut_pacing():
 
 
 def test_featured_product_makes_the_whole_reel_one_product():
-    # Owner: "أنا هعملّ ريل على منتج بعينه مش ميت منتج". When one product is featured, EVERY scene is
-    # the SAME product (real photo index 0), varied by shot/action — not a mixed montage.
-    p = _system_prompt(5, "en", "generic", featured="Rosemary Hair Oil")
+    # Owner: "أنا هعملّ ريل على منتج بعينه مش ميت منتج". When one product is featured WITH its real
+    # photo anchoring the pool, EVERY scene is the SAME product (real photo index 0), varied by
+    # shot/action — not a mixed montage. AMENDED 2026-07-12 (owner's NTI reel): a featured offering
+    # with NO product photo must NOT repeat one generic photo six times — the message locks on the
+    # offering while the visuals move through different real brand photos.
+    p = _system_prompt(5, "en", "generic", featured="Rosemary Hair Oil",
+                       product_photo_anchored=True)
     assert "Rosemary Hair Oil" in p
     assert "SAME product" in p
     assert "ALWAYS 0" in p                                    # every scene reuses the one seed photo
+    # featured but photo-less (a course/service): varied real photos, message-locked
+    course = _system_prompt(5, "ar", "generic", featured="Fiber Course")
+    assert "FEATURED OFFERING" in course and "ALWAYS 0" not in course
     # the whole-brand default still varies the photo per scene
     montage = _system_prompt(5, "en", "generic")
     assert "DISTINCT photo" in montage and "ALWAYS 0" not in montage
