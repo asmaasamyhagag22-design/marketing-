@@ -132,3 +132,27 @@ def test_picker_for_slug_reads_sibling_profile(tmp_path):
     from dashboard.products import products_for_slug
     out = products_for_slug("acme", scrapes_dir=str(tmp_path), out_dir=str(tmp_path / "no_outputs"))
     assert out and out[0]["name"] == "Data Science Bootcamp" and out[0]["price_text"] == "EGP 5,000"
+
+
+def test_compound_cms_filenames_are_leaves_owner_popup_bug():
+    # OWNER POPUP BUG (nti dey/coursesev.php?catID=205 — the course-details modal never
+    # scraped): 'coursesev' is a compound CMS filename; exact matching missed it so the
+    # page never earned leaf priority and sat unfetched. Prefix match fixes the family.
+    assert is_leaf_detail("https://www.nti.sci.eg/dey/coursesev.php?catID=205")
+    assert is_leaf_detail("https://x.com/serviceslist.php?serviceID=7")
+    assert not is_leaf_detail("https://x.com/coursesev.php?page=2")     # still needs an id param
+    assert not is_leaf_detail("https://x.com/contactus.php?id=3")       # not an offering prefix
+
+
+def test_regression_fixture_coursesev_modal_resolves():
+    # The REAL page (saved fixture): the ajax resolver must reconstruct the modal URLs
+    # (dey/pages/modules/<data-target>.html) exactly as it does for the eta family.
+    from pathlib import Path
+    from scraper.ajax_details import discover_ajax_details
+    html = Path("tests/fixtures/nti_coursesev_catid205.html").read_text(encoding="utf-8")
+    # hermetic: serve the popup JS template from a stub instead of the network
+    js = 'popup.load("pages/modules/" + link.getAttribute("data-target") + ".html");'
+    out = list(discover_ajax_details(html, "https://www.nti.sci.eg/dey/coursesev.php?catID=205",
+                                     fetch=lambda u: js))
+    assert any(u.endswith("/dey/pages/modules/2631.html") for u in out)
+    assert len(out) >= 5

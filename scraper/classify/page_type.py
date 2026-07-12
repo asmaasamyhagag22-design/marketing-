@@ -160,9 +160,14 @@ def is_leaf_detail(url: str) -> bool:
         if segments[i] in LEAF_DETAIL_SEGMENTS and segments[i + 1]:
             return True
     if segments:
-        # strip a CMS extension so 'courses.php' / 'track.aspx' match the segment list
+        # strip a CMS extension so 'courses.php' / 'track.aspx' match the segment list.
+        # PREFIX match (owner popup bug, nti dey/coursesev.php?catID=205): CMS files are
+        # routinely compound-named — coursesev / courseslist / servicesdetail — so an exact
+        # match missed them and the modal-bearing pages never earned leaf priority. A >=4-char
+        # segment prefix keeps it safe ('menuitem'->menu, 'storefront'->store).
         last = segments[-1].rsplit(".", 1)[0]
-        if (last in LEAF_DETAIL_SEGMENTS
+        if (any(last == seg or (len(seg) >= 4 and last.startswith(seg))
+                for seg in LEAF_DETAIL_SEGMENTS)
                 and any(k.lower().endswith("id") for k in query.keys())):
             return True
     return False
