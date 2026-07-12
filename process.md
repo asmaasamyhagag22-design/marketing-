@@ -2,8 +2,25 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1304 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
+Test suite: **1309 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**VEO-AUDIO GATE + REEL AUDIT TRAIL SHIPPED (roadmap Phase-1 #1 — the last brand-safety
+sliver, 2026-07-12, suite 1309).** Measured first: the CREATIVE/CLI path's Veo audio is
+STRUCTURALLY STRIPPED (every compositor mux maps video-only; spoken audio = the Ledger-gated
+TTS VO + instrumental music) — nothing to transcribe there, the guarantee is structural. The
+REAL ungated slice was the GENERATED path (web API): `_voiceover_clause` makes Veo SPEAK
+natively and `build_animated_reel(keep_audio=True)` keeps it — the intended TEXT was gated but
+what Veo actually SAYS was not. New `reel/audit.py`: `transcribe_clip` (Gemini native audio via
+the existing caller protocol — media parts are mime-agnostic), `audit_spoken_audio`
+(ledger.audit_text on the transcript), `gate_clip_audio` (unsourced spoken hard claim → the
+clip is MUTED in place — fail-closed: visuals + gated overlay audio survive, rogue speech never
+ships), wired per-clip right after each Veo render. Plus the poster-parity per-asset trail:
+`build_reel_audit`/`write_reel_audit` export `<reel>.audit.json` (coverage scoping + the copy
+audit claim→source + per-scene motion-QA verdicts — the compositor now returns them on
+ReelRenderResult.scene_qa — + the audio-surface statement), wired on BOTH paths. +4 hermetic
+tests. Phase 1 of the roadmap is now COMPLETE on the brand-safety axis; next per the ratified
+order: Meta Ad Library competitor-ads intelligence (Phase 2 #8).
 
 **SEED FRAMING — "الفريم كله كأنه زوم مقصقص" fixed at the root (owner, 2026-07-12, suite
 1304).** MEASURED: the seed normalizer's `cover` default center-cropped EVERY landscape real

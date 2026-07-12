@@ -274,6 +274,7 @@ def build_brand_generated_reel(
     durs = _grid_durations(len(stills))
     clips: list[str] = []
     veo_ok = 0
+    audio_verdicts: list = []   # per-clip transcription-gate records (exported on the audit)
     for j, (si, still) in enumerate(stills):
         clip = work / f"_scene_clip{j}.mp4"
         d = durs[j] if j < len(durs) else 5.0
@@ -287,6 +288,13 @@ def build_brand_generated_reel(
                          reference_image=still)
             veo_ok += 1
             log(f"[veo] scene {si + 1}/{n_scenes} -> REAL video")
+            # AUDIO GATE (roadmap Phase-1 #1): Veo SPEAKS natively on this path and
+            # build_animated_reel keeps its audio — verify what was actually SAID against
+            # the Ledger; an unsourced spoken hard claim MUTES the clip (fail-closed:
+            # visuals survive, rogue speech never ships).
+            from reel.audit import gate_clip_audio
+            audio_verdicts.append({"scene": si,
+                                   **gate_clip_audio(clip, profile, caller, log=log)})
         except Exception as exc:  # noqa: BLE001 — Veo failed this scene: Ken Burns fallback only
             log(f"[veo] scene {si + 1} FAILED ({type(exc).__name__}: {str(exc)[:90]}) -> Ken Burns")
             _make_clip(Path(still), clip, move="in" if j % 2 == 0 else "out",
@@ -305,6 +313,12 @@ def build_brand_generated_reel(
     # keep_audio: Veo 3.1's NATIVE audio (the gated spoken voiceover + ambience) survives the
     # assembly — the reel TALKS; silent fallback clips are padded so the audio chain holds.
     reel = build_animated_reel(clips, out_path, width=width, height=height, keep_audio=True)
+    # per-asset trail (poster parity): coverage + the audio-gate verdicts, next to the reel
+    from reel.audit import build_reel_audit, write_reel_audit
+    write_reel_audit(build_reel_audit(
+        profile, audio_verdicts=audio_verdicts,
+        audio_surface="generated-path: Veo native speech — transcription-gated "
+                      "(an unsourced spoken claim mutes its clip)"), reel)
     for c in clips:                                    # tidy the per-scene clips
         try:
             Path(c).unlink()

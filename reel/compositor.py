@@ -69,6 +69,7 @@ def render_reel(
     W, H = _even(REEL_W * scale), _even(REEL_H * scale)
     fade = 0.4
     fallback_used = (provider.name == "stub")
+    scene_qa: list = []   # per-scene motion-QA verdicts (exported on the audit trail)
     fb = fallback_provider or KenBurnsProvider(
         storyboard.content_images, fallback_palette=storyboard.palette_hex or None
     )
@@ -124,6 +125,7 @@ def render_reel(
                 # real-photo seed is the reference.
                 if qa_caller is not None:
                     from .scene_qa import check_scene
+                    _v_final = None
                     qa_ref = qa_reference_image
                     if qa_ref is None and ref:
                         try:
@@ -134,6 +136,7 @@ def render_reel(
                             qa_ref = None
                     v = check_scene(raw, product_hint=qa_product_hint,
                                     reference_image=qa_ref, caller=qa_caller)
+                    _v_final = v
                     if v.checked and not v.overall_pass:
                         print(f"[reel] scene {i} QA fail ({v.reason}); regenerating once",
                               file=sys.stderr)
@@ -142,6 +145,7 @@ def render_reel(
                             raw = provider.generate(scene.visual_prompt, **gen_kwargs)
                             v2 = check_scene(raw, product_hint=qa_product_hint,
                                              reference_image=qa_ref, caller=qa_caller)
+                            _v_final = v2
                             good = (not v2.checked) or v2.overall_pass
                         except Exception:  # noqa: BLE001 — a failed retry drops to the fallback
                             good = False
@@ -150,6 +154,8 @@ def render_reel(
                                   file=sys.stderr)
                             fallback_used = True
                             raw = fb.generate(scene.visual_prompt, **gen_kwargs)
+                    if _v_final is not None:
+                        scene_qa.append({"scene": i, **_v_final.model_dump()})
             norm = tmpd / f"norm{i}.mp4"
             d = scene.duration_s
             fout = max(0.0, d - fade)
@@ -228,4 +234,5 @@ def render_reel(
         reel_path=str(out_path), filename=out_path.name,
         width=W, height=H, duration_s=storyboard.total_duration_s, fps=fps,
         provider=provider.name, fallback_used=fallback_used, has_audio=has_audio,
+        scene_qa=scene_qa,
     )

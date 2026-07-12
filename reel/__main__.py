@@ -213,6 +213,13 @@ def main() -> int:
         )
         if result is not None:
             _append_brand_endcard(profile, result.reel_path, enabled=not args.no_logo)
+            # per-asset trail (poster parity): copy audit + scene-QA verdicts + the
+            # structural audio statement, exported next to the reel.
+            from reel.audit import build_reel_audit, write_reel_audit
+            audit_p = write_reel_audit(
+                build_reel_audit(profile, creative, render_result=result), result.reel_path)
+            if audit_p:
+                print(f"     audit trail -> {audit_p}")
             print(f"\n[ok] CREATIVE reel -> {Path(result.reel_path).resolve()}")
             print(f"     concept: {creative.concept[:90]}")
             print(f"     {result.width}x{result.height}  {result.duration_s}s  "

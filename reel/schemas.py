@@ -94,6 +94,7 @@ class ReelRenderResult(BaseModel):
     provider: str
     fallback_used: bool = False
     has_audio: bool = False
+    scene_qa: list = []              # per-scene motion-QA verdict dicts (additive, 2026-07-12)
 
 
 # ---------------------------------------------------------------------
