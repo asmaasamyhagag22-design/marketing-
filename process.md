@@ -2,7 +2,7 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1288 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
+Test suite: **1298 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
 
 **DASHBOARD ROUND — the visual mess fixed + "حط فيها كل حاجة" (owner 2026-07-12, screenshot).**
@@ -17,7 +17,8 @@ polish: pretty dates (Sun 05 Jul), snake_case types spaced, no empty “” hook
 export: "Priority actions — أولويات التنفيذ" (tows.priority_actions were silently dropped;
 ranked chips — rank is a REAL sequence) and "Data coverage — تغطية البيانات" (the scrape-QA
 summary strip, best-effort). Studio-side changes land on the next server restart (owner's
-call). +2 tests; test_products re-pinned to the aggregate.
+call). +1 test; test_products re-pinned to the aggregate. (Commit 63c9d9a's message says
++2/1299 — miscounted; the truth is +1/1298.)
 
 **POSTER PRODUCT AUTHENTICITY — the topshoes invented-sneaker chain CLOSED (owner-caught,
 2026-07-12).** The mapped 3-link chain, each link fixed: **(1) starved photos:** topshoes'
