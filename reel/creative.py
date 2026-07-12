@@ -227,7 +227,41 @@ def render_creative_reel(
                            type(exc).__name__)
             seeds = None
 
+    # OWNER VERDICT (calibration #1: the raw distant photo read as "قطع خالص"): in
+    # fully-generated mode a scene whose seed could not be generated is DROPPED (a gate
+    # veto, logged) rather than displayed as a raw photo — unless fewer than 3 scenes
+    # would remain (the absolute last resort keeps the reel alive).
+    if seeds is not None:
+        keep = [i for i, (sp, _r) in enumerate(seeds) if sp]
+        if len(keep) >= 3 and len(keep) < len(seeds):
+            dropped = [i for i in range(len(seeds)) if i not in keep]
+            print(f"[reel] {len(dropped)} scene(s) dropped — generated seed unavailable "
+                  f"(the ruling keeps raw photos off the display path): {dropped}")
+            creative.scenes = [creative.scenes[i] for i in keep]
+            seeds = [seeds[i] for i in keep]
+
     storyboard = build_creative_storyboard(creative, brief, seeds=seeds)
+
+    # DEAD-TAIL FIT (owner, twice: "الكلام خلص من 10 ثواني والفيديو مكمل"): the video's
+    # total must track the SURVIVING speech (post-grounding). Estimate the read at the
+    # same natural pace the pacing stretch uses, and SHRINK scenes proportionally when
+    # the video would outlive the narration by more than ~2s (2.0s per-scene floor).
+    if with_voiceover:
+        _lines = [(s_.voiceover or "").strip() for s_ in creative.scenes]
+        _words = sum(len(l.split()) for l in _lines if l)
+        _n = sum(1 for l in _lines if l)
+        if _words:
+            speech_est = _words / 2.2 + 0.4 * max(0, _n - 1) + 0.5
+            total = storyboard.total_duration_s or 0.0
+            target = speech_est + 2.0
+            if total > target > 0:
+                scale = target / total
+                for sc_ in storyboard.scenes:
+                    sc_.duration_s = round(max(2.0, sc_.duration_s * scale), 2)
+                storyboard.total_duration_s = round(
+                    sum(s_.duration_s for s_ in storyboard.scenes), 2)
+                print(f"[reel] dead-tail fit: video {total:.1f}s -> "
+                      f"{storyboard.total_duration_s:.1f}s (speech ~ {speech_est:.1f}s)")
 
     vo_path = None
     if with_voiceover:

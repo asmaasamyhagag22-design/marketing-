@@ -70,7 +70,10 @@ def _instructions_for(lines: list[str], delivery: "str | list[str] | None" = "",
             f"brand film. Keep the SAME voice, character and energy from the first word to the "
             f"last — do NOT change persona between lines. {dialect}Perform it {mood}. "
             "Never flat, never robotic, never a news anchor. PACE: measured and clear — a "
-            "first-time listener must catch every word; never rush, even when energetic."
+            "first-time listener must catch every word; never rush, even when energetic. "
+            "PRONUNCIATION: any Latin brand or program name embedded in the Arabic (e.g. "
+            "'HireReady', 'NTI') is pronounced as its natural ENGLISH word — one fluent word, "
+            "never letter-by-letter spelling, never Arabized syllables."
         )
     if isinstance(delivery, (list, tuple)):
         arc = [f"{i}) {str(d).strip().rstrip('.')}" for i, d in enumerate(delivery, 1)

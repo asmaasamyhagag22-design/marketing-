@@ -111,13 +111,23 @@ def generate_scene_seeds(creative: Any, photos: List[str], *, profile: dict,
                                    dna_lines=dna_lines, locale_line=locale_line,
                                    n_refs=1 if ref else 0)
         seed_path: Optional[str] = None
-        for attempt in (1, 2):
+        # calibration #2 (owner: the raw distant building photo read as "قطع خالص"): a third
+        # attempt drops the photo conditioning entirely — a clean on-brief scene beats a
+        # world-breaking raw photo — before the caller ever considers a fallback.
+        prompt_plain = build_seed_prompt(getattr(sc, "veo_prompt", ""), brand_name=name,
+                                         dna_lines=dna_lines, locale_line=locale_line,
+                                         n_refs=0)
+        for attempt in (1, 2, 3):
             try:
                 p = out_root / f"seed_{uuid.uuid4().hex[:8]}.png"
+                a_prompt = (prompt if attempt == 1
+                            else prompt + "\nNatural anatomy, realistic photographic light, "
+                                 "one clean focal point." if attempt == 2
+                            else prompt_plain)
                 generate_oneshot_poster(
-                    prompt if attempt == 1 else prompt + "\nNatural anatomy, realistic "
-                    "photographic light, one clean focal point.",
-                    p, logo_bytes=None, product_images=[ref] if ref else None)
+                    a_prompt,
+                    p, logo_bytes=None,
+                    product_images=([ref] if (ref and attempt < 3) else None))
                 stats["generated"] += 1
                 v = check_seed_frame(p, caller=caller, brand_hint=name)
                 if (not v.checked) or v.overall_pass:

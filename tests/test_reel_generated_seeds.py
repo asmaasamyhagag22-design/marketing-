@@ -56,6 +56,49 @@ def test_storyboard_maps_generated_seed_and_real_judging_ref():
     assert sb_old.scenes[0].place_ref_url is None
 
 
+def test_seedless_scenes_drop_and_dead_tail_fits(monkeypatch, tmp_path):
+    # Calibration #2 (owner): a raw photo on display read as "قطع خالص" -> a seedless scene
+    # DROPS (>=3 guard); and the video total tracks the surviving speech (dead-tail fit).
+    import reel.creative as rc
+    import reel.plan_eval as pe
+    from reel.plan_eval import ReelPlanVerdict
+    monkeypatch.setattr(pe, "evaluate_reel_plan",
+                        lambda *a, **k: ReelPlanVerdict(ok=True, score=90))
+    captured: dict = {}
+    monkeypatch.setattr(rc, "synth_voiceover",
+                        lambda lines, durs, out, **kw: captured.update(vo=list(lines),
+                                                                       durs=list(durs)) or None)
+    monkeypatch.setattr(rc, "render_reel",
+                        lambda sb, **kw: captured.update(sb=sb) or {"ok": True})
+    monkeypatch.setenv("REEL_SEED_MODE", "generated")
+    seeds = [("g1.png", "https://x/r0.jpg"), (None, "https://x/r1.jpg"),
+             ("g2.png", "https://x/r0.jpg"), ("g3.png", "https://x/r1.jpg")]
+    monkeypatch.setattr("reel.seed_gen.generate_scene_seeds",
+                        lambda *a, **k: list(seeds))
+
+    plan = CreativeReel(
+        concept="c", hook="h", cta="قدم", language="ar",
+        images=["https://x/r0.jpg", "https://x/r1.jpg"],
+        scenes=[CreativeScene(image_index=0, veo_prompt=f"S{i}",
+                              voiceover="كلمة " * 4, duration_s=6.0) for i in range(4)])
+    rc.render_creative_reel({}, PosterBrief(business_name="NTI", headline="NTI"), [],
+                            provider=None, out_path=tmp_path / "r.mp4",
+                            plan_override=plan.model_dump(), with_voiceover=True)
+    sb = captured["sb"]
+    assert len(sb.scenes) == 3                                # the seedless scene DROPPED
+    assert all(s.seed_image_url and s.seed_image_url.endswith(".png") for s in sb.scenes)
+    # dead-tail fit: 3 scenes x 4 words -> speech ~ 6.75s -> video ~ 8.75s, not 3x6=18s
+    assert sb.total_duration_s <= 9.5
+    assert all(s.duration_s >= 2.0 for s in sb.scenes)        # per-scene floor holds
+    assert len(captured["vo"]) == 3                           # VO lines follow the drop
+
+
+def test_tts_brief_carries_latin_name_pronunciation():
+    from reel.voiceover import _instructions_for
+    brief = _instructions_for(["برنامج HireReady من NTI يؤهلك"], [], tone="")
+    assert "PRONUNCIATION" in brief and "never letter-by-letter" in brief
+
+
 def test_generate_scene_seeds_gate_retry_and_fallback(monkeypatch, tmp_path):
     import reel.seed_gen as sg
 
@@ -73,8 +116,10 @@ def test_generate_scene_seeds_gate_retry_and_fallback(monkeypatch, tmp_path):
     verdicts = iter([SeedVerdict(overall_pass=True, checked=True),      # scene 1: pass
                      SeedVerdict(overall_pass=False, checked=True,      # scene 2: fail
                                  reason="warped"),
-                     SeedVerdict(overall_pass=False, checked=True,      # scene 2 retry: fail
-                                 reason="warped again")])
+                     SeedVerdict(overall_pass=False, checked=True,      # retry: fail
+                                 reason="warped again"),
+                     SeedVerdict(overall_pass=False, checked=True,      # plain 3rd: fail
+                                 reason="still warped")])
     monkeypatch.setattr("reel.scene_qa.check_seed_frame",
                         lambda p, caller=None, brand_hint="", log=None: next(verdicts))
 
@@ -84,5 +129,6 @@ def test_generate_scene_seeds_gate_retry_and_fallback(monkeypatch, tmp_path):
     assert len(out) == 2
     assert out[0][0] and out[0][1] == "https://x/real0.jpg"     # generated + judged vs real
     assert out[1][0] is None and out[1][1] == "https://x/real1.jpg"   # fail-closed fallback
-    assert calls["gen"] == 3                                    # 1 + (1 retry) for scene 2
-    assert "Natural anatomy" in calls["prompts"][-1]            # corrective retry suffix
+    assert calls["gen"] == 4                # 1 + (corrective retry + plain 3rd) for scene 2
+    assert "Natural anatomy" in calls["prompts"][-2]            # corrective retry suffix
+    assert "REAL PLACE" not in calls["prompts"][-1]             # 3rd attempt drops conditioning

@@ -2,8 +2,25 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1317 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
+Test suite: **1319 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**CALIBRATION #2 (owner's audio + pacing verdicts, 2026-07-12) — measured by TRANSCRIBING her
+actual VO track and diffing against the approved plan.** Findings: (1) "HireReady" was spoken
+as "وهاي ريدي" — Latin program names inside Arabic TTS get butchered → PRONUNCIATION rule in
+the narrator brief (Latin brand/program names = one fluent English word, never letter-by-letter
+or Arabized syllables). (2) The line "كن الخيار الأول لكبرى الشركات" was BLANKED by the
+grounding gate ('first choice' = unsourced hard claim) — correct behavior; the preview flags it
+now, so approval sees it coming. (3) Speech ≈ 9s inside a 17.5s video → DEAD-TAIL FIT: after
+the grounding gate, the video total now tracks the SURVIVING speech (estimate at the same
+2.2-wps pace; scenes shrink proportionally, 2.0s floor) — no more silent tails. (4) Her "جاية
+من بعيد شكلها قطع" = the two real-photo fallback scenes (the silent seedgen failures) — the
+ruling's own verdict confirmed: raw photos break the generated world. Now: a 3rd seed attempt
+WITHOUT photo conditioning (clean on-brief beats world-breaking), and a scene whose seed still
+fails is DROPPED (gate veto, logged; >=3-scene guard keeps the last-resort real photo only when
+the reel would otherwise die). (5) "مش سيناريو" — honest answer: this render used the OLD
+approved plan, authored BEFORE the one-scenario rule; render #2 needs a FRESH plan (her
+Generate) to show the new director. +2 hermetic tests; 2 amended to the 3-attempt contract.
 
 **CALIBRATION RUN #1 (fully-generated mode, NTI, 2026-07-12 19:21) + three surgical fixes.**
 The reel rendered end-to-end on the owner's APPROVED plan (17.5s, audio ON, audit trail
