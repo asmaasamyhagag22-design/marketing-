@@ -2,10 +2,10 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1289 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
+Test suite: **1288 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
 
-**POSTER 429 RESILIENCE + STALE-CREATIVE RESET (owner round, 2026-07-12, suite 1289).**
+**POSTER 429 RESILIENCE + STALE-CREATIVE RESET (owner round, 2026-07-12, suite 1288).**
 Her failed studio run: poster died after 239s with a raw google.genai ClientError traceback
 fragment — WHILE the Veo reel rendered concurrently on the same Dynamic-Shared-Quota project
 (the reel finished OK at 404s). Three fixes: **(1)** `generate_oneshot_poster` now WAITS OUT
@@ -16,7 +16,7 @@ the same project") and the action ("Regenerate in a minute") — the studio log 
 humans, not a stack fragment. **(3)** Studio `pick()`: choosing/scraping a NEW product resets
 BOTH creative stages to the honest placeholder (never showing the LAST product's poster/reel
 as if they were this one's) — guarded so a render in flight is never clobbered; files on disk
-untouched. +6 hermetic tests. NOTE: (1)+(2) are subprocess-side (live on her next Generate,
+untouched. +5 hermetic tests. NOTE: (1)+(2) are subprocess-side (live on her next Generate,
 no restart); (3) is studio-page JS — it lands on the NEXT server restart, owner's call when.
 
 **CUSTOMER VOICE + MEDIA PLAN ON THE DASHBOARD (owner: "عايزة الشغل كله يترند... بعرض على
