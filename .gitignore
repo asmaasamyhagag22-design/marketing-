@@ -79,3 +79,6 @@ runs/
 # the code enters the pipeline only wrapped as social_intel/providers/apify_facebook.py
 facebook_collector/*.json
 facebook_collector/__pycache__/
+
+# logs/ product (Phase 0): track the markdown, not the per-run render artifacts
+logs/*/

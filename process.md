@@ -2,8 +2,22 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1319 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
+Test suite: **1323 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**CLIENT-DELIVERABLE MISSION — PHASE 0 (logs as a product) SHIPPED (2026-07-12, suite 1323).**
+The dashboard is now framed as a PAID deliverable, not a debug view. New `logs/` product:
+`telemetry/run_log.py` renders plain-language BILINGUAL step lines ON TOP of the existing U7
+telemetry JSONL (zero new instrumentation) -> logs/<run_id>/<brand>.log; `run_cost()` exposes
+per-run spend/tokens/latency (the census gap: cost was tracked, never shown — the dashboard
+will surface it); `update_index()` maintains logs/INDEX.md. Committed scaffolding:
+logs/decisions.md (this run's autonomous choices + FLAGs), logs/spend.md (metered caps +
+ledger), logs/INDEX.md. DASHBOARD FAILURE POLICY recorded (D-0.2): client UI shows only
+achievements + the honest "what we don't know yet" panel; every failure degrades to logs/ +
+advisor gaps behind a discreet "التفاصيل في سجل التشغيل" link — never a red banner. Per-run
+subdirs gitignored; the markdown product is tracked. +4 hermetic tests. Mission runs
+autonomous ~12h, never-halt: ambiguities take the safest evidence-honest default logged in
+decisions.md; blocked subtasks are ticketed+skipped. Priority P0->P3->P1->P4->P2->P5->P6->P7.
 
 **CALIBRATION #2 (owner's audio + pacing verdicts, 2026-07-12) — measured by TRANSCRIBING her
 actual VO track and diffing against the approved plan.** Findings: (1) "HireReady" was spoken
