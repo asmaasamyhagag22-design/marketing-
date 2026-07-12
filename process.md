@@ -2,8 +2,21 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1326 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
+Test suite: **1332 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**PHASE 3 · SECTION I/B — THE EXPLAINED PLAN SHIPPED (suite 1332).** The owner's headline
+pain ("cards I don't even understand") — the media-plan grid of raw enums is replaced by
+`_explained_plan()`, a narrated plan a non-marketer reads and can explain back: (1) OBJECTIVE as
+a plain bilingual sentence + why + the evidence RECEIPT inline (the real proof quote, not a bare
+tick) + confidence; (2) FUNNEL stage with what it does in words; (3) BUDGET SPLIT — surfaces the
+category-tuned channel_weights (config.channel_weights — computed, never shown before) as human
+bars (IG 40 / FB 30 / …); (4) AUDIENCE — persona axes as sentences, each tagged بالأدلة/افتراض;
+(5) KPI — metric explained + the HONEST "يُعاير بعد أول أسبوعين" line, never a fabricated
+target (a real target shows verbatim if one ever exists); (6) KILL-SWITCH / learning floor in
+plain words; (7) WHAT HAPPENS NEXT — 3 numbered steps; (?) education tooltips on every term.
+Rendered on both real brands. Old grid tests re-pinned to the narrated copy. +6 hermetic tests.
+Sections B/I: 2/1 -> 4.
 
 **PHASE 3 · SECTION A — EXECUTIVE SUMMARY (first-screen story) SHIPPED (suite 1326).** The
 STEP-0 census (logs/mission_inventory.md, logs/_census_raw.json) confirmed the owner's verdict:

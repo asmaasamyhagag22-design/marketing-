@@ -220,6 +220,179 @@ def _executive_summary(name: str, category: str, prof: dict, swot: dict, tows: d
     </div></div>"""
 
 
+# Plain-language, bilingual explanations for the media-plan terms (the "cards I don't
+# understand" fix). Every marketing term becomes a sentence a non-marketer reads.
+_METRIC_L = {
+    "cost_per_purchase": ("تكلفة البيعة الواحدة", "Cost per sale"),
+    "cost_per_lead": ("تكلفة العميل المحتمل", "Cost per enquiry"),
+    "cost_per_click": ("تكلفة النقرة", "Cost per click"),
+    "cpm": ("تكلفة الألف ظهور", "Cost per 1,000 views"),
+    "cost_per_engagement": ("تكلفة التفاعل", "Cost per interaction"),
+    "cost_per_install": ("تكلفة تحميل التطبيق", "Cost per app install"),
+    "cost_per_result": ("تكلفة النتيجة", "Cost per result"),
+}
+_FUNNEL_DOES = {
+    "tofu": ("نعرّف البراند لناس جديدة لسه ماتعرفوش",
+             "Introduce the brand to new people who don't know you yet"),
+    "mofu": ("نقنع الناس المهتمة تفكّر فيك جدياً",
+             "Convince interested people to seriously consider you"),
+    "bofu": ("نحوّل الناس المستعدة للشراء لعملاء فعليين",
+             "Convert ready-to-buy people into actual customers"),
+}
+_OBJ_GOAL = {
+    "OUTCOME_SALES": ("بيع منتجاتك أونلاين", "sell your products online"),
+    "OUTCOME_LEADS": ("جمع بيانات عملاء مهتمّين للتواصل معاهم",
+                      "collect details of interested customers to follow up"),
+    "OUTCOME_TRAFFIC": ("جلب زوّار لموقعك", "bring visitors to your site"),
+    "OUTCOME_AWARENESS": ("تعريف أكبر عدد بالبراند", "make the most people aware of the brand"),
+    "OUTCOME_ENGAGEMENT": ("زيادة تفاعل الناس مع محتواك", "grow people's interaction with your content"),
+    "OUTCOME_APP_PROMOTION": ("زيادة تحميلات تطبيقك", "grow installs of your app"),
+}
+_CHANNEL_L = {"facebook": "فيسبوك · Facebook", "instagram": "إنستجرام · Instagram",
+              "tiktok": "تيك توك · TikTok", "youtube": "يوتيوب · YouTube"}
+
+
+def _tip(ar: str, en: str, label: str) -> str:
+    """A term with a (?) native-tooltip explaining it in both languages (education layer)."""
+    return (f'{_esc(label)}<span class="tip" title="{_esc(ar)}  ·  {_esc(en)}">؟</span>')
+
+
+def _explained_plan(mp: dict, category: str) -> str:
+    """RUBRIC I/B — the media plan a non-marketer reads and can explain back. Every number is
+    evidence-linked or honestly marked; no fabricated targets, ever. Pure composition +
+    surfacing the already-computed channel split (media_plan.config.channel_weights)."""
+    obj = (mp.get("objectives") or [{}])[0] if mp else {}
+    if not obj.get("objective"):
+        return ""
+    o = str(obj.get("objective") or "")
+    dest = str(obj.get("destination") or "")
+    fun = str(obj.get("funnel_stage") or "").lower()
+    kpi = obj.get("kpi_target") or {}
+    geo = mp.get("base_geo") or {}
+    conf = str(obj.get("confidence") or "").lower()
+
+    # 1) OBJECTIVE as a plain sentence + why + the evidence receipt inline
+    goal_ar, goal_en = _OBJ_GOAL.get(o, (_OBJ_L.get(o, o), o))
+    dest_ar = _DEST_L.get(dest, dest)
+    obj_sentence = (f'هدف حملتك: <b>{_esc(goal_ar)}</b> عن طريق {_esc(dest_ar)}.'
+                    f'<span class="pl-en">Your campaign goal: {_esc(goal_en)} via {_esc(dest_ar)}.</span>')
+    quote = ""
+    for e in (obj.get("evidence") or []):
+        for ev in (e.get("evidence") or []):
+            if ev.get("quote"):
+                quote = str(ev["quote"]); break
+        if quote:
+            break
+    receipt = (f'<div class="pl-receipt">✓ الدليل من موقعك · Proof from your own site: '
+               f'«{_esc(quote[:140])}»</div>' if quote
+               else '<div class="pl-receipt pl-warn">⚠ للمراجعة — لم نجد دليلاً مباشراً '
+                    'على الوجهة · needs review: no direct evidence for this destination</div>')
+    conf_line = ""
+    if conf:
+        cl = {"high": ("ثقة عالية في هذا الاقتراح", "high confidence in this recommendation"),
+              "medium": ("ثقة متوسطة", "medium confidence"),
+              "low": ("اقتراح مبدئي", "tentative")}.get(conf, ("", ""))
+        if cl[0]:
+            conf_line = f'<span class="pl-conf">◆ {_esc(cl[0])} · {_esc(cl[1])}</span>'
+
+    # 2) FUNNEL stage — what it does, in words
+    fdo_ar, fdo_en = _FUNNEL_DOES.get(fun, ("", ""))
+    funnel_html = (f'<div class="pl-block"><div class="pl-h">{_tip("مرحلة رحلة العميل التي تركّز عليها الحملة", "the customer-journey stage this campaign targets", "مرحلة الحملة · Campaign stage")}</div>'
+                   f'<div class="pl-funnel"><span class="pl-fstage on">{_esc(_FUN_L.get(fun, fun))}</span></div>'
+                   f'<p class="pl-p">{_esc(fdo_ar)}. <span class="pl-en">{_esc(fdo_en)}.</span></p></div>'
+                   if fdo_ar else "")
+
+    # 3) BUDGET SPLIT — surface the category-tuned channel weights (was computed, never shown)
+    weights = {}
+    try:
+        from media_plan.config import channel_weights
+        weights = channel_weights(category)
+    except Exception:  # noqa: BLE001
+        weights = {}
+    split_rows = ""
+    for ch, w in sorted(weights.items(), key=lambda kv: -kv[1]):
+        pct = round(w * 100)
+        if pct <= 0:
+            continue
+        split_rows += (f'<div class="pl-bar-row"><span class="pl-bar-lab">{_CHANNEL_L.get(ch, ch)}</span>'
+                       f'<span class="pl-bar"><span class="pl-bar-fill" style="width:{pct}%"></span></span>'
+                       f'<span class="pl-bar-pct">{pct}%</span></div>')
+    budget_html = (f'<div class="pl-block"><div class="pl-h">{_tip("كيف توزّع ميزانيتك على المنصّات — مبنيّ على مجالك", "how to split your budget across platforms — tuned to your industry", "توزيع الميزانية على المنصّات · Where to put your budget")}</div>'
+                   f'<div class="pl-split">{split_rows}</div>'
+                   f'<p class="pl-note">النِّسَب مبنيّة على أفضل الممارسات لمجال «{_esc(category or "عام")}» — عدّليها حسب أداءك الفعلي. '
+                   f'<span class="pl-en">Splits are best-practice for your industry — tune to real performance.</span></p></div>'
+                   if split_rows else "")
+
+    # 4) AUDIENCE — persona axes as human sentences, each evidence-tagged or honest-assumption
+    persona = mp.get("base_persona") or {}
+    aud_lines = []
+    for axis, lab in (("age_range", "العمر · Age"), ("gender", "النوع · Gender"),
+                      ("income_level", "الدخل · Income")):
+        v = persona.get(axis)
+        val = (v.get("value") or v.get("claim")) if isinstance(v, dict) else v
+        if val:
+            aud_lines.append((f"{lab}: {val}", isinstance(v, dict) and bool(v.get("evidence"))))
+    for itx in (persona.get("interests") or [])[:4]:
+        c = itx.get("claim") if isinstance(itx, dict) else str(itx)
+        if c:
+            grounded = isinstance(itx, dict) and bool(itx.get("evidence"))
+            aud_lines.append((str(c).replace("the brand's audience:", "الجمهور:"), grounded))
+    aud_rows = "".join(
+        f'<li>{_esc(t)} <span class="pl-tag {"ev" if g else "as"}">'
+        f'{"بالأدلة · evidenced" if g else "افتراض · assumption"}</span></li>' for t, g in aud_lines)
+    audience_html = (f'<div class="pl-block"><div class="pl-h">{_tip("الناس اللي هنوجّه لهم الإعلانات", "the people we aim the ads at", "جمهورك المستهدف · Who to target")}</div>'
+                     f'<ul class="pl-aud">{aud_rows}</ul></div>' if aud_rows
+                     else f'<div class="pl-block"><div class="pl-h">جمهورك المستهدف · Who to target</div>'
+                          '<p class="pl-p pl-warn">لم نستخلص شريحة مؤكدة بعد — تُبنى من بيانات الحملة الأولى. '
+                          '<span class="pl-en">No evidenced audience yet — built from first-campaign data.</span></p></div>')
+
+    # 5) KPI — the number we watch, with an HONEST calibrate-later line (never a fabricated target)
+    metric = str(kpi.get("metric") or "")
+    m_ar, m_en = _METRIC_L.get(metric, (metric, metric))
+    tgt = kpi.get("target_value")
+    win = kpi.get("window_days") or 7
+    if tgt:
+        kpi_val = f'<b>{_esc(str(tgt))} {_esc(str(kpi.get("unit") or "EGP"))}</b>'
+    else:
+        kpi_val = ('<span class="pl-cal">يُعاير بعد أول أسبوعين تشغيل · calibrated after the '
+                   'first two weeks</span>')
+    kpi_html = (f'<div class="pl-block"><div class="pl-h">{_tip("الرقم اللي هنقيس بيه نجاح الحملة", "the number we judge the campaign by", "مؤشر النجاح · The number we watch")}</div>'
+                f'<p class="pl-p"><b>{_esc(m_ar)} · {_esc(m_en)}</b> — {kpi_val}<br>'
+                f'<span class="pl-note">نقيسه على أول {win} أيام. لن نخترع رقماً مستهدفاً قبل رؤية بياناتك الحقيقية. '
+                f'<span class="pl-en">Measured over the first {win} days; we never invent a target before your real data exists.</span></span></p></div>')
+
+    # 6) KILL-SWITCH / learning floor — plain words
+    kill_html = ('<div class="pl-block"><div class="pl-h">متى توقف إعلاناً · When to stop an ad</div>'
+                 '<p class="pl-p">قبل ما تحكم على أي إعلان، سيبه ياخد ٣ نتائج على الأقل (حوالي أول أسبوع) — '
+                 'الأرقام قبل كده مش دقيقة. لو بعدها التكلفة أعلى من المتوقّع بكتير، أوقفه وحوّل ميزانيته للإعلان الشغّال. '
+                 '<span class="pl-en">Give each ad at least 3 results (~the first week) before judging — earlier '
+                 'numbers are noise. If cost stays far above expectation after that, pause it and move its budget '
+                 'to what works.</span></p></div>')
+
+    # 7) WHAT HAPPENS NEXT — 3 numbered steps
+    next_html = ('<div class="pl-block"><div class="pl-h">الخطوات التالية · What happens next</div>'
+                 '<ol class="pl-steps"><li>راجعي الخطة واعتمديها · Review &amp; approve this plan</li>'
+                 '<li>جهّزي البوستر والريل (جاهزين في الاستوديو) · Prepare the poster &amp; reel (ready in the studio)</li>'
+                 '<li>أطلقي بميزانية اختبار صغيرة وراقبي أول أسبوع · Launch with a small test budget and watch week one</li></ol></div>')
+
+    geo_txt = {"national": "كل مصر · nationwide", "radius": "نطاق محلي · local radius"}.get(
+        str(geo.get("mode") or ""), str(geo.get("mode") or ""))
+    if geo.get("center_address"):
+        geo_txt += f" — {geo.get('center_address')} ({geo.get('radius_km')} كم)"
+    rationale = _esc(obj.get("rationale") or "")
+
+    return f"""<div class="sec"><div class="sec-h"><span class="bar"></span>
+      <h2>خطة الإعلان — مشروحة · Your ad plan, explained</h2>
+      <span class="cnt">مبنية على أدلة من موقعك · grounded in your own site</span></div>
+      <div class="card pl">
+        <div class="pl-obj">{obj_sentence}{conf_line}{receipt}
+          {f'<p class="pl-why">{rationale}</p>' if rationale else ''}
+          <div class="pl-geo">📍 المنطقة · Area: {_esc(geo_txt)}</div></div>
+        <div class="pl-grid">{funnel_html}{budget_html}{audience_html}{kpi_html}</div>
+        {kill_html}{next_html}
+      </div></div>"""
+
+
 def _css() -> str:
     c = _C
     return f"""<style>
@@ -385,6 +558,41 @@ def _css() -> str:
     .ex-move-b{{font-size:16px;font-weight:600;margin-top:6px;line-height:1.4;}}
     .ex-move-hz{{display:inline-block;margin-top:9px;font-size:11.5px;font-weight:700;
       background:{c['sage']};color:#fff;padding:3px 12px;border-radius:20px;}}
+    /* RUBRIC I/B — the explained plan */
+    .pl-en{{display:block;font-size:11.5px;color:{c['muted']};margin-top:2px;font-style:italic;}}
+    .tip{{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;
+      margin-inline-start:6px;border-radius:50%;background:{c['blush100']};color:{c['blush700']};
+      font-size:10px;font-weight:700;cursor:help;vertical-align:middle;}}
+    .pl-obj{{background:{c['blush50']};border:1px solid {c['line']};border-radius:14px;
+      padding:16px 18px;margin-bottom:16px;font-size:15px;line-height:1.6;color:{c['ink']};}}
+    .pl-conf{{display:inline-block;margin-top:8px;font-size:12px;color:{c['sage700']};font-weight:700;}}
+    .pl-receipt{{margin-top:10px;font-size:12.5px;color:{c['sage700']};background:{c['sage100']};
+      border-radius:9px;padding:7px 11px;line-height:1.5;}}
+    .pl-receipt.pl-warn{{color:{c['gold700']};background:{c['gold100']};}}
+    .pl-why{{font-size:13px;color:{c['inkSoft']};margin-top:10px;line-height:1.6;}}
+    .pl-geo{{margin-top:10px;font-size:12.5px;color:{c['inkSoft']};font-weight:600;}}
+    .pl-grid{{display:grid;grid-template-columns:1fr 1fr;gap:14px;}}
+    .pl-block{{background:{c['surface2']};border:1px solid {c['line']};border-radius:12px;padding:14px 16px;}}
+    .pl-h{{font-size:13px;font-weight:700;color:{c['blush700']};margin-bottom:8px;}}
+    .pl-p{{font-size:13px;color:{c['ink']};line-height:1.6;}}
+    .pl-note{{font-size:11.5px;color:{c['muted']};line-height:1.5;}}
+    .pl-warn{{color:{c['gold700']};}}
+    .pl-fstage{{display:inline-block;font-size:13px;font-weight:700;padding:4px 14px;border-radius:20px;
+      background:{c['ink']};color:#fff;}}
+    .pl-split{{display:flex;flex-direction:column;gap:7px;margin-bottom:8px;}}
+    .pl-bar-row{{display:flex;align-items:center;gap:9px;font-size:12px;}}
+    .pl-bar-lab{{flex:0 0 118px;color:{c['inkSoft']};}}
+    .pl-bar{{flex:1;height:9px;background:{c['blush100']};border-radius:6px;overflow:hidden;}}
+    .pl-bar-fill{{display:block;height:100%;background:linear-gradient(90deg,{c['blush500']},{c['blush700']});}}
+    .pl-bar-pct{{flex:0 0 34px;text-align:end;font-weight:700;color:{c['ink']};}}
+    .pl-aud{{list-style:none;display:flex;flex-direction:column;gap:7px;}}
+    .pl-aud li{{font-size:12.5px;color:{c['ink']};line-height:1.5;}}
+    .pl-tag{{display:inline-block;font-size:10px;font-weight:700;padding:1px 8px;border-radius:12px;margin-inline-start:6px;}}
+    .pl-tag.ev{{background:{c['sage100']};color:{c['sage700']};}}
+    .pl-tag.as{{background:{c['gold100']};color:{c['gold700']};}}
+    .pl-cal{{font-weight:700;color:{c['gold700']};font-size:12.5px;}}
+    .pl-steps{{margin:0;padding-inline-start:20px;font-size:13px;color:{c['ink']};line-height:1.9;}}
+    @media (max-width:760px){{.pl-grid{{grid-template-columns:1fr;}}}}
     @media (max-width:760px){{.mp-grid{{grid-template-columns:1fr 1fr;}}}}
     @media (max-width:760px){{.swot,.creative{{grid-template-columns:1fr;}}.cal-row{{grid-template-columns:1fr;gap:3px;}}}}
     </style>"""
@@ -476,43 +684,9 @@ def build_dashboard_html(
         mp_path = str(cand) if cand.is_file() else None
     mp = _load(mp_path) if include_media_plan else {}
     obj = (mp.get("objectives") or [{}])[0] if mp else {}
-    if obj.get("objective"):
-        kpi = obj.get("kpi_target") or {}
-        geo = mp.get("base_geo") or {}
-        n_ev = sum(1 for e in (obj.get("evidence") or []) if e.get("resolved"))
-        badge = ("<span class='mp-ok'>مؤكد بالأدلة ✓</span>" if n_ev
-                 else "<span class='mp-warn'>للمراجعة ⚠</span>")
-        geo_txt = str(geo.get("mode") or "")
-        geo_txt = {"national": "قومي · National",
-                   "radius": "نطاق محلي · Radius"}.get(geo_txt, geo_txt)
-        if geo.get("center_address"):
-            geo_txt += f" — {geo.get('center_address')} ({geo.get('radius_km')} km)"
-        # evidenced persona axes from the same plan (only what the evidence supports)
-        persona = mp.get("base_persona") or {}
-        p_bits = []
-        for axis, label in (("age_range", "العمر"), ("gender", "النوع")):
-            val = persona.get(axis)
-            if isinstance(val, dict):
-                val = val.get("value") or val.get("claim")
-            if val:
-                p_bits.append(f"{label}: {val}")
-        for itx in (persona.get("interests") or [])[:3]:
-            c = itx.get("claim") if isinstance(itx, dict) else str(itx)
-            if c:
-                p_bits.append(str(c))
-        persona_html = (f'<p class="mp-r"><b>الشريحة (بالأدلة):</b> '
-                        f'{_esc(" · ".join(p_bits))}</p>' if p_bits else "")
-        mp_html = f"""<div class="sec"><div class="sec-h"><span class="bar"></span>
-          <h2>Media plan — خطة الشراء الإعلاني</h2><span class="cnt">deduced from evidence · U1</span></div>
-          <div class="card"><div class="mp-grid">
-            <div><span class="mp-l">Objective · الهدف</span><b>{_esc(_OBJ_L.get(str(obj.get('objective') or ''), str(obj.get('objective') or '')))}</b></div>
-            <div><span class="mp-l">Destination · الوجهة</span><b>{_esc(_DEST_L.get(str(obj.get('destination') or ''), str(obj.get('destination') or '')))}</b></div>
-            <div><span class="mp-l">Funnel · القمع</span><b>{_esc(_FUN_L.get(str(obj.get('funnel_stage') or ''), str(obj.get('funnel_stage') or '')))}</b></div>
-            <div><span class="mp-l">KPI</span><b>{_esc(kpi.get('metric') or '')}</b></div>
-            <div><span class="mp-l">Geo · الجغرافيا</span><b>{_esc(geo_txt)}</b></div>
-            <div><span class="mp-l">Evidence · الأدلة</span>{badge}</div>
-          </div>
-          <p class="mp-r">{_esc(obj.get('rationale') or '')}</p>{persona_html}</div></div>"""
+    # RUBRIC I/B — the media plan rebuilt as a NARRATED plan a non-marketer can explain back
+    # (owner: "cards I don't even understand"). Replaces the raw enum grid.
+    mp_html = _explained_plan(mp, category) if obj.get("objective") else ""
 
     # TOWS PRIORITY ACTIONS — already inside result.json, silently dropped before
     # (owner: everything must show). rank IS a real sequence, so numbering carries meaning.

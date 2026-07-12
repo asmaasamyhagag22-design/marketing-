@@ -52,12 +52,12 @@ def test_dashboard_renders_voice_section_and_media_plan_card(tmp_path):
     # the voice section is unmissable and carries the verbatim receipts
     assert "Customer voice — صوت العملاء" in html
     assert "طاقم تمريض على أعلى مستوى" in html and "استنيت ساعتين" in html
-    # the media plan card was AUTO-DISCOVERED from the sibling file — and renders bilingual
-    # LABELS, never the raw enum (owner 2026-07-12: the plan section read as a raw dump)
-    assert "Media plan — خطة الشراء الإعلاني" in html
-    assert "عملاء محتملون · Leads" in html and "OUTCOME_LEADS" not in html
-    assert "cost_per_lead" in html                     # the KPI metric name is the real name
-    assert "مؤكد بالأدلة" in html                      # resolved evidence -> the green badge
+    # the plan is AUTO-DISCOVERED from the sibling file and rendered as the EXPLAINED plan
+    # (rubric I/B — narrated, never raw enums; owner: "cards I don't understand")
+    assert "خطة الإعلان — مشروحة · Your ad plan, explained" in html
+    assert "جمع بيانات عملاء" in html and "OUTCOME_LEADS" not in html   # objective as a sentence
+    assert "تكلفة العميل المحتمل · Cost per enquiry" in html and "cost_per_lead" not in html
+    assert "يُعاير بعد أول أسبوعين تشغيل" in html       # honest KPI, never fabricated
     assert "Cairo" in html and "10" in html            # geo radius rendered
 
 
@@ -85,9 +85,9 @@ def test_priority_actions_render_and_studio_suppresses_the_duplicate_plan(tmp_pa
     full = build_dashboard_html(str(cp))
     assert "Priority actions — أولويات التنفيذ" in full
     assert "Launch WhatsApp channel" in full and ">1<" in full     # rank chip carries the order
-    assert "مبيعات · Sales" in full                                # bilingual label, not the enum
+    assert "بيع منتجاتك أونلاين" in full                           # objective as a sentence, not the enum
     studio_embed = build_dashboard_html(str(cp), include_media_plan=False)
-    assert "Media plan — خطة الشراء الإعلاني" not in studio_embed  # no duplicate in the studio
+    assert "خطة الإعلان — مشروحة" not in studio_embed              # no duplicate in the studio
 
 
 def test_dashboard_without_voice_or_plan_stays_clean(tmp_path):
