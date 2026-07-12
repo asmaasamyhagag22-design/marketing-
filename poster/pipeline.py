@@ -902,7 +902,8 @@ def generate_poster(
 
 def build_generation_preview(profile: dict, *, caller: Any = None,
                              product_image: Optional[str] = None,
-                             language: str = "auto") -> dict:
+                             language: str = "auto",
+                             raw_facts: Optional[str] = None) -> dict:
     """HITL step 1 (owner law 2026-07-12): assemble the EXACT one-shot generation brief —
     concept + copy + palette + DNA + real-asset roles + locale — WITHOUT touching any image
     API. Cheap text-only calls (concept build); props are counted but never OCR'd (caller
@@ -913,7 +914,8 @@ def build_generation_preview(profile: dict, *, caller: Any = None,
         caller = default_caller(strong=True)
     arabic = language == "ar" if language in ("ar", "en") else brand_is_arabic(profile)
     brand_dna = load_or_build_dna(profile, caller)
-    concept = build_creative_concept(profile, caller=caller, arabic=arabic)
+    concept = build_creative_concept(profile, caller=caller, arabic=arabic,
+                                     raw_facts=raw_facts)
     brief = build_poster_brief(profile)
     brief = brief.model_copy(update={
         "headline": concept.headline or brief.headline,

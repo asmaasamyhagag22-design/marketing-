@@ -198,6 +198,7 @@ def build_creative_concept(
     arabic: Optional[bool] = None,
     research: Any = None,
     trend_context: Optional[str] = None,
+    raw_facts: Optional[str] = None,
 ) -> CreativeConcept:
     """One coherent campaign concept + brand-language copy. Arabic brands -> Arabic copy with
     ZERO Latin (validated + regenerated). Never raises.
@@ -335,6 +336,12 @@ def build_creative_concept(
         "- proof_points: 2-3 SHORT consumer-language points that support single_message (these "
         "become on-poster chips). Each must serve the message — drop anything unrelated. NOT a "
         "dump of internal/B2B product names.\n"
+        "BRAND-COHERENCE (HARD RULE — owner caught 'بطل مذاكرة' shipped for an education "
+        "institute): the hook must NEVER mock, negate or tell people to stop the brand's own "
+        "category or core activity — an education brand never disparages studying, a restaurant "
+        "never says stop eating, a gym never mocks training. Tension is allowed ONLY against a "
+        "PAIN the brand solves (waiting, cost, theory-without-practice, complexity) and must be "
+        "phrased so the brand's own activity stays desirable.\n"
         "- headline: AD COPY — 2 to 6 words, an ENTICING hook that sells the core_benefit and "
         "stops a scroll. NOT a company mission statement, NOT generic corporate values, NOT a "
         "category platitude a competitor could run unchanged ('control in your hand', 'your unfair "
@@ -354,6 +361,10 @@ def build_creative_concept(
         "THEY DO + the SPECIFIC service + one REAL proof? Is the visual the real world of THIS "
         "service, not a stock person? If any is missing, rewrite."
     )
+    raw_facts_block = (
+        "\nREAL PRODUCT-PAGE FACTS (verbatim from the brand's own page — the owner's "
+        "raw-data-first rule; ground the concept in THESE specifics):\n"
+        + raw_facts[:1800] + "\n") if raw_facts and raw_facts.strip() else ""
     user = (
         f"Brand: {name}\n"
         + (f"Country/market: {country}\n" if country else "")
@@ -363,6 +374,7 @@ def build_creative_concept(
            f"customer would use, but never change what they factually ARE): {', '.join(offers)}\n"
            if offers else "")
         + (f"Brand tone/style (from its real creatives): {tone_block}\n" if tone_block else "")
+        + raw_facts_block
         + research_block
         + trend_block
         + vary

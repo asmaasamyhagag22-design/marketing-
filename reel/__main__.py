@@ -82,6 +82,9 @@ def main() -> int:
                     help="CREATIVE mode: Opus directs the reel (per-scene Veo 3.1 "
                          "prompts + voice-over) from the identity + real photos. Veo 3.1 "
                          "brings each real photo to life; OpenAI TTS narrates.")
+    ap.add_argument("--language", default=None, choices=["ar", "en"],
+                    help="OWNER RULE: the reel's output language is the USER's explicit choice "
+                         "(captions + voice-over); default = the brand's dominant language.")
     ap.add_argument("--plan-file", default=None,
                     help="HITL: a user-APPROVED creative plan JSON (from the studio preview); "
                          "replaces the director call verbatim — all render gates still apply.")
@@ -202,6 +205,7 @@ def main() -> int:
         result, creative = render_creative_reel(
             profile, brief, photos, provider=provider, out_path=out,
             n_scenes=max(3, args.frames), scale=args.scale,
+            language=args.language,
             include_logo=not args.no_logo, music_path=args.music,
             with_voiceover=not args.no_voiceover,
             featured_product=args.product_name,

@@ -97,3 +97,13 @@ def test_english_brand_keeps_english():
         _EN, caller=MockCaller({"poster_concept_brief": _resp(
             headline="Built for builders", cta="Shop now", proof_points=["Fast", "Simple"])}))
     assert c.language == "en" and c.headline == "Built for builders"
+
+
+def test_concept_prompt_carries_brand_coherence_rule():
+    # Owner caught "بطل مذاكرة، ابدأ شغل" shipped for an EDUCATION institute — a hook that
+    # negates the brand's own category. The system prompt must carry the hard rule.
+    import inspect
+    import poster.concept as c
+    src = inspect.getsource(c)
+    assert "BRAND-COHERENCE" in src
+    assert "never disparages studying" in src

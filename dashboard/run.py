@@ -289,6 +289,41 @@ def _arabic_rendering(text: str) -> str:
         return ""
 
 
+def _product_raw_facts(slug: str, product_name: str | None,
+                       product_url: str | None = None, limit_chars: int = 1800) -> str:
+    """The picked product's RAW text (verbatim manifest blocks) — the owner's
+    raw-data-first rule: generation grounds in the page's actual words, not only the
+    capped profile projection. Pages match by URL first, then by name words."""
+    if not (product_name or product_url):
+        return ""
+    try:
+        import json as _json
+        import re as _re
+        from dashboard.products import _latest_manifest
+        mp = _latest_manifest(slug)
+        if not mp:
+            return ""
+        m = _json.loads(mp.read_text(encoding="utf-8"))
+        words = [w for w in _re.findall(r"[\w؀-ۿ]+", (product_name or "").lower())
+                 if len(w) >= 3]
+        tgt = (product_url or "").rstrip("/").lower()
+        out: list[str] = []
+        for pg in (m.get("pages") or []):
+            u = str(pg.get("final_url") or "").rstrip("/").lower()
+            url_hit = bool(tgt) and (u == tgt or (tgt in u))
+            for b in (pg.get("text_blocks") or []):
+                t = str((b.get("text") if isinstance(b, dict) else b) or "").strip()
+                if not t:
+                    continue
+                if url_hit or (words and any(w in t.lower() for w in words)):
+                    out.append(t)
+            if sum(len(x) for x in out) > limit_chars:
+                break
+        return "\n".join(out)[:limit_chars]
+    except Exception:  # noqa: BLE001
+        return ""
+
+
 def hitl_preview(slug: str, kind: str, *, out_dir: str = "outputs",
                  product_name: str | None = None, product_image: str | None = None,
                  language: str | None = None, dialect: str | None = None) -> dict:
@@ -303,8 +338,9 @@ def hitl_preview(slug: str, kind: str, *, out_dir: str = "outputs",
     profile = _json.loads(P["profile"].read_text(encoding="utf-8"))
     if kind == "poster":
         from poster.pipeline import build_generation_preview
-        prev = build_generation_preview(profile, product_image=product_image,
-                                        language=(language or "auto"))
+        prev = build_generation_preview(
+            profile, product_image=product_image, language=(language or "auto"),
+            raw_facts=_product_raw_facts(slug, product_name))
         text = prev["prompt"]
         path = P["out"] / f"{slug}_poster_prompt.txt"
         path.write_text(text, encoding="utf-8")
@@ -313,9 +349,11 @@ def hitl_preview(slug: str, kind: str, *, out_dir: str = "outputs",
             os.environ["REEL_ARABIC_DIALECT"] = dialect
         from reel.creative_director import design_creative_reel
         photos = (profile.get("visual") or {}).get("content_images") or []
-        creative = design_creative_reel(profile, photos, n_scenes=6,
-                                        language=(language or None),
-                                        featured_product=product_name)
+        rf = _product_raw_facts(slug, product_name)
+        creative = design_creative_reel(
+            profile, photos, n_scenes=6, language=(language or None),
+            featured_product=product_name,
+            user_note=("REAL PRODUCT-PAGE FACTS (verbatim):\n" + rf) if rf else None)
         if creative is None or not creative.scenes:
             return {"error": "the director could not design a plan (no usable photos/creds)"}
         path = P["out"] / f"{slug}_reel_plan.json"
