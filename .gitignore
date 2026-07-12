@@ -74,3 +74,8 @@ phone_diagnostic.txt
 /_prompt_diag.py
 # U7 telemetry run-records (JSONL per pipeline run)
 runs/
+
+# team facebook collector: RAW outputs carry unhashed author names (PII) — never commit;
+# the code enters the pipeline only wrapped as social_intel/providers/apify_facebook.py
+facebook_collector/*.json
+facebook_collector/__pycache__/
