@@ -74,10 +74,35 @@ _STRENGTH_BADGE = {
 }
 
 
+_CITE_L = {
+    "value_propositions": "قيمك المعلنة · your value props",
+    "trust_signals": "شارات الثقة · your trust badges",
+    "your profile": "ملفك · your profile",
+    "your scraped site vs peers": "موقعك مقابل المنافسين · your site vs peers",
+    "readiness audit": "فحص جاهزية الموقع · site-readiness check",
+    "own-brand reviews": "آراء عملائك · your customers' reviews",
+    "competitor reviews": "آراء عملاء المنافسين · competitors' reviews",
+}
+
+
+def _clean_citation(c: str) -> str:
+    """RUBRIC G — turn an internal citation token into a client-safe label. snake_case field
+    names, dotted paths, and raw URLs become plain words or a source domain."""
+    s = str(c or "").strip()
+    if s in _CITE_L:
+        return _CITE_L[s]
+    if s.startswith(("http://", "https://")):
+        dom = re.sub(r"^https?://(www\.)?", "", s).split("/")[0]
+        return f"مصدر خارجي · web: {dom}"
+    if re.fullmatch(r"[a-z_]+(\.[a-z_]+)*(=\w+)?", s):   # bare field path / flag -> drop the jargon
+        return _CITE_L.get(s.split(".")[0], s.split(".")[0].replace("_", " "))
+    return s
+
+
 def _swot_item(it: dict) -> str:
     text = _esc(it.get("text") or it.get("evidence") or "")
     cites = it.get("citation") or []
-    cite_html = " · ".join(_esc(c) for c in cites) if cites else "—"
+    cite_html = " · ".join(_esc(_clean_citation(c)) for c in cites) if cites else "—"
     cls, lab = _STRENGTH_BADGE.get(str(it.get("claim_strength") or ""), ("neutral", str(it.get("claim_strength") or "")))
     badge = f'<span class="cs cs-{cls}">{_esc(lab)}</span>' if lab else ""
     return f"""<li class="swot-item"><div class="swot-t">{text} {badge}</div>
@@ -447,8 +472,8 @@ def _css() -> str:
     :root{{color-scheme:light;}}
     .bsr *{{margin:0;padding:0;box-sizing:border-box;}}
     .bsr{{
-      --serif:'Fraunces',Georgia,'Times New Roman',serif;
-      --sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+      --serif:'Fraunces','Sakkal Majalla','Traditional Arabic',Georgia,'Times New Roman',serif;
+      --sans:'Segoe UI','Inter',Tahoma,-apple-system,BlinkMacSystemFont,system-ui,'Noto Sans Arabic',sans-serif;
       font-family:var(--sans);color:{c['ink']};background:{c['bg']};
       background-image:
         radial-gradient(circle at 8% 4%,rgba(236,203,214,.35) 0%,transparent 26%),
@@ -884,7 +909,10 @@ def build_dashboard_html(
 
     content = _css() + body
     if standalone:
-        content = (f"<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\">"
+        # RUBRIC G+ — the deliverable is Arabic-primary: RTL root + Arabic-capable font stack.
+        # Latin runs render LTR via the browser's bidi algorithm; layout mirrors via the
+        # logical CSS properties used throughout.
+        content = (f"<!doctype html><html lang=\"ar\" dir=\"rtl\"><head><meta charset=\"utf-8\">"
                    f"<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">"
                    f"<title>Baseera · {_esc(name)}</title></head><body>{content}</body></html>")
     return content

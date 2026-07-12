@@ -33,3 +33,11 @@ FLAG where the owner should review. Newest first.
   copy in the HTML) instead of by screenshot, and rely on the deliberately-authored CSS for
   the design bar. FLAG: owner may want a screenshot pass in an interactive session; the
   rendered HTML files are in the scratchpad for direct opening.
+
+- **D-3.2 — RTL applied without screenshot verification.** Set `<html lang="ar" dir="rtl">` on
+  the standalone deliverable (Arabic-primary content) + an Arabic-capable font stack (Segoe UI /
+  Sakkal Majalla). New sections use logical CSS props so they mirror cleanly; older flex/grid
+  sections reflow via bidi. Structural verify passed (dir attr + cleaned citations + 0 raw
+  leaks); a pixel-level RTL check needs the owner's interactive screenshot pass (browser preview
+  was unavailable, D-3.1). FLAG: if any older section shows mixed-direction breakage on screen,
+  it's cheap to pin with a logical-property fix — noted as the one visual risk in this pass.

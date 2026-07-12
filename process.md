@@ -2,8 +2,19 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1338 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
+Test suite: **1340 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**PHASE 3 · SECTION G+ — RTL + REAL FONTS + ZERO RAW INTERNALS SHIPPED (suite 1340).** The
+standalone deliverable is now `<html lang="ar" dir="rtl">` (Arabic-primary; Latin runs render
+LTR via bidi, layout mirrors via the logical CSS properties used throughout) with an
+Arabic-capable font stack (Segoe UI / Sakkal Majalla / Traditional Arabic + Tahoma/Noto fallbacks
+— the previously-named Fraunces/Inter never loaded and silently fell back). `_clean_citation()`
+strips the raw internals the census flagged: snake_case field names (value_propositions ->
+"قيمك المعلنة · your value props"), dotted flag paths (readiness.swot_quality_signals.tagline=false),
+and raw URLs (-> "web: <domain>"). Verified: 0 raw-internal leaks in the rendered NTI page.
+Visual RTL screenshot verification deferred to an owner interactive pass (D-3.1/D-3.2 — browser
+preview unavailable this run). +2 hermetic tests. Section G: 2 -> 4 (structural).
 
 **PHASE 3 · SECTION F — HONESTY SURFACE SHIPPED (suite 1335).** `_honesty_surface()` — the
 "ما لا نعرفه بعد · What we don't know yet" panel (rubric F, was 1). Detects real unknowns from
