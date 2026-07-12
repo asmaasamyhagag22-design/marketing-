@@ -35,6 +35,9 @@ class ReelScene(BaseModel):
     # 3.1 image-to-video uses it as the first frame and brings it to life. So the
     # generated motion is LEARNED FROM the real place, not invented.
     seed_image_url: Optional[str] = None
+    # owner ruling 2026-07-12: seeds are GENERATED; the real photo moves here as the
+    # judging reference (motion-QA place fidelity) — visible never, load-bearing always.
+    place_ref_url: Optional[str] = None
 
 
 class Storyboard(BaseModel):

@@ -127,10 +127,13 @@ def render_reel(
                     from .scene_qa import check_scene
                     _v_final = None
                     qa_ref = qa_reference_image
-                    if qa_ref is None and ref:
+                    # owner ruling 2026-07-12: generated seeds — the judge compares the
+                    # clip against the brand's REAL photo, not the generated still.
+                    ref_for_qa = getattr(scene, "place_ref_url", None) or ref
+                    if qa_ref is None and ref_for_qa:
                         try:
                             from .video_provider import _load_reference_image
-                            loaded = _load_reference_image(ref)
+                            loaded = _load_reference_image(ref_for_qa)
                             qa_ref = loaded[0] if loaded else None
                         except Exception:  # noqa: BLE001 — no seed bytes: judge frames alone
                             qa_ref = None

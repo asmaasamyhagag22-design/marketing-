@@ -2,8 +2,29 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1314 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
+Test suite: **1317 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**OWNER CREATIVE RULING — REELS GO FULLY GENERATED (2026-07-12).** Real photos EXIT the reel's
+display path (no raw site photo appears inside a reel — the aesthetic break she kept flagging);
+their role EXPANDS to (a) GENERATION CONDITIONING — every scene seed is now generated 9:16 by
+the same gemini-image call the poster one-shot uses, conditioned on the brand's real
+place/product photo (the C2 REAL-PLACE mechanism), DNA style lines and the evidence-derived
+locale (reel/seed_gen.py) — and (b) JUDGING REFERENCES — ReelScene.place_ref_url carries the
+real photo and motion-QA's place-fidelity verdict judges the generated world AGAINST it (the
+reference stopped being visible, not load-bearing). **SCOPE BOUNDARY (log this — defense
+line):** the ruling covers REEL SCENES, an EXPRESSIVE surface (generated-but-grounded). It does
+NOT touch evidence surfaces — real product photos in commerce posters, composited real logos,
+verbatim copy: "real stays real" remains the law there. Anti-hallucination stays fully armed
+(seed gate -> regenerate-once -> REAL-photo fallback; motion QA + place fidelity) — that stack
+is what makes generated ≠ invented. SIDE EFFECT: the 37%-crop problem dissolves (generated
+seeds are native 9:16); the auto/blur-contain path remains as the legacy fallback for
+user-supplied media and failed generations (REEL_SEED_MODE=real restores it wholesale).
+**STANDING STYLE (the reel reference example is superseded accordingly): "one continuous
+cinematic world, brand-grounded, fully generated."** Next: the NTI calibration render in the
+new mode -> frames at HITL -> ONE owner tuning cycle on place-resemblance strength + the cost
+delta (~6-8 gemini-image generations added per reel ≈ cents; crop processing removed).
++3 hermetic tests.
 
 **U9 INSTAGRAM (Tier-1, OFFICIAL) SHIPPED + LIVE-VALIDATED (2026-07-12):** the owner created
 her Meta app; `scripts/refresh_meta_token.py` exchanged her short-lived token for a 60-DAY

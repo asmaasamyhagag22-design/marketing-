@@ -44,7 +44,8 @@ def _brand_tone(profile: Any) -> str:
 
 
 def build_creative_storyboard(reel: CreativeReel, brief: PosterBrief,
-                              captions: Optional[bool] = None) -> Storyboard:
+                              captions: Optional[bool] = None,
+                              seeds: Optional[list] = None) -> Storyboard:
     """Map an Opus CreativeReel onto the render Storyboard. Each scene carries its
     real-photo seed + Opus's Veo prompt.
 
@@ -58,7 +59,16 @@ def build_creative_storyboard(reel: CreativeReel, brief: PosterBrief,
     scenes: list[ReelScene] = []
     n = len(reel.scenes)
     for idx, s in enumerate(reel.scenes):
-        seed = reel.images[s.image_index] if 0 <= s.image_index < len(reel.images) else None
+        real = reel.images[s.image_index] if 0 <= s.image_index < len(reel.images) else None
+        seed, place_ref = real, None
+        if seeds is not None and idx < len(seeds):
+            # FULLY-GENERATED mode (owner ruling 2026-07-12): the generated still is the
+            # visible seed; the real photo becomes the place-fidelity judging reference.
+            gen_path, ref_url = seeds[idx]
+            if gen_path:
+                seed, place_ref = gen_path, (ref_url or real)
+            else:
+                seed, place_ref = (ref_url or real), None   # legacy fallback, logged upstream
         cap = (s.on_screen_text or "").strip() if captions else ""
         words = len(cap.split())
         # READABLE PACING (owner: 'the text goes by too fast'): a captioned scene must hold long
@@ -87,6 +97,7 @@ def build_creative_storyboard(reel: CreativeReel, brief: PosterBrief,
             duration_s=round(dur, 2),
             visual_prompt=s.veo_prompt,
             seed_image_url=seed,
+            place_ref_url=place_ref,
             headline=headline,
             cta_text=cta_text,
             source_field="creative",
@@ -108,6 +119,15 @@ def build_creative_storyboard(reel: CreativeReel, brief: PosterBrief,
         content_images=list(reel.images),
         warnings=list(brief.warnings),
     )
+
+
+def qa_caller_seed():
+    """The vision caller for the seed gate (None degrades permissive)."""
+    try:
+        from business_profile.llm import default_caller
+        return default_caller(strong=True)
+    except Exception:  # noqa: BLE001
+        return None
 
 
 def render_creative_reel(
@@ -191,7 +211,22 @@ def render_creative_reel(
     except Exception:  # noqa: BLE001 — the gate never loses a reel
         pass
 
-    storyboard = build_creative_storyboard(creative, brief)
+    # FULLY-GENERATED SCENES (owner ruling 2026-07-12): real photos exit the display path
+    # and become conditioning + judging references. REEL_SEED_MODE=real restores legacy.
+    seeds = None
+    import os as _os
+    if (_os.environ.get("REEL_SEED_MODE") or "generated").lower() != "real":
+        try:
+            from reel.seed_gen import generate_scene_seeds
+            seeds = generate_scene_seeds(creative, list(photos or []), profile=profile,
+                                         brand_dna=None,
+                                         out_dir=Path(out_path).parent, caller=qa_caller_seed())
+        except Exception as exc:  # noqa: BLE001 — seed generation failing = legacy mode
+            logger.warning("seed generation unavailable (%s) -> legacy real-photo seeds",
+                           type(exc).__name__)
+            seeds = None
+
+    storyboard = build_creative_storyboard(creative, brief, seeds=seeds)
 
     vo_path = None
     if with_voiceover:
