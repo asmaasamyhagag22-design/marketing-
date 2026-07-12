@@ -139,6 +139,18 @@ def test_full_emotional_arc_reaches_the_narrator():
     assert "just this one" in _instructions_for(["x"], "just this one", tone="")
 
 
+def test_director_carries_scenario_screen_guard_and_tts_rules():
+    # Owner round 2 (2026-07-12): "مش سيناريو" -> ONE CONTINUOUS SCENARIO; Veo junk pseudo-text
+    # on screens -> SCREENS & MARKS guard (incl. no third-party logos); "الكلام أوفر/بيقولوه
+    # غلط" -> <=8 words, silent scenes encouraged, numbers as words (TTS-friendly).
+    p = _system_prompt(6, "ar", "generic")
+    assert "ONE CONTINUOUS SCENARIO" in p and "SAME protagonist" in p
+    assert "SCREENS & MARKS" in p and "NO readable text" in p
+    assert "third-party marks" in p                    # the swoosh class, banned at the source
+    assert "NEVER more than 8 words" in p and "silent" in p
+    assert "TTS-FRIENDLY" in p and "أربع شهور" in p
+
+
 def test_featured_offering_without_photo_uses_varied_photos():
     anchored = _system_prompt(6, "ar", "generic", featured="X", product_photo_anchored=True)
     assert "ALWAYS 0" in anchored               # real product photo -> same-item shots

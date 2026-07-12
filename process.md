@@ -5,6 +5,16 @@ change-log. Read this before acting in this repo. Last full revision: 2026-07-04
 Test suite: **1288 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
 
+**DIRECTOR ROUND 2 (owner 2026-07-12: "مش سيناريو" / "الكلام أوفر وبيقولوه غلط" + her
+pre-EXECUTE scene-5 check):** three prompt-layer rules in _system_prompt (prompt-layer per the
+honesty ruling — deterministic guards are HITL + the motion QA landing next): (1) ONE
+CONTINUOUS SCENARIO — same protagonist/world hook→CTA, each veo_prompt continues the thread
+(montage = failed reel); (2) SCREENS & MARKS — in-scene displays are abstract with NO readable
+text (the junk pseudo-text class), NO logos of ANY company incl. third-party marks (the
+topshoes swoosh class) and the brand's own (end-card carries the real one); (3) VO discipline —
+<=8 words/line, silent scenes encouraged, numbers written as dialect words (TTS-friendly:
+أربع شهور not ٤). +1 hermetic test.
+
 **CAPTIONS OFF BY DEFAULT (owner reversal 2026-07-12: "الغي الكلام اللي ع الريل خالص خليه
 صور").** build_creative_storyboard(captions=False default; REEL_CAPTIONS=on or captions=True
 re-enables — the designed routing is preserved, not deleted). The reel is pure footage +
