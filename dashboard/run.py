@@ -115,6 +115,24 @@ def analyze(url: str, *, out_dir: str = "outputs", on_progress=None) -> str | No
     if have_profile:
         _run([py, "-m", "strategy", str(P["profile"]), "--days", "14", "--out", str(P["plan"])],
              timeout=300, label="Content calendar", on_progress=on_progress)
+        # U1 on the dashboard (owner directive 2026-07-12): build the grounded MediaPlan
+        # (one cheap Gemini text call) so the studio shows objective/KPI/geo at a glance.
+        _emit(on_progress, "stage_start", "Media plan", "  -> Media plan (U1) ...")
+        try:
+            _hitl_env()
+            import json as _json
+            from media_plan.builder import build_media_plan
+            prof = _json.loads(P["profile"].read_text(encoding="utf-8"))
+            mp = build_media_plan(prof, run_id=f"studio_{slug}")
+            if mp is not None:
+                (P["out"] / f"{slug}_media_plan.json").write_text(
+                    mp.model_dump_json(indent=2), encoding="utf-8")
+                _emit(on_progress, "stage_ok", "Media plan", "    [OK] Media plan")
+            else:
+                _emit(on_progress, "stage_fail", "Media plan",
+                      "    [X] Media plan (no grounded objective)")
+        except Exception as exc:  # noqa: BLE001 — the plan never blocks the analyze flow
+            _emit(on_progress, "stage_fail", "Media plan", f"    [X] Media plan ({type(exc).__name__})")
     return slug
 
 

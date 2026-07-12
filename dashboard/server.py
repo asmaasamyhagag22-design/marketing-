@@ -195,6 +195,23 @@ def _studio_css() -> str:
     c = _C
     return f"""<style>
     .cst-wrap{{max-width:1180px;margin:0 auto;}}
+    .mp-card{{background:{c['surface']};border:1px solid {c['line']};border-radius:18px;
+      padding:20px 24px;margin:0 0 18px;box-shadow:0 10px 30px rgba(126,52,80,.07);}}
+    .mp-head{{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}}
+    .mp-title{{font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:19px;}}
+    .mp-map{{display:flex;align-items:center;gap:0;flex-wrap:wrap;margin:4px 0 16px;}}
+    .mp-step{{display:flex;align-items:center;font-size:12px;font-weight:600;color:{c['inkSoft']};}}
+    .mp-step:not(:last-child)::after{{content:"";width:34px;height:2px;margin:0 8px;
+      background:linear-gradient(90deg,{c['blush500']},{c['blush100']});border-radius:2px;}}
+    .mp-dot{{width:9px;height:9px;border-radius:50%;margin-inline-end:6px;
+      background:linear-gradient(135deg,{c['blush500']},{c['blush700']});}}
+    .mp-grid{{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;}}
+    .mp-grid div{{background:{c['bg']};border:1px solid {c['line']};border-radius:12px;
+      padding:10px 14px;display:flex;flex-direction:column;gap:3px;}}
+    .mp-grid small{{color:{c['muted']};font-size:11px;letter-spacing:.3px;}}
+    .mp-grid b{{font-size:14px;}}
+    .mp-why{{margin-top:12px;font-size:13px;color:{c['inkSoft']};line-height:1.65;
+      border-inline-start:3px solid {c['blush100']};padding-inline-start:12px;}}
     .hitl-ov{{position:fixed;inset:0;background:rgba(42,26,31,.55);display:none;
       align-items:center;justify-content:center;z-index:60;padding:18px;}}
     .hitl-box{{background:#fff;border-radius:18px;max-width:860px;width:100%;max-height:88vh;
@@ -496,6 +513,53 @@ window.addEventListener('load',()=>{{
 </script>"""
 
 
+def _media_plan_card(slug: str, out_dir: str) -> str:
+    """U1 on the dashboard (owner directive): the grounded MediaPlan at a glance + the
+    end-to-end process map. Empty string when no plan exists (analyze not re-run yet)."""
+    import json as _json
+    from pathlib import Path as _P
+    path = _P(out_dir) / f"{slug}_media_plan.json"
+    if not path.is_file():
+        return ""
+    try:
+        mp = _json.loads(path.read_text(encoding="utf-8"))
+    except Exception:  # noqa: BLE001
+        return ""
+    obj = (mp.get("objectives") or [{}])[0]
+    kpi = obj.get("kpi_target") or {}
+    geo = mp.get("base_geo") or {}
+    ev = (obj.get("evidence") or [{}])[0]
+    grounded = bool(ev.get("resolved"))
+    c = _C
+    badge = (f'<span style="color:{c["ok"]};font-weight:700">مؤكد بالأدلة ✓</span>' if grounded
+             else f'<span style="color:{c["gold"]};font-weight:700">للمراجعة ⚠</span>')
+    lbl = {"OUTCOME_SALES": "مبيعات Sales", "OUTCOME_LEADS": "عملاء محتملون Leads",
+           "OUTCOME_TRAFFIC": "زيارات Traffic", "OUTCOME_AWARENESS": "وعي Awareness",
+           "OUTCOME_ENGAGEMENT": "تفاعل Engagement", "OUTCOME_APP_PROMOTION": "تطبيق App"}
+    dest_l = {"online_store": "المتجر الإلكتروني", "whatsapp": "واتساب", "phone_call": "مكالمة",
+              "lead_form": "نموذج تسجيل", "website": "الموقع", "physical_store": "الفرع",
+              "messenger": "ماسنجر", "instagram_dm": "دايركت", "app": "التطبيق"}
+    geo_txt = ("قومي — كل البلد" if geo.get("mode") == "national" else
+               f"{geo.get('center_address','')[:44]} · {geo.get('radius_km')} كم")
+    steps = "".join(
+        f'<div class="mp-step"><span class="mp-dot"></span>{t}</div>'
+        for t in ("Scrape", "Profile", "SWOT", "Media Plan", "Poster/Reel"))
+    rationale = (obj.get("rationale") or "").strip()[:220]
+    return f'''<div class="mp-card">
+      <div class="mp-head"><span class="mp-title">📋 الميديا بلان (U1)</span>{badge}</div>
+      <div class="mp-map">{steps}</div>
+      <div class="mp-grid">
+        <div><small>الهدف</small><b>{lbl.get(obj.get("objective"), obj.get("objective",""))}</b></div>
+        <div><small>الوجهة</small><b>{dest_l.get(obj.get("destination"), obj.get("destination",""))}</b></div>
+        <div><small>مرحلة الفانل</small><b>{(obj.get("funnel_stage") or "").upper()}</b></div>
+        <div><small>الميزانية</small><b>{obj.get("budget_allocation_pct", 100):.0f}%</b></div>
+        <div><small>مؤشر القياس</small><b>{kpi.get("metric", "—")}</b></div>
+        <div><small>الاستهداف الجغرافي</small><b>{geo_txt}</b></div>
+      </div>
+      <div class="mp-why">{rationale}</div>
+    </div>'''
+
+
 def _studio_page(slug: str, out_dir: str) -> str | None:
     P = _run_mod.paths(slug, out_dir)
     if not P["result"].is_file():
@@ -511,8 +575,9 @@ def _studio_page(slug: str, out_dir: str) -> str | None:
     # inject the Creative Studio just before the report's footer (where the static creative was)
     marker = '<div class="foot"'
     i = report.rfind(marker)
-    body = (report[:i] + f'<div class="bsr"><div class="wrap">{section}</div></div>' + report[i:]
-            if i >= 0 else report + section)
+    mp_card = _media_plan_card(slug, out_dir)
+    block = f'<div class="bsr"><div class="wrap">{mp_card}{section}</div></div>'
+    body = (report[:i] + block + report[i:] if i >= 0 else report + block)
     bar = ('<div class="cst-bar"><a href="/dashboard?slug=' + slug +
            '" target="_blank">⤓ Download the full dashboard</a></div>')
     # Nothing auto-runs: BOTH the poster (~a few min, slow image model + QA retries) and the reel
