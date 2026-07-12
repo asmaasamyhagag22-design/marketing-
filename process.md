@@ -2,8 +2,28 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1262 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
+Test suite: **1266 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**U9 FACEBOOK WRAP SHIPPED (2026-07-12, suite 1266) — the $20/month cap unblocked it.**
+Recon verdict on the team's uploaded `facebook_collector/` (untracked, per governance): Tier-2
+CLEAN — Apify Actors only (pages/posts/comments scrapers), APIFY_TOKEN from its own gitignored
+.env, no direct-scraping libs; defensive `pick()` normalization is good. Caveats: `collector.py`
+is dead code, `test_profile.py` is broken (imports a function that doesn't exist), and every
+post/comment carries the FULL raw actor payload + raw author name/url/picture — which is exactly
+why the repo boundary hashes. Integration (WRAP, not rewrite): `social_intel/providers/
+apify_facebook.py` parses saved snapshots ONLY (no network; PD-4) — authors hashed at ingestion
+via the one blessed fingerprint, actor `raw` payloads dropped, malformed rows skip, empty=VALID;
+`scripts/pull_facebook.py` is the single network path (drives the team pipeline UNMODIFIED,
+refuses before the pull if the worst-case results estimate would cross the owner's $20/month —
+`social_intel/spend_guard.py` JSONL ledger under runs/, conservative $5/1k-results estimate,
+APIFY_MONTHLY_CAP_USD/APIFY_COST_PER_1K_RESULTS overridable); `scripts/
+convert_facebook_snapshot.py` makes committable fixtures with a LOUD PII gate (refuses to write
+if any raw author name/profile URL/avatar survives serialization). The team's real fiveguys
+sample converted: `social_intel/fixtures/fiveguys.json` (12 sanitized signals, 2 posts + 10
+comments) — ABSA now has REAL Facebook data to develop against, hermetically. +4 tests
+(ingestion-hashing/PII-drop, provider raw+sanitized round-trip, real-fixture sanitation, cap
+refusal). NO recurring pulls scheduled — one-shot script only, per the standing ruling.
 
 **OWNER ROUND LOCKED (2026-07-12, suite 1262):** three rulings executed. **(1) RAG-to-creative
 regression PINNED — with a measured fix first:** on the real NTI manifest the owner's popup course
