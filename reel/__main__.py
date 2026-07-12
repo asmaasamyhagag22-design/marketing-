@@ -165,6 +165,14 @@ def main() -> int:
                 max_keep=max(2, args.frames),
             )
             print(f"   [curate] {len(selected)}/{len(usable)} are on-brand photos", file=sys.stderr)
+            if not selected:
+                # FULLY-GENERATED mode (owner ruling 2026-07-12): photos are CONDITIONING +
+                # JUDGING references now, not display material — the curator's display bar
+                # no longer gates them out. Without this, zero curated photos killed the
+                # whole creative plan (measured on NTI: 0/6 curated -> director skipped).
+                selected = usable
+                print(f"   [curate] 0 curated -> keeping {len(usable)} quality-passing "
+                      "photo(s) as generation/judging references", file=sys.stderr)
 
     # FEATURE the user-picked product: the reel is about ONE product — EXCLUSIVELY that image, so
     # every scene is the SAME product (several shots/uses), not a mixed montage (owner: "ريل عن منتج
