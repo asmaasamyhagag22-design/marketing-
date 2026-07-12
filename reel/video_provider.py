@@ -117,36 +117,83 @@ def _edge_bg_color(img) -> tuple[int, int, int]:
     return tuple(int(sum(c[i] for c in cols) / n) for i in range(3))  # type: ignore[return-value]
 
 
+_OUTPAINT_CACHE: dict = {}
+
+
+def _outpaint_seed(data: bytes, width: int, height: int):
+    """Extend a REAL landscape photo to full 9:16 with Imagen outpainting — the real photo is
+    preserved, only the border is generated (design domain; motion-QA setting_faithful still
+    judges the clip against the ORIGINAL seed). Cents per UNIQUE seed, cached for the run.
+    None without Vertex creds or on any failure (caller falls back to blur-contain)."""
+    import hashlib
+    if not os.environ.get("GOOGLE_CLOUD_PROJECT"):
+        return None
+    key = hashlib.md5(data).hexdigest() + f":{width}x{height}"
+    if key in _OUTPAINT_CACHE:
+        return _OUTPAINT_CACHE[key]
+    try:
+        import tempfile
+        from poster.imagen_edit_provider import ImagenEditProvider
+        with tempfile.TemporaryDirectory(prefix="seed_op_") as td:
+            out = ImagenEditProvider().outpaint(data, "", target=(width, height), out_dir=td)
+            b = Path(out).read_bytes()
+        _OUTPAINT_CACHE[key] = b
+        return b
+    except Exception:  # noqa: BLE001
+        return None
+
+
 def _to_vertical_seed(data: bytes, *, width: int = 768, height: int = 1366) -> tuple[bytes, str]:
     """Make a FULL-FRAME 9:16 seed so Veo i2v doesn't letterbox a landscape photo.
 
-    Default 'cover' crops to fill (sharp, professional, the standard reel look).
-    REEL_SEED_FILL=pad CONTAINS the whole photo (nothing cropped) over its OWN background
-    colour — seamless for a studio product shot, so the product is never cut off AND there is
-    no visible band (this is the default for a single FEATURED product). REEL_SEED_FILL=blur
-    contains it over a blurred+dimmed copy instead (keeps edges but leaves a soft band on
-    seed-hugging scenes), or REEL_SEED_FILL=none passes through.
+    Default 'auto' (owner 2026-07-12: "الفريم كله كأنه زوم مقصقص" — the old cover default
+    center-cropped every landscape real photo to a 37-42% sliver, MEASURED on NTI's own
+    photos, so the whole reel inherited a cropped, zoomed-in world): portrait-ish sources
+    (ratio <= 0.8, crop loss <= ~30%) keep the sharp cover look; landscape sources OUTPAINT
+    to full 9:16 (the real photo preserved, only the border generated), degrading to a
+    blur-contain (whole photo visible over its own blurred copy). Explicit REEL_SEED_FILL
+    still wins: cover / pad / blur / outpaint / none.
     Returns (jpeg_bytes, 'image/jpeg'); falls back to the input on any error."""
-    mode = (os.getenv("REEL_SEED_FILL") or "cover").lower()
+    mode = (os.getenv("REEL_SEED_FILL") or "auto").lower()
     if mode == "none":
         return data, "image/jpeg"
     try:
         import io
         from PIL import Image, ImageEnhance, ImageFilter, ImageOps
         img = Image.open(io.BytesIO(data)).convert("RGB")
-        if mode == "pad":
-            fg = img.copy()
-            fg.thumbnail((width, height), Image.LANCZOS)
-            canvas = Image.new("RGB", (width, height), _edge_bg_color(img))
-            canvas.paste(fg, ((width - fg.width) // 2, (height - fg.height) // 2))
-        elif mode == "blur":
+
+        def _blur_contain():
             bg = ImageOps.fit(img, (width, height), method=Image.LANCZOS)
             bg = ImageEnhance.Brightness(bg.filter(ImageFilter.GaussianBlur(40))).enhance(0.55)
             fg = img.copy()
             fg.thumbnail((width, height), Image.LANCZOS)
             bg.paste(fg, ((width - fg.width) // 2, (height - fg.height) // 2))
-            canvas = bg
-        else:  # cover
+            return bg
+
+        def _outpaint_or_blur():
+            ob = _outpaint_seed(data, width, height)
+            if ob:
+                c = Image.open(io.BytesIO(ob)).convert("RGB")
+                if c.size != (width, height):
+                    c = ImageOps.fit(c, (width, height), method=Image.LANCZOS)
+                return c
+            return _blur_contain()
+
+        if mode == "auto":
+            if img.width / max(1, img.height) <= 0.8:
+                canvas = ImageOps.fit(img, (width, height), method=Image.LANCZOS)
+            else:
+                canvas = _outpaint_or_blur()
+        elif mode == "outpaint":
+            canvas = _outpaint_or_blur()
+        elif mode == "pad":
+            fg = img.copy()
+            fg.thumbnail((width, height), Image.LANCZOS)
+            canvas = Image.new("RGB", (width, height), _edge_bg_color(img))
+            canvas.paste(fg, ((width - fg.width) // 2, (height - fg.height) // 2))
+        elif mode == "blur":
+            canvas = _blur_contain()
+        else:  # cover (explicit only, since 'auto' became the default)
             # FIX-D3 crop safety: a STRONGLY-landscape source (banner-ish, often carrying
             # baked text) center-cropped to 9:16 keeps ~1/3 of its width and truncates words
             # mid-letter (measured on nti: 'TRAINING' rendered as 'TRAING'). Those CONTAIN

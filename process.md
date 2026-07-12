@@ -2,8 +2,27 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1300 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
+Test suite: **1304 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**SEED FRAMING — "الفريم كله كأنه زوم مقصقص" fixed at the root (owner, 2026-07-12, suite
+1304).** MEASURED: the seed normalizer's `cover` default center-cropped EVERY landscape real
+photo to a 37-42% vertical sliver (all six NTI photos measured: 750x500 ratio 1.5 → 37%
+survives) before Veo ever saw it — and Ken Burns cover-cropped the same way then zoomed on
+top. Every frame inherited a cropped, zoomed-in world. Fix in `_to_vertical_seed` (ONE
+choke-point — Veo seeds AND Ken Burns both route through it): new `auto` default —
+portrait-ish sources (ratio<=0.8, loss<=~30%) keep the sharp cover; landscape sources try
+REAL OUTPAINT to 9:16 (imagen edit — photo preserved, border generated, cached per seed),
+degrading to blur-contain (whole photo visible over its own blurred copy). Explicit
+REEL_SEED_FILL still wins (cover/pad/blur/outpaint/none; --product-image keeps pad).
+**HONEST LIVE STATE:** outpaint 404s on radiant-octane — NO imagen-3.0/4.0-capability model
+is enabled on the new project (it was verified on the old image-498715); today the fallback
+blur-contain is what runs (still: 100% of the scene visible vs 37%). Owner action to unlock
+the premium path: enable an Imagen capability/edit model on radiant-octane — the code
+auto-uses it the moment it exists. T-10 (candidate): gemini-image-based extension instead —
+needs an owner ruling first because a generative model may REDRAW the original pixels (the
+real-photos-stay-real doctrine). +4 hermetic tests (landscape whole-scene, outpaint-preferred,
+portrait-sharp, explicit-override).
 
 **U8b DISCOVERY v2 — FIRST SLICE SHIPPED (2026-07-12, suite 1300):** MarketDefinition now
 DRIVES retrieval. The measured v1 gap: candidates came from ONE offerings-built (usually
