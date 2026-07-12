@@ -99,3 +99,18 @@ def test_arabic_dialect_is_an_option_not_a_hardcode(monkeypatch):
     assert "Standard Arabic" in _spoken_language_label("ar")
     monkeypatch.setenv("REEL_ARABIC_DIALECT", "masri")
     assert "Masri" in _spoken_language_label("ar")
+
+
+def test_ratified_tts_routing_masri_openai_fusha_gemini(monkeypatch):
+    # Owner listen-test verdict (2026-07-11): fusha -> Gemini (Kore directed);
+    # masri -> OpenAI gpt-audio. Explicit REEL_TTS_BACKEND still overrides everything.
+    from reel.voiceover import _resolve_backend
+    monkeypatch.setenv("GOOGLE_CLOUD_PROJECT", "proj")
+    monkeypatch.setenv("OPENAI_API_KEY", "k")
+    monkeypatch.delenv("REEL_TTS_BACKEND", raising=False)
+    monkeypatch.setenv("REEL_ARABIC_DIALECT", "masri")
+    assert _resolve_backend(None) == "openai"
+    monkeypatch.setenv("REEL_ARABIC_DIALECT", "fusha")
+    assert _resolve_backend(None) == "gemini"
+    monkeypatch.setenv("REEL_TTS_BACKEND", "edge")
+    assert _resolve_backend(None) == "edge"          # explicit override wins

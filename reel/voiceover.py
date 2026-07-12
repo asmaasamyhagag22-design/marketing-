@@ -257,6 +257,15 @@ def _resolve_backend(backend: Optional[str]) -> str:
     b = (backend or os.environ.get("REEL_TTS_BACKEND") or "").lower()
     if b in ("gemini", "openai", "edge"):
         return b
+    # OWNER-RATIFIED (2026-07-11 listen test): فصحى (fusha) -> Gemini Kore DIRECTED (variant 2);
+    # عامية (masri) -> OpenAI gpt-audio (variant 4). The dialect itself is the USER's choice
+    # (REEL_ARABIC_DIALECT / the studio UI); this only routes the ratified voice per register.
+    try:
+        from reel.art_director import arabic_dialect
+        if arabic_dialect() == "masri" and os.environ.get("OPENAI_API_KEY"):
+            return "openai"
+    except Exception:  # noqa: BLE001
+        pass
     if os.environ.get("GOOGLE_CLOUD_PROJECT") or os.environ.get("GEMINI_API_KEY"):
         return "gemini"
     if os.environ.get("OPENAI_API_KEY"):

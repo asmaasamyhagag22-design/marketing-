@@ -1,0 +1,6 @@
+[
+  {"author": "Omar K", "kind": "comment", "text": "المنتج وصل متأخر أسبوع", "lang": "ar",
+   "likes": 3, "is_own_brand": true, "source_url": "https://fb.example/p/1"},
+  {"author": "Laila", "kind": "comment", "text": "أفضل من اللي جربته عند المنافس", "lang": "ar",
+   "likes": 11, "is_own_brand": false, "source_url": "https://fb.example/p/2"}
+]

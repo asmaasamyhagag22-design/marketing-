@@ -28,3 +28,20 @@ def test_malformed_rows_skip_not_fatal(tmp_path):
         encoding="utf-8")
     out = FixtureReviewProvider(str(tmp_path)).fetch("b")
     assert len(out) == 1 and out[0].rating == 4            # the 9-star row rejected silently
+
+
+def test_labeling_kit_is_startable_the_moment_data_exists(tmp_path):
+    # U8c: 100-review label-ready JSONL (aspect sheet embedded, empty label slots,
+    # evidence_quote contract documented) + the one-page guide. Zero network.
+    from reviews import FixtureReviewProvider
+    from reviews.labeling_kit import build_labeling_file, write_guide
+    from reviews.taxonomy import aspects_for
+    revs = FixtureReviewProvider().fetch("demo_clinic")
+    out = build_labeling_file(revs, "clinic", tmp_path / "label_me.jsonl")
+    lines = [__import__("json").loads(l) for l in out.read_text(encoding="utf-8").splitlines()]
+    header, rows = lines[0], lines[1:]
+    assert any(a["aspect"] == "doctor_competence" for a in header["_aspect_sheet"])
+    assert len(rows) == 3 and all(r["labels"] == [] and "text" in r for r in rows)
+    guide = write_guide(tmp_path)
+    assert "substring" in guide.read_text(encoding="utf-8")
+    assert len(aspects_for(None)) >= 6                       # universal default exists
