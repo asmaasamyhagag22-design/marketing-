@@ -2,8 +2,21 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1340 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
+Test suite: **1341 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**PHASE 3 · SECTION H — FIVE-MINUTE ORDERED READ SHIPPED (suite 1341).** The body is
+reordered to the mandated arc — Market (SWOT + competitors + voice) -> Strategy (TOWS + priority
+actions) -> Plan (explained plan) -> Creative -> Calendar -> Gaps (honesty) — and a numbered
+bilingual "start here" arc strip sits right under the executive summary so one scroll reads
+top-to-bottom in order. Verified: the six section anchors render in monotonic arc order on the
+real NTI page. +1 hermetic test. Section H: 2 -> 4.
+
+**SCORECARD v1 (after Phase-3 sections A,B/I,C,F,G,H — surface-first pass):** A 1->4 · B/I 1->4 ·
+C 2->4 · F 1->4 · G 2->4 · H 2->4. Still open: D (creative tied to strategy — needs the
+poster/reel labelled with strategy/audience/funnel) · E (voice renders only when a review file
+matches the slug — needs a live pull, P2/P5). Round-2 builds still queued: Market Pulse (trends),
+Competitor Registry (the one real build), tier-match reasons, capability census.
 
 **PHASE 3 · SECTION G+ — RTL + REAL FONTS + ZERO RAW INTERNALS SHIPPED (suite 1340).** The
 standalone deliverable is now `<html lang="ar" dir="rtl">` (Arabic-primary; Latin runs render
