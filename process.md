@@ -5,6 +5,20 @@ change-log. Read this before acting in this repo. Last full revision: 2026-07-04
 Test suite: **1254 passed, 0 failed** (2026-07-11; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
 
+**DIRECTOR ROUND (2026-07-11 late, holds lifted) — RATIFIED GATE: objective 93% / destination
+92% / combined 92% PASS.** assalam label owner-ratified phone_call→lead_form (truth-tracking,
+dated note in ground_truth _doc, a6ffaed) → destination 85%→92%; the only miss anywhere is mumm
+(bot wall). TTS listen-test verdict WIRED (951ce39): fusha→Gemini Kore directed, masri→OpenAI
+gpt-audio (REEL_TTS_BACKEND still overrides; dialect+language = user's UI choice). U8c labeling
+kit shipped (reviews/taxonomy.py ABSA aspects config-by-category+default per D-8; labeling_kit
+100-row JSONL with embedded aspect sheet + evidence_quote substring contract; Arabic one-page
+guide). U9 skeleton per governance (fixtures-only: strict SocialSignal + Protocol + fixture
+provider; Apify=Tier-2 behind §10 sign-off; direct IG scraper REJECTED, salvage=snapshot_parser
+Tier-3; schema pending owner raw samples). IN PROGRESS: HITL prompt gate (preview AR/EN + edit +
+EXECUTE lock before any paid render), studio language/dialect selects, MediaPlan dashboard card +
+process map, popup-extraction bug hunt. ABSA R-5 one-paragraph design DELIVERED — awaiting
+owner sign-off before implementation.
+
 **U8a SHIPPED (fixtures-first, 2026-07-11, suite 1254):** new `reviews/` package — strict
 `Review` schema (privacy rule: `author_hash` NEVER a raw name; the one blessed fingerprint is
 telemetry.payload_hash per D-3), `ReviewProvider` protocol (a provider-per-source is universal,
