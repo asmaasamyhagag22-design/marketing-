@@ -890,7 +890,11 @@ def scrape(input_url: str, output_root: str = "scrapes", *, light: bool = False)
                     return _c[u]
 
                 _ajax_added = 0
-                _AJAX_MAX = 40
+                # 120 (was 40): modal detail pages are tiny + light-fetched; MEASURED on nti:
+                # 7 course categories x ~6-10 modals each blew past 40 and the owner's exact
+                # course (catID=205 -> 2631.html) died on the cap with 140s of budget unused.
+                # The time budget remains the real bound.
+                _AJAX_MAX = 120
                 frontier_norms = {normalize_url(s[0]) for s in subpages}
                 # FIX-A: depth per frontier URL (homepage=0, its links=1). Links found on a
                 # depth-d page re-seed the frontier at d+1, up to MAX_CRAWL_DEPTH.
