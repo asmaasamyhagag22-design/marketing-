@@ -68,6 +68,12 @@ def render_reel(
     out_path.parent.mkdir(parents=True, exist_ok=True)
     W, H = _even(REEL_W * scale), _even(REEL_H * scale)
     fade = 0.4
+    # CALIBRATION FINDING (2026-07-12): Veo draws garbled text onto signs/equipment and
+    # the motion QA rightly kills the clip — a wasted render. Ban it at the prompt, for
+    # every scene, retry and fallback — including OLD plans and HITL-edited ones.
+    _NO_TEXT = (" Absolutely no readable text anywhere in the scene — no signage, screen "
+                "text, labels, posters or logos; any text-bearing surface stays abstract, "
+                "blurred or out of frame.")
     fallback_used = (provider.name == "stub")
     scene_qa: list = []   # per-scene motion-QA verdicts (exported on the audit trail)
     fb = fallback_provider or KenBurnsProvider(
@@ -101,7 +107,7 @@ def render_reel(
                 reference_image=ref,
             )
             try:
-                raw = provider.generate(scene.visual_prompt, **gen_kwargs)
+                raw = provider.generate(scene.visual_prompt + _NO_TEXT, **gen_kwargs)
             except Exception as exc:                       # noqa: BLE001
                 # A provider failure on ONE scene must not kill the whole reel.
                 # Regenerate just this scene with the fallback (real-photo KenBurns
@@ -113,7 +119,7 @@ def render_reel(
                     file=sys.stderr,
                 )
                 fallback_used = True
-                raw = fb.generate(scene.visual_prompt, **gen_kwargs)
+                raw = fb.generate(scene.visual_prompt + _NO_TEXT, **gen_kwargs)
             else:
                 # SCENE QA GATE (opt-in via qa_caller): reject a Veo clip where the product is
                 # unfaithful / vanishes / does an impossible action — or (motion-QA extension,
@@ -145,7 +151,7 @@ def render_reel(
                               file=sys.stderr)
                         good = False
                         try:
-                            raw = provider.generate(scene.visual_prompt, **gen_kwargs)
+                            raw = provider.generate(scene.visual_prompt + _NO_TEXT, **gen_kwargs)
                             v2 = check_scene(raw, product_hint=qa_product_hint,
                                              reference_image=qa_ref, caller=qa_caller)
                             _v_final = v2
@@ -153,10 +159,10 @@ def render_reel(
                         except Exception:  # noqa: BLE001 — a failed retry drops to the fallback
                             good = False
                         if not good:
-                            print(f"[reel] scene {i} still failed QA; faithful real-photo fallback",
+                            print(f"[reel] scene {i} still failed QA; faithful seed-frame KenBurns fallback",
                                   file=sys.stderr)
                             fallback_used = True
-                            raw = fb.generate(scene.visual_prompt, **gen_kwargs)
+                            raw = fb.generate(scene.visual_prompt + _NO_TEXT, **gen_kwargs)
                     if _v_final is not None:
                         scene_qa.append({"scene": i, **_v_final.model_dump()})
             norm = tmpd / f"norm{i}.mp4"

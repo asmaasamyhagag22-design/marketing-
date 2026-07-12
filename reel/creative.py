@@ -220,7 +220,8 @@ def render_creative_reel(
             from reel.seed_gen import generate_scene_seeds
             seeds = generate_scene_seeds(creative, list(photos or []), profile=profile,
                                          brand_dna=None,
-                                         out_dir=Path(out_path).parent, caller=qa_caller_seed())
+                                         out_dir=Path(out_path).parent, caller=qa_caller_seed(),
+                                         log=print)   # the CLI shows [seedgen] stats
         except Exception as exc:  # noqa: BLE001 — seed generation failing = legacy mode
             logger.warning("seed generation unavailable (%s) -> legacy real-photo seeds",
                            type(exc).__name__)

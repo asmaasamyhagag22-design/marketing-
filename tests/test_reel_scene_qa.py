@@ -145,7 +145,9 @@ def test_qa_fail_regenerates_once_then_falls_back(tmp_path, monkeypatch):
                            qa_product_hint="Hair Growth", qa_reference_image=b"REF")
     # per scene: 1 initial + 1 retry on the primary, then the faithful KenBurns fallback
     assert len(primary.seen) == 4                       # 2 scenes x (initial + retry)
-    assert {p for p, _ in fb.seen} == {"S0", "S1"}      # both hallucinated scenes -> real-photo fallback
+    # every prompt now carries the standing no-text clause (calibration fix 2026-07-12)
+    assert {p.split(" Absolutely no readable text")[0] for p, _ in fb.seen} == {"S0", "S1"}
+    assert all("no readable text" in p for p, _ in fb.seen)
     assert res.fallback_used is True
     assert qa.calls == 4                                # 2 scenes x (check + recheck)
 

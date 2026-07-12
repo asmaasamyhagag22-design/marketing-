@@ -5,6 +5,24 @@ change-log. Read this before acting in this repo. Last full revision: 2026-07-04
 Test suite: **1317 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
 
+**CALIBRATION RUN #1 (fully-generated mode, NTI, 2026-07-12 19:21) + three surgical fixes.**
+The reel rendered end-to-end on the owner's APPROVED plan (17.5s, audio ON, audit trail
+exported). VISUAL VERDICT (frames inspected): the generated world is exactly the ruling's
+target — cinematic, coherent, authentically Egyptian, native 9:16, zero crop. THE BOTTLENECK
+(measured from the run log): Veo drew GARBLED TEXT onto text-bearing surfaces in 4/5 failed
+clips (equipment labels, the building's real Arabic sign) + 1 place-drift (high-rise vs the
+institutional reference — place fidelity CAUGHT it, working as designed); the motion QA
+rightly killed all five, each fell fail-closed to the KenBurns seed-frame fallback — nothing
+bad shipped, but the reel moves less than it should and every kill wasted a Veo render.
+FIXES (before the owner's resemblance tuning cycle): (1) the SEED GATE gained a `no_text`
+criterion — text-bearing seeds die at cents, never reach Veo dollars; (2) a standing NO-TEXT
+clause is appended to EVERY Veo motion prompt at the compositor choke-point (covers old plans
+and HITL-edited ones); (3) [seedgen] stats now print to the CLI (logger.info was swallowed —
+that's also why 2 scenes silently fell back to real-photo seeds mid-run). Stale log wording
+fixed ('real-photo' -> 'seed-frame' fallback). COST DELTA measured: +~8 gemini-image calls
+(seeds+retries, cents) per reel; the wasted-Veo retries are what fixes 1-2 remove. AWAITING
+OWNER at HITL: the resemblance verdict on the calibration frames + EXECUTE for render #2.
+
 **OWNER CREATIVE RULING — REELS GO FULLY GENERATED (2026-07-12).** Real photos EXIT the reel's
 display path (no raw site photo appears inside a reel — the aesthetic break she kept flagging);
 their role EXPANDS to (a) GENERATION CONDITIONING — every scene seed is now generated 9:16 by

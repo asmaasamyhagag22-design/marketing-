@@ -192,6 +192,7 @@ class SeedVerdict(BaseModel):
     lighting_real: bool = True        # believable, photographic light — not renderish glow
     composition_clean: bool = True    # one focal point, no clutter/garbled elements
     ad_grade: bool = True             # a professional brand would run this frame
+    no_text: bool = True              # NO readable/pseudo text, signage, labels, logos
     score: int = 7                    # art-director score 1..10
     overall_pass: bool = True
     reason: str = ""
@@ -203,6 +204,7 @@ class _SeedResponse(BaseModel):
     lighting_real: bool
     composition_clean: bool
     ad_grade: bool = True
+    no_text: bool = True      # calibration finding 2026-07-12: text in a seed = Veo garbles it
     score: int = 7
     reason: str = ""
 
@@ -230,6 +232,11 @@ def check_seed_frame(image: "str | Path | bytes", *, caller: Any = None,
         "- composition_clean: ONE clear focal point, no clutter, no half-formed or garbled "
         "elements.\n"
         "- ad_grade: overall, professional-campaign quality for this brand.\n"
+        # CALIBRATION FINDING (NTI run 2026-07-12): 4/5 motion-QA failures were garbled text
+        # Veo drew over text-bearing surfaces — kill those seeds HERE, at cents, not there.
+        "- no_text: the frame contains NO readable or pseudo-text of any kind — no signage, "
+        "screen text, labels, posters or logos; text-bearing surfaces must be abstract, "
+        "blurred or out of frame (the motion model garbles any text it inherits).\n"
         "- score: 1..10 as an art director.\n"
         "- reason: one short sentence naming the worst problem (or 'clean')."
     )
@@ -243,8 +250,10 @@ def check_seed_frame(image: "str | Path | bytes", *, caller: Any = None,
     # the compound gate is computed in CODE (same law as the motion QA): every criterion
     # AND the score threshold — the model never self-passes.
     ok = (bool(resp.anatomy_ok) and bool(resp.lighting_real)
-          and bool(resp.composition_clean) and bool(resp.ad_grade) and score >= 6)
+          and bool(resp.composition_clean) and bool(resp.ad_grade)
+          and bool(resp.no_text) and score >= 6)
     return SeedVerdict(anatomy_ok=bool(resp.anatomy_ok), lighting_real=bool(resp.lighting_real),
                        composition_clean=bool(resp.composition_clean),
-                       ad_grade=bool(resp.ad_grade), score=score, overall_pass=ok,
+                       ad_grade=bool(resp.ad_grade), no_text=bool(resp.no_text),
+                       score=score, overall_pass=ok,
                        reason=str(resp.reason or "")[:200], checked=True)

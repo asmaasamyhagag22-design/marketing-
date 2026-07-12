@@ -264,7 +264,9 @@ def test_compositor_seeds_only_intro_and_outro(tmp_path: Path, monkeypatch):
     provider = _RecordingProvider()
     comp.render_reel(sb, provider=provider, out_path=tmp_path / "out.mp4", scale=0.25)
 
-    seeded = {prompt: ref for prompt, ref in provider.seen}
+    # prompts carry the standing no-text clause since the calibration fix (2026-07-12)
+    seeded = {prompt.split(" Absolutely no readable text")[0]: ref
+              for prompt, ref in provider.seen}
     assert seeded["INTRO"] == "https://x.com/hero.jpg"
     assert seeded["OUTRO"] == "https://x.com/hero.jpg"
     assert seeded["OFFER"] is None
@@ -332,7 +334,8 @@ def test_compositor_falls_back_when_primary_provider_raises(tmp_path: Path, monk
 
     # Primary was attempted for every scene; the fallback rendered every scene.
     assert primary.calls == len(scenes)
-    assert {prompt for prompt, _ in fallback.seen} == {"INTRO", "OFFER", "OUTRO"}
+    assert {prompt.split(" Absolutely no readable text")[0]
+            for prompt, _ in fallback.seen} == {"INTRO", "OFFER", "OUTRO"}
     assert result.fallback_used is True
     assert (tmp_path / "out.mp4").exists()
 
