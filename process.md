@@ -2,8 +2,18 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1332 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
+Test suite: **1335 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**PHASE 3 · SECTION F — HONESTY SURFACE SHIPPED (suite 1335).** `_honesty_surface()` — the
+"ما لا نعرفه بعد · What we don't know yet" panel (rubric F, was 1). Detects real unknowns from
+the artifacts and DISPLAYS them, each naming the step that closes it (the advisor-gap channel):
+standalone/0-competitor mode, no customer voice collected, competitor running-ads unavailable
+(blocked on the Meta identity confirmation), null KPI target (calibrate-later, never invented),
+ungrounded persona axes (provisional assumptions). Pure detection, zero fabrication, ZERO red
+banners — failures are relocated to honest disclosure per the dashboard failure policy (D-0.2).
+Test asserts no error/FAIL/traceback language ever reaches the client. +3 hermetic tests.
+Section F: 1 -> 4.
 
 **PHASE 3 · SECTION I/B — THE EXPLAINED PLAN SHIPPED (suite 1332).** The owner's headline
 pain ("cards I don't even understand") — the media-plan grid of raw enums is replaced by

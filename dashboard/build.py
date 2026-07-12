@@ -393,6 +393,54 @@ def _explained_plan(mp: dict, category: str) -> str:
       </div></div>"""
 
 
+def _honesty_surface(comp: dict, mp: dict, prof: dict, n_voice: int) -> str:
+    """RUBRIC F — the "what we don't know yet" panel. Every unknown is DISPLAYED honestly,
+    never hidden; each gap names the unit/action that would fill it (the advisor-gap channel).
+    Pure detection from the real artifacts — no fabrication, no red banners."""
+    gaps: list[tuple[str, str]] = []   # (arabic line, english line)
+    swot = comp.get("swot") or {}
+    mode = str(swot.get("mode") or "")
+    obj = (mp.get("objectives") or [{}])[0] if mp else {}
+
+    if mode == "standalone" or int(comp.get("competitor_count") or 0) == 0:
+        gaps.append(("لم نؤكّد منافسين مباشرين بعد — التحليل التنافسي مبنيّ على موقعك وحده. "
+                     "نحتاج تأكيد قائمة المنافسين لإكمال مقارنة السوق.",
+                     "No confirmed direct competitors yet — the analysis stands on your own site. "
+                     "Confirming the competitor list completes the market comparison."))
+    if n_voice == 0:
+        gaps.append(("لم نجمع آراء عملاء بعد — صوت العميل يُضاف بعد ربط تقييمات Google Maps للبراند.",
+                     "No customer reviews collected yet — customer voice is added once the "
+                     "brand's Google-Maps reviews are connected."))
+    # ad presence (ads_intel) — built but blocked on the Meta identity confirmation
+    gaps.append(("إعلانات المنافسين الجارية غير متاحة بعد — تحتاج تأكيد هوية حساب Meta الإعلاني "
+                 "(خطوة مجانية لمرة واحدة).",
+                 "Competitors' running ads are not available yet — needs the one-time (free) "
+                 "Meta ad-account identity confirmation."))
+    kpi = obj.get("kpi_target") or {}
+    if obj.get("objective") and not kpi.get("target_value"):
+        gaps.append(("الرقم المستهدف للتكلفة لم يُحدَّد بعد — لا نخترع رقماً؛ يُعاير من بيانات "
+                     "أول أسبوعين من التشغيل الفعلي.",
+                     "The cost target isn't set yet — we never invent one; it calibrates from "
+                     "your first two weeks of real spend."))
+    # ungrounded persona axes -> honest assumption disclosure
+    persona = mp.get("base_persona") or {}
+    if persona and not any(
+            isinstance(persona.get(a), dict) and persona.get(a, {}).get("evidence")
+            for a in ("age_range", "gender", "income_level")):
+        gaps.append(("عمر ودخل الجمهور غير مؤكّدين من الموقع — التقديرات مبدئية وتُحسم من أداء الحملة.",
+                     "Audience age &amp; income aren't confirmed from the site — estimates are "
+                     "provisional and settle from campaign performance."))
+    if not gaps:
+        return ""
+    rows = "".join(
+        f'<div class="hs-row"><span class="hs-dot">•</span><div><div class="hs-ar">{_esc(ar)}</div>'
+        f'<div class="hs-en">{_esc(en)}</div></div></div>' for ar, en in gaps)
+    return f"""<div class="sec"><div class="sec-h"><span class="bar"></span>
+      <h2>ما لا نعرفه بعد · What we don't know yet</h2>
+      <span class="cnt">الأمانة جزء من التقرير · honesty is part of the report</span></div>
+      <div class="card hs"><p class="hs-intro">هذه النقاط غير مؤكدة بعد — نعرضها بصراحة بدل إخفائها، وكل واحدة تُغلق بخطوة واضحة.<span class="pl-en">These are still open — shown openly rather than hidden, each with a clear next step.</span></p>{rows}</div></div>"""
+
+
 def _css() -> str:
     c = _C
     return f"""<style>
@@ -593,6 +641,13 @@ def _css() -> str:
     .pl-cal{{font-weight:700;color:{c['gold700']};font-size:12.5px;}}
     .pl-steps{{margin:0;padding-inline-start:20px;font-size:13px;color:{c['ink']};line-height:1.9;}}
     @media (max-width:760px){{.pl-grid{{grid-template-columns:1fr;}}}}
+    /* RUBRIC F — honesty surface */
+    .hs-intro{{font-size:13px;color:{c['inkSoft']};line-height:1.6;margin-bottom:12px;}}
+    .hs-row{{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid {c['line']};align-items:flex-start;}}
+    .hs-row:last-child{{border-bottom:none;}}
+    .hs-dot{{color:{c['gold']};font-size:18px;line-height:1.2;flex:0 0 auto;}}
+    .hs-ar{{font-size:13px;color:{c['ink']};line-height:1.55;}}
+    .hs-en{{font-size:11.5px;color:{c['muted']};font-style:italic;margin-top:2px;line-height:1.5;}}
     @media (max-width:760px){{.mp-grid{{grid-template-columns:1fr 1fr;}}}}
     @media (max-width:760px){{.swot,.creative{{grid-template-columns:1fr;}}.cal-row{{grid-template-columns:1fr;gap:3px;}}}}
     </style>"""
@@ -693,6 +748,8 @@ def build_dashboard_html(
     # RUBRIC A — the first-screen story (composed once the objective is known).
     exec_html = _executive_summary(name, category, prof, swot, tows,
                                    int(comp.get("competitor_count") or len(competitors)), obj)
+    # RUBRIC F — the honesty surface ("what we don't know yet").
+    honesty_html = _honesty_surface(comp, mp, prof, len(voice_items))
 
     actions = (tows.get("priority_actions") or [])[:6]
     actions_html = ""
@@ -801,7 +858,7 @@ def build_dashboard_html(
         {(' · <b>' + _esc(category) + '</b>') if category else ''}{(' · tone: ' + _esc(tone)) if tone else ''}</p>
         <div class="kpis">{kpis}</div>
       </div></div>
-      {exec_html}{swot_html}{voice_html}{mp_html}{comp_html}{tows_html}{actions_html}{cal_html}{creative_html}{qa_html}
+      {exec_html}{swot_html}{voice_html}{mp_html}{comp_html}{tows_html}{actions_html}{cal_html}{creative_html}{honesty_html}{qa_html}
       <div class="foot">Generated by <b>Baseera</b> · {_esc(gen)} · every factual line carries its source (the Evidence Ledger).</div>
     </div></div>"""
 
