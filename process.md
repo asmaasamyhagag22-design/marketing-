@@ -2,8 +2,20 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1308 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
+Test suite: **1311 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**ADS INTEL (Phase-2 #8) — FIRST SLICE SHIPPED, fixtures-first (2026-07-12, suite 1311):**
+new `ads_intel/` package for competitor live-ads intelligence via the OFFICIAL Meta Ad
+Library API. Strict `CompetitorAd` (page names are public business identities — verbatim, no
+PII issue) + `AdsProvider` protocol + fixture provider + `MetaAdLibraryProvider` (parse-only
+over saved snapshots, PD-4) + `ad_presence()` — the DETERMINISTIC aggregation: longevity =
+the market's own split-test verdict (active >=60d = proven winner), format/platform counts;
+all math in code, no model. `scripts/pull_meta_ads.py` is the only network path — **BLOCKED
+on an owner credential: META_ADS_TOKEN** (a free Meta app token with Ad Library API access —
+facebook.com/ads/library/api); the script says so and exits cleanly without it. NEXT SLICE
+(after her token + one live snapshot): wire ad-presence into the SWOT (ad-presence dim per
+the roadmap) + platform/format priors into the media plan. +3 hermetic tests.
 
 **VEO-AUDIO GATE + REEL AUDIT TRAIL SHIPPED (roadmap Phase-1 #1 — the last brand-safety
 sliver, 2026-07-12, suite 1308).** Measured first: the CREATIVE/CLI path's Veo audio is
