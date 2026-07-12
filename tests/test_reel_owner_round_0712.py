@@ -165,6 +165,40 @@ def test_motion_qa_conjunction_is_computed_in_code(monkeypatch):
     assert v2.overall_pass is False and v2.setting_faithful is False
 
 
+def test_seed_gate_conjunction_threshold_and_degrade(tmp_path):
+    # Stage A (owner directive): judge a generated still BEFORE Veo — code computes the
+    # conjunction + score>=6 threshold; no caller degrades permissive (checked=False).
+    from reel.scene_qa import check_seed_frame
+    img = tmp_path / "seed.png"
+    img.write_bytes(b"\x89PNG\r\n\x1a\n" + b"0" * 32)
+
+    class _Judge:
+        def __init__(self, **verdict):
+            self.verdict = verdict
+
+        def __call__(self, system, user, model, group_name="", images=None):
+            assert group_name == "reel_seed_gate" and images
+            return model(**self.verdict), None
+
+    good = check_seed_frame(img, caller=_Judge(anatomy_ok=True, lighting_real=True,
+                                               composition_clean=True, ad_grade=True,
+                                               score=8, reason="clean"))
+    assert good.checked and good.overall_pass
+    # a single failed criterion fails in code
+    bad = check_seed_frame(img, caller=_Judge(anatomy_ok=False, lighting_real=True,
+                                              composition_clean=True, ad_grade=True,
+                                              score=9, reason="six fingers"))
+    assert bad.checked and not bad.overall_pass
+    # a weak score fails even when every boolean passes
+    weak = check_seed_frame(img, caller=_Judge(anatomy_ok=True, lighting_real=True,
+                                               composition_clean=True, ad_grade=True,
+                                               score=5, reason="mediocre"))
+    assert weak.checked and not weak.overall_pass
+    # degrade contract
+    skipped = check_seed_frame(img, caller=None)
+    assert not skipped.checked and skipped.overall_pass
+
+
 def test_scene_qa_runs_for_service_brands_with_seed_reference(monkeypatch, tmp_path):
     # The gap the owner caught live: no featured product -> QA never ran. Now qa_caller runs
     # for every creative reel and the scene's OWN seed becomes the judge's reference.

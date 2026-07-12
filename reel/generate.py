@@ -239,10 +239,30 @@ def build_brand_generated_reel(
         try:
             p = provider.generate(f"{prompt}{dna_style}\n{ctx}", out_dir=str(work),
                                   aspect_ratio="9:16")
-            stills.append((i, str(p)))
-            log(f"[gen] scene {i + 1}/{n_scenes} ok")
         except Exception as exc:  # noqa: BLE001 — skip a failed scene, keep the rest
             log(f"[gen] scene {i + 1} failed: {type(exc).__name__}: {exc}")
+            continue
+        # STAGE A — SEED GATE (owner directive 2026-07-12): judge the still BEFORE any Veo
+        # spend. Fail -> regenerate the IMAGE once (cents); still bad -> DROP the scene —
+        # never animate a bad seed into dollars.
+        from reel.scene_qa import check_seed_frame
+        v = check_seed_frame(p, caller=caller, brand_hint=brief.business_name or "")
+        if v.checked and not v.overall_pass:
+            log(f"[gen] scene {i + 1} seed REJECTED ({v.reason}); regenerating the image once")
+            try:
+                p = provider.generate(
+                    f"{prompt}{dna_style}\n{ctx}\nNatural anatomy, realistic photographic "
+                    "light, one clean focal point.", out_dir=str(work), aspect_ratio="9:16")
+            except Exception:  # noqa: BLE001
+                p = None
+            v2 = check_seed_frame(p, caller=caller,
+                                  brand_hint=brief.business_name or "") if p else None
+            if p is None or (v2 is not None and v2.checked and not v2.overall_pass):
+                log(f"[gen] scene {i + 1} seed still bad -> scene DROPPED "
+                    "(never animate a bad seed)")
+                continue
+        stills.append((i, str(p)))
+        log(f"[gen] scene {i + 1}/{n_scenes} ok")
     if not stills:
         raise RuntimeError("build_brand_generated_reel: no scene could be generated")
 

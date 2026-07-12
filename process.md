@@ -5,6 +5,15 @@ change-log. Read this before acting in this repo. Last full revision: 2026-07-04
 Test suite: **1288 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
 
+**SEED GATE (Stage A) SHIPPED (2026-07-12):** `check_seed_frame` in reel/scene_qa.py —
+generalizes the poster art-critic criteria (anatomy_ok / lighting_real / composition_clean /
+ad_grade / score 1-10, conjunction + score>=6 COMPUTED IN CODE, permissive degrade) and wires
+into the Imagen-seed pipeline (reel/generate.py, the web-API 'generated' mode): a still that
+fails is REGENERATED once (cents); still bad -> the scene is DROPPED — a bad seed is never
+animated into Veo dollars. Scope honesty: the CLI/creative path seeds with REAL photos (mapped:
+no Imagen step there) — those are covered by the director's image bans + motion-QA
+setting_faithful, so Stage A applies exactly where generated seeds exist. +1 hermetic test.
+
 **MOTION QA (Stage B) SHIPPED + CALIBRATED (owner-triggered priority, 2026-07-12):**
 check_scene's verdict EXTENDED additively (locked wording untouched; permissive defaults):
 faces_intact_across_motion, no_morphing_artifacts, no_junk_generated_text, ad_grade,

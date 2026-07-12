@@ -176,3 +176,75 @@ def check_scene(
         checked=True,
     )
     return v
+
+
+# ---------------------------------------------------------------------------------
+# STAGE A — SEED GATE (owner directive 2026-07-12): judge a GENERATED seed still
+# BEFORE any Veo spend — regenerating an image costs cents, animating a bad seed
+# costs dollars and ships the first-frame failure class the owner caught live.
+# Generalizes the poster art-critic criteria (anatomy/lighting/composition/score);
+# real-photo seeds don't pass through here (they are real — the director's image
+# bans + motion-QA setting_faithful cover them).
+# ---------------------------------------------------------------------------------
+
+class SeedVerdict(BaseModel):
+    anatomy_ok: bool = True           # hands/faces/bodies anatomically correct
+    lighting_real: bool = True        # believable, photographic light — not renderish glow
+    composition_clean: bool = True    # one focal point, no clutter/garbled elements
+    ad_grade: bool = True             # a professional brand would run this frame
+    score: int = 7                    # art-director score 1..10
+    overall_pass: bool = True
+    reason: str = ""
+    checked: bool = False
+
+
+class _SeedResponse(BaseModel):
+    anatomy_ok: bool
+    lighting_real: bool
+    composition_clean: bool
+    ad_grade: bool = True
+    score: int = 7
+    reason: str = ""
+
+
+def check_seed_frame(image: "str | Path | bytes", *, caller: Any = None,
+                     brand_hint: str = "", log=logger.info) -> SeedVerdict:
+    """One generated still -> pass/fail BEFORE Veo. Degrades permissive (checked=False)
+    with no caller / unreadable image / call failure — the gate never blocks a render
+    by itself; it only stops KNOWN-bad seeds from being animated."""
+    if caller is None:
+        return SeedVerdict(reason="no vision caller: seed gate skipped", checked=False)
+    try:
+        data = image if isinstance(image, bytes) else Path(image).read_bytes()
+    except Exception:  # noqa: BLE001
+        return SeedVerdict(reason="could not read the seed image", checked=False)
+    hint = f" The brand context: {brand_hint.strip()}." if brand_hint.strip() else ""
+    system = (
+        "You are a WORLD-CLASS advertising ART DIRECTOR reviewing ONE frame that is about to "
+        "be animated into a brand video. Your bar: would a top brand run this frame?" + hint +
+        " Judge strictly:\n"
+        "- anatomy_ok: hands, faces and bodies are anatomically correct — false for extra/"
+        "fused fingers, warped faces, impossible limbs.\n"
+        "- lighting_real: photographic, believable light — false for a synthetic render glow "
+        "or physically impossible lighting.\n"
+        "- composition_clean: ONE clear focal point, no clutter, no half-formed or garbled "
+        "elements.\n"
+        "- ad_grade: overall, professional-campaign quality for this brand.\n"
+        "- score: 1..10 as an art director.\n"
+        "- reason: one short sentence naming the worst problem (or 'clean')."
+    )
+    try:
+        resp, _u = caller(system, "Review this seed frame and return the structured verdict.",
+                          _SeedResponse, group_name="reel_seed_gate",
+                          images=[(data, "image/png")])
+    except Exception as exc:  # noqa: BLE001
+        return SeedVerdict(reason=f"seed gate call failed ({type(exc).__name__})", checked=False)
+    score = int(resp.score or 0)
+    # the compound gate is computed in CODE (same law as the motion QA): every criterion
+    # AND the score threshold — the model never self-passes.
+    ok = (bool(resp.anatomy_ok) and bool(resp.lighting_real)
+          and bool(resp.composition_clean) and bool(resp.ad_grade) and score >= 6)
+    return SeedVerdict(anatomy_ok=bool(resp.anatomy_ok), lighting_real=bool(resp.lighting_real),
+                       composition_clean=bool(resp.composition_clean),
+                       ad_grade=bool(resp.ad_grade), score=score, overall_pass=ok,
+                       reason=str(resp.reason or "")[:200], checked=True)
