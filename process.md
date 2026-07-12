@@ -2,11 +2,11 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1309 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
+Test suite: **1308 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
 
 **VEO-AUDIO GATE + REEL AUDIT TRAIL SHIPPED (roadmap Phase-1 #1 — the last brand-safety
-sliver, 2026-07-12, suite 1309).** Measured first: the CREATIVE/CLI path's Veo audio is
+sliver, 2026-07-12, suite 1308).** Measured first: the CREATIVE/CLI path's Veo audio is
 STRUCTURALLY STRIPPED (every compositor mux maps video-only; spoken audio = the Ledger-gated
 TTS VO + instrumental music) — nothing to transcribe there, the guarantee is structural. The
 REAL ungated slice was the GENERATED path (web API): `_voiceover_clause` makes Veo SPEAK
