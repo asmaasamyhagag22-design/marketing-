@@ -74,7 +74,7 @@ def test_grounded_poster_yields_pass_sheet_with_verified_sourced_rows():
     assert sheet["summary"]["claims_unverified"] == 0
     assert sheet["summary"]["claims_remediated"] == 0
     # The sheet states its own scoping honestly (reel excluded until gated).
-    assert "reel" in (sheet["coverage"] or {}).get("excluded_surfaces", {})
+    assert "imagery" in (sheet["coverage"] or {}).get("excluded_surfaces", {})  # reel gated 2026-07-12
 
 
 def test_softened_fabrication_appears_as_remediation_row_never_verified():

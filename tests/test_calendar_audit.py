@@ -23,7 +23,8 @@ def test_calendar_audit_scoping_lists_poster_and_calendar_excludes_reel():
     audit = build_calendar_audit(_AR, _calendar([
         _PlanItem(day_offset=0, platform="instagram", content_type="post", topic="مبادرة شبابية")]))
     cov = audit["coverage"]
-    assert "reel" in cov["excluded_surfaces"]
+    assert "imagery" in cov["excluded_surfaces"]   # reel copy GATED 2026-07-12
+    assert any("reel" in s for s in cov["covered_surfaces"])
     assert any("calendar" in s for s in cov["covered_surfaces"])
     assert any("poster" in s for s in cov["covered_surfaces"])
     assert audit["asset_type"] == "content_calendar"

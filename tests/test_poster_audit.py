@@ -64,7 +64,7 @@ def test_grounded_poster_audit_has_real_source_urls_and_scoping():
     assert any(c["source_url"] == _ABOUT for c in claims)
     assert all(c["source_tier"] == "brand" for c in claims)
     # Explicit scoping in the artifact itself; the reel is excluded.
-    assert "reel" in audit["coverage"]["excluded_surfaces"]
+    assert "imagery" in audit["coverage"]["excluded_surfaces"]   # reel copy GATED 2026-07-12
     assert audit["coverage"]["covered_surfaces"]
     assert audit["remediated"] is False
 
