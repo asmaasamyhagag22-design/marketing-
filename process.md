@@ -2,8 +2,26 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1266 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
+Test suite: **1271 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**ABSA SHIPPED (owner-APPROVED design, fixtures-first, 2026-07-12, suite 1271):** `reviews/
+absa.py` — the customer-voice layer, grounded by CODE not model trust: every mention must cite
+an `evidence_quote` that is a VERBATIM substring of its row (whitespace-insensitive; paraphrase
+= rejected), the aspect must exist in the category taxonomy (universal default for unknown
+categories), and a theme survives only with >= 2 DISTINCT supporting rows. Routing is
+deterministic R-5 through the single door `synthesize_swot(themes=)`: `ReviewTheme` gained
+`is_own_brand` — own praise -> Strengths, own complaint -> Weaknesses (evidence: "own-brand
+customer voice", claim ladder unchanged: >=2 citations = validated, each citation carries its
+verbatim quote «...»); peer complaint -> Opportunity when the aspect is a controllable service
+gap (waiting/booking/communication/staff/delivery/shipping/returns/emergency/nursing) else
+Threat; peer praise stays a category note. Gold fixture `reviews/fixtures/absa_gold_ar.json`
+(masri clinic voice, pilot vertical; _gold expectations embedded, no author fields by design).
+Inputs are provider-agnostic (SocialSignal / Review / dicts) — the fiveguys Facebook fixture
+and the U8a review fixtures feed it as-is. +5 hermetic tests (end-to-end with every rejection
+gate, fabricated-quotes-in-numbers, threshold, no-caller/empty valid, universal-taxonomy
+fallback). Live wiring (real pulls -> ABSA -> SWOT v2 in the studio) = the queue's next
+measured step.
 
 **U9 FACEBOOK WRAP SHIPPED (2026-07-12, suite 1266) — the $20/month cap unblocked it.**
 Recon verdict on the team's uploaded `facebook_collector/` (untracked, per governance): Tier-2

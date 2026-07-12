@@ -1,0 +1,22 @@
+{
+  "_doc": "ABSA Arabic gold fixture (owner-approved fixtures-first order, 2026-07-12). Egyptian-clinic customer voice — synthetic but dialect-faithful (masri), pilot vertical = EG clinics. _gold carries the expected surviving themes for the hermetic end-to-end test; author fields intentionally absent (PD-6: only hashes may exist, and a fixture needs none).",
+  "category": "clinic",
+  "rows": [
+    {"id": "R1", "is_own_brand": true,  "text": "الدكتور شاطر جدا والمكان نضيف ومرتب"},
+    {"id": "R2", "is_own_brand": true,  "text": "استنيت ساعتين رغم ان كان معايا حجز"},
+    {"id": "R3", "is_own_brand": true,  "text": "الحجز من الموقع كان سهل بس الانتظار طويل جدا"},
+    {"id": "R4", "is_own_brand": true,  "text": "المعاملة ممتازة والتمريض محترم جدا"},
+    {"id": "R5", "is_own_brand": true,  "text": "الاستقبال مش بيرد على التليفون خالص"},
+    {"id": "R6", "is_own_brand": true,  "text": "كل مرة انتظار فوق الساعة"},
+    {"id": "R7", "is_own_brand": true,  "text": "الموظفين محترمين والمعاملة راقية"},
+    {"id": "P1", "is_own_brand": false, "text": "الدكتور كويس بس استنيت كتير اوي"},
+    {"id": "P2", "is_own_brand": false, "text": "محدش بيرد على الواتساب ولا التليفون"},
+    {"id": "P3", "is_own_brand": false, "text": "تأخير ساعة عن معاد الحجز"}
+  ],
+  "_gold": {
+    "own_complaint_waiting_time": ["R2", "R3", "R6"],
+    "own_praise_staff": ["R4", "R7"],
+    "peer_complaint_waiting_time": ["P1", "P3"],
+    "below_threshold": {"own_complaint_communication": ["R5"], "peer_complaint_communication": ["P2"]}
+  }
+}

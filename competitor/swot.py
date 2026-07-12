@@ -27,11 +27,13 @@ from .matrix import ComparativeGapMatrix, DimensionGap, DIMENSIONS
 
 @dataclass
 class ReviewTheme:
-    """A theme extracted from competitor reviews (the next module produces these)."""
+    """A theme extracted from customer reviews (peer themes from competitor/themes.py,
+    own-brand + peer ABSA themes from reviews/absa.py)."""
     polarity: str                       # "praise" | "complaint"
     text: str                           # e.g. "long wait times"
     support: List[str] = field(default_factory=list)   # citations (which peers / how many reviews)
     is_unmet_need: bool = False         # True => treat as an Opportunity rather than a Threat
+    is_own_brand: bool = False          # R-5: own voice -> S/W; peer voice -> O/T
 
 
 @dataclass
@@ -149,9 +151,17 @@ def synthesize_swot(
             swot.opportunities.append(SWOTItem(gap.detail, _cite_whitespace(gap, n_peers),
                                                gap.detail, claim_strength=strength))
 
-    # review themes (customer voice, grounded in real peer reviews)
+    # review themes (customer voice, grounded in real reviews/comments)
     for t in themes:
         theme_strength = "validated" if len(t.support or []) >= 2 else "directional_not_validated"
+        if t.is_own_brand:
+            # R-5: the customers' OWN voice about the subject — praise is a Strength,
+            # a recurring complaint is a Weakness. Deterministic, evidence carried.
+            item = SWOTItem(text=t.text, citation=list(t.support) or ["own-brand reviews"],
+                            evidence=f"{t.polarity} theme in own-brand customer voice",
+                            claim_strength=theme_strength)
+            (swot.strengths if t.polarity == "praise" else swot.weaknesses).append(item)
+            continue
         item = SWOTItem(text=t.text, citation=list(t.support) or ["competitor reviews"],
                         evidence=f"{t.polarity} theme across peers",
                         claim_strength=theme_strength)
