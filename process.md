@@ -5,6 +5,22 @@ change-log. Read this before acting in this repo. Last full revision: 2026-07-04
 Test suite: **1288 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
 
+**POSTER PRODUCT AUTHENTICITY — the topshoes invented-sneaker chain CLOSED (owner-caught,
+2026-07-12).** The mapped 3-link chain, each link fixed: **(1) starved photos:** topshoes'
+profile stored ONLY Shopify `?width=100/330` thumbnails → filter_usable_photos measured 0/10
+usable → n_products=0. Fix: `original_variant(url)` strips CDN size params and a too-small
+thumbnail retries at the ORIGINAL (measured: same URL without the param = 1024px real product
+photo) — the UPGRADED url is kept. This is the T-7 thumbnail-site fix, universal. **(2) the
+license to invent:** the n_products=0 prompt explicitly PERMITTED 'generic unlabeled products'
+— for a retail brand that licensed a fabricated hero sneaker (a false product claim, not
+design freedom). Fix: with no real product attached the prompt now BANS inventing a hero
+product presented as merchandise (compose with the brand's real WORLD: hands/environment/
+texture) and BANS all third-party logos/trademarks (the swoosh was a LOGO, invisible to every
+text gate) — the marks ban is unconditional. **(3) blind QA:** poster_vision_qa gained
+ADDITIVE hard gates `invented_product` (asked only when expect_real_products=False — the
+caller knows the ground truth) + `third_party_mark` (always asked), both re-ANDed IN CODE and
+included in _qa_image_fixable so a flagged render retries. +3 hermetic tests.
+
 **SEED GATE (Stage A) SHIPPED (2026-07-12):** `check_seed_frame` in reel/scene_qa.py —
 generalizes the poster art-critic criteria (anatomy_ok / lighting_real / composition_clean /
 ad_grade / score 1-10, conjunction + score>=6 COMPUTED IN CODE, permissive degrade) and wires

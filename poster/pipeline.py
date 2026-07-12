@@ -597,7 +597,10 @@ def _try_oneshot(profile, brief, concept, brand_dna, caller, *, arabic, audit,
             # competing focal points — retry when the failure is image-fixable,
             # keep the BEST attempt by score.
             qa = poster_vision_qa(out_path, caller=qa_caller, brand_dna=brand_dna,
-                                  arabic=arabic)
+                                  arabic=arabic,
+                                  # product-authenticity context (topshoes fix): with no real
+                                  # product attached, an invented hero product must FAIL.
+                                  expect_real_products=bool(product_imgs))
             result = PosterGenResult(
                 poster_path=str(out_path), filename=Path(out_path).name,
                 image_base64=base64.b64encode(Path(out_path).read_bytes()).decode("ascii"),
@@ -626,7 +629,7 @@ def _qa_image_fixable(v: PosterQAVerdict) -> bool:
     a low-res logo is handled deterministically elsewhere — re-rolling the image won't change
     those, so we don't loop on them."""
     return (v.candid_violation or (not v.on_brand_color) or v.has_latin_text
-            or (not v.single_focal))
+            or (not v.single_focal) or v.invented_product or v.third_party_mark)
 
 
 def _verified_external_headline(headline_override, concept_headline, ledger):

@@ -33,6 +33,10 @@ class PosterQAVerdict(BaseModel):
     strong_typography: bool = True  # an intentional display lockup, not a default font
     cta_prominent: bool = True      # a confident button, not a footnote
     script_wellformed: bool = True  # copy well-formed for its script (Arabic ligatures/dots) — hard gate
+    # PRODUCT AUTHENTICITY (owner-caught: topshoes' poster showed an INVENTED sneaker with a
+    # swoosh — a false product claim invisible to every text gate). Additive, hard gates:
+    invented_product: bool = False  # a fabricated hero product presented as the brand's merchandise
+    third_party_mark: bool = False  # any other company's logo/trademark rendered in the scene
     score: int = 7                  # art-director score 1..10
     overall_pass: bool = True
     reason: str = ""
@@ -52,6 +56,8 @@ class _QAResponse(BaseModel):
     strong_typography: bool = True
     cta_prominent: bool = True
     script_wellformed: bool = True
+    invented_product: bool = False   # additive (permissive default keeps older tests valid)
+    third_party_mark: bool = False
     score: int = 7
 
 
@@ -61,6 +67,7 @@ def poster_vision_qa(
     caller: Any = None,
     brand_dna: Any = None,
     arabic: bool = True,
+    expect_real_products: Optional[bool] = None,
 ) -> PosterQAVerdict:
     """Inspect the FINAL rendered poster. Returns a verdict; `checked=False` (permissive pass)
     when no multimodal caller is available."""
@@ -107,9 +114,19 @@ def poster_vision_qa(
         f"- {color_line}\n"
         "- candid_violation = true if the imagery looks candid/documentary or flat natural "
         "lighting (amateur/stock) rather than a polished brand campaign.\n"
+        # PRODUCT AUTHENTICITY (additive, 2026-07-12 — the topshoes invented-sneaker class):
+        + ("- invented_product = true if the poster features a SPECIFIC hero product presented "
+           "as this brand's merchandise even though NO real product photo was provided — a "
+           "fabricated shoe/bottle/device/dish shown as theirs (HARD GATE: a fake product is a "
+           "false claim). Generic out-of-focus background objects are fine.\n"
+           if expect_real_products is False else "")
+        + "- third_party_mark = true if ANY other company's logo or trademark appears anywhere "
+        "in the scene — a swoosh, an apple mark, any recognizable brand symbol on objects or "
+        "clothing (HARD GATE).\n"
         "- score = 1..10 overall creative quality as a premium brand poster.\n"
         "- overall_pass = true ONLY if logo_ok AND script_wellformed AND no Latin in the copy AND "
-        "no clipping AND on_brand_color AND no candid violation AND score >= 7.\n"
+        "no clipping AND on_brand_color AND no candid violation AND no invented_product AND no "
+        "third_party_mark AND score >= 7.\n"
         "- reason = one short sentence naming the biggest problem (or 'clean')."
     )
     user = "Review this rendered poster as an art director and return the verdict."
@@ -130,10 +147,15 @@ def poster_vision_qa(
         strong_typography=bool(resp.strong_typography),
         cta_prominent=bool(resp.cta_prominent),
         script_wellformed=bool(resp.script_wellformed),
+        invented_product=bool(resp.invented_product),
+        third_party_mark=bool(resp.third_party_mark),
         score=int(resp.score or 0),
-        # code-side hard gates re-ANDed: a crisp logo AND well-formed script are non-negotiable,
-        # so a model that answers overall_pass=true but flags either still FAILS.
-        overall_pass=bool(resp.overall_pass) and bool(resp.logo_ok) and bool(resp.script_wellformed),
+        # code-side hard gates re-ANDed: a crisp logo, well-formed script, NO invented hero
+        # product and NO third-party mark are non-negotiable — a model that answers
+        # overall_pass=true but flags any of them still FAILS.
+        overall_pass=bool(resp.overall_pass) and bool(resp.logo_ok)
+        and bool(resp.script_wellformed) and not bool(resp.invented_product)
+        and not bool(resp.third_party_mark),
         reason=(resp.reason or "").strip(),
         checked=True,
     )

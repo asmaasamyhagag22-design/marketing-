@@ -123,8 +123,18 @@ def build_oneshot_prompt(copy: dict, *, brand_name: str = "", palette_names: str
         + ". NEVER paint or print the brand name onto other objects, devices, robots, "
         "vehicles, bags, screens or signage — do NOT invent branded objects or services "
         "the brand may not have."
-        + ("" if n_products else " If generic products appear they must be COMPLETELY "
-           "UNLABELED (no text, no pseudo-text, no gibberish lettering on any packaging).")
+        + ("" if n_products else
+           # OWNER-CAUGHT HALLUCINATION (topshoes, 2026-07-12): with no real product photo the
+           # old wording LICENSED an invented 'generic unlabeled product' — the model painted a
+           # hero sneaker the brand never made. Showing a fabricated product as the brand's
+           # merchandise is a FALSE PRODUCT CLAIM, not design freedom.
+           " NO real product photo is attached, so do NOT invent a hero product presented as "
+           "the brand's merchandise (no fabricated shoe/bottle/device/dish 'from' this brand). "
+           "Compose with the brand's real WORLD instead — hands at work, environment, texture, "
+           "abstract shapes of the craft; incidental background objects must stay generic, "
+           "out of focus and COMPLETELY UNLABELED (no text, no pseudo-text, no gibberish).")
+        + " NEVER render any third-party logo or trademark — no swooshes, apple marks, "
+        "telecom or fashion brand symbols on any object or clothing."
         + " Every object in the scene must belong to this business's real world — nothing "
         "that would look out of place in its actual category."
     )

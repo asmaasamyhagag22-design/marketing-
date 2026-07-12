@@ -126,24 +126,56 @@ def _default_fetch(url: str) -> Optional[bytes]:
         return None
 
 
+def original_variant(url: str) -> Optional[str]:
+    """The CDN ORIGINAL behind a thumbnail URL, when the URL itself says it is resized —
+    size params in the query (?width=100, &height=330, ?w=, ?size=). MEASURED (topshoes,
+    2026-07-12): the scraper stored Shopify `?width=100/330` thumbnails, this gate dropped
+    all 10 real product photos, and the poster painted an INVENTED sneaker; the same URL
+    without the param returns the 1024px original. None when nothing to strip."""
+    try:
+        from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
+        parts = urlsplit(url)
+        if not parts.query:
+            return None
+        pairs = parse_qsl(parts.query, keep_blank_values=True)
+        kept = [(k, v) for k, v in pairs if k.lower() not in ("width", "height", "w", "h", "size")]
+        if len(kept) == len(pairs):
+            return None                                # no size param present
+        return urlunsplit(parts._replace(query=urlencode(kept)))
+    except Exception:  # noqa: BLE001
+        return None
+
+
 def filter_usable_photos(
     urls, *, fetch: Optional[Callable[[str], Optional[bytes]]] = None, max_keep: int = 12,
 ) -> list[str]:
     """Keep only the URLs that resolve to USABLE photos (order preserved). UNIVERSAL, never
     raises. `fetch(url) -> bytes|None` is injectable (default: SSRF-guarded http) so tests stay
-    hermetic. An undecodable / unreachable / failing-gate image is silently dropped."""
+    hermetic. An undecodable / unreachable / failing-gate image is silently dropped. A photo
+    rejected as TOO SMALL whose URL carries a CDN size param is retried at the param-stripped
+    ORIGINAL and, if that passes, the UPGRADED URL is kept (the T-7 thumbnail-site fix)."""
     fetch = fetch or _default_fetch
+
+    def _gate(data: Optional[bytes]) -> tuple[bool, str]:
+        m = measure_bytes(data)
+        if not m:
+            return False, "undecodable"
+        ok, why = assess_photo(*m)
+        if ok and data is not None and is_collage_bytes(data):
+            return False, "collage"                    # FIX-D2: logo grids never animate
+        return ok, why
+
     out: list[str] = []
     for u in (urls or []):
         if not isinstance(u, str) or not u.startswith(("http://", "https://")):
             continue
-        data = fetch(u)
-        m = measure_bytes(data)
-        if not m:
-            continue
-        ok, _why = assess_photo(*m)
-        if ok and data is not None and is_collage_bytes(data):
-            ok = False                                 # FIX-D2: logo grids never animate
+        ok, why = _gate(fetch(u))
+        if not ok and why.startswith("too_small"):
+            big = original_variant(u)
+            if big:
+                ok, _why2 = _gate(fetch(big))
+                if ok:
+                    u = big                            # keep the ORIGINAL, not the thumbnail
         if ok:
             out.append(u)
         if len(out) >= max_keep:
