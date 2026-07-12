@@ -28,6 +28,14 @@ class SceneQAVerdict(BaseModel):
     product_faithful: bool = True     # same product as the reference (shape / cap / colour / label)
     product_persists: bool = True     # present in every frame — does NOT vanish / melt / morph away
     action_plausible: bool = True     # no physically impossible action (a sealed pump pressed, etc.)
+    # MOTION-QA extension (owner directive 2026-07-12 — service-brand reels rendered visually
+    # UNGATED; the NTI 'old school' hallucination shipped). ADDITIVE fields, permissive
+    # defaults so pre-extension callers/tests stay valid:
+    faces_intact_across_motion: bool = True   # no warped/melted faces, no identity morphing
+    no_morphing_artifacts: bool = True        # limbs/objects keep structure across frames
+    no_junk_generated_text: bool = True       # no garbled pseudo-text rendered INTO the scene
+    ad_grade: bool = True                     # a professional brand would actually run this
+    setting_faithful: bool = True             # the generated WORLD stays true to the seed photo
     overall_pass: bool = True
     reason: str = ""
     checked: bool = False             # True only when a vision model actually inspected the clip
@@ -37,6 +45,11 @@ class _QAResponse(BaseModel):
     product_faithful: bool
     product_persists: bool
     action_plausible: bool
+    faces_intact_across_motion: bool = True   # additive (permissive default until calibrated)
+    no_morphing_artifacts: bool = True
+    no_junk_generated_text: bool = True
+    ad_grade: bool = True
+    setting_faithful: bool = True
     overall_pass: bool
     reason: str
 
@@ -116,6 +129,25 @@ def check_scene(
         "an IMPOSSIBLE action — a sealed/closed pump being pressed and spraying, pouring from a "
         "closed bottle, liquid appearing with no source, or the product changing state by magic.\n"
         "- overall_pass = product_faithful AND product_persists AND action_plausible.\n"
+        # ADDITIVE motion-QA criteria (2026-07-12) — appended after the measurement-locked
+        # wording above; the compound gate is re-computed in CODE below regardless.
+        "- faces_intact_across_motion: every human face stays anatomically intact and the SAME "
+        "person across the frames — false for warped/melted features, extra or missing parts, "
+        "or an identity that morphs between frames.\n"
+        "- no_morphing_artifacts: bodies and objects keep their structure across frames — false "
+        "when limbs/objects blend into each other, duplicate, or dissolve.\n"
+        "- no_junk_generated_text: the scene itself contains NO garbled pseudo-text or gibberish "
+        "lettering (on signs, screens, packaging, walls). Clean DESIGNED caption overlays are "
+        "allowed — judge only text rendered INTO the scene.\n"
+        "- ad_grade: would a professional brand actually run footage of this visual quality — a "
+        "coherent, believable, real-looking setting for this brand, no uncanny artifacts, no "
+        "decayed/implausible environment presented as the brand's real premises? Be strict.\n"
+        "- setting_faithful: when the reference photo shows a PLACE (premises, interior, "
+        "storefront) rather than a product: does the generated environment stay true to that "
+        "real place — its era, upkeep and character? false when a modern, well-kept real place "
+        "is rendered old/decayed/ruined, or the environment is a DIFFERENT kind of place than "
+        "the reference (the owner's caught failure: her institute drawn as an ancient school). "
+        "true when there is no reference or it shows a product.\n"
         "- reason = one short sentence naming the WORST problem (or 'clean')."
     )
     user = "Review the clip against the reference and return the structured verdict."
@@ -128,7 +160,18 @@ def check_scene(
         product_faithful=bool(resp.product_faithful),
         product_persists=bool(resp.product_persists),
         action_plausible=bool(resp.action_plausible),
-        overall_pass=bool(resp.overall_pass),
+        faces_intact_across_motion=bool(resp.faces_intact_across_motion),
+        no_morphing_artifacts=bool(resp.no_morphing_artifacts),
+        no_junk_generated_text=bool(resp.no_junk_generated_text),
+        ad_grade=bool(resp.ad_grade),
+        setting_faithful=bool(resp.setting_faithful),
+        # COMPOUND GATE COMPUTED IN CODE (owner directive: the model never self-passes) —
+        # the conjunction of every criterion AND the model's own overall verdict.
+        overall_pass=bool(resp.overall_pass) and bool(resp.product_faithful)
+        and bool(resp.product_persists) and bool(resp.action_plausible)
+        and bool(resp.faces_intact_across_motion) and bool(resp.no_morphing_artifacts)
+        and bool(resp.no_junk_generated_text) and bool(resp.ad_grade)
+        and bool(resp.setting_faithful),
         reason=str(resp.reason or "")[:200],
         checked=True,
     )

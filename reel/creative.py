@@ -203,20 +203,20 @@ def render_creative_reel(
         if vo_path:
             logger.info("voice-over track ready: %s", vo_path)
 
-    # SCENE QA (featured single product): a Gemini vision caller inspects each generated clip and
-    # rejects Veo hallucinations — the product redrawn/unfaithful, VANISHING mid-scene, or an
-    # IMPOSSIBLE action (a sealed pump pressed) — regenerating once, then falling back to the
-    # faithful real photo. Only when a product is featured (that's the item that must stay true).
-    qa_caller = None
+    # SCENE QA — ALL creative reels (owner finding 2026-07-12: service-brand reels rendered
+    # visually UNGATED and the NTI 'old school' hallucination shipped). A Gemini vision caller
+    # inspects each generated clip: product fidelity when a product is featured (its photo is
+    # the reference), and for every reel the motion-QA criteria (faces, morphing, junk text,
+    # ad-grade, setting vs the scene's OWN real seed). Regenerate once, then faithful KenBurns.
+    try:
+        from business_profile.llm import default_caller
+        qa_caller = default_caller(strong=True)
+    except Exception:
+        qa_caller = None
     qa_ref = None
-    if featured_product:
-        try:
-            from business_profile.llm import default_caller
-            qa_caller = default_caller(strong=True)
-        except Exception:
-            qa_caller = None
+    if featured_product and qa_caller is not None:
         seed_url = storyboard.content_images[0] if storyboard.content_images else None
-        if qa_caller is not None and seed_url:
+        if seed_url:
             try:
                 from reel.video_provider import _load_reference_image
                 loaded = _load_reference_image(seed_url)

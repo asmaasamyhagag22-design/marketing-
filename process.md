@@ -5,6 +5,23 @@ change-log. Read this before acting in this repo. Last full revision: 2026-07-04
 Test suite: **1288 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
 
+**MOTION QA (Stage B) SHIPPED + CALIBRATED (owner-triggered priority, 2026-07-12):**
+check_scene's verdict EXTENDED additively (locked wording untouched; permissive defaults):
+faces_intact_across_motion, no_morphing_artifacts, no_junk_generated_text, ad_grade,
+setting_faithful — the compound gate is COMPUTED IN CODE (the model never self-passes) and now
+runs for ALL creative reels (no featured product required): with no product reference the
+scene's OWN real-photo seed is the judge's reference. Fail → one retry → faithful per-scene
+KenBurns (machinery already existed; fail-closed). **CALIBRATION (live Gemini vision, frames
+from real clips):** owner-labeled-BAD NTI reel — morphed-hands scene FAILS
+(no_morphing_artifacts) and the owner's exact 'old school' scene FAILS once judged against its
+REAL seed photo (ad_grade: "dated and somewhat dilapidated — poor fit for a modern digital
+training program"); earlier topshoes-era clip 0/4 false-positives; iti's uncanny AI faces
+caught. One calibration sample (tarshouby) was INVALID — my product hint mislabeled the brand;
+excluded honestly. Cost note: QA ≈ 1-2 vision calls/scene (cents) vs a wasted Veo scene render
+(dollars) and a full 10-20-min re-run when a bad reel ships. The NTI reel re-renders only
+after Stage A (seed gate) also lands — next. +2 hermetic tests (code-conjunction; service-brand
+QA with seed reference).
+
 **DIRECTOR ROUND 2 (owner 2026-07-12: "مش سيناريو" / "الكلام أوفر وبيقولوه غلط" + her
 pre-EXECUTE scene-5 check):** three prompt-layer rules in _system_prompt (prompt-layer per the
 honesty ruling — deterministic guards are HITL + the motion QA landing next): (1) ONE

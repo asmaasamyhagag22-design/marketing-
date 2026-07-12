@@ -115,12 +115,25 @@ def render_reel(
                 raw = fb.generate(scene.visual_prompt, **gen_kwargs)
             else:
                 # SCENE QA GATE (opt-in via qa_caller): reject a Veo clip where the product is
-                # unfaithful / vanishes / does an impossible action — regenerate ONCE, then fall
-                # back to the FAITHFUL real-photo KenBurns so a hallucination never ships.
-                if qa_caller is not None and ref:
+                # unfaithful / vanishes / does an impossible action — or (motion-QA extension,
+                # 2026-07-12) faces warp, objects morph, junk pseudo-text appears, the footage
+                # isn't ad-grade, or the WORLD drifts from the real seed (calibrated: the
+                # owner's 'old school' scene fails against its real seed) — regenerate ONCE,
+                # then fall back to the FAITHFUL real-photo KenBurns so a hallucination never
+                # ships. Service brands too: with no product reference, the scene's OWN
+                # real-photo seed is the reference.
+                if qa_caller is not None:
                     from .scene_qa import check_scene
+                    qa_ref = qa_reference_image
+                    if qa_ref is None and ref:
+                        try:
+                            from .video_provider import _load_reference_image
+                            loaded = _load_reference_image(ref)
+                            qa_ref = loaded[0] if loaded else None
+                        except Exception:  # noqa: BLE001 — no seed bytes: judge frames alone
+                            qa_ref = None
                     v = check_scene(raw, product_hint=qa_product_hint,
-                                    reference_image=qa_reference_image, caller=qa_caller)
+                                    reference_image=qa_ref, caller=qa_caller)
                     if v.checked and not v.overall_pass:
                         print(f"[reel] scene {i} QA fail ({v.reason}); regenerating once",
                               file=sys.stderr)
@@ -128,7 +141,7 @@ def render_reel(
                         try:
                             raw = provider.generate(scene.visual_prompt, **gen_kwargs)
                             v2 = check_scene(raw, product_hint=qa_product_hint,
-                                             reference_image=qa_reference_image, caller=qa_caller)
+                                             reference_image=qa_ref, caller=qa_caller)
                             good = (not v2.checked) or v2.overall_pass
                         except Exception:  # noqa: BLE001 — a failed retry drops to the fallback
                             good = False

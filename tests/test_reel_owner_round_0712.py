@@ -139,6 +139,75 @@ def test_full_emotional_arc_reaches_the_narrator():
     assert "just this one" in _instructions_for(["x"], "just this one", tone="")
 
 
+def test_motion_qa_conjunction_is_computed_in_code(monkeypatch):
+    # Owner directive: the model never self-passes — a verdict that says overall_pass=True
+    # while flagging ad_grade=False (or any criterion) FAILS in code.
+    import reel.scene_qa as sq
+    monkeypatch.setattr(sq, "_extract_frames", lambda clip, n=3: [b"f1", b"f2", b"f3"])
+
+    class _Optimist:
+        def __call__(self, system, user, model, group_name="", images=None):
+            return model(product_faithful=True, product_persists=True, action_plausible=True,
+                         ad_grade=False, overall_pass=True, reason="model says fine"), None
+
+    v = sq.check_scene("c.mp4", caller=_Optimist())
+    assert v.checked and v.ad_grade is False
+    assert v.overall_pass is False                     # code conjunction wins
+
+    class _SettingDrift:
+        def __call__(self, system, user, model, group_name="", images=None):
+            assert "setting_faithful" in system        # the additive criteria reached the judge
+            assert "no_junk_generated_text" in system
+            return model(product_faithful=True, product_persists=True, action_plausible=True,
+                         setting_faithful=False, overall_pass=True, reason="old ruin"), None
+
+    v2 = sq.check_scene("c.mp4", caller=_SettingDrift())
+    assert v2.overall_pass is False and v2.setting_faithful is False
+
+
+def test_scene_qa_runs_for_service_brands_with_seed_reference(monkeypatch, tmp_path):
+    # The gap the owner caught live: no featured product -> QA never ran. Now qa_caller runs
+    # for every creative reel and the scene's OWN seed becomes the judge's reference.
+    from pathlib import Path
+
+    import reel.compositor as comp
+
+    calls = {"qa": 0, "refs": []}
+
+    class _Judge:
+        def __call__(self, system, user, model, group_name="", images=None):
+            calls["qa"] += 1
+            calls["refs"].append(len(images or []))
+            return model(product_faithful=True, product_persists=True, action_plausible=True,
+                         overall_pass=True, reason="clean"), None
+
+    class _Prov:
+        name = "fake"
+
+        def generate(self, prompt, **kw):
+            p = tmp_path / f"clip{calls['qa']}.mp4"
+            p.write_bytes(b"\x00")
+            return str(p)
+
+    import reel.scene_qa as sq
+    monkeypatch.setattr(sq, "_extract_frames", lambda clip, n=3: [b"f1", b"f2"])
+    monkeypatch.setattr(comp, "render_text_sequences",
+                        lambda sb, *a, **k: [str(tmp_path / "tx_%02d.png")] * len(sb.scenes))
+    monkeypatch.setattr(comp, "run_ffmpeg", lambda args, **k: Path(str(args[-1])).write_bytes(b"\x00"))
+    monkeypatch.setattr("reel.video_provider._load_reference_image",
+                        lambda url: [(b"seedbytes", "image/jpeg")] if url else None)
+
+    from reel.schemas import ReelScene, Storyboard
+    sb = Storyboard(business_name="NTI", primary_dir="rtl", total_duration_s=4.0,
+                    scenes=[ReelScene(kind="gallery", duration_s=4.0, visual_prompt="p",
+                                      seed_image_url="https://x/real.jpg")],
+                    palette_hex=["#111111"], content_images=["https://x/real.jpg"])
+    comp.render_reel(sb, provider=_Prov(), out_path=tmp_path / "r.mp4",
+                     qa_caller=_Judge())                 # NO product hint, NO product ref
+    assert calls["qa"] == 1                              # QA ran without a featured product
+    assert calls["refs"][0] >= 3                         # seed reference + 2 frames reached it
+
+
 def test_director_carries_scenario_screen_guard_and_tts_rules():
     # Owner round 2 (2026-07-12): "مش سيناريو" -> ONE CONTINUOUS SCENARIO; Veo junk pseudo-text
     # on screens -> SCREENS & MARKS guard (incl. no third-party logos); "الكلام أوفر/بيقولوه
