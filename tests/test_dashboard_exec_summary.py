@@ -55,8 +55,8 @@ def test_exec_summary_is_first_content_block_in_the_page(tmp_path):
     cp.write_text(json.dumps(competitor, ensure_ascii=False), encoding="utf-8")
     html = build_dashboard_html(str(cp))
     # the executive summary appears before the SWOT section header (first-screen story)
-    assert html.index("Executive summary") < html.index("<h2>SWOT")
+    assert html.index("Executive summary") < html.index("Strengths, weaknesses")
     # the exec-summary MOVE block strips the "Fix:" prefix (the raw action still shows later
     # in the priority-actions section — that's expected, so scope the check to the exec block)
-    ex_block = html[html.index("Executive summary"):html.index("<h2>SWOT")]
+    ex_block = html[html.index("Executive summary"):html.index("Strengths, weaknesses")]
     assert "do X" in ex_block and "Fix:" not in ex_block

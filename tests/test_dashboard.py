@@ -61,7 +61,7 @@ def test_dashboard_prints_everything(tmp_path):
     assert "Dima Jewellery" in h and "web peer rank 3" in h   # competitor + why-selected
     assert "33%" in h                                         # peer-fit score
     assert "Leverage social reach to open bookings" in h      # TOWS title (not the empty 'text')
-    assert "contingency" in h                                 # posture
+    assert "الوضع الاستراتيجي · Your strategic stance" in h    # posture, now explained in plain words
     assert "The Art of Craftsmanship" in h                    # calendar topic
     assert "Witness the artistry" in h                        # calendar hook
 

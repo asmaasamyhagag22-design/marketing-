@@ -648,6 +648,11 @@ def _css() -> str:
     .hs-dot{{color:{c['gold']};font-size:18px;line-height:1.2;flex:0 0 auto;}}
     .hs-ar{{font-size:13px;color:{c['ink']};line-height:1.55;}}
     .hs-en{{font-size:11.5px;color:{c['muted']};font-style:italic;margin-top:2px;line-height:1.5;}}
+    /* RUBRIC C — strategy narrative in plain words */
+    .cs-legend{{display:flex;flex-wrap:wrap;gap:8px 18px;margin-bottom:12px;font-size:11.5px;color:{c['inkSoft']};}}
+    .cs-legend b{{margin-inline-end:5px;}}
+    .tows-plain{{display:inline-block;font-size:11px;font-weight:700;color:{c['blush700']};
+      background:{c['blush100']};padding:1px 9px;border-radius:12px;margin-bottom:5px;}}
     @media (max-width:760px){{.mp-grid{{grid-template-columns:1fr 1fr;}}}}
     @media (max-width:760px){{.swot,.creative{{grid-template-columns:1fr;}}.cal-row{{grid-template-columns:1fr;gap:3px;}}}}
     </style>"""
@@ -696,8 +701,15 @@ def build_dashboard_html(
 
     swot_html = ""
     if n_swot:
+        # RUBRIC C — a plain-words legend for the claim-strength badges (was bare jargon).
+        legend = ('<div class="cs-legend">'
+                  '<span><b class="cs cs-ok">مؤكَّد</b> بأكثر من منافس · confirmed vs several peers</span>'
+                  '<span><b class="cs cs-warn">مبدئي</b> إشارة من مصدر واحد · one-source signal</span>'
+                  '<span><b class="cs cs-warn">داخلي</b> من موقعك وحده · from your site alone</span></div>')
         swot_html = f"""<div class="sec"><div class="sec-h"><span class="bar"></span>
-          <h2>SWOT — grounded in real evidence</h2><span class="cnt">{_esc(swot.get('mode') or '')} · every line cited</span></div>
+          <h2>نقاط القوة والضعف والفرص والتهديدات · Strengths, weaknesses, opportunities, threats</h2>
+          <span class="cnt">كل سطر له مصدر · every line has a source</span></div>
+          {legend}
           <div class="swot">
             {_swot_quad('Strengths', '💪', swot.get('strengths'), 's')}
             {_swot_quad('Weaknesses', '⚠', swot.get('weaknesses'), 'w')}
@@ -799,18 +811,26 @@ def build_dashboard_html(
     strategies = tows.get("strategies") or []
     if strategies or tows.get("posture"):
         _tk = {"SO": "tows-so", "ST": "tows-st", "WO": "tows-wo", "WT": "tows-wt"}
+        # RUBRIC C — translate the two-letter TOWS codes into a plain "what to do" phrase.
+        _tk_lab = {"SO": ("هاجِم", "attack"), "ST": ("دافِع", "defend"),
+                   "WO": ("طوّر", "improve"), "WT": ("احترِس", "protect")}
         rows = ""
         for s in strategies[:8]:
             kind = str(s.get("type") or s.get("kind") or "SO").upper()[:2]
             title = _esc(s.get("title") or s.get("text") or s.get("strategy") or "")
             desc = _esc(s.get("description") or "")
             desc_h = f'<div class="tows-desc">{desc}</div>' if desc else ""
+            ka, ke = _tk_lab.get(kind, ("", ""))
+            klab = f'<span class="tows-plain">{_esc(ka)} · {_esc(ke)}</span>' if ka else ""
             rows += (f'<div class="tows-row"><span class="tows-k {_tk.get(kind, "tows-so")}">{_esc(kind)}</span>'
-                     f'<div class="tows-txt"><b>{title}</b>{desc_h}</div></div>')
-        posture = _esc(tows.get("posture") or "")
-        posture_html = f'<div class="posture">◎ Strategic posture: {posture}</div>' if posture else ""
+                     f'<div class="tows-txt">{klab}<b>{title}</b>{desc_h}</div></div>')
+        posture = str(tows.get("posture") or "").lower()
+        pa, pe = _POSTURE.get(posture, ("", ""))
+        posture_html = (f'<div class="posture">◎ الوضع الاستراتيجي · Your strategic stance: '
+                        f'<b>{_esc(pa)}</b> — {_esc(pe)}</div>' if pa else "")
         tows_html = f"""<div class="sec"><div class="sec-h"><span class="bar"></span>
-          <h2>TOWS — strategies from the matrix</h2></div>
+          <h2>الاستراتيجية — ماذا تفعل ولماذا · Strategy — what to do &amp; why</h2>
+          <span class="cnt">{len(strategies)} تحرّكات مبنية على تحليلك · moves from your analysis</span></div>
           <div class="card">{rows or '<div class="swot-empty">—</div>'}{posture_html}</div></div>"""
 
     cal_html = ""

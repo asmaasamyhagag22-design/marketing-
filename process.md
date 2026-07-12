@@ -2,7 +2,7 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1335 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
+Test suite: **1338 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
 
 **PHASE 3 · SECTION F — HONESTY SURFACE SHIPPED (suite 1335).** `_honesty_surface()` — the
