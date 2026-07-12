@@ -2,8 +2,28 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1276 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
+Test suite: **1279 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**LIVE REVIEW PULLS (Google Maps) SHIPPED — code complete, live pull BLOCKED on one owner
+click (2026-07-12, suite 1279).** Mirrors the ratified Facebook-wrap governance exactly:
+`scripts/pull_reviews.py` (the ONLY network path; resolves a place via the existing
+competitor PlacesClient, snapshots the RAW payload with author names under gitignored
+runs/review_snapshots/), `scripts/convert_reviews_snapshot.py` (loud PII gate — refuses to
+write if any raw author name survives), `reviews/providers/google_maps.py` (parse-only
+ReviewProvider: hash-at-ingestion, relative dates -> honest None, ~5-reviews/place cap
+documented, reads raw snapshots AND sanitized fixtures). Reviews feed ABSA rows directly
+(own/peer tagged from the snapshot). +3 hermetic tests. **LIVE-VALIDATED END-TO-END same day:**
+first attempt hit 403 (Places API (New) disabled on project 627765796315) → owner enabled it →
+`pull_reviews "Alameda ... As Salam International Hospital Cairo"` resolved the REAL hospital
+(مستشفى السلام الدولى), pulled 5 Arabic reviews, converter passed the PII gate →
+`reviews/fixtures/alameda_hc.json`, and ABSA on Gemini produced **3 grounded themes with
+verbatim quotes** (nursing praise 5/5 supports, doctor_competence 3, service_quality 2 — all
+own-brand praise → Strengths via R-5). The full customer-voice chain (pull → sanitize →
+provider → ABSA → SWOT door) is now proven on live data. Note: person names appearing INSIDE
+public review text (praised doctors/staff) are review content, not reviewer identity — the
+PII rule covers AUTHORS, and no author name survives. Vezeeta remains a separate future
+source (needs a governance tier ruling before any code).
 
 **REEL REGRESSION — OWNER ROUND (2026-07-12 "الريل البشع", suite 1276): four roots found by
 forensics on HER actual run (outputs/nti_sci_eg_reel_plan.json + reel/), each fixed measured.**
