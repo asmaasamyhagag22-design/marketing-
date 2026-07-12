@@ -383,12 +383,26 @@ def hitl_preview(slug: str, kind: str, *, out_dir: str = "outputs",
             return {"error": "the director could not design a plan (no usable photos/creds)"}
         path = P["out"] / f"{slug}_reel_plan.json"
         path.write_text(creative.model_dump_json(indent=2), encoding="utf-8")
-        lines = [f"CONCEPT: {creative.concept}", f"HOOK: {creative.hook}",
-                 f"CTA: {creative.cta}", f"LANGUAGE: {creative.language}", ""]
+
+        # The render-side grounding gate BLANKS unsourced lines — the preview must show the
+        # user the same verdicts NOW, not diverge after approval (owner check, 2026-07-12).
+        def _flag(line: str) -> str:
+            try:
+                from grounding import EvidenceLedger
+                led = getattr(_flag, "_led", None)
+                if led is None:
+                    led = _flag._led = EvidenceLedger.from_profile(profile)
+                uns = [v for v in led.audit_text(line or "") if not v.sourced]
+                return "  ⚠ غير مدعوم — سيُحذف عند التنفيذ" if uns else ""
+            except Exception:  # noqa: BLE001
+                return ""
+
+        lines = [f"CONCEPT: {creative.concept}", f"HOOK: {creative.hook}{_flag(creative.hook)}",
+                 f"CTA: {creative.cta}{_flag(creative.cta)}", f"LANGUAGE: {creative.language}", ""]
         for i, sc in enumerate(creative.scenes, 1):
             lines += [f"SCENE {i} ({sc.duration_s:.0f}s, photo #{sc.image_index}):",
                       f"  MOTION: {sc.veo_prompt}",
-                      f"  VOICE-OVER: {sc.voiceover}",
+                      f"  VOICE-OVER: {sc.voiceover}{_flag(sc.voiceover)}",
                       f"  CAPTION: {sc.on_screen_text or '—'}", ""]
         text = "\n".join(lines)
     return {"text": text, "arabic": _arabic_rendering(text), "file": str(path)}

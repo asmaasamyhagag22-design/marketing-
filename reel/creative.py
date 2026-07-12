@@ -161,6 +161,28 @@ def render_creative_reel(
     except Exception:  # noqa: BLE001 — the eval must never block a render
         pass
 
+    # GROUNDING GATE (2026-07-12 — closes the reel's LAST ungated copy surface; the owner's
+    # pre-EXECUTE check found the creative path audit-only): the spoken voiceover, hook, cta
+    # and any caption now pass the shared drop-to-grounded policy — a line carrying an
+    # UNSOURCED hard claim is BLANKED (ambience instead of speech), never rewritten. Runs on
+    # APPROVED plans too: the HITL law lets gates veto/log — blanking is not a plan swap.
+    try:
+        from reel.grounding import grounded_captions
+        vo = [s.voiceover for s in creative.scenes]
+        kept_vo = grounded_captions(profile, vo)
+        blanked = sum(1 for a, b in zip(vo, kept_vo) if a and not b)
+        if blanked:
+            logger.info("[reel] %d voiceover line(s) blanked (unsourced hard claim)", blanked)
+        for s, k in zip(creative.scenes, kept_vo):
+            s.voiceover = k
+        caps = grounded_captions(profile, [s.on_screen_text for s in creative.scenes])
+        for s, k in zip(creative.scenes, caps):
+            s.on_screen_text = k
+        hc = grounded_captions(profile, [creative.hook, creative.cta])
+        creative.hook, creative.cta = hc[0], hc[1]
+    except Exception:  # noqa: BLE001 — the gate never loses a reel
+        pass
+
     storyboard = build_creative_storyboard(creative, brief)
 
     vo_path = None

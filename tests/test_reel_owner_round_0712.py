@@ -68,6 +68,32 @@ def test_hitl_approved_plan_is_never_replaced_by_the_eval(monkeypatch, tmp_path)
     assert creative.scenes[0].voiceover == "بتجمع شهادات ومش لاقي فرصة؟"
 
 
+def test_grounding_gate_blanks_unsourced_vo_even_on_approved_plans(monkeypatch, tmp_path):
+    # The owner's pre-EXECUTE check found the creative path AUDIT-ONLY (reel/grounding.py said
+    # so itself). Now BLOCKING: an unsourced hard claim in the spoken VO is BLANKED — on HITL
+    # plans too (blanking is a veto, not a plan swap). Grounded/emotive lines pass untouched.
+    import reel.creative as rc
+    import reel.plan_eval as pe
+    monkeypatch.setattr(pe, "evaluate_reel_plan",
+                        lambda *a, **k: ReelPlanVerdict(ok=True, score=90))
+    captured: dict = {}
+
+    def _fake_synth(lines, durs, out, **kw):
+        captured["vo"] = list(lines)
+        return None
+    monkeypatch.setattr(rc, "synth_voiceover", _fake_synth)
+    monkeypatch.setattr(rc, "render_reel", lambda sb, **kw: {"ok": True})
+
+    plan = _plan()
+    # scene 1 gains a fabricated award (empty profile -> nothing can source it)
+    plan.scenes[0].voiceover = "حاصلين على جايزة أفضل معهد في مصر 2026"
+    render_creative_reel({}, PosterBrief(business_name="NTI", headline="NTI"), [],
+                         provider=None, out_path=tmp_path / "r.mp4",
+                         plan_override=plan.model_dump(), with_voiceover=True)
+    assert captured["vo"][0] == ""                                  # fabricated award BLANKED
+    assert captured["vo"][1] == plan.scenes[1].voiceover            # clean line untouched
+
+
 def test_narrated_scene_stretches_to_a_listenable_pace():
     # Her S2: 13 words squeezed into 4.0s (3.2 wps). The video must stretch to ~words/2.2.
     reel = _plan()

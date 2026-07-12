@@ -5,6 +5,18 @@ change-log. Read this before acting in this repo. Last full revision: 2026-07-04
 Test suite: **1288 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
 
+**REEL GROUNDING GATE — the LAST ungated copy surface CLOSED (owner pre-EXECUTE check,
+2026-07-12).** Her check was right structurally, wrong on the content: the two flagged NTI VO
+lines ("خريجينا بيشتغلوا في أكبر الشركات", "٤ شهور") both PASS ledger.audit_text against NTI's
+real evidence — but the surface itself was AUDIT-ONLY (reel/grounding.py said so; the
+creative.py comment claiming grounding runs was aspirational). Now BLOCKING at the plan_eval →
+storyboard seam in render_creative_reel: voiceover + hook + cta + captions pass the shared
+drop-to-grounded policy (unsourced hard claim → BLANKED, ambience instead of speech, never
+rewritten); covers the fresh-director path AND plan_override (HITL law: blanking is a veto,
+not a plan swap). hitl_preview now shows the same verdicts inline ("⚠ غير مدعوم — سيُحذف عند
+التنفيذ") so approval never diverges from render. grounding/audit.py: reel moved to
+GATED_SURFACES; honest imagery limitation stays named. +1 hermetic test.
+
 **POSTER 429 RESILIENCE + STALE-CREATIVE RESET (owner round, 2026-07-12, suite 1288).**
 Her failed studio run: poster died after 239s with a raw google.genai ClientError traceback
 fragment — WHILE the Veo reel rendered concurrently on the same Dynamic-Shared-Quota project

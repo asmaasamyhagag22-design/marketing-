@@ -23,11 +23,14 @@ POLICY = (
 GATED_SURFACES = [
     "poster copy: headline, subheadline, CTA, proof chips",
     "content-calendar copy: item hooks and angles",
+    "reel copy: voiceover, hook, CTA, captions — story AND creative/HITL paths, "
+    "drop-to-grounded (gated 2026-07-12)",
 ]
 
 # Surfaces NOT yet gated — explicitly named so the proof is honest about its limits.
 UNGATED_SURFACES = {
-    "reel": "NOT yet gated — no brand-safety trail is claimed for reel copy",
+    "imagery": "generated scenes/backgrounds are design-domain (no per-pixel claim trail); "
+               "text ON images is OCR-gated on the poster path only",
 }
 
 
