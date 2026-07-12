@@ -5,6 +5,22 @@ change-log. Read this before acting in this repo. Last full revision: 2026-07-04
 Test suite: **1298 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
 
+**REFERENCE REEL EXAMPLE (per the owner's directive — pairs with the poster reference):** the
+NTI 6-scene plan (outputs/nti_sci_eg_reel_plan.json, 2026-07-12 11:09) + its three pre-EXECUTE
+verdicts: (1) GROUNDING — "خريجينا بيشتغلوا في أكبر الشركات" and "٤ شهور" both PASS
+ledger.audit_text against NTI's evidence; the SURFACE was ungated → now blocking
+(drop-to-grounded) on VO/hook/cta incl. HITL plans, with the verdicts shown at preview time.
+(2) SCENE-5 UI TEXT — generalized into the director's SCREENS & MARKS rule + the motion-QA
+no_junk_generated_text criterion; Cisco/FortiGate style tech mentions stay legitimate ONLY as
+curriculum-evidence copy, never as on-screen logos (third-party marks banned at source and at
+QA). (3) VO-DURATION FIT — verdict: the compositor STRETCHES the scene to the words (0.3s +
+words/2.2, cap 8s) and never compresses beyond atempo 1.12; scene 2's 13-words/4s would now
+render at ~6.2s. **QUEUE STATUS:** the NTI re-render awaits the owner's EXECUTE (HITL law — no
+auto-render). op_shoes motion restructure: its roots (motion QA, scenario arc, featured
+seeding) shipped this round; the before/after case runs at her next Generate. NEXT build unit:
+U8b Discovery v2 (consumes MarketDefinition: query_seeds + geo → candidate pool → peer-fit
+rank; replaces the current discovery's ad-hoc seeds; fixtures-first per PD-3).
+
 **DASHBOARD ROUND — the visual mess fixed + "حط فيها كل حاجة" (owner 2026-07-12, screenshot).**
 (1) The scraper-quality panel's 10 stacked pink URL rows: the per-category ajax_modal_details
 notes now AGGREGATE server-side (dashboard/products.py) into ONE human line ("JS-modal detail
