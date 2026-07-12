@@ -1047,11 +1047,21 @@ def scrape(input_url: str, output_root: str = "scrapes", *, light: bool = False)
                             if _new:
                                 for cand in _new:
                                     depth_by_norm[cand[0]] = _cur_depth + 1
-                                subpages.extend(_new)
+                                # LEAF candidates SPLICE right after the current page (the ajax
+                                # resolver's philosophy: they're the real content, not tail
+                                # material) — MEASURED: nti's depth-3 coursesev leaves were
+                                # discovered (+7/+20 per hub) yet the run always ended before
+                                # the tail, so the owner's course modals never got fetched.
+                                # Non-leaf discoveries still queue at the tail.
+                                leaf_new = [c for c in _new if is_leaf_detail(c[0])]
+                                tail_new = [c for c in _new if not is_leaf_detail(c[0])]
+                                for k, cand in enumerate(leaf_new):
+                                    subpages.insert(i + _sub_ajax + k, cand)
+                                subpages.extend(tail_new)
                                 _bfs_added_total += len(_new)
                                 manifest.notes.append(
                                     f"bfs_reseed({sub_url}): +{len(_new)} depth-{_cur_depth + 1} "
-                                    f"candidates ({sum(1 for c in _new if is_leaf_detail(c[0]))} leaf)")
+                                    f"candidates ({len(leaf_new)} leaf spliced ahead)")
                         # H1: re-evaluate the store signal over the ACCUMULATED links as
                         # subpages reveal more product URLs, and upgrade the budget ONCE if
                         # it crosses the threshold — the one-shot homepage detection above
