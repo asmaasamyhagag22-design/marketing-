@@ -477,7 +477,8 @@ def _gather_product_props(profile, caller, log,
 
 def _try_oneshot(profile, brief, concept, brand_dna, caller, *, arabic, audit,
                  out_dir, variation, max_retries, log,
-                 qa_caller=None, product_image: Optional[str] = None) -> Optional[PosterGenResult]:
+                 qa_caller=None, product_image: Optional[str] = None,
+                 prompt_override: Optional[str] = None) -> Optional[PosterGenResult]:
     """ONE-SHOT engine: a Gemini image model composes the ENTIRE creative (layout +
     typography + graphics) in one call — the measured pilot (poster/oneshot.py:
     Arabic fidelity 5/5) earned it this pipeline mode; same idea as TrendPulse's
@@ -533,6 +534,13 @@ def _try_oneshot(profile, brief, concept, brand_dna, caller, *, arabic, audit,
         cue = concept_variation_cue(variation)
         if cue:
             prompt += "\n" + cue   # per-run design diversity (mood/lighting/composition)
+        # HITL (owner law 2026-07-12): the user-approved prompt is FINAL — it replaces the
+        # assembled brief verbatim. Every render gate below (verbatim-copy fidelity, corner
+        # slot, brand-lines, QA critic) still runs on the RESULT, so the edit box can never
+        # bypass validation; generation only reaches here via an explicit EXECUTE.
+        if prompt_override and prompt_override.strip():
+            prompt = prompt_override.strip()
+            log("[oneshot] HITL prompt override in effect (user-approved)")
 
         logo_bytes, logo_mime = _logo_bytes(brief.logo_url)
         brand_tokens = [t.lower() for t in re.findall(r"[A-Za-z؀-ۿ]{3,}",
@@ -673,6 +681,7 @@ def generate_poster(
     engine: str = "classic",
     language: str = "auto",
     product_image: Optional[str] = None,
+    prompt_override: Optional[str] = None,
     log=_safe_log,
 ) -> PosterGenResult:
     """The one pipeline. `caller` = a (multimodal) Gemini caller; `qa_caller` defaults to it.
@@ -800,7 +809,7 @@ def generate_poster(
         r = _try_oneshot(profile, brief, concept, brand_dna, caller, arabic=arabic,
                          audit=audit, out_dir=out_dir, variation=variation,
                          max_retries=max_qa_retries, log=log, qa_caller=qa_caller,
-                         product_image=product_image)
+                         product_image=product_image, prompt_override=prompt_override)
         if r is not None:
             return _emit(r)
         log("[oneshot] gate not passed / unavailable -> classic overlay pipeline")
@@ -889,3 +898,52 @@ def generate_poster(
     if not best.qa.overall_pass:
         log(f"[qa] no attempt passed; returning best (score={best.qa.score}): {best.qa.reason}")
     return _emit(best)
+
+
+def build_generation_preview(profile: dict, *, caller: Any = None,
+                             product_image: Optional[str] = None,
+                             language: str = "auto") -> dict:
+    """HITL step 1 (owner law 2026-07-12): assemble the EXACT one-shot generation brief —
+    concept + copy + palette + DNA + real-asset roles + locale — WITHOUT touching any image
+    API. Cheap text-only calls (concept build); props are counted but never OCR'd (caller
+    is withheld from the gather). What the user approves here is what runs verbatim via
+    `prompt_override`, so preview==execution by construction."""
+    if caller is None:
+        from business_profile.llm import default_caller
+        caller = default_caller(strong=True)
+    arabic = language == "ar" if language in ("ar", "en") else brand_is_arabic(profile)
+    brand_dna = load_or_build_dna(profile, caller)
+    concept = build_creative_concept(profile, caller=caller, arabic=arabic)
+    brief = build_poster_brief(profile)
+    brief = brief.model_copy(update={
+        "headline": concept.headline or brief.headline,
+        "subheadline": concept.subheadline or brief.subheadline,
+        "cta_text": concept.cta or brief.cta_text})
+    import poster.oneshot as oneshot
+    from poster.art_director import _palette_names
+    from poster.locale import brand_locale
+    dna_lines = ""
+    if brand_dna is not None:
+        vals = []
+        for f in ("imagery_style", "mood", "layout_philosophy", "composition_patterns",
+                  "typographic_character", "motifs", "signature_moves"):
+            v = getattr(brand_dna, f, None)
+            if v:
+                vals.append(v if isinstance(v, str) else ", ".join(map(str, v)))
+        dna_lines = "; ".join(vals)[:800]
+    product_imgs, _lines, asset_role = _gather_product_props(profile, None, _safe_log,
+                                                             product_image=product_image)
+    _country, locale_line = brand_locale(profile)
+    copy = {"headline": brief.headline or "", "subheadline": brief.subheadline or "",
+            "cta": brief.cta_text or ""}
+    prompt = oneshot.build_oneshot_prompt(
+        copy, brand_name=brief.business_name or "",
+        palette_names=_palette_names(brief.palette_hex), dna_lines=dna_lines,
+        rtl=arabic, has_logo=bool(brief.logo_url),
+        heading_font=(brief.heading_font or ""), body_font=(brief.body_font or ""),
+        single_message=(concept.single_message or ""),
+        visual_idea=(concept.visual_idea or ""),
+        n_products=(len(product_imgs) if asset_role == "prop" else 0),
+        n_places=(len(product_imgs) if asset_role == "place" else 0),
+        locale_line=locale_line)
+    return {"prompt": prompt, "copy": copy, "engine": "oneshot", "arabic": arabic}

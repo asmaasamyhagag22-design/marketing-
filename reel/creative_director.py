@@ -370,6 +370,7 @@ def design_creative_reel(
     language: Optional[str] = None,
     featured_product: Optional[str] = None,
     caller=None,
+    user_note: Optional[str] = None,
 ) -> Optional[CreativeReel]:
     """Gemini 2.5 Pro designs the full creative reel from the identity + real photos (it SEES the
     photos — natively multimodal). When `featured_product` is set, the WHOLE reel is about that ONE
@@ -412,9 +413,16 @@ def design_creative_reel(
 
     feat = (f"\n\nFEATURED PRODUCT (advertise ONLY this): {featured_product}. Every scene is the SAME "
             "product — vary the shot/action, not the item." if featured_product else "")
+    note_line = ""
+    if user_note and str(user_note).strip():
+        # HITL refine loop: the studio user's change request steers the NEXT plan; grounding
+        # rules in the system prompt still apply unchanged.
+        note_line = ("\n\nUSER CHANGE REQUEST (must be honored): "
+                     + str(user_note).strip())
     user = ("BUSINESS IDENTITY:\n" + _identity_block(profile) + feat +
             f"\n\n{len(used)} real photos are attached in index order 0..{len(used) - 1}. "
             "Design the reel.")
+    user = user + note_line
 
     try:
         from poster.contracts import compliance_for

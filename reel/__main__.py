@@ -82,6 +82,9 @@ def main() -> int:
                     help="CREATIVE mode: Opus directs the reel (per-scene Veo 3.1 "
                          "prompts + voice-over) from the identity + real photos. Veo 3.1 "
                          "brings each real photo to life; OpenAI TTS narrates.")
+    ap.add_argument("--plan-file", default=None,
+                    help="HITL: a user-APPROVED creative plan JSON (from the studio preview); "
+                         "replaces the director call verbatim — all render gates still apply.")
     ap.add_argument("--no-voiceover", action="store_true",
                     help="skip the AI voice-over narration (default: Gemini TTS narrates "
                          "each scene's on-screen text; runs on GCP credits)")
@@ -187,12 +190,22 @@ def main() -> int:
         provider = StubVideoProvider() if args.no_video else default_video_provider()
         print(f"[creative] Opus directing {args.frames} scenes from {len(photos)} real photos; "
               f"provider={provider.name}", file=sys.stderr)
+        plan_override = None
+        if getattr(args, "plan_file", None):
+            try:
+                import json as _json
+                plan_override = _json.loads(Path(args.plan_file).read_text(encoding="utf-8"))
+                print(f"[creative] HITL plan override loaded ({len(plan_override.get('scenes') or [])} scenes)",
+                      file=sys.stderr)
+            except Exception as exc:
+                print(f"[creative] could not read --plan-file: {type(exc).__name__}", file=sys.stderr)
         result, creative = render_creative_reel(
             profile, brief, photos, provider=provider, out_path=out,
             n_scenes=max(3, args.frames), scale=args.scale,
             include_logo=not args.no_logo, music_path=args.music,
             with_voiceover=not args.no_voiceover,
             featured_product=args.product_name,
+            plan_override=plan_override,
         )
         if result is not None:
             _append_brand_endcard(profile, result.reel_path, enabled=not args.no_logo)

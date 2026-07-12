@@ -40,6 +40,9 @@ def main() -> int:
     )
     ap.add_argument("profile", help="path to a business_profile.json")
     ap.add_argument("--out", default="outputs/posters/poster.png", help="output PNG path")
+    ap.add_argument("--prompt-file", default=None,
+                    help="HITL: a user-APPROVED generation prompt (utf-8 text file); replaces "
+                         "the assembled one-shot brief verbatim — render gates still apply.")
     ap.add_argument(
         "--engine", choices=("classic", "oneshot"), default="classic",
         help="poster engine: 'classic' (Imagen background + crisp HTML overlay) or 'oneshot' "
@@ -204,12 +207,20 @@ def main() -> int:
 
     # The ONE pipeline shared with the web app.
     from poster.pipeline import generate_poster
+    prompt_override = None
+    if getattr(args, "prompt_file", None):
+        try:
+            prompt_override = Path(args.prompt_file).read_text(encoding="utf-8")
+            print(f"      HITL prompt override loaded ({len(prompt_override)} chars)")
+        except Exception as exc:
+            print(f"      (could not read --prompt-file: {type(exc).__name__})", file=sys.stderr)
     res = generate_poster(
         profile, caller=caller, variation=variation, brand_dna=brand_dna,
         no_image=args.no_image, headline_override=headline_override,
         trend_context=trend_context or None, engine=args.engine,
         out_dir=str(Path(args.out).parent or "."),
         product_image=args.product_image,
+        prompt_override=prompt_override,
     )
 
     # Place the result at the requested --out path.
