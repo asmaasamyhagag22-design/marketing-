@@ -51,12 +51,13 @@ def _emit(on_progress, event: str, label: str, msg: str) -> None:
             pass
 
 
-def _run(cmd: list[str], *, timeout: int, label: str, on_progress=None) -> tuple[bool, str]:
+def _run(cmd: list[str], *, timeout: int, label: str, on_progress=None,
+         env: dict | None = None) -> tuple[bool, str]:
     """Run one stage; stream a compact status. Returns (ok, tail_of_output)."""
     _emit(on_progress, "stage_start", label, f"  -> {label} ...")
     t0 = time.monotonic()
     try:
-        p = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout,
+        p = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, env=env,
                            encoding="utf-8", errors="replace")
     except subprocess.TimeoutExpired:
         _emit(on_progress, "stage_fail", label, f"    [X] {label} timed out after {timeout}s")
@@ -146,16 +147,27 @@ def generate_poster(slug: str, *, out_dir: str = "outputs", on_progress=None,
 
 
 def generate_reel(slug: str, *, out_dir: str = "outputs", on_progress=None,
-                 product_name: str | None = None, product_image: str | None = None) -> Path | None:
-    """On-demand: (re)generate the Opus-directed Veo 3.1 reel, optionally FEATURING a picked product."""
+                 product_name: str | None = None, product_image: str | None = None,
+                 language: str | None = None, dialect: str | None = None) -> Path | None:
+    """On-demand reel. OWNER RULE (2026-07-11): the output LANGUAGE (ar/en) and the Arabic
+    register (fusha/masri) are the USER's explicit choices from the studio UI — passed as
+    --language + the REEL_ARABIC_DIALECT env (which also routes the ratified TTS backend:
+    masri -> gpt-audio, fusha -> Gemini directed)."""
+    import os
     py = sys.executable
     P = paths(slug, out_dir)
     if not P["profile"].is_file():
         return None
     P["reel"].parent.mkdir(parents=True, exist_ok=True)
-    ok, _ = _run([py, "-m", "reel", str(P["profile"]), "--creative", "--out", str(P["reel"])]
-                 + _product_args(product_name, product_image),
-                 timeout=1500, label="Reel (Veo 3.1, Opus-directed)", on_progress=on_progress)
+    args = [py, "-m", "reel", str(P["profile"]), "--creative", "--out", str(P["reel"])]
+    if language in ("ar", "en"):
+        args += ["--language", language]
+    env = dict(os.environ)
+    if dialect in ("masri", "fusha"):
+        env["REEL_ARABIC_DIALECT"] = dialect
+    ok, _ = _run(args + _product_args(product_name, product_image),
+                 timeout=1500, label="Reel (Veo 3.1, user-directed)", on_progress=on_progress,
+                 env=env)
     return P["reel"] if (ok and P["reel"].is_file()) else None
 
 

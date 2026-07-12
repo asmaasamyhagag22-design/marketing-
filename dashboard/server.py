@@ -647,6 +647,10 @@ class _Handler(BaseHTTPRequestHandler):
         # the chosen product to FEATURE (from the picker); absent -> whole-brand creative
         product_name = (q.get("pname") or [""])[0].strip() or None
         product_image = (q.get("pimg") or [""])[0].strip() or None
+        # OWNER RULE: reel language (ar/en) + Arabic register (fusha/masri) are the USER's
+        # explicit UI choices, passed through to the reel subprocess.
+        lang = (q.get("lang") or [""])[0].strip().lower() or None
+        dialect = (q.get("dialect") or [""])[0].strip().lower() or None
         if product_image and not product_image.startswith(("http://", "https://")):
             product_image = None
         self._begin_sse()
@@ -684,10 +688,16 @@ class _Handler(BaseHTTPRequestHandler):
                                     f"* product scrape snapshot -> {snap}\n")
                 except Exception:
                     pass
-            fn = _run_mod.generate_poster if kind == "poster" else _run_mod.generate_reel
             try:
-                asset = fn(slug, out_dir=self.out_dir, on_progress=on_progress,
-                           product_name=product_name, product_image=product_image)
+                if kind == "poster":
+                    asset = _run_mod.generate_poster(
+                        slug, out_dir=self.out_dir, on_progress=on_progress,
+                        product_name=product_name, product_image=product_image)
+                else:
+                    asset = _run_mod.generate_reel(
+                        slug, out_dir=self.out_dir, on_progress=on_progress,
+                        product_name=product_name, product_image=product_image,
+                        language=lang, dialect=dialect)
             except Exception as exc:
                 self._sse_write(sse("failed", {"msg": f"{type(exc).__name__}: {exc}"}))
                 return
