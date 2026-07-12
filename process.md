@@ -5,6 +5,20 @@ change-log. Read this before acting in this repo. Last full revision: 2026-07-04
 Test suite: **1288 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
 
+**DASHBOARD ROUND — the visual mess fixed + "حط فيها كل حاجة" (owner 2026-07-12, screenshot).**
+(1) The scraper-quality panel's 10 stacked pink URL rows: the per-category ajax_modal_details
+notes now AGGREGATE server-side (dashboard/products.py) into ONE human line ("JS-modal detail
+pages resolved: +N URLs across M page(s)"); raw lines kept under ajax_detail_lines. (2) The
+plan mess: the exported media-plan card renders BILINGUAL LABELS (عملاء محتملون · Leads /
+نموذج تواصل / تحويل · BOFU / قومي · National) — never raw enums — plus the EVIDENCED persona
+axes from base_persona; and the STUDIO no longer shows the plan TWICE (its embed passes
+include_media_plan=False; the richer Arabic card is the single source there). (3) Calendar
+polish: pretty dates (Sun 05 Jul), snake_case types spaced, no empty “” hooks. (4) NEW on the
+export: "Priority actions — أولويات التنفيذ" (tows.priority_actions were silently dropped;
+ranked chips — rank is a REAL sequence) and "Data coverage — تغطية البيانات" (the scrape-QA
+summary strip, best-effort). Studio-side changes land on the next server restart (owner's
+call). +2 tests; test_products re-pinned to the aggregate.
+
 **POSTER PRODUCT AUTHENTICITY — the topshoes invented-sneaker chain CLOSED (owner-caught,
 2026-07-12).** The mapped 3-link chain, each link fixed: **(1) starved photos:** topshoes'
 profile stored ONLY Shopify `?width=100/330` thumbnails → filter_usable_photos measured 0/10

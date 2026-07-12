@@ -578,7 +578,8 @@ def _studio_page(slug: str, out_dir: str) -> str | None:
         str(P["result"]),
         profile_path=str(P["profile"]) if P["profile"].is_file() else None,
         plan_path=str(P["plan"]) if P["plan"].is_file() else None,
-        standalone=False,           # body + CSS only — we wrap it ourselves
+        include_media_plan=False,   # the studio renders its OWN Arabic media-plan card below —
+        standalone=False,           # the English grid duplicated it (owner: the plan mess)
     )
     has_poster, has_reel = P["poster"].is_file(), P["reel"].is_file()
     section = _studio_section(slug, has_poster, has_reel)

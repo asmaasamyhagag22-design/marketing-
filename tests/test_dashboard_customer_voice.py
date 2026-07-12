@@ -52,11 +52,42 @@ def test_dashboard_renders_voice_section_and_media_plan_card(tmp_path):
     # the voice section is unmissable and carries the verbatim receipts
     assert "Customer voice — صوت العملاء" in html
     assert "طاقم تمريض على أعلى مستوى" in html and "استنيت ساعتين" in html
-    # the media plan card was AUTO-DISCOVERED from the sibling file
+    # the media plan card was AUTO-DISCOVERED from the sibling file — and renders bilingual
+    # LABELS, never the raw enum (owner 2026-07-12: the plan section read as a raw dump)
     assert "Media plan — خطة الشراء الإعلاني" in html
-    assert "OUTCOME_LEADS" in html and "cost_per_lead" in html
+    assert "عملاء محتملون · Leads" in html and "OUTCOME_LEADS" not in html
+    assert "cost_per_lead" in html                     # the KPI metric name is the real name
     assert "مؤكد بالأدلة" in html                      # resolved evidence -> the green badge
     assert "Cairo" in html and "10" in html            # geo radius rendered
+
+
+def test_priority_actions_render_and_studio_suppresses_the_duplicate_plan(tmp_path):
+    # "حط فيها كل حاجة": tows.priority_actions were silently dropped; now a ranked section.
+    # And the studio embed suppresses the English plan grid (it has its own Arabic card).
+    competitor = {
+        "subject_url": "https://x.example/", "competitor_count": 0, "competitors": [],
+        "swot": {"mode": "standalone", "strengths": [], "weaknesses": [],
+                 "opportunities": [], "threats": []},
+        "tows": {"strategies": [],
+                 "priority_actions": [{"rank": 1, "action": "Launch WhatsApp channel",
+                                       "horizon": "30d", "rationale": "peers converting there"},
+                                      {"rank": 2, "action": "Fix booking form", "horizon": "60d"}]},
+    }
+    media_plan = {"objectives": [{"objective": "OUTCOME_SALES", "destination": "online_store",
+                                  "funnel_stage": "bofu", "rationale": "r", "evidence": [],
+                                  "kpi_target": {"metric": "cost_per_purchase"}}],
+                  "base_geo": {"mode": "national"}}
+    cp = tmp_path / "x_result.json"
+    cp.write_text(json.dumps(competitor, ensure_ascii=False), encoding="utf-8")
+    (tmp_path / "x_media_plan.json").write_text(json.dumps(media_plan), encoding="utf-8")
+
+    from dashboard.build import build_dashboard_html
+    full = build_dashboard_html(str(cp))
+    assert "Priority actions — أولويات التنفيذ" in full
+    assert "Launch WhatsApp channel" in full and ">1<" in full     # rank chip carries the order
+    assert "مبيعات · Sales" in full                                # bilingual label, not the enum
+    studio_embed = build_dashboard_html(str(cp), include_media_plan=False)
+    assert "Media plan — خطة الشراء الإعلاني" not in studio_embed  # no duplicate in the studio
 
 
 def test_dashboard_without_voice_or_plan_stays_clean(tmp_path):

@@ -119,15 +119,20 @@ _PLAT_ICON = {"instagram": "◎", "tiktok": "♪", "linkedin": "in", "facebook":
 
 def _calendar_row(it: dict) -> str:
     plat = str(it.get("platform") or "")
-    ctype = str(it.get("content_type") or "")
+    ctype = str(it.get("content_type") or "").replace("_", " ")   # static_post -> static post
     topic = _esc(it.get("topic") or "")
     hook = _esc(it.get("hook") or it.get("angle") or "")
-    date = _esc(it.get("date") or "")
+    raw_date = str(it.get("date") or "")
+    try:                                              # 2026-07-05 -> Sun 05 Jul (raw on failure)
+        date = _esc(datetime.strptime(raw_date, "%Y-%m-%d").strftime("%a %d %b"))
+    except Exception:  # noqa: BLE001
+        date = _esc(raw_date)
     ic = _PLAT_ICON.get(plat, "•")
+    hook_html = f'<div class="cal-hook">“{hook}”</div>' if hook else ""   # no empty quotes
     return f"""<div class="cal-row">
       <div class="cal-date">{date}</div>
       <div class="cal-plat"><span class="cal-ic">{ic}</span>{_esc(plat)} · {_esc(ctype)}</div>
-      <div class="cal-body"><div class="cal-topic">{topic}</div><div class="cal-hook">“{hook}”</div></div>
+      <div class="cal-body"><div class="cal-topic">{topic}</div>{hook_html}</div>
     </div>"""
 
 
@@ -266,6 +271,12 @@ def _css() -> str:
     .mp-ok{{font-size:12px;color:{c['ok']};font-weight:700;}}
     .mp-warn{{font-size:12px;color:{c['warn']};font-weight:700;}}
     .mp-r{{font-size:12.5px;color:{c['inkSoft']};margin-top:12px;line-height:1.6;}}
+    .act-row{{display:flex;gap:12px;padding:10px 4px;border-bottom:1px solid {c['line']};align-items:flex-start;}}
+    .act-row:last-child{{border-bottom:none;}}
+    .act-n{{flex:0 0 26px;height:26px;border-radius:50%;background:{c['blush100']};color:{c['blush700']};
+      font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;}}
+    .act-row b{{font-size:13.5px;color:{c['ink']};}}
+    .act-h{{font-size:12px;color:{c['muted']};margin-top:2px;}}
     @media (max-width:760px){{.mp-grid{{grid-template-columns:1fr 1fr;}}}}
     @media (max-width:760px){{.swot,.creative{{grid-template-columns:1fr;}}.cal-row{{grid-template-columns:1fr;gap:3px;}}}}
     </style>"""
@@ -279,6 +290,7 @@ def build_dashboard_html(
     poster_path: Optional[str] = None,
     reel_path: Optional[str] = None,
     media_plan_path: Optional[str] = None,
+    include_media_plan: bool = True,
     standalone: bool = True,
     generated_at: Optional[str] = None,
 ) -> str:
@@ -344,13 +356,32 @@ def build_dashboard_html(
           <div class="card">{rows}</div></div>"""
 
     # MEDIA PLAN (U1) — auto-discovered next to the result file, so the exported dashboard
-    # carries the buying plan without any caller changes.
+    # carries the buying plan without any caller changes. Bilingual labels, never raw enums
+    # (owner 2026-07-12: the plan section read as a raw dump). include_media_plan=False
+    # suppresses it (the STUDIO embeds this report and has its own richer Arabic card —
+    # the duplication was part of the mess).
     mp_html = ""
+    _OBJ_L = {"OUTCOME_SALES": "مبيعات · Sales",
+              "OUTCOME_LEADS": "عملاء محتملون · Leads",
+              "OUTCOME_TRAFFIC": "زيارات · Traffic",
+              "OUTCOME_AWARENESS": "وعي · Awareness",
+              "OUTCOME_ENGAGEMENT": "تفاعل · Engagement",
+              "OUTCOME_APP_PROMOTION": "تطبيق · App"}
+    _DEST_L = {"online_store": "المتجر الإلكتروني",
+               "lead_form": "نموذج تواصل",
+               "whatsapp": "واتساب",
+               "phone_call": "مكالمة هاتفية",
+               "messenger": "ماسنجر",
+               "app_store": "متجر التطبيقات",
+               "website": "الموقع"}
+    _FUN_L = {"tofu": "وعي · TOFU", "mofu": "تفكير · MOFU",
+              "bofu": "تحويل · BOFU"}
     mp_path = media_plan_path
-    if not mp_path and competitor_path and str(competitor_path).endswith("_result.json"):
+    if include_media_plan and not mp_path and competitor_path \
+            and str(competitor_path).endswith("_result.json"):
         cand = Path(str(competitor_path).replace("_result.json", "_media_plan.json"))
         mp_path = str(cand) if cand.is_file() else None
-    mp = _load(mp_path)
+    mp = _load(mp_path) if include_media_plan else {}
     obj = (mp.get("objectives") or [{}])[0] if mp else {}
     if obj.get("objective"):
         kpi = obj.get("kpi_target") or {}
@@ -358,20 +389,77 @@ def build_dashboard_html(
         n_ev = sum(1 for e in (obj.get("evidence") or []) if e.get("resolved"))
         badge = ("<span class='mp-ok'>مؤكد بالأدلة ✓</span>" if n_ev
                  else "<span class='mp-warn'>للمراجعة ⚠</span>")
-        geo_txt = geo.get("mode") or ""
+        geo_txt = str(geo.get("mode") or "")
+        geo_txt = {"national": "قومي · National",
+                   "radius": "نطاق محلي · Radius"}.get(geo_txt, geo_txt)
         if geo.get("center_address"):
-            geo_txt += f" · {geo.get('center_address')} ({geo.get('radius_km')} km)"
+            geo_txt += f" — {geo.get('center_address')} ({geo.get('radius_km')} km)"
+        # evidenced persona axes from the same plan (only what the evidence supports)
+        persona = mp.get("base_persona") or {}
+        p_bits = []
+        for axis, label in (("age_range", "العمر"), ("gender", "النوع")):
+            val = persona.get(axis)
+            if isinstance(val, dict):
+                val = val.get("value") or val.get("claim")
+            if val:
+                p_bits.append(f"{label}: {val}")
+        for itx in (persona.get("interests") or [])[:3]:
+            c = itx.get("claim") if isinstance(itx, dict) else str(itx)
+            if c:
+                p_bits.append(str(c))
+        persona_html = (f'<p class="mp-r"><b>الشريحة (بالأدلة):</b> '
+                        f'{_esc(" · ".join(p_bits))}</p>' if p_bits else "")
         mp_html = f"""<div class="sec"><div class="sec-h"><span class="bar"></span>
           <h2>Media plan — خطة الشراء الإعلاني</h2><span class="cnt">deduced from evidence · U1</span></div>
           <div class="card"><div class="mp-grid">
-            <div><span class="mp-l">Objective</span><b>{_esc(obj.get('objective') or '')}</b></div>
-            <div><span class="mp-l">Destination</span><b>{_esc(obj.get('destination') or '')}</b></div>
-            <div><span class="mp-l">Funnel</span><b>{_esc(obj.get('funnel_stage') or '')}</b></div>
+            <div><span class="mp-l">Objective · الهدف</span><b>{_esc(_OBJ_L.get(str(obj.get('objective') or ''), str(obj.get('objective') or '')))}</b></div>
+            <div><span class="mp-l">Destination · الوجهة</span><b>{_esc(_DEST_L.get(str(obj.get('destination') or ''), str(obj.get('destination') or '')))}</b></div>
+            <div><span class="mp-l">Funnel · القمع</span><b>{_esc(_FUN_L.get(str(obj.get('funnel_stage') or ''), str(obj.get('funnel_stage') or '')))}</b></div>
             <div><span class="mp-l">KPI</span><b>{_esc(kpi.get('metric') or '')}</b></div>
-            <div><span class="mp-l">Geo</span><b>{_esc(geo_txt)}</b></div>
-            <div><span class="mp-l">Evidence</span>{badge}</div>
+            <div><span class="mp-l">Geo · الجغرافيا</span><b>{_esc(geo_txt)}</b></div>
+            <div><span class="mp-l">Evidence · الأدلة</span>{badge}</div>
           </div>
-          <p class="mp-r">{_esc(obj.get('rationale') or '')}</p></div></div>"""
+          <p class="mp-r">{_esc(obj.get('rationale') or '')}</p>{persona_html}</div></div>"""
+
+    # TOWS PRIORITY ACTIONS — already inside result.json, silently dropped before
+    # (owner: everything must show). rank IS a real sequence, so numbering carries meaning.
+    actions = (tows.get("priority_actions") or [])[:6]
+    actions_html = ""
+    if actions:
+        rows = ""
+        for a in actions:
+            extra = f" — {_esc(a.get('rationale') or '')}" if a.get("rationale") else ""
+            rows += (f'<div class="act-row"><span class="act-n">{int(a.get("rank") or 0)}</span>'
+                     f'<div><b>{_esc(a.get("action") or "")}</b>'
+                     f'<div class="act-h">{_esc(a.get("horizon") or "")}{extra[:170]}</div>'
+                     f'</div></div>')
+        actions_html = f"""<div class="sec"><div class="sec-h"><span class="bar"></span>
+          <h2>Priority actions — أولويات التنفيذ</h2><span class="cnt">{len(actions)} ranked moves</span></div>
+          <div class="card">{rows}</div></div>"""
+
+    # SCRAPER QA STRIP — the same summary the studio shows, now on the export (the analysis
+    # names its own coverage). Best-effort; silently absent without a scrape dir.
+    qa_html = ""
+    try:
+        if competitor_path and str(competitor_path).endswith("_result.json"):
+            _slug = Path(competitor_path).name[: -len("_result.json")]
+            from dashboard.products import scrape_qa_for_slug
+            qa = scrape_qa_for_slug(_slug)
+            if qa:
+                note = _esc((qa.get("key_notes") or [""])[0])
+                note_html = f'<p class="mp-r">{note}</p>' if note else ''
+                qa_html = f"""<div class="sec"><div class="sec-h"><span class="bar"></span>
+                  <h2>Data coverage — تغطية البيانات</h2><span class="cnt">{'✓ ready' if qa.get('ready') else '⚠ partial'}</span></div>
+                  <div class="card"><div class="mp-grid">
+                    <div><span class="mp-l">Pages</span><b>{qa.get('pages_succeeded')}/{qa.get('pages_attempted')}</b></div>
+                    <div><span class="mp-l">Products</span><b>{qa.get('products')}</b></div>
+                    <div><span class="mp-l">Images</span><b>{qa.get('images')}</b></div>
+                    <div><span class="mp-l">Text blocks</span><b>{qa.get('text_blocks')}</b></div>
+                    <div><span class="mp-l">Duration</span><b>{int((qa.get('duration_ms') or 0)/1000)}s</b></div>
+                    <div><span class="mp-l">Failures</span><b>{qa.get('failures')}</b></div>
+                  </div>{note_html}</div></div>"""
+    except Exception:  # noqa: BLE001 — the export never breaks on a missing scrape
+        qa_html = ""
 
     comp_html = ""
     if competitors:
@@ -442,7 +530,7 @@ def build_dashboard_html(
         {(' · <b>' + _esc(category) + '</b>') if category else ''}{(' · tone: ' + _esc(tone)) if tone else ''}</p>
         <div class="kpis">{kpis}</div>
       </div></div>
-      {swot_html}{voice_html}{mp_html}{comp_html}{tows_html}{cal_html}{creative_html}
+      {swot_html}{voice_html}{mp_html}{comp_html}{tows_html}{actions_html}{cal_html}{creative_html}{qa_html}
       <div class="foot">Generated by <b>Baseera</b> · {_esc(gen)} · every factual line carries its source (the Evidence Ledger).</div>
     </div></div>"""
 

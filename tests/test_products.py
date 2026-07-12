@@ -76,8 +76,11 @@ def test_scrape_qa_summarizes_the_freshest_manifest(tmp_path):
     assert qa["pages_succeeded"] == 5 and qa["pages_attempted"] == 6
     assert qa["ready"] is True and qa["products"] >= 2
     assert qa["text_blocks"] == 2 and qa["images"] == 4
-    # only the notable notes are surfaced (the url-less-modal + ecommerce), not the unrelated one
-    assert any("ajax_modal" in n for n in qa["key_notes"])
+    # only the notable notes are surfaced; the ajax lines AGGREGATE into one human summary
+    # (owner 2026-07-12: stacked raw-URL rows were a visual mess), raw lines kept separately
+    assert any("JS-modal detail pages resolved: +6 URLs" in n for n in qa["key_notes"])
+    assert not any("ajax_modal_details(" in n for n in qa["key_notes"])
+    assert qa["ajax_detail_lines"] and "b.com/cat" in qa["ajax_detail_lines"][0]
     assert not any("unrelated" in n for n in qa["key_notes"])
 
 

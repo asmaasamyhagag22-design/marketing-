@@ -312,7 +312,18 @@ def scrape_qa_for_slug(slug: str, *, scrapes_dir: str = "scrapes") -> dict | Non
     notes = [n for n in (m.get("notes") or []) if isinstance(n, str)]
     text_blocks = sum(len(p.get("text_blocks") or []) for p in pages if isinstance(p, dict))
     products = products_from_manifest(m, limit=100)
-    key_notes = [n for n in notes if any(k in n.lower() for k in _QA_NOTE_KEYS)]
+    # AGGREGATE the per-category ajax_modal_details lines (owner 2026-07-12: 10 stacked pink
+    # URL rows = "عبث بصري") into ONE human summary; the raw lines stay available under
+    # ajax_detail_lines for a details toggle. Other notable notes pass through unchanged.
+    import re as _re
+    ajax_lines = [n for n in notes if "ajax_modal_details" in n]
+    other = [n for n in notes if "ajax_modal_details" not in n]
+    key_notes = [n for n in other if any(k in n.lower() for k in _QA_NOTE_KEYS)]
+    if ajax_lines:
+        total = sum(int(m2.group(1)) for n in ajax_lines
+                    for m2 in [_re.search(r"\+(\d+) JS-built", n)] if m2)
+        key_notes.insert(0, f"JS-modal detail pages resolved: +{total} URLs "
+                            f"across {len(ajax_lines)} page(s)")
     return {
         "manifest_path": str(mp),
         "final_url": sm.get("final_url") or "",
@@ -330,4 +341,5 @@ def scrape_qa_for_slug(slug: str, *, scrapes_dir: str = "scrapes") -> dict | Non
                    "blocks": len(p.get("text_blocks") or [])}
                   for p in pages if isinstance(p, dict)][:25],
         "key_notes": key_notes[:10],
+        "ajax_detail_lines": ajax_lines[:12],
     }
