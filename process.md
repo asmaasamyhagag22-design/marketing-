@@ -20,8 +20,20 @@ Threat; peer praise stays a category note. Gold fixture `reviews/fixtures/absa_g
 Inputs are provider-agnostic (SocialSignal / Review / dicts) — the fiveguys Facebook fixture
 and the U8a review fixtures feed it as-is. +5 hermetic tests (end-to-end with every rejection
 gate, fabricated-quotes-in-numbers, threshold, no-caller/empty valid, universal-taxonomy
-fallback). Live wiring (real pulls -> ABSA -> SWOT v2 in the studio) = the queue's next
-measured step.
+fallback). **LIVE SMOKE (Gemini 2.5 Pro, same day): 13/13 raw mentions passed the verbatim
+substring gate and the surviving themes match _gold EXACTLY** (own complaint waiting_time
+{R2,R3,R6}, own praise staff {R4,R7}, peer complaint waiting_time {P1,P3}; all single-support
+mentions correctly held under the threshold). Caveat for entrypoint authors: default_caller
+needs .env loaded — a bare script without it gets the extractor's honest-empty []. Live wiring
+(real pulls -> ABSA -> SWOT v2 in the studio) = the queue's next measured step.
+
+**FACEBOOK VALIDATION PULL EXECUTED (the ONE pre-authorized pull, 2026-07-12):** scripts/
+pull_facebook.py live end-to-end on the team's same public test page (fiveguys): cap check
+passed (est $0.07 + $0.00 <= $20.00), team pipeline ran unmodified via Apify (2 posts + 10
+comments), ledger row recorded (runs/apify_spend.jsonl), raw snapshot under runs/
+social_snapshots/ (PII, gitignored), converter re-ran with the PII gate and refreshed
+social_intel/fixtures/fiveguys.json. apify-client installed into the conda env. No recurring
+pulls scheduled.
 
 **U9 FACEBOOK WRAP SHIPPED (2026-07-12, suite 1266) — the $20/month cap unblocked it.**
 Recon verdict on the team's uploaded `facebook_collector/` (untracked, per governance): Tier-2
