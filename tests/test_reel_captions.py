@@ -24,7 +24,10 @@ def _reel(caps, durs=None):
 
 def test_creative_captions_routed_to_designed_styles_and_readable_durations():
     reel = _reel(["ITI Institute", "85% get hired", "", "Apply to ITI now"])
-    sb = build_creative_storyboard(reel, PosterBrief(business_name="ITI", headline="ITI"))
+    # captions default OFF since the owner reversal (2026-07-12) — this test pins the
+    # PRESERVED routing behind the flag, not the default.
+    sb = build_creative_storyboard(reel, PosterBrief(business_name="ITI", headline="ITI"),
+                                   captions=True)
     s = sb.scenes
     # scene 0 caption -> intro HEADLINE (unlocks the hero lockup + logo), not a plain subline
     assert s[0].kind == "intro" and s[0].headline == "ITI Institute" and not s[0].sublines

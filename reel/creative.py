@@ -43,15 +43,23 @@ def _brand_tone(profile: Any) -> str:
         return ""
 
 
-def build_creative_storyboard(reel: CreativeReel, brief: PosterBrief) -> Storyboard:
+def build_creative_storyboard(reel: CreativeReel, brief: PosterBrief,
+                              captions: Optional[bool] = None) -> Storyboard:
     """Map an Opus CreativeReel onto the render Storyboard. Each scene carries its
-    real-photo seed + Opus's Veo prompt; on-screen text is a short kinetic caption
-    (NOT the old repeating headline)."""
+    real-photo seed + Opus's Veo prompt.
+
+    OWNER REVERSAL (2026-07-12, "الغي الكلام اللي ع الريل خالص خليه صور"): per-scene kinetic
+    captions are OFF by default — the reel is pure footage + voice-over; the branded END-CARD
+    (real logo, deterministic) still closes it. Re-enable with captions=True or
+    REEL_CAPTIONS=on (the routing logic is preserved, not deleted)."""
+    import os
+    if captions is None:
+        captions = os.environ.get("REEL_CAPTIONS", "").lower() in ("on", "1", "true")
     scenes: list[ReelScene] = []
     n = len(reel.scenes)
     for idx, s in enumerate(reel.scenes):
         seed = reel.images[s.image_index] if 0 <= s.image_index < len(reel.images) else None
-        cap = (s.on_screen_text or "").strip()
+        cap = (s.on_screen_text or "").strip() if captions else ""
         words = len(cap.split())
         # READABLE PACING (owner: 'the text goes by too fast'): a captioned scene must hold long
         # enough to READ — research CPS rule ~ 1.5s + 0.35s/word, hard 3s floor for a phrase.

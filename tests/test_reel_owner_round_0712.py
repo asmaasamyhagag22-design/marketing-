@@ -103,6 +103,23 @@ def test_narrated_scene_stretches_to_a_listenable_pace():
     assert sb.scenes[1].duration_s <= 8.0
 
 
+def test_captions_off_by_default_reel_is_pure_footage(monkeypatch):
+    # Owner reversal (2026-07-12): "الغي الكلام اللي ع الريل خالص خليه صور" — no kinetic
+    # captions by default; the branded end-card (compositor) is separate and stays.
+    monkeypatch.delenv("REEL_CAPTIONS", raising=False)
+    reel = _plan()
+    sb = build_creative_storyboard(reel, PosterBrief(business_name="NTI", headline="NTI"))
+    assert all(not (s.headline or s.cta_text) for s in sb.scenes)
+    assert all(s.kind == "gallery" for s in sb.scenes)
+    # the VO listenable-pacing stretch still applies without captions
+    words = len(reel.scenes[1].voiceover.split())
+    assert sb.scenes[1].duration_s >= round(0.3 + words / 2.2, 2)
+    # and the flag preserves the old routing
+    sb_on = build_creative_storyboard(reel, PosterBrief(business_name="NTI", headline="NTI"),
+                                      captions=True)
+    assert any(s.headline or s.cta_text for s in sb_on.scenes)
+
+
 def test_audio_squeeze_capped_at_1_12x():
     # A read 33% too long must NOT be sped 1.33x (unintelligible) — 1.12x max.
     af = _fit_filter(raw_dur=25.0, total=19.0)

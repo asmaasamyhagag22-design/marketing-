@@ -5,6 +5,12 @@ change-log. Read this before acting in this repo. Last full revision: 2026-07-04
 Test suite: **1288 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
 
+**CAPTIONS OFF BY DEFAULT (owner reversal 2026-07-12: "الغي الكلام اللي ع الريل خالص خليه
+صور").** build_creative_storyboard(captions=False default; REEL_CAPTIONS=on or captions=True
+re-enables — the designed routing is preserved, not deleted). The reel is pure footage +
+voice-over; the deterministic branded END-CARD stays. VO listenable-pacing stretch unaffected.
+Caption tests re-pinned behind the flag; +1 default-off test.
+
 **REEL GROUNDING GATE — the LAST ungated copy surface CLOSED (owner pre-EXECUTE check,
 2026-07-12).** Her check was right structurally, wrong on the content: the two flagged NTI VO
 lines ("خريجينا بيشتغلوا في أكبر الشركات", "٤ شهور") both PASS ledger.audit_text against NTI's
