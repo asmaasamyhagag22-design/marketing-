@@ -5,6 +5,18 @@ change-log. Read this before acting in this repo. Last full revision: 2026-07-04
 Test suite: **1254 passed, 0 failed** (2026-07-11; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
 
+**POPUP BUG CLOSED (owner URL dey/coursesev.php?catID=205, 2026-07-12) — three measured loops:**
+the ajax resolver was INNOCENT (run directly on the page it reconstructed all 6 modal URLs).
+Loop 1: `coursesev` failed is_leaf_detail's EXACT filename match -> PREFIX match for compound CMS
+names (a09d01a; regression fixture saved from the live page). Measure: still 0 fetched. Loop 2:
+BFS leaves were appended at the frontier TAIL and every run ended before reaching them -> leaf
+candidates now SPLICE right after the current page, the ajax philosophy (ca75895). Measure:
+coursesev 7/7 + 40 modals, but the owner's exact modal (2631) died on _AJAX_MAX=40 with 140s
+budget unused. Loop 3: cap 40->120 (2170814; modal pages are tiny — time is the real bound).
+FINAL MEASURE: 105 pages / 66 modals / 544s and **"Fiber Networks Essentials (72 Hours)" +
+its full description are in the text blocks** — the exact popup from the owner's screenshot.
+Deliverables complete: root cause + universal fix + regression fixture + measured re-scrape.
+
 **DIRECTOR ROUND (2026-07-11 late, holds lifted) — RATIFIED GATE: objective 93% / destination
 92% / combined 92% PASS.** assalam label owner-ratified phone_call→lead_form (truth-tracking,
 dated note in ground_truth _doc, a6ffaed) → destination 85%→92%; the only miss anywhere is mumm
