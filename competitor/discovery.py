@@ -209,10 +209,46 @@ def discover_competitors(
     q_terms = list(crit.offering_keywords[:6]) + ([crit.category] if crit.category else [])
     text_query = " ".join(t for t in q_terms if t).strip() or crit.category
 
+    # U8b DISCOVERY v2 (2026-07-12): the MarketDefinition's BILINGUAL query_seeds widen
+    # retrieval — the single offerings-query is usually English-only, so Arabic-named local
+    # peers never entered the pool at all. Additive: the v1 query stays first, seeds follow,
+    # the union dedupes by place_id, and the scoring/hard-filter pipeline is UNCHANGED.
+    seed_queries: List[str] = []
+    try:
+        from competitor.market_definition import build_market_definition
+        _md = build_market_definition(profile)
+        if _md.is_grounded:
+            seed_queries = [q.strip() for q in (_md.query_seeds or []) if q and q.strip()][:3]
+    except Exception:  # noqa: BLE001 — seeds are additive; their absence IS v1 behavior
+        seed_queries = []
+    queries = [text_query] + [q for q in seed_queries if q.lower() != text_query.lower()]
+
+    def _union_search(**kw) -> List:
+        seen_keys: set = set()
+        pool: List = []
+        for q in queries:
+            try:
+                found = client.search_text(q, **kw) or []
+            except Exception:  # noqa: BLE001 — one bad seed never kills discovery
+                continue
+            for c in found:
+                key = getattr(c, "place_id", None) or (getattr(c, "name", ""),
+                                                       getattr(c, "website", ""))
+                if key in seen_keys:
+                    continue
+                seen_keys.add(key)
+                pool.append(c)
+            if len(pool) >= candidate_pool:
+                break
+        if len(queries) > 1:
+            notes.append(f"v2 multi-seed retrieval: {len(queries)} queries -> "
+                         f"{len(pool)} unique candidates")
+        return pool[:candidate_pool]
+
     # ---- get candidates ----
     if crit.is_online_only:
         notes.append(f"online-only: text search {text_query!r}, proximity dropped")
-        candidates = client.search_text(text_query, max_results=candidate_pool)
+        candidates = _union_search(max_results=candidate_pool)
     else:
         if crit.lat is None or crit.lng is None:
             if not address:
@@ -239,8 +275,8 @@ def discover_competitors(
             crit.lat, crit.lng = geo
         notes.append(f"text search {text_query!r} biased to "
                      f"({crit.lat:.4f},{crit.lng:.4f}) r={radius_m}m")
-        candidates = client.search_text(text_query, lat=crit.lat, lng=crit.lng,
-                                        radius_m=radius_m, max_results=candidate_pool)
+        candidates = _union_search(lat=crit.lat, lng=crit.lng,
+                                   radius_m=radius_m, max_results=candidate_pool)
 
     # drop the subject itself if it appears (match by website domain / exact name)
     candidates = [c for c in candidates if not _is_self(c, profile)]

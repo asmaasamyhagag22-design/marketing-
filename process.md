@@ -2,8 +2,18 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1298 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
+Test suite: **1300 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**U8b DISCOVERY v2 — FIRST SLICE SHIPPED (2026-07-12, suite 1300):** MarketDefinition now
+DRIVES retrieval. The measured v1 gap: candidates came from ONE offerings-built (usually
+English) text query — Arabic-named local peers never entered the pool at all. Additive fix in
+discover_competitors: the definition's bilingual query_seeds (<=3) join the v1 query
+(v1 FIRST — its behavior is the floor), the union dedupes by place_id, the pool cap holds,
+and the tuned scoring/hard-filter pipeline is UNCHANGED; an ungrounded definition degrades to
+EXACT v1 (pinned by test). Cost: <=4 Places text searches per discovery instead of 1
+(~$0.03). Remaining v2 scope (roadmap): web-discovery merge under the same seeds + geo-mode
+awareness (radius vs national bias). +2 hermetic tests.
 
 **REFERENCE REEL EXAMPLE (per the owner's directive — pairs with the poster reference):** the
 NTI 6-scene plan (outputs/nti_sci_eg_reel_plan.json, 2026-07-12 11:09) + its three pre-EXECUTE
