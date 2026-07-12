@@ -195,6 +195,29 @@ def _studio_css() -> str:
     c = _C
     return f"""<style>
     .cst-wrap{{max-width:1180px;margin:0 auto;}}
+    .hitl-ov{{position:fixed;inset:0;background:rgba(42,26,31,.55);display:none;
+      align-items:center;justify-content:center;z-index:60;padding:18px;}}
+    .hitl-box{{background:#fff;border-radius:18px;max-width:860px;width:100%;max-height:88vh;
+      display:flex;flex-direction:column;box-shadow:0 24px 70px rgba(126,52,80,.35);overflow:hidden;}}
+    .hitl-head{{padding:16px 22px;border-bottom:1px solid {c['line']};display:flex;
+      align-items:center;justify-content:space-between;font-weight:700;}}
+    .hitl-tabs button{{background:#fff;color:{c['inkSoft']};border:1.5px solid {c['line']};
+      box-shadow:none;padding:7px 16px;border-radius:9px;font-size:12.5px;margin-inline-start:6px;}}
+    .hitl-tabs button.on{{background:{c['blush100']};color:{c['blush700']};border-color:{c['blush500']};}}
+    .hitl-body{{padding:14px 22px;overflow:auto;flex:1;}}
+    .hitl-body textarea{{width:100%;min-height:300px;border:1.5px solid {c['line']};border-radius:12px;
+      padding:12px 14px;font-family:'Space Grotesk',ui-monospace,monospace;font-size:12.5px;
+      line-height:1.65;color:{c['ink']};resize:vertical;}}
+    .hitl-note{{font-size:12px;color:{c['muted']};margin:8px 0 4px;}}
+    .hitl-edit{{display:flex;gap:8px;margin-top:10px;}}
+    .hitl-edit input{{flex:1;padding:11px 13px;border:1.5px solid {c['line']};border-radius:10px;
+      font-family:inherit;font-size:13.5px;}}
+    .hitl-foot{{padding:14px 22px;border-top:1px solid {c['line']};display:flex;gap:10px;
+      justify-content:flex-end;align-items:center;}}
+    .hitl-exec{{background:linear-gradient(135deg,{c['ok']},#2E7355)!important;font-size:15px;
+      padding:13px 30px;}}
+    .hitl-cancel{{background:#fff!important;color:{c['inkSoft']}!important;border:1.5px solid {c['line']}!important;
+      box-shadow:none!important;}}
     .cst-opts{{display:flex;gap:14px;margin:8px 0 6px;flex-wrap:wrap;}}
     .cst-opts label{{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;
       color:{c['inkSoft']};font-weight:600;}}
@@ -380,14 +403,71 @@ function setEmpty(stage,kind,head,sub){{
   stage.className=stageBase(kind);
   stage.innerHTML='<div class="cst-empty">'+ICON[kind]+'<span>'+head+'</span><small>'+sub+'</small></div>';
 }}
-function gen(kind){{
+const HITL={{kind:null,arText:'',enText:''}};
+function hitlShow(kind,data){{
+  HITL.kind=kind;HITL.enText=data.text||'';HITL.arText=data.arabic||'';
+  document.getElementById('hitl-title').textContent=(kind==='poster'?'Poster':'Reel')+' — راجعي البرومبت قبل التوليد';
+  hitlTab('ar');
+  document.getElementById('hitl-ov').style.display='flex';
+}}
+function hitlTab(which){{
+  const ta=document.getElementById('hitl-text');
+  document.getElementById('tab-ar').classList.toggle('on',which==='ar');
+  document.getElementById('tab-en').classList.toggle('on',which==='en');
+  ta.value=(which==='ar'&&HITL.arText)?HITL.arText:HITL.enText;
+  ta.dataset.tab=which; ta.readOnly=(which==='ar');
+  document.getElementById('hitl-armiss').style.display=(which==='ar'&&!HITL.arText)?'block':'none';
+}}
+function hitlClose(){{document.getElementById('hitl-ov').style.display='none';
+  const b=document.getElementById(HITL.kind+'-btn');if(b){{b.disabled=false;b.textContent='Generate '+HITL.kind;}}}}
+async function hitlRefine(){{
+  const inst=document.getElementById('hitl-inst').value.trim();
+  if(!inst)return;
+  const rb=document.getElementById('hitl-refine-btn');rb.disabled=true;rb.textContent='بيحدّث…';
+  const ta=document.getElementById('hitl-text');
+  // manual English edits count as the current text
+  if(ta.dataset.tab==='en')HITL.enText=ta.value;
+  const body={{slug:SLUG,kind:HITL.kind,instruction:inst,
+    pname:SEL?SEL.name:'',lang:(document.getElementById('reel-lang')||{{}}).value||'',
+    dialect:(document.getElementById('reel-dialect')||{{}}).value||''}};
+  try{{
+    const r=await fetch('/hitl/refine',{{method:'POST',headers:{{'Content-Type':'application/json'}},
+      body:JSON.stringify(body)}});
+    const d=await r.json();
+    if(d.error){{alert(d.error);}}else{{HITL.enText=d.text||'';HITL.arText=d.arabic||'';
+      document.getElementById('hitl-inst').value='';hitlTab('ar');}}
+  }}catch(e){{alert('refine failed');}}
+  rb.disabled=false;rb.textContent='حدّثي البرومبت';
+}}
+function hitlExecute(){{
+  const ta=document.getElementById('hitl-text');
+  if(ta.dataset.tab==='en')HITL.enText=ta.value;   // freeform English edits are allowed
+  document.getElementById('hitl-ov').style.display='none';
+  genExecute(HITL.kind);
+}}
+async function gen(kind){{
+  // HITL GATE (owner law): NOTHING hits a paid API before the user sees the exact
+  // brief and clicks EXECUTE. This first phase is text-only.
+  const btn=document.getElementById(kind+'-btn');
+  btn.disabled=true;btn.textContent='بيجهّز البرومبت…';
+  let pu='/hitl/preview?kind='+kind+'&slug='+encodeURIComponent(SLUG);
+  if(SEL){{pu+='&pname='+encodeURIComponent(SEL.name)+'&pimg='+encodeURIComponent(SEL.image);}}
+  if(kind==='reel'){{const L=document.getElementById('reel-lang'),D=document.getElementById('reel-dialect');
+    if(L)pu+='&lang='+L.value; if(D&&L&&L.value==='ar')pu+='&dialect='+D.value;}}
+  try{{
+    const r=await fetch(pu); const d=await r.json();
+    if(d.error){{alert(d.error);btn.disabled=false;btn.textContent='Generate '+kind;return;}}
+    hitlShow(kind,d);
+  }}catch(e){{alert('preview failed');btn.disabled=false;btn.textContent='Generate '+kind;}}
+}}
+function genExecute(kind){{
   const btn=document.getElementById(kind+'-btn'),log=document.getElementById(kind+'-log'),
         stage=document.getElementById(kind+'-stage');
   btn.disabled=true;btn.textContent='Generating…';log.style.display='block';log.textContent='';
   stage.className=stageBase(kind)+' is-gen';
   stage.innerHTML='<div class="cst-empty">'+ICON[kind]+'<span>Generating your '+kind+'…</span><small>'
     +(kind==='reel'?'this usually takes 10–20 minutes (Veo) — you can leave it running':'this usually takes a few minutes — you can leave it running')+'</small></div>';
-  let gu='/generate/'+kind+'?slug='+encodeURIComponent(SLUG);
+  let gu='/generate/'+kind+'?slug='+encodeURIComponent(SLUG)+'&hitl=1';
   if(SEL){{gu+='&product='+encodeURIComponent(SEL.url)+'&pimg='+encodeURIComponent(SEL.image)+'&pname='+encodeURIComponent(SEL.name);}}
   if(kind==='reel'){{const L=document.getElementById('reel-lang'),D=document.getElementById('reel-dialect');
     if(L)gu+='&lang='+L.value; if(D&&L&&L.value==='ar')gu+='&dialect='+D.value;}}
@@ -438,10 +518,31 @@ def _studio_page(slug: str, out_dir: str) -> str | None:
     # Nothing auto-runs: BOTH the poster (~a few min, slow image model + QA retries) and the reel
     # (10–20 min Veo) are heavy, so the report shows INSTANTLY and each creative is an explicit
     # button with an honest estimate — the owner never lands on a wait they didn't ask for.
+    hitl = (
+        '<div class="hitl-ov" id="hitl-ov"><div class="hitl-box">'
+        '<div class="hitl-head"><span id="hitl-title">راجعي البرومبت</span>'
+        '<span class="hitl-tabs">'
+        "<button id=\"tab-ar\" class=\"on\" onclick=\"hitlTab('ar')\">عربي</button>"
+        "<button id=\"tab-en\" onclick=\"hitlTab('en')\">English</button></span></div>"
+        '<div class="hitl-body">'
+        '<div class="hitl-note" id="hitl-armiss" style="display:none">'
+        '(الترجمة العربية غير متاحة — النص الإنجليزي هو المُنفَّذ)</div>'
+        '<textarea id="hitl-text" dir="auto" spellcheck="false"></textarea>'
+        '<div class="hitl-note">النص الإنجليزي هو اللي بيتنفّذ. عايزة تعديل؟ اكتبي طلبك تحت '
+        'وهيتحدّث البرومبت ويرجع يتأكد منك — النص التسويقي المعتمد وبنود الالتزام محمية ولا '
+        'يتخطّاها أي تعديل.</div>'
+        '<div class="hitl-edit"><input id="hitl-inst" dir="auto" '
+        'placeholder="مثال: خلّي المشهد ليلي وركّزي على المنتج الأحمر…">'
+        '<button id="hitl-refine-btn" onclick="hitlRefine()">حدّثي البرومبت</button></div>'
+        '</div>'
+        '<div class="hitl-foot">'
+        '<button class="hitl-cancel" onclick="hitlClose()">إلغاء</button>'
+        '<button class="hitl-exec" onclick="hitlExecute()">EXECUTE — نفّذي التوليد</button>'
+        '</div></div></div>')
     return (f'<!doctype html><html lang="en"><head><meta charset="utf-8">'
             f'<meta name="viewport" content="width=device-width,initial-scale=1">'
             f'<title>Baseera Studio · {slug}</title>{_studio_css()}</head><body>'
-            f'{bar}{body}{_studio_js(slug, False, False)}</body></html>')
+            f'{bar}{body}{hitl}{_studio_js(slug, False, False)}</body></html>')
 
 
 # ------------------------------------------------------------------------------------------------
