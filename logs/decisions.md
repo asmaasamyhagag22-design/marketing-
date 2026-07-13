@@ -54,3 +54,24 @@ FLAG where the owner should review. Newest first.
   untouched (verified by test_genuine_near_tier_peer_is_untouched). A full U1 re-gate on live
   data is the owner-side confirmation that discovery quality didn't regress — ticket T-TIER-GATE
   (needs network + is measurement-sensitive; not run inside this offline mission).
+
+## Render #3 — reel consistency prompt pack
+
+- **D-R3.1 — Resolved image model ids (pack 🌐 verify-at-decision-time).** Probed live on
+  radiant-octane: `gemini-3.1-flash-image-preview` (Nano Banana 2, fast lane) and
+  `gemini-3-pro-image-preview` (Pro lane, legible text) both LIVE at Vertex
+  `location="global"`; 404 at us-central1. Legacy `gemini-2.5-flash-image` live at
+  us-central1 as fallback. Seed generator switches Imagen → Nano Banana per §10; resolved
+  model id logged per request.
+- **D-R3.2 — Calibration fixture built from render #2.** tests/fixtures/render2_sheet.png
+  (5 frames — the 6th timestamp fell past the last keyframe; 5 are sufficient and visibly
+  carry the diseases: ≥4 different protagonists, the banned smile-at-laptop beat, a glowing
+  sci-fi UI panel). G2 MUST fail this sheet or the gate itself is broken (§5).
+- **D-R3.3 — Temperature 0 for G2 not directly controllable** through the caller protocol
+  (temp lives inside the caller implementation). The BINDING part is preserved in code: the
+  PASS conjunction is computed from the boolean fields in code (the model never self-passes),
+  matching the pack's code-level invariant. FLAG: if G2 verdicts prove noisy, expose a
+  temperature override on the Gemini caller.
+- **D-R3.4 — VO↔EVIDENCE check upgraded from "cheap LLM check" to the Ledger.** G1's VO trace
+  uses ledger.audit_text (deterministic, the actual moat) instead of an LLM opinion — stronger
+  than the pack's minimum, same intent.

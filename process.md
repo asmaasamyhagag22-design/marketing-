@@ -2,8 +2,22 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1370 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
+Test suite: **1375 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**RENDER #3 · COMMIT 1 — DIRECTOR + G1 (owner prompt pack adopted verbatim, suite 1375).**
+New `reel/render3/` package. `director.py`: the §1 Director prompt VERBATIM (D1 concept + D2
+Arabic VO + D3 storyboard in ONE strict-JSON call; hard rules R1-R8: one protagonist, 3-act
+arc, one motif, color script, match cuts, screen rules, frozen character sheet, VO
+evidence-traced) -> a validated ReelTreatment (retry once, then None — fail loud).
+`g1_lint`: every checkable rule re-checked IN CODE (exactly-2 distinctive features, ≤4
+locations, act order, smile-ban outside the final payoff, match_cut_out chain, screen-rule
+whitelist, 55-75-word VO) + the VO<->EVIDENCE trace via ledger.audit_text (D-R3.4 — the moat,
+not an LLM opinion). Capability probe LOGGED (D-R3.1): gemini-3.1-flash-image-preview +
+gemini-3-pro-image-preview LIVE at location=global; the Imagen blocker is dissolved per §10.
+Calibration fixture BUILT from render #2 (D-R3.2, tests/fixtures/render2_sheet.png — visibly
+carries ≥4 different protagonists + the banned smile-at-laptop + a glowing sci-fi UI panel).
++5 hermetic tests.
 
 **CAPABILITY CENSUS SHIPPED (Round-2 D, suite 1370).** (1) _brand_assets surfaces the real
 selling lines the census found dropped (shown only as KPI counts before): the 8 trust signals /
