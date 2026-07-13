@@ -92,6 +92,25 @@ class ReelTreatment(BaseModel):
     shots: List[Shot]
 
 
+class ConceptStub(BaseModel):
+    """One candidate idea (§1 per-run variety) — a one-line pitch, not a full treatment."""
+    model_config = ConfigDict(extra="forbid")
+    big_idea: str
+    logline: str
+    motif_object: str
+    protagonist_one_liner: str
+
+
+class DirectorOutput(BaseModel):
+    """The variety-mode D1 output: 3 distinct candidates, the agent's ranked pick, and the
+    FULL treatment rendered for the pick only (owner directive 2026-07-13)."""
+    model_config = ConfigDict(extra="forbid")
+    concepts: List[ConceptStub] = Field(min_length=3, max_length=3)
+    picked_index: int
+    treatment: ReelTreatment
+    direction_note: str = ""
+
+
 # ---------------------------------------------------------------------------------
 # Inputs
 # ---------------------------------------------------------------------------------
@@ -126,22 +145,23 @@ def evidence_bullets_from_profile(profile: dict) -> list[str]:
     return bullets
 
 
-_DIRECTOR_PROMPT = """ROLE
+_ROLE = """ROLE
 You are the Creative Director of a ~30-second vertical (9:16) ad reel. You
 produce ONE coherent film treatment — a single story — not a mood board. Your
 output feeds an automated image+video pipeline; every field must be concrete,
-visual, and unambiguous.
+visual, and unambiguous."""
 
-INPUTS
+_INPUTS = """INPUTS
 CLIENT: {client_name} — {client_one_liner}
 OFFER: {offer}
 AUDIENCE: {audience}
 GOAL / CTA: {goal_cta}
 EVIDENCE (grounded facts — the ONLY permissible claim source): {evidence_bullets}
-LOCALE LOCK: Egypt. Egyptian people, Egyptian streets and interiors, Arabic
-signage where natural. Never Gulf styling, never generic Western stock look.
+LOCALE: {locale}. Local people, streets and interiors; local-language signage
+where natural. Never a generic Western stock look; never a mismatched region."""
 
-HARD RULES — violating any one makes the output invalid:
+# R1-R8 verbatim (unchanged by the variety directive) — shared by both prompt modes.
+_HARD_RULES = """HARD RULES — violating any one makes the output invalid:
 R1 ONE PROTAGONIST. Exactly one character is the visual subject of EVERY shot.
    Supporting people (instructor, colleague) may appear but never replace the
    protagonist as the subject of a shot.
@@ -174,37 +194,83 @@ R7 CHARACTER SHEET SPEC. A complete physical description FROZEN for the whole
 R8 VO. One voice, Egyptian Arabic, 60-70 words, first person, matching the
    arc. Aim for ~65 words — COUNT the words before answering; short scripts
    are rejected. Every factual claim in the VO must trace to a bullet in
-   EVIDENCE. If a claim is not in EVIDENCE, do not make it.
+   EVIDENCE. If a claim is not in EVIDENCE, do not make it."""
 
-Return the structured treatment."""
+_DIRECTOR_PROMPT = _ROLE + "\n\n" + _INPUTS + "\n\n" + _HARD_RULES + "\n\nReturn the structured treatment."
+
+# Variety mode (§1 additions, owner 2026-07-13): a sampled creative direction + an AVOID
+# list + R9 novelty; OUTPUT is 3 distinct candidates, the ranked pick, and the FULL treatment
+# for the pick only. R1-R8 unchanged.
+_DIRECTOR_CONCEPTS_PROMPT = _ROLE + "\n\n" + _INPUTS + """
+
+CREATIVE DIRECTION (sampled for THIS run — strong defaults; deviate only with a
+one-line reason in direction_note):
+  narrative archetype : {archetype} — {archetype_desc}
+  motif domain        : {motif_domain} — {motif_domain_desc}
+  protagonist slot    : {protagonist_slot} — {protagonist_slot_desc}
+AVOID (used before for this client — do NOT reuse or closely echo):
+{avoid_list}
+
+""" + _HARD_RULES + """
+R9 NOVELTY. The big_idea, motif object, and protagonist must be substantially
+   different from every AVOID entry — same domain is allowed, the same story is
+   not. The 3 candidate concepts must also be mutually distinct (no near-duplicates
+   among themselves).
+
+OUTPUT — return a DirectorOutput:
+1. "concepts": EXACTLY 3 distinct candidate ideas built on the sampled creative
+   direction (three genuinely different takes within it), each with big_idea,
+   logline, motif_object, protagonist_one_liner.
+2. "picked_index": the 0-based index of your best candidate, ranked by
+   audience_fit, evidence_coverage, filmability, and novelty_vs_history.
+3. "treatment": the FULL treatment (all R1-R8 fields) for the PICKED concept ONLY.
+4. "direction_note": one line noting any deliberate deviation from the sampled
+   direction, or "" if none."""
+
+
+_DIRECTOR_SYSTEM = ("You are a world-class creative director. Output must satisfy every HARD "
+                    "RULE. Be concrete and visual; never vague.")
+
+
+def _locale_of(p: dict, override: str) -> str:
+    if override:
+        return override
+    loc = _val(p.get("locale")) or _val(p.get("country"))
+    return loc or "Egypt"
+
+
+def _base_fields(profile: dict, client_one_liner, offer, audience, goal_cta,
+                 locale, bullets, n_shots) -> dict:
+    p = profile.get("profile", profile) if isinstance(profile, dict) else {}
+    return dict(
+        client_name=_val(p.get("name")) or "the brand",
+        client_one_liner=client_one_liner or _val(p.get("description"))[:160],
+        offer=offer or "; ".join(b for b in bullets[:3]),
+        audience=audience or _val(p.get("audience_type")) or "local consumers",
+        goal_cta=goal_cta or "drive applications / purchases now",
+        evidence_bullets="\n- " + "\n- ".join(bullets) if bullets else "(none)",
+        locale=_locale_of(p, locale),
+        n_shots=n_shots,
+    )
 
 
 def direct_reel(profile: dict, *, caller: Any, client_one_liner: str = "",
                 offer: str = "", audience: str = "", goal_cta: str = "",
-                n_shots: int = 6,
+                locale: str = "", n_shots: int = 6,
                 evidence_bullets: Optional[list[str]] = None) -> Optional[ReelTreatment]:
     """ONE Director call -> a validated ReelTreatment. Retries once on parse/validation
     failure (per the pack), then returns None — the caller fails loud, never guesses."""
     if caller is None:
         return None
-    p = profile.get("profile", profile) if isinstance(profile, dict) else {}
     bullets = evidence_bullets if evidence_bullets is not None \
         else evidence_bullets_from_profile(profile)
     prompt = _DIRECTOR_PROMPT.format(
-        client_name=_val(p.get("name")) or "the brand",
-        client_one_liner=client_one_liner or _val(p.get("description"))[:160],
-        offer=offer or "; ".join(b for b in bullets[:3]),
-        audience=audience or _val(p.get("audience_type")) or "Egyptian consumers",
-        goal_cta=goal_cta or "drive applications / purchases now",
-        evidence_bullets="\n- " + "\n- ".join(bullets) if bullets else "(none)",
-        n_shots=n_shots,
-    )
+        **_base_fields(profile, client_one_liner, offer, audience, goal_cta, locale,
+                       bullets, n_shots))
     for attempt in (1, 2):
         try:
-            resp, _u = caller(
-                "You are a world-class creative director. Output must satisfy every HARD "
-                "RULE. Be concrete and visual; never vague.",
-                prompt, ReelTreatment, group_name="render3_director")
+            resp, _u = caller(_DIRECTOR_SYSTEM, prompt, ReelTreatment,
+                              group_name="render3_director")
             if resp and resp.shots:
                 return resp
         except Exception as exc:  # noqa: BLE001
@@ -213,9 +279,65 @@ def direct_reel(profile: dict, *, caller: Any, client_one_liner: str = "",
     return None
 
 
+def direct_reel_concepts(profile: dict, *, caller: Any, direction: Any,
+                         avoid: Optional[list[str]] = None, locale: str = "",
+                         client_one_liner: str = "", offer: str = "", audience: str = "",
+                         goal_cta: str = "", n_shots: int = 6,
+                         evidence_bullets: Optional[list[str]] = None
+                         ) -> Optional["DirectorOutput"]:
+    """Variety-mode Director call: the sampled `direction` (a CreativeDirection) + an AVOID
+    list -> 3 distinct candidates, the ranked pick, and the full treatment for the pick.
+    Retries once, then None (fail loud)."""
+    if caller is None or direction is None:
+        return None
+    bullets = evidence_bullets if evidence_bullets is not None \
+        else evidence_bullets_from_profile(profile)
+    avoid_block = ("\n".join(f"  - {a}" for a in (avoid or [])) or "  (none — first run)")
+    prompt = _DIRECTOR_CONCEPTS_PROMPT.format(
+        archetype=direction.archetype, archetype_desc=direction.archetype_desc,
+        motif_domain=direction.motif_domain, motif_domain_desc=direction.motif_domain_desc,
+        protagonist_slot=direction.protagonist_slot,
+        protagonist_slot_desc=direction.protagonist_slot_desc,
+        avoid_list=avoid_block,
+        **_base_fields(profile, client_one_liner, offer, audience, goal_cta, locale,
+                       bullets, n_shots))
+    for attempt in (1, 2):
+        try:
+            resp, _u = caller(_DIRECTOR_SYSTEM, prompt, DirectorOutput,
+                              group_name="render3_director")
+            if resp and resp.concepts and resp.treatment and resp.treatment.shots \
+                    and 0 <= resp.picked_index < len(resp.concepts):
+                return resp
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("director(concepts) call failed (attempt %d): %s", attempt,
+                           type(exc).__name__)
+    return None
+
+
 # ---------------------------------------------------------------------------------
 # G1 lint — code checks + the Ledger VO trace
 # ---------------------------------------------------------------------------------
+
+def _concept_tokens(s: str) -> set:
+    return set(re.findall(r"[a-z؀-ۿ]{4,}", (s or "").lower()))
+
+
+def concepts_distinct(output: "DirectorOutput", *, threshold: float = 0.6) -> List[str]:
+    """G1 addition (§4): the 3 candidate concepts must be mutually distinct (no near-
+    duplicates). Code check on big_idea + motif_object token overlap (Jaccard). Returns the
+    list of near-duplicate issues (empty = distinct)."""
+    issues: List[str] = []
+    stubs = output.concepts
+    for i in range(len(stubs)):
+        for j in range(i + 1, len(stubs)):
+            a = _concept_tokens(stubs[i].big_idea + " " + stubs[i].motif_object)
+            b = _concept_tokens(stubs[j].big_idea + " " + stubs[j].motif_object)
+            if a and b:
+                jac = len(a & b) / len(a | b)
+                if jac >= threshold:
+                    issues.append(f"concepts {i} and {j} near-duplicate (jaccard {jac:.2f})")
+    return issues
+
 
 @dataclass
 class G1Report:

@@ -2,8 +2,10 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1412 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
+Test suite: **1417 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**CREATIVE VARIETY ENGINE (2/N) — D1 3-CONCEPT OUTPUT + LOCALE (suite 1417).** The Director gains a variety mode (`direct_reel_concepts`): the sampled creative direction (archetype/motif-domain/protagonist-slot) + an AVOID list are injected as strong defaults; R9 NOVELTY added; the output is a `DirectorOutput` = 3 mutually-distinct candidate stubs + the ranked pick + the FULL treatment for the pick + a direction_note. LOCALE is now a parameter (Egypt the DEFAULT value, not a hardcoded rule) — R1-R8 unchanged (R8 keeps 'Egyptian Arabic' per the owner's unchanged list). `concepts_distinct` code-checks mutual distinctness (Jaccard). +6 hermetic tests.
 
 **CREATIVE VARIETY ENGINE (1/N) — DIRECTION SAMPLER (suite 1412).** Owner directive: lock WITHIN a run, vary ACROSS runs — variety is a REQUIREMENT with a mechanism, not chance. New `creative/` package: three libraries (narrative_archetypes / motif_domains / protagonist_slots YAML, each entry tagged audience_fit) + `sampler.py` drawing one (archetype, motif-domain, protagonist-slot) triple FILTERED by the grounded profile's audience. Reproducible (seed + `forced=` re-injection of a logged triple), `avoid=` de-prioritises a client's recent runs, and `sample_distinct_directions` yields N candidates with distinct archetypes. +6 hermetic tests.
 
