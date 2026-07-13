@@ -2,8 +2,20 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1343 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
+Test suite: **1351 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**T-REGISTRY — COMPETITOR REGISTRY SHIPPED (the one real build, suite 1351).** The
+owner-caught non-determinism (every scrape rebuilt the competitor set from live search + LLM
+selection, so "who are my competitors" drifted run-to-run). `competitor/registry.py`: a stable
+identity key (domain, name fallback), JSON persistence (registry/<slug>.json, gitignored), and
+`establish_or_diff` — the FIRST discovery persists as the approved baseline; every later run
+DIFFs (still-present ✓ / disappeared ⚠ / new-pending) WITHOUT mutating the baseline. SWOT now
+computes against the APPROVED set (full_run wires matrix_competitors = approved), not the raw
+pool. Newcomers are PENDING owner approval (HITL for identity) — never auto-added; disappeared
+peers are flagged, never deleted. The diff persists into result.json and renders as a dashboard
+panel ("سجل المنافسين — ثابت لا يتغيّر بلا إذنك"). Best-effort: any failure degrades to today's
+raw-pool behaviour, never blocks a run. +8 hermetic tests (5 registry logic + 3 dashboard panel).
 
 **PHASE 3 · SECTION H — FIVE-MINUTE ORDERED READ SHIPPED (suite 1341).** The body is
 reordered to the mandated arc — Market (SWOT + competitors + voice) -> Strategy (TOWS + priority

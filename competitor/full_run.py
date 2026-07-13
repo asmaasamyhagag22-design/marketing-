@@ -240,6 +240,33 @@ def main():
     if n == 0:
         say("   -> no competitors; continuing in STANDALONE mode (profile-only SWOT).")
 
+    # COMPETITOR REGISTRY (owner-caught non-determinism, 2026-07-12): the first approved
+    # discovery persists as the STABLE baseline; later runs DIFF (present/disappeared/
+    # new-pending) instead of silently replacing. SWOT computes against the APPROVED set, not
+    # the raw live pool — so "who are my competitors" stops drifting run-to-run. Newcomers are
+    # PENDING (owner approves via the dashboard, HITL); never auto-added. Best-effort: any
+    # failure degrades to the raw pool (today's behaviour), never blocks the run.
+    registry_diff = None
+    matrix_competitors = result.competitors
+    try:
+        from datetime import datetime, timezone
+        from competitor.registry import approved_competitors, establish_or_diff
+        _now = datetime.now(timezone.utc).date().isoformat()
+        _reg = establish_or_diff(args.url, result.competitors, now=_now)
+        registry_diff = _reg["diff"]
+        if _reg["established"]:
+            say("   registry: baseline established with %d approved competitor(s)"
+                % len(_reg["approved_keys"]))
+        else:
+            d = registry_diff
+            say("   registry: %d present, %d disappeared, %d new pending owner approval"
+                % (len(d["still_present"]), len(d["disappeared"]), len(d["new_pending"])))
+            approved = approved_competitors(result.competitors, _reg["approved_keys"])
+            if approved:                       # SWOT on the approved baseline (stable)
+                matrix_competitors = approved
+    except Exception as exc:  # noqa: BLE001 — registry never blocks a run
+        say("   registry skipped (%s)" % type(exc).__name__)
+
     say("[4/5] building comparison matrix (scrapes %d benchmark site(s))..." % scrapable)
     # The subject's OWN Places listing (rating/volume/price) — without it every
     # Places gap is "n/a" and market-position Threats can never fire. Grounded
@@ -251,7 +278,7 @@ def main():
             subject_places.name, subject_places.rating, subject_places.review_count))
     matrix = build_matrix(
         manifest,                 # reuse the subject's manifest -> no re-scrape of subject
-        result.competitors,
+        matrix_competitors,       # the APPROVED registry set (stable), not the raw live pool
         scrape_fn=scrape_fn,
         subject_places=subject_places,
     )
@@ -324,6 +351,7 @@ def main():
             if hasattr(profile, "model_dump") else str(profile)
         ),
         "competitors": [dataclasses.asdict(c) for c in result.competitors],
+        "registry_diff": registry_diff,   # stable-baseline diff for the dashboard (None on first run)
         "swot": swot_json,
         "tows": dataclasses.asdict(tows),
     }

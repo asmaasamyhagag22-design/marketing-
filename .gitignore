@@ -82,3 +82,6 @@ facebook_collector/__pycache__/
 
 # logs/ product (Phase 0): track the markdown, not the per-run render artifacts
 logs/*/
+
+# competitor registry — per-machine baseline state, like runs/
+registry/
