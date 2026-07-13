@@ -75,3 +75,12 @@ FLAG where the owner should review. Newest first.
 - **D-R3.4 — VO↔EVIDENCE check upgraded from "cheap LLM check" to the Ledger.** G1's VO trace
   uses ledger.audit_text (deterministic, the actual moat) instead of an LLM opinion — stronger
   than the pack's minimum, same intent.
+
+- **D-R3.5 — G2 calibration RUN LIVE and PASSED (i.e., correctly FAILED render #2).**
+  verdict=FAIL, same_person=false with 4 identity offenders (blurred face / protagonist
+  absent / back turned / different woman without hijab), same_world_grade=false,
+  arc_readable=false. Nuance vs the pack's expectation: junk_screens=[] — the judge read
+  frame 5's glow as architectural light behind glass, not on-screen UI; the FAIL is carried
+  decisively by identity+grade+arc, which is the mandatory core. The CI assertion pins
+  verdict==FAIL && same_person==false; live test gated behind RUN_LIVE_GATES=1 (this repo's
+  CI is hermetic by policy).

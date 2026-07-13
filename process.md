@@ -2,8 +2,22 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1375 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
+Test suite: **1386 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**RENDER #3 · COMMIT 2 — LOCKED BLOCKS + NANO GENERATOR + G2 GATE, CALIBRATED LIVE (suite
+1386).** `prompts.py`: STYLE_BLOCK/CHARACTER_BLOCK as pure functions with the §3 sha256
+lock (`assert_locked` raises on a single drifted byte), §2 character-sheet prompt, §4 seed
+prompt (identity anchor FIRST -> scene -> negatives LAST), §6 screen-rule expansion incl. the
+attached-screenshot strongest form, §7 Veo prompt (ambient-only audio, match-cut end), §8
+global negative as the single source of truth. `nano.py`: reference-conditioned generation
+with lane fallback (3.1-flash-image-preview@global -> 2.5-flash-image@us-central1; pro lane
+3-pro-image-preview), resolved model id logged per request, quota-aware backoff. `g2.py`:
+numbered contact sheet + the BLOCKING verdict — PASS computed IN CODE from the booleans (the
+model never self-passes), targeted regen <=3 then RuntimeError (Veo never fires).
+**MANDATORY CALIBRATION RUN LIVE (D-R3.5): G2 correctly FAILED render #2's sheet** — 4
+identity offenders, grade+arc false; CI pin behind RUN_LIVE_GATES=1 (hermetic CI policy).
++11 hermetic tests (+1 live-gated).
 
 **RENDER #3 · COMMIT 1 — DIRECTOR + G1 (owner prompt pack adopted verbatim, suite 1375).**
 New `reel/render3/` package. `director.py`: the §1 Director prompt VERBATIM (D1 concept + D2
