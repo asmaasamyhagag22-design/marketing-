@@ -74,6 +74,11 @@ INTER_PAGE_DELAY_SECONDS = 1.0
 # empty DOM, success) never retry. See fetcher.fetch_page.
 RETRY_ATTEMPTS = 2                # total tries = 1 + RETRY_ATTEMPTS
 RETRY_BACKOFF_SECONDS = 1.5       # sleep grows: 1.5s, 3.0s, ...
+# The HOMEPAGE is make-or-break: a homepage HTTP 429 loses the ENTIRE scrape (0 pages ->
+# "could not read this site"), while a rate-limit cooldown clears in tens of seconds. So the
+# homepage gets a LARGER, 429-ONLY patience budget (6s,12s,18s,24s ~= 60s total) — every other
+# failure and every subpage still fails fast on RETRY_ATTEMPTS. Politely waiting, never hammering.
+HOMEPAGE_RATE_LIMIT_RETRIES = 4
 
 # --- Browser settings -----------------------------------------------
 # A realistic current desktop-Chrome UA so normal sites don't reject an

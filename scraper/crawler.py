@@ -29,6 +29,7 @@ from .config import (
     ECOMMERCE_BUDGET_SECONDS,
     ECOMMERCE_MAX_INTERNAL_PAGES,
     ECOMMERCE_PRODUCT_URL_MIN,
+    HOMEPAGE_RATE_LIMIT_RETRIES,
     INTER_PAGE_DELAY_SECONDS,
     MAX_CRAWL_DEPTH,
     MAX_INTERNAL_PAGES,
@@ -739,7 +740,8 @@ def scrape(input_url: str, output_root: str = "scrapes", *, light: bool = False)
                 # Seed was deep -> fetch the site ROOT for identity. If the root is
                 # unreachable, fall back to the original seed so we never lose a scrape
                 # that the deep page itself would have served.
-                home_result = fetch_page(context, home_fetch_url, keep_page=True)
+                home_result = fetch_page(context, home_fetch_url, keep_page=True,
+                                         rate_limit_retries=HOMEPAGE_RATE_LIMIT_RETRIES)
                 manifest.scrape_meta.pages_attempted += 1
                 if deep_root and not home_result.ok and home_fetch_url != normalized:
                     manifest.notes.append(
@@ -751,7 +753,8 @@ def scrape(input_url: str, output_root: str = "scrapes", *, light: bool = False)
                             pass
                     deep_root = None
                     home_fetch_url = normalized
-                    home_result = fetch_page(context, normalized, keep_page=True)
+                    home_result = fetch_page(context, normalized, keep_page=True,
+                                             rate_limit_retries=HOMEPAGE_RATE_LIMIT_RETRIES)
                     manifest.scrape_meta.pages_attempted += 1
                 manifest.scrape_meta.bytes_downloaded += home_result.bytes_downloaded
 

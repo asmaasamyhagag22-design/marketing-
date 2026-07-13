@@ -2,8 +2,17 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1399 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
+Test suite: **1402 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**SCRAPER — PATIENT HOMEPAGE 429 RETRY (the make-or-break fetch; suite 1402).** A homepage
+HTTP 429 loses the ENTIRE scrape (0 pages -> "could not read this site"), yet a rate-limit
+cooldown clears in tens of seconds — the old budget gave up in ~18s. `fetch_page` now takes a
+`rate_limit_retries` arg granting a LARGER, 429-ONLY patience budget; the crawler passes
+`HOMEPAGE_RATE_LIMIT_RETRIES=4` for the homepage only, so it waits out a cooldown
+(6s,12s,18s,24s ~= 60s) while EVERY other failure and EVERY subpage still fails fast on
+RETRY_ATTEMPTS. Verified hermetically: a 429-only budget (not network errors), correct backoff
+schedule, default callers unchanged. +4 tests.
 
 **SCRAPER FOOTPRINT — DROP TRACKING/ADS BEACONS ON EVERY FETCH (suite 1399).** MEASURED: the
 topshoes.store homepage fires ~300 requests; ~14 are third-party analytics/ads/telemetry beacons

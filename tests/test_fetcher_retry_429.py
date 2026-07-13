@@ -86,3 +86,30 @@ def test_429_exhausts_retries_then_fails_honestly(monkeypatch):
     r = fetcher.fetch_page(object(), "https://x")
     assert not r.ok and r.http_status == 429                 # persistent 429 still fails honestly
     assert calls["n"] == 1 + fetcher.RETRY_ATTEMPTS          # first attempt + all retries
+
+
+def test_homepage_429_gets_patient_budget(monkeypatch):
+    # a make-or-break homepage waits out a cooldown longer than the default budget...
+    seq = [_result(429, ErrorCode.HTTP_ERROR)] * 4 + [_result(200, None)]
+    calls, sleeps = _script(monkeypatch, seq)
+    r = fetcher.fetch_page(object(), "https://x", rate_limit_retries=4)
+    assert r.ok and r.http_status == 200
+    assert calls["n"] == 5                                   # 1 + 4 patient retries
+    assert sleeps == [6.0, 12.0, 18.0, 24.0]                 # rate-limit backoff grows
+
+
+def test_patient_budget_is_429_only_not_network(monkeypatch):
+    # the larger budget must NOT apply to a network blip — those still fail fast
+    seq = [_result(None, ErrorCode.NETWORK_ERROR)] * 5
+    calls, _ = _script(monkeypatch, seq)
+    r = fetcher.fetch_page(object(), "https://x", rate_limit_retries=4)
+    assert not r.ok
+    assert calls["n"] == 1 + fetcher.RETRY_ATTEMPTS          # network error keeps the SMALL budget
+
+
+def test_no_patient_budget_by_default(monkeypatch):
+    # without rate_limit_retries, a homepage 429 uses the default budget (subpages/other callers)
+    seq = [_result(429, ErrorCode.HTTP_ERROR)] * 5
+    calls, _ = _script(monkeypatch, seq)
+    r = fetcher.fetch_page(object(), "https://x")
+    assert not r.ok and calls["n"] == 1 + fetcher.RETRY_ATTEMPTS

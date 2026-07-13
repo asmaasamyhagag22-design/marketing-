@@ -316,8 +316,13 @@ def _block_tracking_route(route) -> None:
             pass
 
 
+def _is_rate_limited(result: "FetchResult") -> bool:
+    return (result.error_code is ErrorCode.HTTP_ERROR
+            and (result.http_status or 0) == 429)
+
+
 def fetch_page(context: BrowserContext, url: str, keep_page: bool = False,
-               light: bool = False) -> FetchResult:
+               light: bool = False, rate_limit_retries: int = 0) -> FetchResult:
     """Fetch one page, retrying ONLY transient transport failures.
 
     A successful or permanently-failed result returns immediately. A transient
@@ -325,17 +330,26 @@ def fetch_page(context: BrowserContext, url: str, keep_page: bool = False,
     backoff. A failed attempt always closes its own page (see _fetch_page_once's
     finally), so retries never leak a page; only a successful keep_page result
     holds the live Page open for the caller.
+
+    `rate_limit_retries` grants a LARGER, 429-only patience budget for a make-or-break
+    fetch — the homepage. A homepage 429 loses the ENTIRE scrape (0 pages -> "could not
+    read this site"), yet a rate-limit cooldown clears in tens of seconds. So the caller
+    can ask the homepage to wait out a 429 (6s,12s,18s,24s...) while every OTHER failure
+    (and every subpage) still fails fast on the normal RETRY_ATTEMPTS budget — no site is
+    ever hammered, only politely waited on.
     """
     result = _fetch_page_once(context, url, keep_page=keep_page, light=light)
     attempt = 0
-    while (not result.ok
-           and _is_transient(result)
-           and attempt < RETRY_ATTEMPTS):
+    while not result.ok and _is_transient(result):
+        budget = max(RETRY_ATTEMPTS, rate_limit_retries) if _is_rate_limited(result) \
+            else RETRY_ATTEMPTS
+        if attempt >= budget:
+            break
         attempt += 1
         time.sleep(_retry_delay_s(result, attempt))
         result = _fetch_page_once(context, url, keep_page=keep_page, light=light)
     if attempt and result.error_message:
-        result.error_message = f"[retry {attempt}/{RETRY_ATTEMPTS}] {result.error_message}"
+        result.error_message = f"[retry {attempt}] {result.error_message}"
     return result
 
 
