@@ -198,6 +198,15 @@ R8 VO. One voice, Egyptian Arabic, 60-70 words, first person, matching the
 
 _DIRECTOR_PROMPT = _ROLE + "\n\n" + _INPUTS + "\n\n" + _HARD_RULES + "\n\nReturn the structured treatment."
 
+# Concept-lock mode (§5 HITL): after the owner PICKS one candidate, render the FULL treatment for
+# EXACTLY that concept (fixing any G1 issues on retry), never re-inventing the story.
+_DIRECTOR_LOCK_PROMPT = _ROLE + "\n\n" + _INPUTS + """
+
+LOCKED CONCEPT — realize the FULL treatment for EXACTLY this owner-approved concept. Do NOT
+invent a different story, motif, or protagonist; every HARD RULE still applies:
+{concept_block}
+""" + "\n" + _HARD_RULES + "\n\nReturn the structured treatment."
+
 # Variety mode (§1 additions, owner 2026-07-13): a sampled creative direction + an AVOID
 # list + R9 novelty; OUTPUT is 3 distinct candidates, the ranked pick, and the FULL treatment
 # for the pick only. R1-R8 unchanged.
@@ -254,19 +263,35 @@ def _base_fields(profile: dict, client_one_liner, offer, audience, goal_cta,
     )
 
 
+def concept_lock_block(concept: "ConceptStub") -> str:
+    """Render a chosen ConceptStub as the LOCKED CONCEPT block for concept-lock mode."""
+    return (f"  BIG IDEA: {concept.big_idea}\n"
+            f"  MOTIF OBJECT: {concept.motif_object}\n"
+            f"  PROTAGONIST: {concept.protagonist_one_liner}")
+
+
 def direct_reel(profile: dict, *, caller: Any, client_one_liner: str = "",
                 offer: str = "", audience: str = "", goal_cta: str = "",
-                locale: str = "", n_shots: int = 6,
+                locale: str = "", n_shots: int = 6, concept_lock: str = "",
+                fix_note: str = "",
                 evidence_bullets: Optional[list[str]] = None) -> Optional[ReelTreatment]:
     """ONE Director call -> a validated ReelTreatment. Retries once on parse/validation
-    failure (per the pack), then returns None — the caller fails loud, never guesses."""
+    failure (per the pack), then returns None — the caller fails loud, never guesses.
+
+    `concept_lock` (a LOCKED CONCEPT block, e.g. from concept_lock_block) pins the story to an
+    owner-approved candidate so the full treatment realizes THAT concept, not a fresh one.
+    `fix_note` appends explicit corrections for a G1-feedback retry."""
     if caller is None:
         return None
     bullets = evidence_bullets if evidence_bullets is not None \
         else evidence_bullets_from_profile(profile)
-    prompt = _DIRECTOR_PROMPT.format(
-        **_base_fields(profile, client_one_liner, offer, audience, goal_cta, locale,
-                       bullets, n_shots))
+    fields = _base_fields(profile, client_one_liner, offer, audience, goal_cta, locale,
+                          bullets, n_shots)
+    prompt = (_DIRECTOR_LOCK_PROMPT.format(concept_block=concept_lock, **fields)
+              if concept_lock else _DIRECTOR_PROMPT.format(**fields))
+    if fix_note:
+        prompt += ("\n\nCORRECTIONS REQUIRED — fix ALL of these from your previous attempt, "
+                   "introduce no new violations:\n" + fix_note)
     for attempt in (1, 2):
         try:
             resp, _u = caller(_DIRECTOR_SYSTEM, prompt, ReelTreatment,

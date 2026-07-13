@@ -2,8 +2,10 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1417 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
+Test suite: **1421 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**CREATIVE VARIETY ENGINE (3/N) — CONCEPT-LOCK + TEXT-ONLY APPROVAL STEP (suite 1421).** §5 HITL: after the owner picks one of the 3 candidates, `direct_reel(concept_lock=...)` realizes the FULL treatment for EXACTLY that concept (never re-inventing), and the G1 feedback loop cleans it via `fix_note` corrective retries. `prepare_render3(concept_lock=, generate_card=False)` returns the CLEAN treatment TEXT-ONLY for concept approval BEFORE any character card is spent (card follows on approval, per pack §0). LIVE: the owner-picked pharmacist concept regenerated G1-clean in 2 retries (smile-in-shot-5 + unsourced-VO fixed). +4 hermetic tests.
 
 **CREATIVE VARIETY ENGINE (2/N) — D1 3-CONCEPT OUTPUT + LOCALE (suite 1417).** The Director gains a variety mode (`direct_reel_concepts`): the sampled creative direction (archetype/motif-domain/protagonist-slot) + an AVOID list are injected as strong defaults; R9 NOVELTY added; the output is a `DirectorOutput` = 3 mutually-distinct candidate stubs + the ranked pick + the FULL treatment for the pick + a direction_note. LOCALE is now a parameter (Egypt the DEFAULT value, not a hardcoded rule) — R1-R8 unchanged (R8 keeps 'Egyptian Arabic' per the owner's unchanged list). `concepts_distinct` code-checks mutual distinctness (Jaccard). +6 hermetic tests.
 

@@ -17,10 +17,11 @@ junk screens — BY MECHANISM, not by hope-in-prompt:
       -> Assemble + VO (Arabic TTS, in post) -> HITL #2 -> publish
 """
 from .director import (
-    ConceptStub, DirectorOutput, G1Report, ReelTreatment, concepts_distinct,
-    direct_reel, direct_reel_concepts, evidence_bullets_from_profile, g1_lint,
+    ConceptStub, DirectorOutput, G1Report, ReelTreatment, concept_lock_block,
+    concepts_distinct, direct_reel, direct_reel_concepts, evidence_bullets_from_profile,
+    g1_lint,
 )
 
 __all__ = ["ReelTreatment", "G1Report", "direct_reel", "g1_lint",
            "evidence_bullets_from_profile", "ConceptStub", "DirectorOutput",
-           "direct_reel_concepts", "concepts_distinct"]
+           "direct_reel_concepts", "concepts_distinct", "concept_lock_block"]

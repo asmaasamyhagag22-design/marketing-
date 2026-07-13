@@ -80,6 +80,33 @@ def test_prepare_zero_seed_spend_and_package(tmp_path, monkeypatch):
     assert len(prep["hashes"]) == 6                       # 3 style + 3 character locks
 
 
+def test_prepare_generate_card_false_is_text_only(tmp_path, monkeypatch):
+    # §5: after a concept pick, the clean treatment is presented text-only BEFORE any card
+    nano_calls = []
+    monkeypatch.setattr(orch, "generate_with_refs", _fake_nano(tmp_path, nano_calls))
+    prep = orch.prepare_render3(_PROFILE, caller=_DirectorCaller([_treatment()]),
+                                out_dir=tmp_path, generate_card=False, log=lambda *a: None)
+    assert "error" not in prep and prep["card_pending"] is True
+    assert prep["sheet_path"] is None
+    assert nano_calls == []                               # ZERO image spend at concept approval
+    assert Path(prep["treatment_path"]).is_file()         # treatment still saved
+
+
+def test_prepare_concept_lock_pins_story(tmp_path, monkeypatch):
+    monkeypatch.setattr(orch, "generate_with_refs", _fake_nano(tmp_path, []))
+    seen = {}
+
+    class _LockCaller:
+        def __call__(self, system, user, response_model, group_name="", images=None):
+            seen["prompt"] = user
+            return _treatment(), None
+
+    orch.prepare_render3(_PROFILE, caller=_LockCaller(), out_dir=tmp_path,
+                         concept_lock="  BIG IDEA: a clock that runs backward",
+                         generate_card=False, log=lambda *a: None)
+    assert "LOCKED CONCEPT" in seen["prompt"] and "clock that runs backward" in seen["prompt"]
+
+
 def test_prepare_g1_fail_retries_then_loud(tmp_path, monkeypatch):
     monkeypatch.setattr(orch, "generate_with_refs",
                         _fake_nano(tmp_path, []))

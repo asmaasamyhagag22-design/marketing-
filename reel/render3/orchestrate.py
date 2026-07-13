@@ -29,16 +29,20 @@ logger = logging.getLogger(__name__)
 
 
 def prepare_render3(profile: dict, *, caller: Any, out_dir: "str | Path",
-                    n_shots: int = 6, max_g1_retries: int = 3, log=print) -> dict:
+                    n_shots: int = 6, max_g1_retries: int = 3, concept_lock: str = "",
+                    generate_card: bool = True, log=print) -> dict:
     """Stage 1 (pre-approval): Director -> G1 -> character sheet. Returns the HITL #1
     package {treatment, treatment_path, sheet_path, hashes} or {'error': ...}. G1
     failures feed CUMULATIVE issues back to the director for up to `max_g1_retries`
     corrective retries (cheap text calls — the HITL law governs image/video spend),
-    then fail loud."""
+    then fail loud.
+
+    `concept_lock` pins the story to an owner-approved candidate (§5 HITL) — the treatment
+    realizes THAT concept and the G1 loop cleans it, never re-inventing a fresh one."""
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
 
-    t = direct_reel(profile, caller=caller, n_shots=n_shots)
+    t = direct_reel(profile, caller=caller, n_shots=n_shots, concept_lock=concept_lock)
     if t is None:
         return {"error": "director produced no valid treatment (after retry)"}
     rep = g1_lint(t, profile=profile, n_shots=n_shots)
@@ -48,10 +52,8 @@ def prepare_render3(profile: dict, *, caller: Any, out_dir: "str | Path",
             break
         seen = list(dict.fromkeys(seen + rep.issues))       # cumulative, deduped
         log(f"[g1] FAIL (attempt {attempt + 1}): {rep.issues} -> corrective retry")
-        t2 = direct_reel(
-            profile, caller=caller, n_shots=n_shots,
-            client_one_liner=f"(Your previous attempts violated these rules — fix ALL "
-                             f"of them without introducing new ones: {'; '.join(seen[:8])})")
+        t2 = direct_reel(profile, caller=caller, n_shots=n_shots, concept_lock=concept_lock,
+                         fix_note="; ".join(seen[:8]))
         if t2 is not None:
             t, rep = t2, g1_lint(t2, profile=profile, n_shots=n_shots)
     if not rep.ok:
@@ -60,6 +62,13 @@ def prepare_render3(profile: dict, *, caller: Any, out_dir: "str | Path",
     tp = out / "treatment.json"
     tp.write_text(t.model_dump_json(indent=2), encoding="utf-8")
     (out / "locked_hashes.json").write_text(json.dumps(hashes, indent=2), encoding="utf-8")
+
+    if not generate_card:
+        # §5: after an owner concept-pick, present the CLEAN full treatment (text-only) for
+        # approval BEFORE any character card is spent. Card follows on approval.
+        log(f"[render3] clean treatment ready for concept approval (text-only): {tp}")
+        return {"treatment": t, "treatment_path": str(tp), "hashes": hashes,
+                "sheet_path": None, "card_pending": True}
 
     sheet_path = out / "character_sheet.png"
     generate_with_refs(character_sheet_prompt(t.character_sheet), sheet_path, refs=None,

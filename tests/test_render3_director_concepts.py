@@ -7,7 +7,8 @@ import pytest
 
 from creative.sampler import sample_direction
 from reel.render3.director import (
-    ConceptStub, DirectorOutput, concepts_distinct, direct_reel, direct_reel_concepts,
+    ConceptStub, DirectorOutput, concept_lock_block, concepts_distinct, direct_reel,
+    direct_reel_concepts,
 )
 from tests.test_render3_director import _treatment
 
@@ -87,6 +88,29 @@ def test_legacy_direct_reel_still_works_and_carries_locale():
     c = _T()
     t = direct_reel(_PROFILE, caller=c)
     assert t is not None and "LOCALE: Egypt" in c.p and "R1 ONE PROTAGONIST" in c.p
+
+
+def test_concept_lock_pins_the_chosen_story_into_the_prompt():
+    class _T:
+        def __call__(self, system, user, response_model, group_name="", images=None):
+            self.p = user
+            return _treatment(), None
+    c = _T()
+    stub = _stub(2)                                       # the "map redraws" concept
+    t = direct_reel(_PROFILE, caller=c, concept_lock=concept_lock_block(stub))
+    assert t is not None
+    assert "LOCKED CONCEPT" in c.p and stub.big_idea in c.p and stub.motif_object in c.p
+    assert "R1 ONE PROTAGONIST" in c.p                    # hard rules still present
+
+
+def test_fix_note_appends_corrections():
+    class _T:
+        def __call__(self, system, user, response_model, group_name="", images=None):
+            self.p = user
+            return _treatment(), None
+    c = _T()
+    direct_reel(_PROFILE, caller=c, fix_note="VO is 40 words (must be 55-75)")
+    assert "CORRECTIONS REQUIRED" in c.p and "40 words" in c.p
 
 
 def test_concepts_distinct_flags_near_duplicates():
