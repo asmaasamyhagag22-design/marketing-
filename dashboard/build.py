@@ -678,6 +678,13 @@ def _css() -> str:
     .arc-step b{{display:inline-flex;width:17px;height:17px;border-radius:50%;background:{c['blush100']};
       color:{c['blush700']};font-size:10px;align-items:center;justify-content:center;margin-inline-end:4px;}}
     .arc-sep{{color:{c['muted']};font-size:12px;margin:0 3px;}}
+    /* RUBRIC D — creative tied to strategy */
+    .tie{{margin-top:8px;padding:9px 11px;background:{c['blush50']};border-radius:10px;}}
+    .tie-h{{font-size:10.5px;font-weight:700;letter-spacing:.04em;color:{c['blush700']};text-transform:uppercase;margin-bottom:6px;}}
+    .tie-chips{{display:flex;flex-wrap:wrap;gap:5px;}}
+    .tie-chip{{font-size:11px;font-weight:600;color:{c['inkSoft']};background:{c['surface']};
+      border:1px solid {c['line']};padding:2px 9px;border-radius:12px;}}
+    .tie-chip.tie-strat{{color:{c['blush700']};background:{c['blush100']};border-color:transparent;}}
     .hs-ar{{font-size:13px;color:{c['ink']};line-height:1.55;}}
     .hs-en{{font-size:11.5px;color:{c['muted']};font-style:italic;margin-top:2px;line-height:1.5;}}
     /* RUBRIC C — strategy narrative in plain words */
@@ -881,26 +888,48 @@ def build_dashboard_html(
     reel_uri = _data_uri(reel_path)
     creative_html = ""
     if poster_uri or reel_uri:
+        # RUBRIC D — every creative is LABELLED with the strategy line, audience and funnel
+        # stage it serves (no orphan creatives). Pulled from the same plan the deliverable shows.
+        strat = ""
+        if (tows.get("priority_actions") or []):
+            strat = re.sub(r"^(Leverage|Fix|Address|Defend|Exploit)\s*:\s*", "",
+                           str(tows["priority_actions"][0].get("action") or "")).strip()
+        elif (tows.get("strategies") or []):
+            strat = str(tows["strategies"][0].get("title") or "")
+        fun = str(obj.get("funnel_stage") or "").lower()
+        aud = ""
+        for itx in ((mp.get("base_persona") or {}).get("interests") or [])[:1]:
+            aud = str(itx.get("claim") if isinstance(itx, dict) else itx).replace(
+                "the brand's audience:", "").strip()
+
+        def _tie(kind_ar: str) -> str:
+            chips = []
+            if strat:
+                chips.append(f'<span class="tie-chip tie-strat">🎯 {_esc(strat[:60])}</span>')
+            if fun and fun in _FUN_L:
+                chips.append(f'<span class="tie-chip">{_esc(_FUN_L[fun])}</span>')
+            if aud:
+                chips.append(f'<span class="tie-chip">👥 {_esc(aud[:40])}</span>')
+            return (f'<div class="tie"><div class="tie-h">{kind_ar} يخدم استراتيجيتك · serves your strategy</div>'
+                    f'<div class="tie-chips">{"".join(chips)}</div></div>' if chips else "")
+
         media = ""
         if poster_uri:
             media += (f'<div class="media"><img src="{poster_uri}" alt="poster">'
-                      f'<div class="cap">Poster · one-shot engine · logo composited crisp</div></div>')
+                      f'<div class="cap">بوستر · Poster</div>{_tie("البوستر · The poster")}</div>')
         if reel_uri:
-            # base64-inlined so the page stays self-contained (opens as a file AND serves the same);
-            # the reel plays right in the dashboard — "everything shows in one place".
             media += (f'<div class="media"><video class="reel-vid" src="{reel_uri}" controls playsinline '
                       f'preload="metadata"></video>'
-                      f'<div class="cap">Reel · Veo 3.1 · grounded story · branded end-card</div></div>')
+                      f'<div class="cap">ريل · Reel · Veo 3.1</div>{_tie("الريل · The reel")}</div>')
         creative_html = f"""<div class="sec"><div class="sec-h"><span class="bar"></span>
-          <h2>Creative — agency-grade, brand-safe</h2></div>
+          <h2>الإبداع — مربوط باستراتيجيتك · Creative — tied to your strategy</h2>
+          <span class="cnt">كل تصميم يخدم هدفاً · every asset serves a goal</span></div>
           <div class="card creative">
             <div class="media-col">{media}</div>
-            <div><div class="swot-t" style="font-size:15px">Every hard claim traces to real evidence.</div>
+            <div><div class="swot-t" style="font-size:15px">كل ادعاء يرجع لدليل حقيقي · Every hard claim traces to real evidence.</div>
               <p style="font-size:13px;color:{_C['inkSoft']};margin-top:8px;line-height:1.6">
-              The headline and proof lines pass the Evidence Ledger before they render; the brand logo is
-              the real asset composited deterministically (never re-drawn by the image model). The reel
-              tells the same grounded story with continuous voice-over, refined typography and a branded
-              end-card (the real logo on the brand colour).</p></div>
+              العناوين وسطور الإثبات تمرّ ببوابة الأدلة قبل الرندر؛ اللوجو أصل حقيقي مركّب بدقة (لا يُعاد رسمه).
+              الريل يحكي نفس القصة المؤسَّسة بصوت متصل وكارت نهاية بلوجو البراند.</p></div>
           </div></div>"""
 
     gen = generated_at or datetime.now().strftime("%Y-%m-%d")

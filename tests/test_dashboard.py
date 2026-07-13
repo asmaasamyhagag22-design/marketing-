@@ -94,7 +94,7 @@ def test_dashboard_embeds_the_reel_video(tmp_path):
                           out_path=str(tmp_path / "d.html"))
     h = Path(out).read_text(encoding="utf-8")
     assert "<video" in h and "data:video/mp4;base64," in h        # the reel plays in-page
-    assert "branded end-card" in h                                # the creative note mentions it
+    assert "كارت نهاية بلوجو البراند" in h                        # the creative note mentions it (bilingual copy)
     assert "http://" not in h.replace("http://www.w3.org", "")    # still self-contained
 
 
@@ -105,5 +105,5 @@ def test_creative_section_shows_with_only_a_reel(tmp_path):
     reel.write_bytes(b"\x00\x00\x00\x18ftypmp42fake")
     out = build_dashboard(cp, profile_path=pp, reel_path=str(reel), out_path=str(tmp_path / "d.html"))
     h = Path(out).read_text(encoding="utf-8")
-    assert "Creative — agency-grade" in h and "<video" in h
+    assert "Creative — tied to your strategy" in h and "<video" in h
     assert 'alt="poster"' not in h                                # no poster embedded, reel only

@@ -41,3 +41,9 @@ FLAG where the owner should review. Newest first.
   leaks); a pixel-level RTL check needs the owner's interactive screenshot pass (browser preview
   was unavailable, D-3.1). FLAG: if any older section shows mixed-direction breakage on screen,
   it's cheap to pin with a logical-property fix — noted as the one visual risk in this pass.
+
+- **D-3.3 — test_api_run.py flakes under full-suite contention.** Two API-run tests
+  (returns_job_id, rejects_when_llm_required) failed once during a full-suite run while a heavy
+  render/other work contended for the port/timing, then passed 9/9 in isolation. Not caused by
+  the dashboard changes. Treating as a load flake; re-running the full suite clean before each
+  commit. FLAG: worth a port-isolation/retry hardening pass on those tests (ticket T-APIFLAKE).
