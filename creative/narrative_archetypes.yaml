@@ -1,0 +1,46 @@
+# Narrative archetypes — the STORY SHAPE a reel takes. The per-run sampler picks one
+# (filtered by audience fit) so consistency lives WITHIN a run and variety ACROSS runs
+# (owner directive 2026-07-13). Each is a strong default the Director may deviate from
+# only with a one-line direction_note. `audience_fit: [universal]` = fits any brand.
+archetypes:
+  - key: transformation
+    label: Transformation
+    description: >
+      One protagonist moves from a real, visible problem to a changed life, the
+      change made concrete through the motif and the colour grade. Classic and clear.
+    audience_fit: [universal]
+
+  - key: day-in-the-life
+    label: Day in the life
+    description: >
+      Follow the protagonist through ONE authentic day where the brand is woven in
+      naturally — no before/after, the value shows in lived, ordinary moments.
+    audience_fit: [universal]
+
+  - key: problem-agitate-solve
+    label: Problem · agitate · solve
+    description: >
+      Name a sharp, relatable pain in Act 1, twist the knife (its daily cost) in
+      Act 2, then land the brand as the clean resolution in Act 3.
+    audience_fit: [services, education, health, b2b, retail, ecommerce, universal]
+
+  - key: before-after
+    label: Before / after contrast
+    description: >
+      A tight, almost split-screen contrast between the world without and with the
+      brand — cut on a shared gesture or object so the two halves rhyme.
+    audience_fit: [retail, ecommerce, health, food, universal]
+
+  - key: testimonial-style
+    label: Testimonial voice
+    description: >
+      The protagonist speaks as a real customer recommending the brand in their own
+      words — the VO IS the recommendation, warm and specific, never a slogan.
+    audience_fit: [services, education, health, b2b, universal]
+
+  - key: pov-challenge
+    label: POV challenge
+    description: >
+      Address the VIEWER in second person and pose a challenge ("could you...?"),
+      the protagonist standing in for them as they rise to meet it. High energy.
+    audience_fit: [education, retail, ecommerce, fitness, food, universal]

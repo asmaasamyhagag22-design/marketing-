@@ -1,0 +1,49 @@
+# Protagonist slots — WHO the single protagonist is (R1). The sampler picks one that
+# fits the brand's real audience; the Director casts a specific, grounded Egyptian
+# person into it. Varying the slot across runs keeps the same brand from always
+# starring the same archetype. `audience_fit: [universal]` = fits any brand.
+protagonist_slots:
+  - key: fresh-grad-f
+    label: Fresh graduate (woman)
+    description: A young woman just out of study, hungry for her first real break.
+    audience_fit: [education, services, b2b, universal]
+
+  - key: fresh-grad-m
+    label: Fresh graduate (man)
+    description: A young man just out of study, hungry for his first real break.
+    audience_fit: [education, services, b2b, universal]
+
+  - key: career-switcher
+    label: Career switcher
+    description: >
+      Someone mid-career leaving a stuck path to retrain into something new — the
+      stakes are higher, the resolve harder-won.
+    audience_fit: [education, services, b2b, universal]
+
+  - key: small-business-owner
+    label: Small-business owner
+    description: >
+      A proprietor running a shop, clinic, or workshop, using the brand to lift their
+      own business — grounded, practical, proud.
+    audience_fit: [b2b, services, retail, food, health, universal]
+
+  - key: parent
+    label: Parent
+    description: >
+      A mother or father acting for their family — the value framed through care and
+      the household, not personal ambition.
+    audience_fit: [retail, ecommerce, health, food, education, universal]
+
+  - key: student
+    label: Student
+    description: >
+      Someone still studying, juggling coursework and life, the brand a lever on their
+      near future rather than a finished career.
+    audience_fit: [education, retail, universal]
+
+  - key: craftsman
+    label: Craftsman / maker
+    description: >
+      A hands-on maker — cook, tailor, technician, mechanic — whose skill IS the story;
+      the brand sharpens a craft they already love.
+    audience_fit: [food, services, retail, b2b, health]

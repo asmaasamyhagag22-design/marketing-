@@ -1,0 +1,46 @@
+# Motif domains — the CATEGORY the single recurring object is drawn from (R3). The
+# Director invents a concrete object WITHIN the sampled domain and evolves it across
+# the three acts. Varying the domain across runs stops every reel leaning on the same
+# literal prop. `audience_fit: [universal]` = fits any brand.
+motif_domains:
+  - key: tool-of-trade
+    label: Tool of the trade
+    description: >
+      An implement the work itself uses — a cable, a wrench, a stethoscope, a chef's
+      knife. Concrete and credible, but keep it emotionally alive, not a dry symbol.
+    audience_fit: [education, b2b, services, health, food, universal]
+
+  - key: journey-object
+    label: Journey object
+    description: >
+      Something that travels or accrues with the arc — a ticket, a boarding pass, a
+      key, a stamp, a filling notebook — a physical record of progress.
+    audience_fit: [education, services, travel, universal]
+
+  - key: sensory-food
+    label: Sensory / food
+    description: >
+      A dish, ingredient, cup, or bite whose look, steam, and texture carry appetite
+      and feeling. Reserve for brands where taste/craft is the product.
+    audience_fit: [food, hospitality, retail]
+
+  - key: wearable
+    label: Wearable
+    description: >
+      Something worn that marks identity or change — a garment, a badge, glasses, a
+      uniform, jewellery — transformation you can literally put on.
+    audience_fit: [retail, ecommerce, fashion, education, health, universal]
+
+  - key: workspace-object
+    label: Workspace object
+    description: >
+      An object of the desk/bench/counter — a mug, a lamp, a nameplate, a plant, a
+      handset — grounding the story in where the work happens.
+    audience_fit: [b2b, services, education, universal]
+
+  - key: vehicle
+    label: Vehicle / motion
+    description: >
+      Something that moves the protagonist through space — a bike, a car door, a
+      metro card, a delivery box in transit — momentum made physical.
+    audience_fit: [retail, ecommerce, services, travel, food]

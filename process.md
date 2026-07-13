@@ -2,8 +2,10 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1405 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
+Test suite: **1412 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**CREATIVE VARIETY ENGINE (1/N) — DIRECTION SAMPLER (suite 1412).** Owner directive: lock WITHIN a run, vary ACROSS runs — variety is a REQUIREMENT with a mechanism, not chance. New `creative/` package: three libraries (narrative_archetypes / motif_domains / protagonist_slots YAML, each entry tagged audience_fit) + `sampler.py` drawing one (archetype, motif-domain, protagonist-slot) triple FILTERED by the grounded profile's audience. Reproducible (seed + `forced=` re-injection of a logged triple), `avoid=` de-prioritises a client's recent runs, and `sample_distinct_directions` yields N candidates with distinct archetypes. +6 hermetic tests.
 
 **RENDER #3 — G2 JUNK-SCREEN DETECTION STRENGTHENED (owner C1; suite 1405).** The G2 gate now flags sci-fi glow (neon/cyan LED strips, holographic panels) even when it could pass as ambient architectural light — closing the D-R3.5 gap where render#2's glowing frame 5 slipped junk_screens. Live-recalibrated x2: stable junk_screens=[5], verdict=FAIL, same_person=false; the calibration test pins `5 in junk_screens`. Blocking conjunction / locked blocks / spend order UNCHANGED — only junk-detection sensitivity. (D-R3.7)
 
