@@ -87,6 +87,13 @@ def scrape_yielded_nothing(manifest) -> bool:
     return len(getattr(manifest, "pages", []) or []) == 0
 
 
+def rate_limited_failure(failures) -> bool:
+    """True when a 0-page crawl failed on an HTTP 429 (rate limit) — a TEMPORARY throttle, not a
+    block or an outage. Drives an honest, actionable message ("wait a minute and retry") instead of
+    the misleading "site may block crawlers / be unreachable"."""
+    return any("429" in str(getattr(f, "message", "")) for f in (failures or []))
+
+
 def _make_caller():
     """build_profile needs an explicit LLM caller. Use the PRIMARY prod caller (Gemini/Vertex — the
     GCP credits are the budget, and it's what poster/reel/strategy already use), falling back to
@@ -206,10 +213,20 @@ def main():
     # A 0-page crawl (blocked / unreachable / bad cert) would otherwise build a hollow profile and a
     # garbage dashboard that LOOKS successful. Fail loudly instead so the studio shows a clear reason.
     if scrape_yielded_nothing(manifest):
-        fails = "; ".join(str(f) for f in (getattr(manifest, "failures", []) or [])[:2])
-        print("!! could not read this site — 0 pages scraped"
-              + (f" ({fails})" if fails else "")
-              + ". It may block crawlers, be down, or have an invalid certificate.", file=sys.stderr)
+        failures = getattr(manifest, "failures", []) or []
+        fails = "; ".join(str(f) for f in failures[:2])
+        # HONEST distinction: a 429 means the site is RATE-LIMITING us (temporary — it works
+        # again after a short cooldown), NOT that it blocks crawlers or is down. Telling the
+        # user "may block scraping / be unreachable" on a 429 is misleading (the site is fine).
+        if rate_limited_failure(failures):
+            print("!! rate-limited (HTTP 429) — the site asked us to slow down; it is NOT blocking "
+                  "us and is not down. Wait about a minute and analyze it again"
+                  + (f" ({fails})" if fails else "") + ".", file=sys.stderr)
+        else:
+            print("!! could not read this site — 0 pages scraped"
+                  + (f" ({fails})" if fails else "")
+                  + ". It may block crawlers, be down, or have an invalid certificate.",
+                  file=sys.stderr)
         return 3
 
     say("[2/5] building BusinessProfile (OpenAI extraction)...")

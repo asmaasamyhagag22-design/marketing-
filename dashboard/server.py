@@ -886,8 +886,13 @@ class _Handler(BaseHTTPRequestHandler):
             _INFLIGHT.add(key)
 
         alive = {"v": True}
+        saw_rate_limit = {"v": False}
 
         def on_progress(event, label, msg):
+            # Watch the streamed log for a rate-limit so the FINAL banner stays honest: a 429
+            # means the site throttled us (temporary), NOT that it blocks crawlers or is down.
+            if "429" in (msg or "") or "rate-limit" in (msg or "").lower():
+                saw_rate_limit["v"] = True
             if alive["v"] and not self._sse_write(sse("stage", {"event": event, "label": label, "msg": msg})):
                 alive["v"] = False
 
@@ -901,6 +906,9 @@ class _Handler(BaseHTTPRequestHandler):
                 return
             if slug:
                 self._sse_write(sse("done", {"slug": slug}))
+            elif saw_rate_limit["v"]:
+                self._sse_write(sse("failed", {"msg": "The site is rate-limiting us (HTTP 429) — "
+                    "it isn't blocking us and isn't down. Wait about a minute and analyze it again."}))
             else:
                 self._sse_write(sse("failed", {"msg": "The site may block scraping or be unreachable."}))
         finally:

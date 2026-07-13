@@ -2,8 +2,16 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1402 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
+Test suite: **1405 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**SCRAPER — HONEST 429 MESSAGING END-TO-END (suite 1405).** A rate-limit is not a block: telling
+the user "the site may block scraping or be unreachable" on an HTTP 429 is misleading (the site
+is fine and works again after a short cooldown). Now `competitor/full_run.py` (via the testable
+`rate_limited_failure`) prints "rate-limited (HTTP 429) — wait about a minute and analyze again"
+instead of "could not read this site", and the studio's final banner (`_stream_analyze`) watches
+the streamed log and shows the same honest, actionable message rather than the generic
+block/outage line. +3 hermetic tests (banner both ways + the 429 detector).
 
 **SCRAPER — PATIENT HOMEPAGE 429 RETRY (the make-or-break fetch; suite 1402).** A homepage
 HTTP 429 loses the ENTIRE scrape (0 pages -> "could not read this site"), yet a rate-limit

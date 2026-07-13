@@ -258,6 +258,32 @@ def test_concurrent_generate_runs_only_one_subprocess(live, monkeypatch):
     assert any("already generating" in b for b in bodies)  # the duplicate was rejected cleanly
 
 
+def test_analyze_429_shows_honest_rate_limit_banner(live, monkeypatch):
+    # a 429 failure must NOT tell the user "may block scraping / be unreachable" (misleading —
+    # the site is fine, just throttling). The banner must name the rate limit + suggest waiting.
+    def rl_analyze(url, *, out_dir="outputs", on_progress=None):
+        on_progress("stage_fail", "Scrape",
+                    "    [X] rate-limited (HTTP 429) — the site asked us to slow down")
+        return None                                      # scrape yielded nothing
+
+    monkeypatch.setattr("dashboard.run.analyze", rl_analyze)
+    _s, body = _get(live + "/analyze?url=https://topshoes.store/")
+    stream = body.decode("utf-8")
+    assert "event: failed" in stream
+    assert "rate-limiting us (HTTP 429)" in stream and "Wait about a minute" in stream
+    assert "may block scraping" not in stream           # the misleading banner is gone
+
+
+def test_analyze_non_429_keeps_generic_banner(live, monkeypatch):
+    def dead_analyze(url, *, out_dir="outputs", on_progress=None):
+        on_progress("stage_fail", "Scrape", "    [X] EMPTY_RENDERED_DOM")
+        return None
+
+    monkeypatch.setattr("dashboard.run.analyze", dead_analyze)
+    _s, body = _get(live + "/analyze?url=https://dead.example/")
+    assert "may block scraping or be unreachable" in body.decode("utf-8")
+
+
 def test_concurrent_analyze_runs_only_one_scrape(live, monkeypatch):
     # A double-click / SSE reconnect must NOT spawn two concurrent crawls of the same host —
     # two crawls hammering the site is exactly what trips Cloudflare's 429 (MEASURED:

@@ -7,12 +7,27 @@ result that LOOKS successful, so the studio showed an empty/garbage dashboard in
 """
 from __future__ import annotations
 
-from competitor.full_run import scrape_yielded_nothing
+from competitor.full_run import rate_limited_failure, scrape_yielded_nothing
 
 
 class _Manifest:
     def __init__(self, pages):
         self.pages = pages
+
+
+class _Failure:
+    def __init__(self, message):
+        self.message = message
+
+
+def test_rate_limited_failure_distinguishes_429():
+    # a 429 -> honest "wait and retry" message; anything else -> generic "unreadable"
+    assert rate_limited_failure([_Failure("[retry 4] HTTP 429")]) is True
+    assert rate_limited_failure([_Failure("HTTP 403"), _Failure("HTTP 429")]) is True
+    assert rate_limited_failure([_Failure("EMPTY_RENDERED_DOM")]) is False
+    assert rate_limited_failure([_Failure("HTTP 403 bot wall")]) is False
+    assert rate_limited_failure([]) is False
+    assert rate_limited_failure(None) is False
 
 
 def test_zero_page_crawl_is_detected_as_nothing():
