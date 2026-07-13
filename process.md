@@ -5,6 +5,8 @@ change-log. Read this before acting in this repo. Last full revision: 2026-07-04
 Test suite: **1405 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
 
+**RENDER #3 — G2 JUNK-SCREEN DETECTION STRENGTHENED (owner C1; suite 1405).** The G2 gate now flags sci-fi glow (neon/cyan LED strips, holographic panels) even when it could pass as ambient architectural light — closing the D-R3.5 gap where render#2's glowing frame 5 slipped junk_screens. Live-recalibrated x2: stable junk_screens=[5], verdict=FAIL, same_person=false; the calibration test pins `5 in junk_screens`. Blocking conjunction / locked blocks / spend order UNCHANGED — only junk-detection sensitivity. (D-R3.7)
+
 **SCRAPER — HONEST 429 MESSAGING END-TO-END (suite 1405).** A rate-limit is not a block: telling
 the user "the site may block scraping or be unreachable" on an HTTP 429 is misleading (the site
 is fine and works again after a short cooldown). Now `competitor/full_run.py` (via the testable

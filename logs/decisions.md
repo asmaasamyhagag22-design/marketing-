@@ -96,3 +96,31 @@ the named issue and rolled a new one (VO 52→47 words, then a stray smile) →
 retry cap raised to 3 with CUMULATIVE deduped feedback; director calls are cheap
 text (the HITL law governs image/video spend). R8 now says "COUNT the words".
 Result: live run passes G1 on the first corrective retry (VO 59 words).
+
+## D-429.1 / D-429.2 — the 429 round, two honest notes (2026-07-13)
+(a) **The double-submit lock was the real first-cause.** `/analyze` had NO concurrency guard
+(unlike `/generate`); a double-click / SSE-reconnect spawned TWO concurrent crawls of the same
+host, and two crawls hammering at once is what first tripped Cloudflare's per-IP 429. Shipped as
+the `_INFLIGHT (slug, "analyze")` guard.
+(b) **My own diagnostics caused much of the observed 429.** Probe/measure/categorize scripts
+fired 1000+ requests at topshoes/bobana/rawafrican during diagnosis; on a shared IP that
+degraded our Cloudflare reputation so the crawler (headless) got 429 while curl got 200. Encoded
+as a hard rule: memory `diagnostic-isolation-shared-ip` + a diagnostic ledger in logs/spend.md.
+
+## D-429.3 — footprint fix is two-phase, NOT a blunt request cut (owner ruling 2026-07-13)
+The 106 product images are the SAME data U1 fought for (rawafrican offerings) — do not drop them.
+PHASE A (crawl): fetch ALL text/content/prices/offerings; only COLLECT image URLs (cheap text),
+do NOT download image bytes inline → homepage ~300 -> ~50-70 requests, ZERO content loss.
+PHASE B (post-crawl, metered): download ONLY what's used — the screenshot asset + the poster/reel
+candidate images that already pass the quality gate — not all 106. `--thorough` preserves the old
+full-image behavior; two-phase is the new DEFAULT. Gate: extraction coverage regression >5% = revert.
+
+## D-R3.7 — G2 junk-screen detection strengthened for C1 (owner, 2026-07-13)
+Owner C1 requires the G2 gate to flag render#2's glowing-cyan frame (frame 5) in junk_screens.
+Earlier (D-R3.5) the judge read that glow as architectural light -> junk_screens=[]; the FAIL
+was carried only by identity+grade+arc. Strengthened the `_G2_PROMPT` junk_screens definition
+to flag sci-fi glow (neon/cyan LED strips, holographic panels) EVEN when it could pass as ambient
+lighting ("when in doubt about a glow, FLAG it"), while explicitly NOT flagging a plain real
+monitor with ordinary text. Re-ran live x2: stable junk_screens=[5], verdict=FAIL,
+same_person=false. Calibration test now pins `5 in junk_screens`. Blocking mechanism, code
+conjunction, locked blocks, spend order all UNCHANGED — only the junk-detection sensitivity.

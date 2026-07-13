@@ -44,8 +44,13 @@ only:
 - identity_offenders: [{{"frame": int, "reason": str}}] for every frame that fails.
 - same_world_grade: palette/grade follows a deliberate act progression;
   random palette jumps = false. grade_offenders likewise.
-- junk_screens: frame numbers where any screen shows glowing abstract/sci-fi
-  UI, or gibberish presented as readable text.
+- junk_screens: frame numbers showing ANY AI-generated "unreal" tell —
+  (a) a screen/monitor with glowing abstract or sci-fi UI, holographic panels,
+  or gibberish presented as readable text; OR (b) glowing neon / cyan / blue
+  light strips, luminous holographic partitions, or other sci-fi glow that makes
+  a real-world office look artificially futuristic. FLAG the frame EVEN IF the
+  glow could be read as architectural or ambient lighting; when in doubt about a
+  glow, FLAG it. A plain, real monitor showing ordinary readable text is NOT junk.
 - arc_readable: could a stranger order these frames into
   tension -> effort -> payoff?
 - verdict: "PASS" iff same_person && same_world_grade && junk_screens == []

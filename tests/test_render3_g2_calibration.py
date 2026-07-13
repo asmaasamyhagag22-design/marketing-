@@ -2,12 +2,13 @@
 """§5/§10.5 — the MANDATORY G2 calibration: the gate must FAIL render #2's contact sheet
 (a gate that passes render #2 is itself a failed build).
 
-LIVE vision test — CI stays hermetic, so it runs only under RUN_LIVE_GATES=1. It was run
-live on 2026-07-12 and the verdict is pinned in process.md: FAIL, same_person=false with 4
-identity offenders (blurred face / protagonist absent / back turned / different woman, no
-hijab), same_world_grade=false, arc_readable=false. Honest nuance (D-R3.5): the judge read
-frame 5's glow as architectural light behind glass, not an on-screen UI — junk_screens=[];
-the FAIL is carried decisively by identity + grade + arc.
+LIVE vision test — CI stays hermetic, so it runs only under RUN_LIVE_GATES=1. Verdict pinned
+in process.md: FAIL, same_person=false with 4 identity offenders (blurred face / protagonist
+absent / back turned / different woman, no hijab), same_world_grade=false, arc_readable=false.
+C1 (owner, 2026-07-13): the glowing-UI frame (frame 5's cyan LED strips) MUST be caught in
+junk_screens. Earlier (D-R3.5) the judge read that glow as architectural light -> junk_screens=[];
+the G2 junk-screen prompt was strengthened to flag sci-fi glow even when it could pass as ambient
+light, and now stably returns junk_screens=[5]. A gate that does NOT flag it is broken.
 """
 from __future__ import annotations
 
@@ -44,3 +45,4 @@ def test_g2_fails_render2_sheet_live():
                      caller=default_caller(strong=True))
     assert v.verdict == "FAIL"                 # the mandatory core
     assert v.same_person is False and v.identity_offenders
+    assert 5 in v.junk_screens                 # C1: the glowing-cyan frame MUST be flagged
