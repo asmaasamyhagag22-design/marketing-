@@ -27,6 +27,17 @@ from .prompts import character_sheet_prompt, locked_hashes, seed_prompt, veo_pro
 
 logger = logging.getLogger(__name__)
 
+# Cues in an action/camera that a shot must render LEGIBLE in-frame text (badge titles, labels,
+# signage) — such shots need the text-capable pro image model, like REAL_CONTENT screens do.
+_LEGIBLE_TEXT_CUES = ("legible", "clearly see", "readable", "reads ", "the title")
+
+
+def _needs_pro_lane(shot) -> bool:
+    if shot.screen_rule.startswith("REAL_CONTENT:"):
+        return True
+    blob = (shot.action + " " + shot.camera).lower()
+    return any(cue in blob for cue in _LEGIBLE_TEXT_CUES)
+
 
 def prepare_render3(profile: dict, *, caller: Any, out_dir: "str | Path",
                     n_shots: int = 6, max_g1_retries: int = 3, concept_lock: str = "",
@@ -142,8 +153,10 @@ def continue_render3(prep: dict, *, caller: Any, out_dir: "str | Path",
         p = seed_prompt(t, shot, n_shots=len(t.shots),
                         location_photo_attached=loc_attached,
                         screenshot_index=scr_idx, hashes=hashes)
-        # Pro lane for legible REAL_CONTENT screens without an attached screenshot (§6).
-        pro = shot.screen_rule.startswith("REAL_CONTENT:") and scr_idx is None
+        # Pro lane wherever LEGIBLE in-frame text must render (a REAL_CONTENT screen, or an
+        # action/camera that calls for readable text — e.g. a keycard title) and no real
+        # screenshot is composited. The pro model is the one that renders text cleanly (§6).
+        pro = _needs_pro_lane(shot) and scr_idx is None
         dst = out / f"seed_{shot.id:02d}.png"
         return str(generate_with_refs(p, dst, refs=refs, pro=pro, log=log))
 

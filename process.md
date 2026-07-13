@@ -2,8 +2,10 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1424 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
+Test suite: **1425 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**RENDER #3 — PRO LANE FOR ANY LEGIBLE IN-FRAME TEXT (suite 1425).** The seed pro-lane trigger only fired on REAL_CONTENT screens, so a legible non-screen element (an approved keycard title) would have used the fast model and risked garbling. `_needs_pro_lane` now also fires when the action/camera calls for readable text (legible / clearly see / readable / the title). LIVE (guardian EXECUTE): shots 4 (terminal) + 6 (keycard 'KARIM' + title) used the pro model; all 6 seeds generated with the card attached and G2 PASSED on the FIRST attempt (same_person, same_world_grade, junk_screens=[], arc_readable — zero regens). +1 hermetic test.
 
 **RENDER #3 — GENDER-AWARE CHARACTER (male protagonists now render correctly; suite 1424).** `character_block` + `character_sheet_prompt` HARDCODED 'Egyptian woman' / she / her — the whole render3 character system was female-only (built for Layla), so the male pharmacist/guardian protagonist rendered as a WOMAN. Added `CharacterSheet.presenting_gender` ('man'|'woman', R7 now requires it) and made both prompt builders gender-aware (noun + pronouns + the lock sentence; a man has hijab null, lock on hair not hijab). Empty default preserves the original female phrasing for pre-field treatments. LIVE: Karim's card now renders a consistent man across all 3 views (C2-verified: same person, scar his-left, watch his-left). +1 hermetic test.
 

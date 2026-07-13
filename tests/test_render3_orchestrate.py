@@ -138,6 +138,20 @@ def test_continue_g2_fail_blocks_veo(tmp_path, monkeypatch):
     assert veo.calls == []                                 # the invariant: zero Veo spend
 
 
+def test_needs_pro_lane_detects_legible_text():
+    from reel.render3.orchestrate import _needs_pro_lane
+
+    class _S:
+        def __init__(self, sr, action="", camera=""):
+            self.screen_rule, self.action, self.camera = sr, action, camera
+
+    assert _needs_pro_lane(_S("REAL_CONTENT:a terminal with text"))          # screen text
+    assert _needs_pro_lane(_S("NONE", camera="the keycard title is legible"))  # in-frame text
+    assert _needs_pro_lane(_S("NONE", action="the sign clearly see-able"))
+    assert not _needs_pro_lane(_S("NONE", action="he types", camera="close-up"))  # no text
+    assert not _needs_pro_lane(_S("OUT_OF_FOCUS", camera="soft glow"))
+
+
 def test_stop_after_g2_returns_verified_seeds_without_veo(tmp_path, monkeypatch):
     nano_calls = []
     monkeypatch.setattr(orch, "generate_with_refs", _fake_nano(tmp_path, nano_calls))
