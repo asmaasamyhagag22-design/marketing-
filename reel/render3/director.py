@@ -93,12 +93,15 @@ class ReelTreatment(BaseModel):
 
 
 class ConceptStub(BaseModel):
-    """One candidate idea (§1 per-run variety) — a one-line pitch, not a full treatment."""
+    """One candidate idea (§1 per-run variety) — a one-line pitch, not a full treatment.
+    `audience_signal_served` names the REAL grounded audience signal this concept embodies
+    (domain-truth trace — the protagonist must be that person, not an invented off-domain one)."""
     model_config = ConfigDict(extra="forbid")
     big_idea: str
     logline: str
     motif_object: str
     protagonist_one_liner: str
+    audience_signal_served: str = ""
 
 
 class DirectorOutput(BaseModel):
@@ -155,10 +158,19 @@ _INPUTS = """INPUTS
 CLIENT: {client_name} — {client_one_liner}
 OFFER: {offer}
 AUDIENCE: {audience}
+AUDIENCE SIGNALS (real people this brand actually serves — the protagonist MUST be one of them):
+{audience_signals}
 GOAL / CTA: {goal_cta}
 EVIDENCE (grounded facts — the ONLY permissible claim source): {evidence_bullets}
 LOCALE: {locale}. Local people, streets and interiors; local-language signage
-where natural. Never a generic Western stock look; never a mismatched region."""
+where natural. Never a generic Western stock look; never a mismatched region.
+
+DOMAIN TRUTH (violating this is an invalid, ungrounded concept):
+The protagonist must be a real person from AUDIENCE SIGNALS, and the story must show them
+ENTERING or ADVANCING in THIS brand's actual field (as evidenced by OFFER + EVIDENCE). Never
+invent an off-domain use case for the brand — e.g. a training institute in software / networks /
+data-science does NOT teach a pharmacist to run a modern pharmacy; it produces network engineers,
+developers, and analysts. Ground the person in what the brand truly does."""
 
 # R1-R8 verbatim (unchanged by the variety directive) — shared by both prompt modes.
 _HARD_RULES = """HARD RULES — violating any one makes the output invalid:
@@ -225,11 +237,16 @@ R9 NOVELTY. The big_idea, motif object, and protagonist must be substantially
    different from every AVOID entry — same domain is allowed, the same story is
    not. The 3 candidate concepts must also be mutually distinct (no near-duplicates
    among themselves).
+R10 DOMAIN TRUTH. Every concept must obey DOMAIN TRUTH above: the protagonist is a
+   real AUDIENCE SIGNAL person, entering/advancing in the brand's ACTUAL field.
+   Name which signal in audience_signal_served. A concept that drifts off the
+   brand's real field is invalid, however creative.
 
 OUTPUT — return a DirectorOutput:
 1. "concepts": EXACTLY 3 distinct candidate ideas built on the sampled creative
    direction (three genuinely different takes within it), each with big_idea,
-   logline, motif_object, protagonist_one_liner.
+   logline, motif_object, protagonist_one_liner, and audience_signal_served
+   (the exact real signal the protagonist embodies).
 2. "picked_index": the 0-based index of your best candidate, ranked by
    audience_fit, evidence_coverage, filmability, and novelty_vs_history.
 3. "treatment": the FULL treatment (all R1-R8 fields) for the PICKED concept ONLY.
@@ -248,6 +265,11 @@ def _locale_of(p: dict, override: str) -> str:
     return loc or "Egypt"
 
 
+def _audience_signals(p: dict) -> str:
+    sigs = [_val(s) for s in (p.get("audience_signals") or []) if _val(s)]
+    return "\n".join(f"  - {s}" for s in sigs[:8]) if sigs else "  (none captured)"
+
+
 def _base_fields(profile: dict, client_one_liner, offer, audience, goal_cta,
                  locale, bullets, n_shots) -> dict:
     p = profile.get("profile", profile) if isinstance(profile, dict) else {}
@@ -256,6 +278,7 @@ def _base_fields(profile: dict, client_one_liner, offer, audience, goal_cta,
         client_one_liner=client_one_liner or _val(p.get("description"))[:160],
         offer=offer or "; ".join(b for b in bullets[:3]),
         audience=audience or _val(p.get("audience_type")) or "local consumers",
+        audience_signals=_audience_signals(p),
         goal_cta=goal_cta or "drive applications / purchases now",
         evidence_bullets="\n- " + "\n- ".join(bullets) if bullets else "(none)",
         locale=_locale_of(p, locale),

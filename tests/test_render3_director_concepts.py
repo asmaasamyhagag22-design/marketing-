@@ -62,6 +62,19 @@ def test_concepts_call_returns_three_and_a_full_pick():
     assert "first run" in p                               # empty avoid rendered honestly
 
 
+def test_audience_signals_and_domain_truth_reach_the_prompt():
+    prof = {"profile": {"name": "NTI", "category": {"value": "education"},
+                        "audience_signals": [{"value": "Fresh graduates from Egyptian universities"},
+                                             {"value": "Engineers and computer science graduates"}]}}
+    caller = _Caller(_output())
+    direct_reel_concepts(prof, caller=caller, direction=sample_direction(prof, seed=1))
+    p = caller.prompts[0]
+    assert "AUDIENCE SIGNALS" in p and "Fresh graduates from Egyptian universities" in p
+    assert "DOMAIN TRUTH" in p and "R10 DOMAIN TRUTH" in p and "audience_signal_served" in p
+    # the anti-pattern is named explicitly so the model can't repeat the pharmacist drift
+    assert "pharmacist" in p
+
+
 def test_avoid_list_is_injected():
     caller = _Caller(_output())
     direct_reel_concepts(_PROFILE, caller=caller, direction=sample_direction(_PROFILE, seed=1),

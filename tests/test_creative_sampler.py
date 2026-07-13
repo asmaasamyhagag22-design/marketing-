@@ -52,6 +52,18 @@ def test_audience_filter_excludes_ill_fitting_entries():
     assert "sensory-food" in seen_food
 
 
+def test_education_brand_excludes_customer_protagonist_slots():
+    # regression: a tech-training institute must NOT cast a small-business-owner / parent
+    # (the pharmacist bug — those slots were mis-tagged 'universal' and always leaked through)
+    seen = {sample_direction(_EDU, seed=s).protagonist_slot for s in range(80)}
+    assert "small-business-owner" not in seen and "parent" not in seen
+    assert seen & {"fresh-grad-f", "fresh-grad-m", "career-switcher", "student"}
+    # ...but a retail brand CAN still cast a small-business-owner
+    _RETAIL = {"profile": {"category": {"value": "retail"}, "audience_type": {"value": "shops"}}}
+    seen_retail = {sample_direction(_RETAIL, seed=s).protagonist_slot for s in range(80)}
+    assert "small-business-owner" in seen_retail
+
+
 def test_distinct_directions_have_distinct_archetypes():
     ds = sample_distinct_directions(_EDU, n=3, seed=1)
     assert len(ds) == 3

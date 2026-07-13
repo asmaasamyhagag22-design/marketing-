@@ -2,8 +2,10 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1421 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
+Test suite: **1423 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**CREATIVE VARIETY ENGINE (4/N) — DOMAIN-TRUTH GROUNDING (suite 1423).** Owner caught a real grounding failure: the sampler cast a pharmacist for NTI (an ICT/cybersecurity/software/data-science TRAINING institute). Two fixes: (a) the Director now receives the brand's REAL audience_signals + a DOMAIN TRUTH rule (R10) — the protagonist must be a real audience-signal person ENTERING/ADVANCING in the brand's ACTUAL field, never an invented off-domain use case; each concept names `audience_signal_served`. (b) the sampler bug: `small-business-owner`/`parent`/`craftsman` were mis-tagged `universal`, making the audience filter a no-op — removed, so a tech-training brand no longer casts a shopkeeper. +2 hermetic regression tests (education excludes business-owner slot; domain-truth reaches the prompt).
 
 **CREATIVE VARIETY ENGINE (3/N) — CONCEPT-LOCK + TEXT-ONLY APPROVAL STEP (suite 1421).** §5 HITL: after the owner picks one of the 3 candidates, `direct_reel(concept_lock=...)` realizes the FULL treatment for EXACTLY that concept (never re-inventing), and the G1 feedback loop cleans it via `fix_note` corrective retries. `prepare_render3(concept_lock=, generate_card=False)` returns the CLEAN treatment TEXT-ONLY for concept approval BEFORE any character card is spent (card follows on approval, per pack §0). LIVE: the owner-picked pharmacist concept regenerated G1-clean in 2 retries (smile-in-shot-5 + unsourced-VO fixed). +4 hermetic tests.
 

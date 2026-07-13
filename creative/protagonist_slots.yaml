@@ -24,15 +24,16 @@ protagonist_slots:
     label: Small-business owner
     description: >
       A proprietor running a shop, clinic, or workshop, using the brand to lift their
-      own business — grounded, practical, proud.
-    audience_fit: [b2b, services, retail, food, health, universal]
+      own business — grounded, practical, proud. Fits brands that SERVE small businesses,
+      not those that train individuals into a profession.
+    audience_fit: [b2b, retail, food, hospitality]
 
   - key: parent
     label: Parent
     description: >
       A mother or father acting for their family — the value framed through care and
-      the household, not personal ambition.
-    audience_fit: [retail, ecommerce, health, food, education, universal]
+      the household, not personal ambition. Fits consumer/household brands.
+    audience_fit: [retail, ecommerce, health, food]
 
   - key: student
     label: Student
@@ -45,5 +46,5 @@ protagonist_slots:
     label: Craftsman / maker
     description: >
       A hands-on maker — cook, tailor, technician, mechanic — whose skill IS the story;
-      the brand sharpens a craft they already love.
-    audience_fit: [food, services, retail, b2b, health]
+      the brand sharpens a craft they already love. Fits brands whose product IS the craft.
+    audience_fit: [food, hospitality, retail]
