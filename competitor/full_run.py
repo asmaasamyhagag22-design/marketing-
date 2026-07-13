@@ -352,6 +352,9 @@ def main():
         ),
         "competitors": [dataclasses.asdict(c) for c in result.competitors],
         "registry_diff": registry_diff,   # stable-baseline diff for the dashboard (None on first run)
+        # Market Pulse (Round-2 A): the trends were computed then folded ONLY into SWOT — persist
+        # them so the dashboard can surface the live signals as their own section.
+        "trends": [dataclasses.asdict(t) if dataclasses.is_dataclass(t) else t for t in (trends or [])],
         "swot": swot_json,
         "tows": dataclasses.asdict(tows),
     }

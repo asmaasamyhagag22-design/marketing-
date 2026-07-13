@@ -179,10 +179,21 @@ def _calendar_row(it: dict) -> str:
         date = _esc(raw_date)
     ic = _PLAT_ICON.get(plat, "•")
     hook_html = f'<div class="cal-hook">“{hook}”</div>' if hook else ""   # no empty quotes
+    # ROUND-2 A — per-item trend/season attribution: when the post date falls in an Egyptian
+    # marketing season, say so ("هذا المحتوى قرب رمضان"). Deterministic from the date.
+    season_tag = ""
+    try:
+        from trends.seasons import season_for_date
+        sea = season_for_date(raw_date)
+        if sea:
+            season_tag = (f'<span class="cal-season">🗓️ قرب {_esc(sea["ar"])} · '
+                          f'near {_esc(sea["en"])}</span>')
+    except Exception:  # noqa: BLE001
+        season_tag = ""
     return f"""<div class="cal-row">
       <div class="cal-date">{date}</div>
       <div class="cal-plat"><span class="cal-ic">{ic}</span>{_esc(plat)} · {_esc(ctype)}</div>
-      <div class="cal-body"><div class="cal-topic">{topic}</div>{hook_html}</div>
+      <div class="cal-body"><div class="cal-topic">{topic}{season_tag}</div>{hook_html}</div>
     </div>"""
 
 
@@ -440,6 +451,43 @@ def _explained_plan(mp: dict, category: str) -> str:
         <div class="pl-grid">{funnel_html}{budget_html}{audience_html}{kpi_html}</div>
         {kill_html}{next_html}
       </div></div>"""
+
+
+def _market_pulse(comp: dict, generated_at: str = "") -> str:
+    """ROUND-2 A / Market Pulse — surface the live trends (computed, folded only into SWOT
+    before) as their own section + the upcoming Egyptian marketing-season window. Surfacing +
+    the one allowed new compute (the season calendar). Renders only when there is something."""
+    trends = [t for t in (comp.get("trends") or []) if isinstance(t, dict) and t.get("title")][:8]
+    today = (generated_at or comp.get("generated_at") or "")[:10]
+    season = None
+    if today:
+        try:
+            from trends.seasons import upcoming_season
+            season = upcoming_season(today, within_days=120)
+        except Exception:  # noqa: BLE001
+            season = None
+    if not trends and not season:
+        return ""
+    season_html = ""
+    if season:
+        approx = " (تقريبي · approx)" if season.get("approximate") else ""
+        when = ("مستمر الآن · active now" if season.get("active")
+                else f"بعد {season['days_until']} يوم · in {season['days_until']} days")
+        season_html = (f'<div class="mpz"><div class="mpz-h">🗓️ الموسم القادم · Upcoming season</div>'
+                       f'<div class="mpz-b"><b>{_esc(season["ar"])} · {_esc(season["en"])}</b>{_esc(approx)}'
+                       f'<span class="mpz-when">{_esc(when)}</span></div>'
+                       f'<div class="mpz-note">جهّزي محتواك قبلها · plan content ahead of it '
+                       f'({_esc(season["start"])} → {_esc(season["end"])})</div></div>')
+    chips = "".join(
+        f'<a class="mp-chip" href="{_esc(t.get("url") or "#")}" target="_blank" rel="noopener">'
+        f'{_esc(str(t.get("title"))[:70])}</a>' for t in trends)
+    chips_html = (f'<div class="mpz"><div class="mpz-h">📈 إشارات السوق الحيّة · Live market signals</div>'
+                  f'<div class="mp-chips">{chips}</div>'
+                  f'<div class="mpz-note">موضوعات رائجة على صلة بمجالك — مصدر إلهام لمحتواك · '
+                  f'trending topics relevant to your field</div></div>' if chips else "")
+    return f"""<div class="sec"><div class="sec-h"><span class="bar"></span>
+      <h2>نبض السوق · Market pulse</h2><span class="cnt">اتجاهات ومواسم · trends &amp; seasons</span></div>
+      <div class="card mp">{season_html}{chips_html}</div></div>"""
 
 
 def _registry_panel(comp: dict) -> str:
@@ -753,6 +801,20 @@ def _css() -> str:
     .comp-reasons{{display:flex;flex-wrap:wrap;gap:5px;margin:5px 0;}}
     .cmr{{font-size:10.5px;font-weight:600;color:{c['sage700']};background:{c['sage100']};
       padding:1px 8px;border-radius:11px;}}
+    /* ROUND-2 A — Market Pulse */
+    .mpz{{margin-bottom:14px;}}
+    .mpz:last-child{{margin-bottom:0;}}
+    .mpz-h{{font-size:12.5px;font-weight:700;color:{c['blush700']};margin-bottom:8px;}}
+    .mpz-b{{font-size:14px;color:{c['ink']};}}
+    .mpz-when{{display:inline-block;margin-inline-start:8px;font-size:11px;font-weight:700;
+      background:{c['gold100']};color:{c['gold700']};padding:1px 9px;border-radius:11px;}}
+    .mpz-note{{font-size:11.5px;color:{c['muted']};margin-top:5px;line-height:1.5;}}
+    .mp-chips{{display:flex;flex-wrap:wrap;gap:7px;}}
+    .mp-chip{{font-size:11.5px;color:{c['inkSoft']};background:{c['surface2']};border:1px solid {c['line']};
+      padding:4px 11px;border-radius:14px;text-decoration:none;max-width:100%;}}
+    .mp-chip:hover{{border-color:{c['blush400']};}}
+    .cal-season{{display:inline-block;margin-inline-start:8px;font-size:10.5px;font-weight:600;
+      color:{c['gold700']};background:{c['gold100']};padding:1px 8px;border-radius:11px;}}
     /* RUBRIC C — strategy narrative in plain words */
     .cs-legend{{display:flex;flex-wrap:wrap;gap:8px 18px;margin-bottom:12px;font-size:11.5px;color:{c['inkSoft']};}}
     .cs-legend b{{margin-inline-end:5px;}}
@@ -869,6 +931,8 @@ def build_dashboard_html(
     honesty_html = _honesty_surface(comp, mp, prof, len(voice_items))
     # T-REGISTRY — the stable competitor baseline + this run's diff (HITL for identity).
     registry_html = _registry_panel(comp)
+    # ROUND-2 A — Market Pulse (live trends + upcoming Egyptian season).
+    pulse_html = _market_pulse(comp, generated_at or comp.get("generated_at") or "")
     # RUBRIC H — the "start here" reading arc (one scroll, in order).
     _arc = [("السوق", "Market"), ("الاستراتيجية", "Strategy"), ("الخطة", "Plan"),
             ("الإبداع", "Creative"), ("التقويم", "Calendar"), ("ما لا نعرفه", "Gaps")]
@@ -1014,7 +1078,7 @@ def build_dashboard_html(
         <div class="kpis">{kpis}</div>
       </div></div>
       {exec_html}{arc_html}
-      {swot_html}{comp_html}{registry_html}{voice_html}{tows_html}{actions_html}{mp_html}{creative_html}{cal_html}{honesty_html}{qa_html}
+      {pulse_html}{swot_html}{comp_html}{registry_html}{voice_html}{tows_html}{actions_html}{mp_html}{creative_html}{cal_html}{honesty_html}{qa_html}
       <div class="foot">Generated by <b>Baseera</b> · {_esc(gen)} · every factual line carries its source (the Evidence Ledger).</div>
     </div></div>"""
 

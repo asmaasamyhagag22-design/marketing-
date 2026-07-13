@@ -2,8 +2,19 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1358 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
+Test suite: **1366 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**MARKET PULSE + T-SEASON SHIPPED (Round-2 A, suite 1366).** The trends the engine already
+computes were folded ONLY into SWOT; now full_run persists them into result.json and the
+dashboard renders a "نبض السوق · Market pulse" section — live trend chips (linked) + the upcoming
+Egyptian marketing-season window. `trends/seasons.py` is the one allowed new computation (data
+genuinely absent): a deterministic static calendar of Egypt's real seasons (Ramadan/Eid/
+back-to-school/White Friday/…), with Hijri dates honestly flagged "تقريبي · approximate" since
+they shift ~11 days/year. `upcoming_season` (nearest within 120 days, active season wins) +
+`season_for_date` (per-calendar-item attribution: a post dated in a season gets a "قرب رمضان ·
+near Ramadan" tag). Renders only when there is a real trend or season. +8 hermetic tests (4
+seasons + 4 dashboard). Round-2 A done.
 
 **T-TIER — TIER MATCHING AS DECISIVE CRITERIA SHIPPED (suite 1358).** Two pieces. (1) The
 dashboard competitor card now shows WHY each rival matched — plain bilingual chips from the
