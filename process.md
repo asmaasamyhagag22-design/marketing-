@@ -2,8 +2,18 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1396 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
+Test suite: **1399 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**SCRAPER FOOTPRINT — DROP TRACKING/ADS BEACONS ON EVERY FETCH (suite 1399).** MEASURED: the
+topshoes.store homepage fires ~300 requests; ~14 are third-party analytics/ads/telemetry beacons
+(GTM, TikTok, Facebook pixel, DoubleClick, Google Ads, Converted.in, Shopify telemetry) that
+carry NO brand content and are never screenshotted. A blocklist (`_is_tracking_request`) now
+aborts them on BOTH routers — LIGHT subpages (`_block_heavy_route`, already dropping
+image/media/font) and the FULL homepage (`_block_tracking_route`, trackers ONLY so first-party
+images/CSS still load for the screenshot). ~14 fewer requests/page x 41 pages ~= 570 per crawl,
+lowering the chance of tripping a per-IP rate limit (the 429 cause) while speeding the crawl.
+Never matches first-party content or the site CDN. +5 hermetic tests.
 
 **STUDIO ANALYZE — CONCURRENCY GUARD (the REAL 429 root cause; suite 1396).** MEASURED
 live: analyzing topshoes.store from the studio 429'd after 3 retries — yet the site serves
