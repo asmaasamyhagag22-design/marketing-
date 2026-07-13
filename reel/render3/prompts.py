@@ -102,13 +102,19 @@ def character_sheet_prompt(ch: CharacterSheet) -> str:
 
 def expand_screen_rule(rule: str) -> str:
     r = (rule or "NONE").strip()
-    if r == "NONE":
+    # An optional ":detail" suffix on the safe tokens is descriptive flavor —
+    # keep it, but the safety clause always rides along (never weakened by it).
+    base, _, detail = r.partition(":")
+    base, detail = base.strip(), detail.strip()
+    if base == "NONE":
         return "No screens visible in frame."
-    if r == "OUT_OF_FOCUS":
-        return ("The screen is far out of focus (bokeh); a soft glow only, no readable "
-                "or implied content.")
-    if r == "ANGLED_AWAY":
-        return "The screen faces away from camera; its content is not visible."
+    if base == "OUT_OF_FOCUS":
+        return ((detail.rstrip(".") + ". " if detail else "")
+                + "The screen is far out of focus (bokeh); a soft glow only, no readable "
+                  "or implied content.")
+    if base == "ANGLED_AWAY":
+        return ((detail.rstrip(".") + ". " if detail else "")
+                + "The screen faces away from camera; its content is not visible.")
     if r.startswith("REAL_CONTENT:"):
         desc = r.split(":", 1)[1].strip()
         return (f"The screen displays exactly this mundane, real content: {desc}. "

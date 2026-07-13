@@ -29,10 +29,12 @@ logger = logging.getLogger(__name__)
 
 
 def prepare_render3(profile: dict, *, caller: Any, out_dir: "str | Path",
-                    n_shots: int = 6, log=print) -> dict:
+                    n_shots: int = 6, max_g1_retries: int = 3, log=print) -> dict:
     """Stage 1 (pre-approval): Director -> G1 -> character sheet. Returns the HITL #1
-    package {treatment, treatment_path, sheet_path, hashes} or {'error': ...}. On a G1
-    failure the director gets ONE corrective retry (issues appended), then fail loud."""
+    package {treatment, treatment_path, sheet_path, hashes} or {'error': ...}. G1
+    failures feed CUMULATIVE issues back to the director for up to `max_g1_retries`
+    corrective retries (cheap text calls — the HITL law governs image/video spend),
+    then fail loud."""
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
 
@@ -40,16 +42,20 @@ def prepare_render3(profile: dict, *, caller: Any, out_dir: "str | Path",
     if t is None:
         return {"error": "director produced no valid treatment (after retry)"}
     rep = g1_lint(t, profile=profile, n_shots=n_shots)
-    if not rep.ok:
-        log(f"[g1] FAIL: {rep.issues} -> one corrective retry")
+    seen: list[str] = []
+    for attempt in range(max_g1_retries):
+        if rep.ok:
+            break
+        seen = list(dict.fromkeys(seen + rep.issues))       # cumulative, deduped
+        log(f"[g1] FAIL (attempt {attempt + 1}): {rep.issues} -> corrective retry")
         t2 = direct_reel(
             profile, caller=caller, n_shots=n_shots,
-            client_one_liner=f"(Fix these violations from your previous attempt: "
-                             f"{'; '.join(rep.issues[:6])})")
-        rep2 = g1_lint(t2, profile=profile, n_shots=n_shots) if t2 else None
-        if not (t2 and rep2 and rep2.ok):
-            return {"error": f"G1 lint failed twice: {(rep2.issues if rep2 else rep.issues)}"}
-        t = t2
+            client_one_liner=f"(Your previous attempts violated these rules — fix ALL "
+                             f"of them without introducing new ones: {'; '.join(seen[:8])})")
+        if t2 is not None:
+            t, rep = t2, g1_lint(t2, profile=profile, n_shots=n_shots)
+    if not rep.ok:
+        return {"error": f"G1 lint failed after {max_g1_retries + 1} attempts: {rep.issues}"}
     hashes = locked_hashes(t)
     tp = out / "treatment.json"
     tp.write_text(t.model_dump_json(indent=2), encoding="utf-8")

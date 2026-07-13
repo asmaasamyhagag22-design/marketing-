@@ -5,6 +5,15 @@ change-log. Read this before acting in this repo. Last full revision: 2026-07-04
 Test suite: **1390 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
 
+**RENDER #3 · COMMIT 4 — G1 CALIBRATED AGAINST THE LIVE DIRECTOR + HITL #1 REACHED (suite
+1390).** Three measured drifts from live NTI runs fixed at the root (D-R3.6): R6 now
+names `NONE` (the model was inventing `N/A`); safe screen tokens accept a descriptive
+`:detail` suffix with the safety clause always riding along; G1 corrective retries raised
+1 -> 3 with cumulative deduped feedback (text-only spend). **Live result: NTI treatment
+passed G1 on the first corrective retry (VO 59 words), character sheet generated — the
+HITL #1 package (big idea / logline / motif / VO / 6 shots / protagonist card) is now
+AWAITING THE OWNER. Zero seed/Veo spend, exactly per the pack.**
+
 **RENDER #3 · COMMIT 3 — THE ORCHESTRATOR: TWO HITL HARD STOPS + THE VEO INVARIANT (suite
 1390).** `orchestrate.py`: `prepare_render3` = Director -> G1 (one corrective retry with
 the lint issues fed back, then loud error) -> character sheet -> HITL #1 package

@@ -84,3 +84,15 @@ FLAG where the owner should review. Newest first.
   decisively by identity+grade+arc, which is the mandatory core. The CI assertion pins
   verdict==FAIL && same_person==false; live test gated behind RUN_LIVE_GATES=1 (this repo's
   CI is hermetic by policy).
+
+## D-R3.6 — G1 calibrated against the live director (2026-07-13)
+Three measured drifts from the first live NTI runs, each fixed at the root:
+(1) the R6 prompt never named `NONE`, so the model invented `N/A` → NONE is now
+option (a) in the prompt; `N/A` stays rejected (pinned in tests). (2) the model
+mirrors REAL_CONTENT's `:<desc>` onto the safe tokens (`OUT_OF_FOCUS:A monitor…`)
+→ lint + expander accept the suffix as descriptive flavor; the safety clause
+always rides along. (3) one corrective retry was not enough — each retry fixed
+the named issue and rolled a new one (VO 52→47 words, then a stray smile) →
+retry cap raised to 3 with CUMULATIVE deduped feedback; director calls are cheap
+text (the HITL law governs image/video spend). R8 now says "COUNT the words".
+Result: live run passes G1 on the first corrective retry (VO 59 words).

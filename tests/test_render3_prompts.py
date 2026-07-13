@@ -73,6 +73,11 @@ def test_expand_screen_rule_table():
     assert "faces away" in expand_screen_rule("ANGLED_AWAY")
     assert "5 labeled nodes" in expand_screen_rule("REAL_CONTENT: topology with 5 labeled nodes")
     assert expand_screen_rule("") == "No screens visible in frame."
+    # ":detail" flavor on safe tokens is kept — but the safety clause ALWAYS rides along
+    r = expand_screen_rule("OUT_OF_FOCUS:A monitor in the background.")
+    assert r.startswith("A monitor in the background. ") and "no readable" in r
+    r2 = expand_screen_rule("ANGLED_AWAY: a sleek monitor on her desk")
+    assert "a sleek monitor" in r2 and "not visible" in r2
 
 
 def test_character_sheet_and_veo_prompts():

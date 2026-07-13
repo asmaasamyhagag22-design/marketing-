@@ -158,10 +158,11 @@ R4 COLOR SCRIPT. A deliberate 3-act palette progression (2 hex anchors + grade
 R5 MATCH CUTS. For every consecutive shot pair, specify match_cut_out: how
    shot k ENDS (gesture / object / camera direction) so that shot k+1's
    opening visually continues it.
-R6 SCREENS. Any visible screen must be exactly one of:
-   (a) OUT_OF_FOCUS — content unreadable by design (bokeh glow only),
-   (b) ANGLED_AWAY — screen not facing camera,
-   (c) REAL_CONTENT:<desc> — name the exact mundane content (e.g. "dark
+R6 SCREENS. screen_rule must be exactly one of these tokens:
+   (a) NONE — no screen in this shot (default),
+   (b) OUT_OF_FOCUS — content unreadable by design (bokeh glow only),
+   (c) ANGLED_AWAY — screen not facing camera,
+   (d) REAL_CONTENT:<desc> — name the exact mundane content (e.g. "dark
        terminal window, a few lines of white monospace text" / "network
        topology diagram with 5 labeled nodes").
    NEVER "futuristic interface", NEVER glowing abstract UI, NEVER implied text.
@@ -171,8 +172,9 @@ R7 CHARACTER SHEET SPEC. A complete physical description FROZEN for the whole
    max 2 outfits (Act1 outfit, Act3 outfit — both precise), and one constant
    accessory tied to the motif.
 R8 VO. One voice, Egyptian Arabic, 60-70 words, first person, matching the
-   arc. Every factual claim in the VO must trace to a bullet in EVIDENCE.
-   If a claim is not in EVIDENCE, do not make it.
+   arc. Aim for ~65 words — COUNT the words before answering; short scripts
+   are rejected. Every factual claim in the VO must trace to a bullet in
+   EVIDENCE. If a claim is not in EVIDENCE, do not make it.
 
 Return the structured treatment."""
 
@@ -248,8 +250,8 @@ def g1_lint(t: ReelTreatment, *, profile: Optional[dict] = None,
             issues.append(f"shot {s.id}: empty match_cut_out")
         if s.location not in t.locations:
             issues.append(f"shot {s.id}: location {s.location!r} not in locations")
-        if not (s.screen_rule in _ALLOWED_SCREEN
-                or s.screen_rule.startswith("REAL_CONTENT:")):
+        base = s.screen_rule.split(":", 1)[0].strip()
+        if not (base in _ALLOWED_SCREEN or s.screen_rule.startswith("REAL_CONTENT:")):
             issues.append(f"shot {s.id}: screen_rule {s.screen_rule!r} not allowed")
         if not 3 <= s.duration_s <= 8:
             issues.append(f"shot {s.id}: duration {s.duration_s}s outside 3-8s")

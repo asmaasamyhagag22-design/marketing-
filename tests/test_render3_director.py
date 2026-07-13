@@ -70,6 +70,12 @@ def test_g1_catches_each_violation_class():
     bad = t.model_copy(deep=True)
     bad.shots[0].screen_rule = "FUTURISTIC_UI"
     assert any("screen_rule" in i for i in g1_lint(bad).issues)
+    bad.shots[0].screen_rule = "N/A"                       # measured live: N/A rejected
+    assert any("screen_rule" in i for i in g1_lint(bad).issues)
+    # safe token + descriptive ":detail" suffix is allowed (measured live drift)
+    ok = t.model_copy(deep=True)
+    ok.shots[0].screen_rule = "OUT_OF_FOCUS:A monitor blurred into bokeh."
+    assert not any("screen_rule" in i for i in g1_lint(ok).issues)
     # act out of order (arc broken)
     bad = t.model_copy(deep=True)
     bad.shots[0].act = 3

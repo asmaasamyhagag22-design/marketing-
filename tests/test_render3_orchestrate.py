@@ -80,18 +80,19 @@ def test_prepare_zero_seed_spend_and_package(tmp_path, monkeypatch):
     assert len(prep["hashes"]) == 6                       # 3 style + 3 character locks
 
 
-def test_prepare_g1_fail_retries_once_then_loud(tmp_path, monkeypatch):
+def test_prepare_g1_fail_retries_then_loud(tmp_path, monkeypatch):
     monkeypatch.setattr(orch, "generate_with_refs",
                         _fake_nano(tmp_path, []))
     bad = _treatment()
     bad.shots[0].action = bad.shots[0].action + " she is smiling warmly"   # smile ban
-    prep = orch.prepare_render3(_PROFILE, caller=_DirectorCaller([bad, bad]),
+    prep = orch.prepare_render3(_PROFILE, caller=_DirectorCaller([bad] * 4),
                                 out_dir=tmp_path, log=lambda *a: None)
-    assert "error" in prep and "twice" in prep["error"]
+    assert "error" in prep and "after 4 attempts" in prep["error"]
+    # recovery on the LAST corrective retry still ships
     good = _treatment()
-    prep2 = orch.prepare_render3(_PROFILE, caller=_DirectorCaller([bad, good]),
+    prep2 = orch.prepare_render3(_PROFILE, caller=_DirectorCaller([bad, bad, bad, good]),
                                  out_dir=tmp_path, log=lambda *a: None)
-    assert "error" not in prep2                            # corrective retry recovered
+    assert "error" not in prep2
 
 
 def test_continue_g2_fail_blocks_veo(tmp_path, monkeypatch):
