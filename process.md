@@ -2,10 +2,10 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **$ACTUAL passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
+Test suite: **1396 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
 
-**STUDIO ANALYZE — CONCURRENCY GUARD (the REAL 429 root cause; suite $ACTUAL).** MEASURED
+**STUDIO ANALYZE — CONCURRENCY GUARD (the REAL 429 root cause; suite 1396).** MEASURED
 live: analyzing topshoes.store from the studio 429'd after 3 retries — yet the site serves
 200 to sequential requests (it is behind Cloudflare, NOT blocking us). The studio log showed
 TWO "analyzing" blocks: `/analyze` had NO concurrency guard (unlike `/generate`), so a
