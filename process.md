@@ -2,8 +2,18 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1390 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
+Test suite: **1395 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**SCRAPER 429 ROOT FIX — HTTP 429/5xx ARE TRANSIENT, NOT "UNREADABLE" (suite 1395).**
+MEASURED: bobana-eg.com returned HTTP 429 (Too-Many-Requests) on one burst and the whole
+scrape died in 19s with 0 pages + "could not read this site" — but the same URL served 200
+moments later (the site is NOT blocked). Root cause: `fetch_page` only retried
+{NETWORK,RENDER,TIMEOUT}; a 429 fell to HTTP_ERROR and was treated as permanent. Fix
+(`scraper/fetcher.py`): 429/500/502/503/504 now retry via `_is_transient`; a 429 backs off
+FAR longer than a network blip (6s x attempt) and HONORS the server's `Retry-After` header
+(new `FetchResult.retry_after_s`, capped at 20s so a run can't stall). A hard 4xx (404) still
+fails immediately — no hammering. +5 hermetic tests (scripted _fetch_page_once, no network).
 
 **RENDER #3 · COMMIT 4 — G1 CALIBRATED AGAINST THE LIVE DIRECTOR + HITL #1 REACHED (suite
 1390).** Three measured drifts from live NTI runs fixed at the root (D-R3.6): R6 now

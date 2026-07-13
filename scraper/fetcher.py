@@ -63,6 +63,8 @@ class FetchResult:
     # visual identity degrades gracefully to logo pixels + header/footer colors — so this
     # is surfaced as a manifest note, NOT an error_code that would discard the page.
     screenshot_failed: bool = False
+    # Server-requested wait (seconds) parsed from a Retry-After header on 429/503.
+    retry_after_s: Optional[float] = None
     # Marker for the caller — used by extractors that need a live Page
     # for computed-CSS reads. We attach the Page only when requested.
     _page: Optional[Page] = field(default=None, repr=False)
@@ -218,13 +220,40 @@ def _scroll_to_load(page: Page) -> None:
 
 # Transient failures worth a retry: a network blip, an HTTP/2 reset, or a
 # navigation timeout often clears on a second try. Permanent outcomes
-# (bot-block, CAPTCHA, 4xx, empty DOM) are NOT retried — retrying them just
-# wastes the scrape budget and can look like hammering.
+# (bot-block, CAPTCHA, hard 4xx, empty DOM) are NOT retried — retrying them
+# just wastes the scrape budget and can look like hammering.
 _TRANSIENT_ERRORS = {
     ErrorCode.NETWORK_ERROR,
     ErrorCode.RENDER_ERROR,
     ErrorCode.TIMEOUT,
 }
+
+# HTTP statuses that mean "try again shortly", not "no": 429 is literally
+# Too-Many-Requests (MEASURED: bobana-eg.com 429'd one burst and served the
+# same URL fine moments later — the old code failed the whole run in 19s),
+# and 5xx are server hiccups. Same set net.py already retries for JSON APIs.
+_TRANSIENT_HTTP = {429, 500, 502, 503, 504}
+# A 429 asks us to SLOW DOWN — back off far longer than a network blip, and
+# honor the server's own Retry-After when it sends one (capped: a scrape run
+# can't stall for minutes on one page).
+_RATE_LIMIT_BACKOFF_S = 6.0
+_RETRY_AFTER_CAP_S = 20.0
+
+
+def _is_transient(result: "FetchResult") -> bool:
+    if result.error_code in _TRANSIENT_ERRORS:
+        return True
+    return (result.error_code is ErrorCode.HTTP_ERROR
+            and (result.http_status or 0) in _TRANSIENT_HTTP)
+
+
+def _retry_delay_s(result: "FetchResult", attempt: int) -> float:
+    """attempt is 1-based. Rate-limit statuses wait longest; Retry-After wins (capped)."""
+    if result.retry_after_s is not None:
+        return min(result.retry_after_s, _RETRY_AFTER_CAP_S)
+    if result.http_status == 429:
+        return _RATE_LIMIT_BACKOFF_S * attempt
+    return RETRY_BACKOFF_SECONDS * attempt
 
 
 # Heavy, non-essential resource types blocked on LIGHT sub-page fetches: sub-pages are crawled
@@ -260,10 +289,10 @@ def fetch_page(context: BrowserContext, url: str, keep_page: bool = False,
     result = _fetch_page_once(context, url, keep_page=keep_page, light=light)
     attempt = 0
     while (not result.ok
-           and result.error_code in _TRANSIENT_ERRORS
+           and _is_transient(result)
            and attempt < RETRY_ATTEMPTS):
         attempt += 1
-        time.sleep(RETRY_BACKOFF_SECONDS * attempt)
+        time.sleep(_retry_delay_s(result, attempt))
         result = _fetch_page_once(context, url, keep_page=keep_page, light=light)
     if attempt and result.error_message:
         result.error_message = f"[retry {attempt}/{RETRY_ATTEMPTS}] {result.error_message}"
@@ -333,6 +362,13 @@ def _fetch_page_once(context: BrowserContext, url: str, keep_page: bool = False,
         response = page.goto(url, wait_until="domcontentloaded")
         if response is not None:
             result.http_status = response.status
+            if response.status in (429, 503):
+                try:
+                    ra = (response.headers or {}).get("retry-after")
+                    if ra and ra.strip().isdigit():
+                        result.retry_after_s = float(ra.strip())
+                except Exception:  # noqa: BLE001 — headers may be unavailable; backoff covers it
+                    pass
         result.final_url = page.url
 
         # Wait briefly for additional content; networkidle can hang forever
