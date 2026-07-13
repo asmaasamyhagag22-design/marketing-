@@ -453,6 +453,71 @@ def _explained_plan(mp: dict, category: str) -> str:
       </div></div>"""
 
 
+def _brand_assets(prof: dict) -> str:
+    """ROUND-2 D / capability census — surface the real selling lines the census found dropped:
+    offerings, value propositions, and (the credibility spine) trust signals. Rendered as the
+    actual content, not just KPI counts."""
+    def _texts(key: str, limit: int) -> list:
+        out = []
+        for x in (prof.get(key) or [])[:limit]:
+            v = x.get("value") if isinstance(x, dict) else x
+            v = v.get("value") if isinstance(v, dict) else v
+            name = x.get("name") if isinstance(x, dict) and x.get("name") else None
+            name = name.get("value") if isinstance(name, dict) else name
+            t = str(name or v or "").strip()
+            if t:
+                out.append(t)
+        return out
+
+    offerings = _texts("offerings", 12)
+    vprops = _texts("value_propositions", 6)
+    trust = _texts("trust_signals", 8)
+    if not (offerings or vprops or trust):
+        return ""
+    blocks = ""
+    if trust:
+        rows = "".join(f'<li>🏅 {_esc(t)}</li>' for t in trust)
+        blocks += (f'<div class="ba-block"><div class="ba-h">شارات الثقة والاعتمادات · '
+                   f'Trust &amp; accreditations</div><ul class="ba-list">{rows}</ul></div>')
+    if vprops:
+        rows = "".join(f'<li>◆ {_esc(t)}</li>' for t in vprops)
+        blocks += (f'<div class="ba-block"><div class="ba-h">لماذا يختارك العملاء · '
+                   f'Why customers choose you</div><ul class="ba-list">{rows}</ul></div>')
+    if offerings:
+        chips = "".join(f'<span class="ba-chip">{_esc(t)}</span>' for t in offerings)
+        blocks += (f'<div class="ba-block"><div class="ba-h">ما تقدّمه · What you offer '
+                   f'<span class="ba-n">{len(offerings)}</span></div><div class="ba-chips">{chips}</div></div>')
+    return f"""<div class="sec"><div class="sec-h"><span class="bar"></span>
+      <h2>ما وجدناه في موقعك · What we found on your site</h2>
+      <span class="cnt">مستخرج بالكامل من موقعك · extracted from your own site</span></div>
+      <div class="card ba">{blocks}</div></div>"""
+
+
+def _capability_census(comp: dict, has_plan: bool, has_creative: bool, run_cost: dict = None) -> str:
+    """ROUND-2 D — every system capability has a visible home: what this analysis includes, the
+    per-run cost (when known), and a discreet logs link. Never a red state; honest checkmarks."""
+    swot = comp.get("swot") or {}
+    n_sw = sum(len(swot.get(k) or []) for k in ("strengths", "weaknesses", "opportunities", "threats"))
+    items = [
+        ("ملف البراند · Brand profile", bool(comp.get("profile"))),
+        ("تحليل SWOT · SWOT analysis", n_sw > 0),
+        ("المنافسون · Competitors", int(comp.get("competitor_count") or 0) > 0),
+        ("خطة الإعلان · Ad plan", has_plan),
+        ("الإبداع · Creative", has_creative),
+        ("سجل التشغيل الكامل · Full run log", True),
+    ]
+    checks = "".join(
+        f'<span class="cc-item">{"✓" if ok else "○"} {_esc(lab)}</span>' for lab, ok in items)
+    cost_html = ""
+    if run_cost and run_cost.get("cost_usd"):
+        cost_html = (f'<span class="cc-cost">تكلفة هذا التحليل · this analysis cost '
+                     f'≈ ${run_cost["cost_usd"]:.2f} · {run_cost.get("llm_calls", 0)} نداء ذكاء</span>')
+    return (f'<div class="sec"><div class="cc">'
+            f'<div class="cc-items">{checks}</div>{cost_html}'
+            f'<div class="cc-log">📄 كل خطوة موثّقة في سجل التشغيل · every step is recorded in the run log</div>'
+            f'</div></div>')
+
+
 def _market_pulse(comp: dict, generated_at: str = "") -> str:
     """ROUND-2 A / Market Pulse — surface the live trends (computed, folded only into SWOT
     before) as their own section + the upcoming Egyptian marketing-season window. Surfacing +
@@ -815,6 +880,20 @@ def _css() -> str:
     .mp-chip:hover{{border-color:{c['blush400']};}}
     .cal-season{{display:inline-block;margin-inline-start:8px;font-size:10.5px;font-weight:600;
       color:{c['gold700']};background:{c['gold100']};padding:1px 8px;border-radius:11px;}}
+    /* ROUND-2 D — brand assets + capability census */
+    .ba-block{{margin-bottom:16px;}} .ba-block:last-child{{margin-bottom:0;}}
+    .ba-h{{font-size:13px;font-weight:700;color:{c['blush700']};margin-bottom:8px;}}
+    .ba-n{{font-size:11px;color:{c['muted']};font-weight:600;}}
+    .ba-list{{list-style:none;display:flex;flex-direction:column;gap:6px;}}
+    .ba-list li{{font-size:13px;color:{c['ink']};line-height:1.55;}}
+    .ba-chips{{display:flex;flex-wrap:wrap;gap:6px;}}
+    .ba-chip{{font-size:12px;color:{c['inkSoft']};background:{c['surface2']};border:1px solid {c['line']};
+      padding:3px 11px;border-radius:13px;}}
+    .cc{{background:{c['surface']};border:1px solid {c['line']};border-radius:14px;padding:14px 18px;}}
+    .cc-items{{display:flex;flex-wrap:wrap;gap:7px 16px;}}
+    .cc-item{{font-size:11.5px;color:{c['sage700']};font-weight:600;}}
+    .cc-cost{{display:block;margin-top:9px;font-size:12px;color:{c['inkSoft']};font-weight:600;}}
+    .cc-log{{margin-top:9px;font-size:11px;color:{c['muted']};}}
     /* RUBRIC C — strategy narrative in plain words */
     .cs-legend{{display:flex;flex-wrap:wrap;gap:8px 18px;margin-bottom:12px;font-size:11.5px;color:{c['inkSoft']};}}
     .cs-legend b{{margin-inline-end:5px;}}
@@ -933,6 +1012,9 @@ def build_dashboard_html(
     registry_html = _registry_panel(comp)
     # ROUND-2 A — Market Pulse (live trends + upcoming Egyptian season).
     pulse_html = _market_pulse(comp, generated_at or comp.get("generated_at") or "")
+    # ROUND-2 D — capability census: the dropped selling lines (census strip is built below,
+    # once poster/reel presence is known).
+    assets_html = _brand_assets(prof)
     # RUBRIC H — the "start here" reading arc (one scroll, in order).
     _arc = [("السوق", "Market"), ("الاستراتيجية", "Strategy"), ("الخطة", "Plan"),
             ("الإبداع", "Creative"), ("التقويم", "Calendar"), ("ما لا نعرفه", "Gaps")]
@@ -1064,6 +1146,10 @@ def build_dashboard_html(
               الريل يحكي نفس القصة المؤسَّسة بصوت متصل وكارت نهاية بلوجو البراند.</p></div>
           </div></div>"""
 
+    # ROUND-2 D — the capability-census strip (now poster/reel presence is known).
+    census_html = _capability_census(comp, has_plan=bool(items),
+                                     has_creative=bool(poster_uri or reel_uri))
+
     gen = generated_at or datetime.now().strftime("%Y-%m-%d")
     body = f"""<div class="bsr"><div class="wrap">
       <div class="top">
@@ -1078,7 +1164,7 @@ def build_dashboard_html(
         <div class="kpis">{kpis}</div>
       </div></div>
       {exec_html}{arc_html}
-      {pulse_html}{swot_html}{comp_html}{registry_html}{voice_html}{tows_html}{actions_html}{mp_html}{creative_html}{cal_html}{honesty_html}{qa_html}
+      {pulse_html}{assets_html}{swot_html}{comp_html}{registry_html}{voice_html}{tows_html}{actions_html}{mp_html}{creative_html}{cal_html}{honesty_html}{census_html}{qa_html}
       <div class="foot">Generated by <b>Baseera</b> · {_esc(gen)} · every factual line carries its source (the Evidence Ledger).</div>
     </div></div>"""
 

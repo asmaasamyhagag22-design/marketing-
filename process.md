@@ -2,8 +2,17 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1366 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
+Test suite: **1370 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**CAPABILITY CENSUS SHIPPED (Round-2 D, suite 1370).** (1) _brand_assets surfaces the real
+selling lines the census found dropped (shown only as KPI counts before): the 8 trust signals /
+accreditations (credibility spine), value propositions, and offerings list, as actual content
+under "ما وجدناه في موقعك · What we found on your site". (2) _capability_census — a strip where
+every capability has a visible home (profile/SWOT/competitors/plan/creative/run log) with honest
+checkmarks (never red), an optional per-run telemetry cost line, and the discreet logs link.
++4 hermetic tests. Round-2 D done; scorecard v2 holds 8/9 (only E, live customer voice, needs a
+review pull).
 
 **MARKET PULSE + T-SEASON SHIPPED (Round-2 A, suite 1366).** The trends the engine already
 computes were folded ONLY into SWOT; now full_run persists them into result.json and the
