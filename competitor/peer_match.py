@@ -268,12 +268,29 @@ def score_language(cand: Candidate, crit: MatchCriteria,
 # Weighted aggregation with redistribution
 # ---------------------------------------------------------------------------
 
+# TIER-MISMATCH CAP (owner rule 2026-07-12: "a local single-branch burger joint must NOT
+# surface McDonald's — tier mismatch outranks category match"). A SEVERE size or price-band
+# mismatch is DECISIVE: it caps the total below PEER_FIT_FLOOR so a strong category (sub_vertical)
+# score can't carry a wrong-tier business in. Transparent, not a magic weight — it only fires on
+# an extreme mismatch (≈2 orders of magnitude of reviews, or the opposite price tier), so genuine
+# near-tier peers (what the U1 gate selects) are untouched.
+_SIZE_MISMATCH_SEVERE = 0.20     # log-ratio size score below this ≈ 100x review-count gap
+_TIER_CAP = 0.44                 # just under PEER_FIT_FLOOR (0.45) -> "not a real competitor"
+
+
 def _aggregate(subscores: Dict[str, Optional[float]]) -> PeerFitBreakdown:
-    """Drop None dimensions, renormalize remaining weights to sum 1, weight-sum."""
+    """Drop None dimensions, renormalize remaining weights to sum 1, weight-sum. Then apply
+    the decisive tier-mismatch cap (size/price band outrank category)."""
     available = {k: v for k, v in subscores.items() if v is not None}
     weight_sum = sum(BASE_WEIGHTS[k] for k in available) or 1.0
     weights_used = {k: round(BASE_WEIGHTS[k] / weight_sum, 4) for k in available}
     total = sum(weights_used[k] * available[k] for k in available)
+    size = subscores.get("size_similarity")
+    tier = subscores.get("audience_tier")
+    severe_size = isinstance(size, (int, float)) and size < _SIZE_MISMATCH_SEVERE
+    opposite_tier = isinstance(tier, (int, float)) and tier <= 0.0
+    if (severe_size or opposite_tier) and total > _TIER_CAP:
+        total = _TIER_CAP        # decisive: wrong tier -> below the real-competitor floor
     return PeerFitBreakdown(
         sub_vertical=subscores.get("sub_vertical"),
         proximity=subscores.get("proximity"),

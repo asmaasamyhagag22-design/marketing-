@@ -117,6 +117,28 @@ def _swot_quad(title: str, icon: str, items: list, kind: str) -> str:
       <ul class="swot-list">{body}</ul></div>"""
 
 
+def _tier_reasons(breakdown: dict) -> str:
+    """T-TIER — WHY this competitor matched, in plain bilingual chips (surfaces the already-
+    computed PeerFitBreakdown sub-scores). A high sub-score => a real reason the owner reads:
+    same field / same price band / similar size / nearby. Empty for the web-search path
+    (all sub-scores null) — that honesty is handled by the caller's fallback reason."""
+    if not isinstance(breakdown, dict):
+        return ""
+    labels = {
+        "sub_vertical": ("نفس المجال", "same field"),
+        "audience_tier": ("نفس الشريحة السعرية", "same price band"),
+        "size_similarity": ("حجم مماثل", "similar size"),
+        "proximity": ("قريب منك", "nearby"),
+        "language": ("نفس اللغة", "same language"),
+    }
+    chips = []
+    for k, (ar, en) in labels.items():
+        v = breakdown.get(k)
+        if isinstance(v, (int, float)) and v >= 0.6:      # a genuine match on this dimension
+            chips.append(f'<span class="cmr">{_esc(ar)} · {_esc(en)}</span>')
+    return f'<div class="comp-reasons">{"".join(chips)}</div>' if chips else ""
+
+
 def _competitor_card(comp: dict) -> str:
     sel = comp.get("selection") or {}
     cand = comp.get("candidate") or {}
@@ -125,18 +147,20 @@ def _competitor_card(comp: dict) -> str:
     site_h = f'<a href="{_esc(site)}" class="comp-site">{_esc(site.replace("https://", "").strip("/"))}</a>' if site else ""
     fit = sel.get("peer_fit_score")
     fit_pct = f"{round(float(fit) * 100)}%" if isinstance(fit, (int, float)) else "—"
-    why = _esc(sel.get("why_selected") or "")
+    reasons = _tier_reasons(sel.get("breakdown") or {})
+    # WHY matched: prefer the plain tier chips (Places path); else the honest search reason.
+    why = "" if reasons else _esc(sel.get("why_selected") or "")
     tags = []
     if comp.get("is_local"):
-        tags.append('<span class="tag tag-sage">local</span>')
+        tags.append('<span class="tag tag-sage">محلي · local</span>')
     if comp.get("has_scrapable_site"):
-        tags.append('<span class="tag tag-teal">site</span>')
+        tags.append('<span class="tag tag-teal">موقع · site</span>')
     initials = "".join(w[0] for w in name.split()[:2]).upper() or "?"
     return f"""<div class="comp">
       <div class="comp-logo">{_esc(initials)}</div>
       <div class="comp-body"><div class="comp-name">{name} {"".join(tags)}</div>
-        {site_h}<div class="comp-why">{why}</div></div>
-      <div class="comp-fit"><div class="comp-fit-v">{fit_pct}</div><div class="comp-fit-l">peer fit</div></div>
+        {site_h}{reasons}<div class="comp-why">{why}</div></div>
+      <div class="comp-fit"><div class="comp-fit-v">{fit_pct}</div><div class="comp-fit-l">تطابق · peer fit</div></div>
     </div>"""
 
 
@@ -725,6 +749,10 @@ def _css() -> str:
     .rg-gone{{background:{c['gold100']};color:{c['gold700']};}}
     .rg-new{{background:{c['blush100']};color:{c['blush700']};}}
     .rg-note{{font-size:11px;color:{c['muted']};}}
+    /* T-TIER — why a competitor matched */
+    .comp-reasons{{display:flex;flex-wrap:wrap;gap:5px;margin:5px 0;}}
+    .cmr{{font-size:10.5px;font-weight:600;color:{c['sage700']};background:{c['sage100']};
+      padding:1px 8px;border-radius:11px;}}
     /* RUBRIC C — strategy narrative in plain words */
     .cs-legend{{display:flex;flex-wrap:wrap;gap:8px 18px;margin-bottom:12px;font-size:11.5px;color:{c['inkSoft']};}}
     .cs-legend b{{margin-inline-end:5px;}}

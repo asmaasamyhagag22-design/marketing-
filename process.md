@@ -2,8 +2,20 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1351 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
+Test suite: **1358 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**T-TIER — TIER MATCHING AS DECISIVE CRITERIA SHIPPED (suite 1358).** Two pieces. (1) The
+dashboard competitor card now shows WHY each rival matched — plain bilingual chips from the
+already-computed PeerFitBreakdown (نفس المجال · نفس الشريحة السعرية · حجم مماثل · قريب منك);
+the web-search path honestly shows no tier chips (its sub-scores are null) and falls back to the
+search reason; media-buyer jargon (type=doctor tier=mid dist=1.2km) is hidden. (2) A DECISIVE
+tier-mismatch cap in peer_match._aggregate (owner: "a burger joint must not surface
+McDonald's"): a SEVERE size mismatch (≈100x reviews) or the opposite price band caps the total
+below PEER_FIT_FLOOR so a strong category score can't carry a wrong-tier business in —
+transparent, not a magic weight. Conservative: fires only on extreme mismatch, so the near-tier
+peers the U1 gate selects are untouched (D-3.4 + ticket T-TIER-GATE for the owner-side live
+re-gate confirmation). +8 hermetic tests (4 card reasons + 4 cap).
 
 **T-REGISTRY — COMPETITOR REGISTRY SHIPPED (the one real build, suite 1351).** The
 owner-caught non-determinism (every scrape rebuilt the competitor set from live search + LLM

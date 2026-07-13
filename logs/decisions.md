@@ -47,3 +47,10 @@ FLAG where the owner should review. Newest first.
   render/other work contended for the port/timing, then passed 9/9 in isolation. Not caused by
   the dashboard changes. Treating as a load flake; re-running the full suite clean before each
   commit. FLAG: worth a port-isolation/retry hardening pass on those tests (ticket T-APIFLAKE).
+
+- **D-3.4 — Tier-mismatch cap is conservative to protect the U1 gate.** The decisive cap in
+  peer_match._aggregate only fires on EXTREME mismatch (size score <0.20 ≈ 100x reviews, or the
+  opposite price tier), so genuine near-tier peers the U1 objective-deduction gate selects are
+  untouched (verified by test_genuine_near_tier_peer_is_untouched). A full U1 re-gate on live
+  data is the owner-side confirmation that discovery quality didn't regress — ticket T-TIER-GATE
+  (needs network + is measurement-sensitive; not run inside this offline mission).
