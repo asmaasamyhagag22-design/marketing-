@@ -2,8 +2,19 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1386 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
+Test suite: **1390 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**RENDER #3 · COMMIT 3 — THE ORCHESTRATOR: TWO HITL HARD STOPS + THE VEO INVARIANT (suite
+1390).** `orchestrate.py`: `prepare_render3` = Director -> G1 (one corrective retry with
+the lint issues fed back, then loud error) -> character sheet -> HITL #1 package
+(treatment.json + locked_hashes.json + character_sheet.png). ZERO seed/Veo spend before the
+owner approves the concept + protagonist card. `continue_render3` (post-approval only) =
+seeds with the ref sheet ATTACHED to every request (+ optional real location photo /
+screenshot, pro lane for legible screens) -> `run_g2_loop` BLOCKING -> explicit re-check
+`if verdict != PASS: RuntimeError` -> Veo i2v per shot FROM the verified seed paths
+(1080x1920). Hermetic proof: the Veo recorder shows ZERO calls when G2 fails, and
+exactly-one-image-call (charsheet, no refs) during prepare. +4 tests.
 
 **RENDER #3 · COMMIT 2 — LOCKED BLOCKS + NANO GENERATOR + G2 GATE, CALIBRATED LIVE (suite
 1386).** `prompts.py`: STYLE_BLOCK/CHARACTER_BLOCK as pure functions with the §3 sha256
