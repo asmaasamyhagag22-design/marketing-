@@ -111,6 +111,27 @@ def test_continue_g2_fail_blocks_veo(tmp_path, monkeypatch):
     assert veo.calls == []                                 # the invariant: zero Veo spend
 
 
+def test_stop_after_g2_returns_verified_seeds_without_veo(tmp_path, monkeypatch):
+    nano_calls = []
+    monkeypatch.setattr(orch, "generate_with_refs", _fake_nano(tmp_path, nano_calls))
+    prep = orch.prepare_render3(_PROFILE, caller=_DirectorCaller([_treatment()]),
+                                out_dir=tmp_path, log=lambda *a: None)
+    veo = _VeoRecorder()
+    ok = G2Verdict(same_person=True, same_world_grade=True, junk_screens=[],
+                   arc_readable=True)
+    res = orch.continue_render3(prep, caller=_GateCaller([ok]),
+                                out_dir=tmp_path / "run", veo_provider=veo,
+                                stop_after_g2=True, log=lambda *a: None)
+    assert res["veo_pending"] is True and res["clips"] == []
+    assert veo.calls == []                                   # NO Veo spend at the G2 checkpoint
+    assert res["g2"]["verdict"] == "PASS" and len(res["seeds"]) == 6
+    # resuming animates exactly the verified seeds
+    clips = orch.render_veo_from_seeds(res["treatment"], res["seeds"],
+                                       out_dir=tmp_path / "run", veo_provider=veo,
+                                       log=lambda *a: None)
+    assert len(clips) == 6 and [c["seed"] for c in veo.calls] == res["seeds"]
+
+
 def test_continue_pass_animates_every_verified_seed(tmp_path, monkeypatch):
     nano_calls = []
     monkeypatch.setattr(orch, "generate_with_refs", _fake_nano(tmp_path, nano_calls))

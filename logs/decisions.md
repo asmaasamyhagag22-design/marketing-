@@ -124,3 +124,21 @@ lighting ("when in doubt about a glow, FLAG it"), while explicitly NOT flagging 
 monitor with ordinary text. Re-ran live x2: stable junk_screens=[5], verdict=FAIL,
 same_person=false. Calibration test now pins `5 in junk_screens`. Blocking mechanism, code
 conjunction, locked blocks, spend order all UNCHANGED — only the junk-detection sensitivity.
+
+## D-SEQ.1 — reel front first, scraper two-phase FROZEN (owner, 2026-07-13)
+Do NOT run both fronts in parallel across the 12h window. The reel gates real spend and C1-C5 are
+met with the gate correctly failing render#2 — it takes priority and now waits ONLY on the owner's
+EXECUTE decision on render#3. The scraper two-phase build is FROZEN mid-design; its dependency map
+is parked in logs/scraper_two_phase_map.md. Scraper resumes with full focus AFTER the reel closes.
+
+## D-429.4 — two-phase carve-out: block PRODUCT image bytes only (owner, 2026-07-13)
+The map caught that blocking ALL homepage image bytes regresses logo detection (getBoundingClientRect
+collapses -> _suitable_logo_shape false -> +12 bonus + floor-rescue lost). Resolution: block
+PRODUCT-image bytes only; ALLOW dimensions/bytes for logo candidates (logo = 1-2 images, not 106).
+Keeps the footprint win (products are the bulk) AND logo detection intact. Implement on resume, then
+the mandated before/after (request count + logo-pick + products/prices coverage; revert if >5%).
+
+## HITL #1 — render#3 EXECUTE gate (owner, 2026-07-13)
+Despite the earlier "after C1-C5, proceed to seeds", the owner judges the CONCEPT before ANY spend.
+No seed/G2/Veo spend until an explicit EXECUTE. C1-C5 all met (C2 resolved: mole her-left, card
+clean/consistent, text aligned). G2 strengthening + C1 pin + C2 alignment shipped (suite 1405).

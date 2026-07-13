@@ -70,14 +70,41 @@ def prepare_render3(profile: dict, *, caller: Any, out_dir: "str | Path",
             "hashes": hashes}
 
 
+def render_veo_from_seeds(t: ReelTreatment, seeds: list, *, out_dir: "str | Path",
+                          veo_provider: Any = None, log=print) -> list:
+    """Veo i2v per shot from ALREADY-G2-VERIFIED seeds (the §0 invariant is enforced upstream,
+    where G2 gates the seed set). Returns the per-shot clip paths."""
+    out = Path(out_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    if veo_provider is None:
+        from reel.video_provider import VeoProvider
+        veo_provider = VeoProvider()
+    clips: list[str] = []
+    for i, shot in enumerate(t.shots):
+        clip = out / f"clip_{shot.id:02d}.mp4"
+        veo_provider.generate(veo_prompt(t, shot), out_path=clip,
+                              duration_s=float(shot.duration_s),
+                              width=1080, height=1920,
+                              reference_image=seeds[i])
+        log(f"[render3] shot {shot.id}/{len(t.shots)} animated from VERIFIED seed")
+        clips.append(str(clip))
+    return clips
+
+
 def continue_render3(prep: dict, *, caller: Any, out_dir: "str | Path",
                      location_photos: Optional[dict[str, str]] = None,
                      screenshots: Optional[dict[int, str]] = None,
                      veo_provider: Any = None, max_g2_retries: int = 3,
+                     stop_after_g2: bool = False,
                      log=print) -> dict:
     """Stage 2 (POST-approval only — HITL #1 is the owner's). Seeds -> G2 (blocking) ->
     Veo from verified seeds -> per-shot clips. Returns {clips, seeds, g2} — assembly/VO
-    ride the existing reel toolchain downstream."""
+    ride the existing reel toolchain downstream.
+
+    `stop_after_g2=True` returns the G2-VERIFIED seed set (+ verdict) WITHOUT spending on
+    Veo — so the caller can show the verified contact sheet before the (expensive) Veo pass,
+    then resume with render_veo_from_seeds. The gate is still the code checkpoint; this only
+    adds visibility, it never lets Veo fire on an unverified set."""
     t: ReelTreatment = prep["treatment"] if isinstance(prep.get("treatment"), ReelTreatment) \
         else ReelTreatment.model_validate_json(
             Path(prep["treatment_path"]).read_text(encoding="utf-8"))
@@ -118,17 +145,11 @@ def continue_render3(prep: dict, *, caller: Any, out_dir: "str | Path",
     if verdict.verdict != "PASS":
         raise RuntimeError(f"G2 FAIL — Veo spend refused: {verdict.model_dump()}")
 
-    if veo_provider is None:
-        from reel.video_provider import VeoProvider
-        veo_provider = VeoProvider()
-    clips: list[str] = []
-    for i, shot in enumerate(t.shots):
-        clip = out / f"clip_{shot.id:02d}.mp4"
-        veo_provider.generate(veo_prompt(t, shot), out_path=clip,
-                              duration_s=float(shot.duration_s),
-                              width=1080, height=1920,
-                              reference_image=seeds[i])
-        log(f"[render3] shot {shot.id}/{len(t.shots)} animated from VERIFIED seed")
-        clips.append(str(clip))
+    if stop_after_g2:
+        log("[render3] G2 PASS — stopping before Veo (verified seeds ready for inspection)")
+        return {"clips": [], "seeds": seeds, "g2": verdict.model_dump(),
+                "treatment": t, "veo_pending": True}
+
+    clips = render_veo_from_seeds(t, seeds, out_dir=out, veo_provider=veo_provider, log=log)
     return {"clips": clips, "seeds": seeds, "g2": verdict.model_dump(),
             "treatment": t}
