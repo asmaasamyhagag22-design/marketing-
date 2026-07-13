@@ -871,6 +871,20 @@ class _Handler(BaseHTTPRequestHandler):
         if not (url.startswith("http://") or url.startswith("https://")):
             self._sse_write(sse("failed", {"msg": "Enter a full URL starting with http:// or https://"}))
             return
+
+        # One analyze per brand at a time. A browser refresh / second tab / SSE reconnect / a
+        # double-click would otherwise spawn a DUPLICATE scrape of the SAME host — and TWO
+        # concurrent crawls hammering the site trip its rate limit (MEASURED: topshoes.store &
+        # bobana-eg.com both serve 200 to sequential requests but return 429 to our own
+        # double-fire). Reject the duplicate cleanly instead of racing (same guard as generate).
+        key = (_run_mod._slug(url), "analyze")
+        with _INFLIGHT_LOCK:
+            if key in _INFLIGHT:
+                self._sse_write(sse("failed",
+                    {"msg": "This brand is already being analyzed — please wait for it to finish."}))
+                return
+            _INFLIGHT.add(key)
+
         alive = {"v": True}
 
         def on_progress(event, label, msg):
@@ -878,16 +892,20 @@ class _Handler(BaseHTTPRequestHandler):
                 alive["v"] = False
 
         try:
-            slug = _run_mod.analyze(url, out_dir=self.out_dir, on_progress=on_progress)
-        except Exception as exc:
-            self._sse_write(sse("failed", {"msg": f"{type(exc).__name__}: {exc}"}))
-            return
-        if not alive["v"]:
-            return
-        if slug:
-            self._sse_write(sse("done", {"slug": slug}))
-        else:
-            self._sse_write(sse("failed", {"msg": "The site may block scraping or be unreachable."}))
+            try:
+                slug = _run_mod.analyze(url, out_dir=self.out_dir, on_progress=on_progress)
+            except Exception as exc:
+                self._sse_write(sse("failed", {"msg": f"{type(exc).__name__}: {exc}"}))
+                return
+            if not alive["v"]:
+                return
+            if slug:
+                self._sse_write(sse("done", {"slug": slug}))
+            else:
+                self._sse_write(sse("failed", {"msg": "The site may block scraping or be unreachable."}))
+        finally:
+            with _INFLIGHT_LOCK:
+                _INFLIGHT.discard(key)
 
     def _stream_generate(self, q: dict, kind: str):
         slug = (q.get("slug") or [""])[0]

@@ -2,8 +2,18 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1395 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
+Test suite: **$ACTUAL passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**STUDIO ANALYZE — CONCURRENCY GUARD (the REAL 429 root cause; suite $ACTUAL).** MEASURED
+live: analyzing topshoes.store from the studio 429'd after 3 retries — yet the site serves
+200 to sequential requests (it is behind Cloudflare, NOT blocking us). The studio log showed
+TWO "analyzing" blocks: `/analyze` had NO concurrency guard (unlike `/generate`), so a
+double-click / SSE-reconnect / second tab spawned TWO concurrent crawls of the same host —
+and two crawls hammering the site at once is exactly what trips the rate limit. Fix
+(`dashboard/server.py::_stream_analyze`): the existing `_INFLIGHT` `(slug, kind)` guard now
+covers analyze too — a duplicate is rejected cleanly ("already being analyzed") instead of
+racing. +1 hermetic test mirroring the generate guard (two threads -> one scrape).
 
 **SCRAPER 429 ROOT FIX — HTTP 429/5xx ARE TRANSIENT, NOT "UNREADABLE" (suite 1395).**
 MEASURED: bobana-eg.com returned HTTP 429 (Too-Many-Requests) on one burst and the whole

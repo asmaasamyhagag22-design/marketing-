@@ -258,6 +258,44 @@ def test_concurrent_generate_runs_only_one_subprocess(live, monkeypatch):
     assert any("already generating" in b for b in bodies)  # the duplicate was rejected cleanly
 
 
+def test_concurrent_analyze_runs_only_one_scrape(live, monkeypatch):
+    # A double-click / SSE reconnect must NOT spawn two concurrent crawls of the same host —
+    # two crawls hammering the site is exactly what trips Cloudflare's 429 (MEASURED:
+    # topshoes.store serves 200 sequentially but 429s our double-fire).
+    import time as _t
+    calls = {"n": 0}
+    lock = threading.Lock()
+
+    def slow_analyze(url, *, out_dir="outputs", on_progress=None):
+        with lock:
+            calls["n"] += 1
+        on_progress("stage_start", "Scrape", "  -> Scrape ...")
+        _t.sleep(1.5)                                    # hold the in-flight window open
+        slug = srv._run_mod._slug(url)
+        P = srv._run_mod.paths(slug, out_dir)
+        P["out"].mkdir(parents=True, exist_ok=True)
+        P["result"].write_text("{}", encoding="utf-8")
+        P["profile"].write_text("{}", encoding="utf-8")
+        return slug
+
+    monkeypatch.setattr("dashboard.run.analyze", slow_analyze)
+    bodies: list = []
+
+    def hit():
+        try:
+            bodies.append(_get(live + "/analyze?url=https://topshoes.store/", timeout=20)[1].decode())
+        except Exception as e:                           # noqa: BLE001
+            bodies.append(str(e))
+
+    ts = [threading.Thread(target=hit) for _ in range(2)]
+    for t in ts:
+        t.start()
+    for t in ts:
+        t.join()
+    assert calls["n"] == 1                               # only ONE real scrape ran
+    assert any("already being analyzed" in b for b in bodies)   # the duplicate rejected cleanly
+
+
 def test_asset_being_regenerated_returns_503(live, monkeypatch):
     import pathlib
     _get(live + "/analyze?url=https://brand.example/")
