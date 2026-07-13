@@ -262,10 +262,50 @@ def _retry_delay_s(result: "FetchResult", attempt: int) -> float:
 # content (products, links, lazy text) is preserved. Universal (helps any heavy page).
 _HEAVY_RESOURCE_TYPES = frozenset({"image", "media", "font"})
 
+# Analytics / ads / tracking / telemetry hosts — pure noise for our profile (they carry NO brand
+# content and are never screenshotted), yet they fire many beacons per page. Blocking them on
+# EVERY fetch (homepage + subpages) cuts our request footprint, which both speeds the crawl AND
+# lowers the chance of tripping a site's per-IP rate limit — the measured cause of the HTTP 429
+# that killed whole scrapes (topshoes.store fired ~20 such requests on the homepage alone). These
+# substrings match ONLY third-party trackers; they never match first-party content, product
+# images, or a site's own CDN (cdn.shopify.com, imgix, etc. are deliberately NOT here).
+_TRACKING_HOST_SIGNS = (
+    "googletagmanager.com", "google-analytics.com", "analytics.google.com",
+    "googleadservices.com", "doubleclick.net", "merchant-center-analytics",
+    "adservice.google", "googlesyndication.com",
+    "analytics.tiktok", "tiktokw.us", "connect.facebook.net", "facebook.com/tr",
+    "monorail-edge.shopifysvc", "otlp-http", "converted.in",
+    "hotjar.com", "clarity.ms", "snap.licdn.com", "bat.bing.com", "criteo.",
+    "pinterest.com/ct", "ct.pinterest.com", "sc-static.net", "cdn.segment.com",
+)
+
+
+def _is_tracking_request(url: str) -> bool:
+    """True for a third-party analytics/ads/telemetry beacon (safe to drop — no brand content)."""
+    u = (url or "").lower()
+    return any(sign in u for sign in _TRACKING_HOST_SIGNS)
+
 
 def _block_heavy_route(route) -> None:
+    """LIGHT-mode router: drop heavy resources AND trackers; let content/scripts/XHR through."""
     try:
-        if route.request.resource_type in _HEAVY_RESOURCE_TYPES:
+        req = route.request
+        if req.resource_type in _HEAVY_RESOURCE_TYPES or _is_tracking_request(req.url):
+            route.abort()
+        else:
+            route.continue_()
+    except Exception:
+        try:
+            route.continue_()
+        except Exception:
+            pass
+
+
+def _block_tracking_route(route) -> None:
+    """FULL-mode router (homepage): drop ONLY trackers — first-party images/CSS/fonts still load
+    so the screenshot and product-image URLs are unaffected."""
+    try:
+        if _is_tracking_request(route.request.url):
             route.abort()
         else:
             route.continue_()
@@ -324,11 +364,12 @@ def _fetch_page_once(context: BrowserContext, url: str, keep_page: bool = False,
     page = context.new_page()
     page.set_default_timeout(PAGE_TIMEOUT_MS)
     page.set_default_navigation_timeout(NAV_TIMEOUT_MS)
-    if light:
-        try:
-            page.route("**/*", _block_heavy_route)
-        except Exception:
-            pass
+    # Always route: LIGHT drops heavy resources + trackers; FULL (homepage) drops trackers only
+    # (first-party images/CSS/fonts still load, so the screenshot + product URLs are intact).
+    try:
+        page.route("**/*", _block_heavy_route if light else _block_tracking_route)
+    except Exception:
+        pass
 
     # API-driven SPA capture: some sites (Angular/React) expose almost no <a href> links and load
     # their real content from their OWN JSON APIs (ITI: iti.gov.eg shell + pgateway.iti.gov.eg
