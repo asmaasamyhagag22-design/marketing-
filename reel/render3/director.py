@@ -55,6 +55,7 @@ class CharacterSheet(BaseModel):
     model_config = ConfigDict(extra="forbid")
     name: str
     age: int
+    presenting_gender: str = ""            # "man" | "woman" — drives pronouns + the card render
     skin_tone: str
     face: str
     distinctive_features: List[str]
@@ -199,10 +200,11 @@ R6 SCREENS. screen_rule must be exactly one of these tokens:
        topology diagram with 5 labeled nodes").
    NEVER "futuristic interface", NEVER glowing abstract UI, NEVER implied text.
 R7 CHARACTER SHEET SPEC. A complete physical description FROZEN for the whole
-   reel: name, age, skin tone, face shape + exactly 2 distinctive facial
-   features, eyes, hijab yes/no (if yes: exact color + pattern + wrap style),
-   max 2 outfits (Act1 outfit, Act3 outfit — both precise), and one constant
-   accessory tied to the motif.
+   reel: name, age, presenting_gender ("man" or "woman" — must match the
+   protagonist), skin tone, face shape + exactly 2 distinctive facial features,
+   eyes, hijab yes/no (a man has hijab null; if a woman wears one: exact color +
+   pattern + wrap style), max 2 outfits (Act1 outfit, Act3 outfit — both
+   precise), and one constant accessory tied to the motif.
 R8 VO. One voice, Egyptian Arabic, 60-70 words, first person, matching the
    arc. Aim for ~65 words — COUNT the words before answering; short scripts
    are rejected. Every factual claim in the VO must trace to a bullet in

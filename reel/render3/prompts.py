@@ -42,19 +42,28 @@ def style_block(cs: ColorScript, act: int) -> str:
     )
 
 
+def _gender_words(ch: CharacterSheet) -> tuple[str, str]:
+    """(noun, possessive) for the character's presenting gender. Default (empty) -> woman,
+    preserving the original female-only behavior for treatments predating the field."""
+    is_man = (ch.presenting_gender or "").strip().lower().startswith("m")
+    return ("man", "his") if is_man else ("woman", "her")
+
+
 def character_block(ch: CharacterSheet, act: int) -> str:
     """CHARACTER_BLOCK — constant except the act outfit slot (act 1-2 -> outfit_act1,
     act 3 -> outfit_act3). Identity anchor + the lock sentence that stops re-sampling."""
     outfit = ch.outfit_act3 if act == 3 else ch.outfit_act1
+    noun, poss = _gender_words(ch)
     hijab_or_hair = f"hijab: {ch.hijab}" if ch.hijab else "hair"
-    wearing_hijab = f"wearing {ch.hijab} and {outfit}" if ch.hijab else f"wearing {outfit}"
+    wearing = f"wearing {ch.hijab} and {outfit}" if ch.hijab else f"wearing {outfit}"
+    lock_feature = f"{poss} hijab color or pattern" if ch.hijab else f"{poss} hair"
     return (
         f"PROTAGONIST — the SAME person as in the attached reference sheet; identity "
         f"must match it exactly (face, {hijab_or_hair}, build): {ch.name}, {ch.age}, Egyptian "
-        f"woman, {ch.skin_tone}, {ch.face}; distinctive: {ch.distinctive_features[0]}, "
-        f"{ch.distinctive_features[1]}; eyes {ch.eyes}; {wearing_hijab}; "
+        f"{noun}, {ch.skin_tone}, {ch.face}; distinctive: {ch.distinctive_features[0]}, "
+        f"{ch.distinctive_features[1]}; eyes {ch.eyes}; {wearing}; "
         f"{ch.constant_accessory} visible.\n"
-        f"Do not change her face, her hijab color or pattern, or her identity in any way."
+        f"Do not change {poss} face, {lock_feature}, or {poss} identity in any way."
     )
 
 
@@ -80,13 +89,16 @@ def assert_locked(block: str, expected_hash: str, name: str) -> None:
 # ---------------------------------------------------------------------------------
 
 def character_sheet_prompt(ch: CharacterSheet) -> str:
-    hijab_line = (f"She wears a {ch.hijab}." if ch.hijab else "Her hair is styled simply.")
+    noun, poss = _gender_words(ch)
+    subj = "He" if noun == "man" else "She"
+    hijab_line = (f"{subj} wears a {ch.hijab}." if ch.hijab
+                  else f"{poss.capitalize()} hair is styled simply.")
     return (
         "Generate ONE image: a character reference sheet on a plain light-grey studio "
         "background, showing the SAME person in three views side by side — "
         "(1) front portrait, chest-up; (2) three-quarter left portrait; "
         "(3) full body standing.\n\n"
-        f"{ch.name}, {ch.age}, Egyptian woman, {ch.skin_tone} skin, {ch.face} face; "
+        f"{ch.name}, a {ch.age}-year-old Egyptian {noun}, {ch.skin_tone} skin, {ch.face} face; "
         f"distinctive: {ch.distinctive_features[0]}, {ch.distinctive_features[1]}; "
         f"eyes {ch.eyes}. {hijab_line} "
         f"Wearing {ch.outfit_act1}. Constant accessory: {ch.constant_accessory}.\n\n"

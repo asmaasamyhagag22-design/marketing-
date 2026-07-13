@@ -80,6 +80,22 @@ def test_expand_screen_rule_table():
     assert "a sleek monitor" in r2 and "not visible" in r2
 
 
+def test_character_block_is_gender_aware():
+    from reel.render3.director import CharacterSheet
+    man = CharacterSheet(name="Karim", age=28, presenting_gender="man", skin_tone="olive",
+                         face="oval", distinctive_features=["a scar on his brow", "sharp jaw"],
+                         eyes="brown", hijab=None, outfit_act1="a blue shirt",
+                         outfit_act3="a navy blazer", constant_accessory="a silver watch")
+    cb = character_block(man, 1)
+    assert "Egyptian man" in cb and "his face" in cb and "his hair" in cb
+    assert "woman" not in cb and "her " not in cb
+    csp = character_sheet_prompt(man)
+    assert "Egyptian man" in csp and "His hair" in csp
+    # default (no gender) preserves the original woman phrasing
+    t = _treatment()
+    assert "Egyptian woman" in character_block(t.character_sheet, 1)
+
+
 def test_character_sheet_and_veo_prompts():
     t = _treatment()
     cs = character_sheet_prompt(t.character_sheet)
