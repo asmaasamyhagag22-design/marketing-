@@ -142,3 +142,16 @@ the mandated before/after (request count + logo-pick + products/prices coverage;
 Despite the earlier "after C1-C5, proceed to seeds", the owner judges the CONCEPT before ANY spend.
 No seed/G2/Veo spend until an explicit EXECUTE. C1-C5 all met (C2 resolved: mole her-left, card
 clean/consistent, text aligned). G2 strengthening + C1 pin + C2 alignment shipped (suite 1405).
+
+## FRONT 1 CLOSE — reel finalized (Run#2, 2026-07-14)
+render#3 EXECUTEd earlier this session (owner-approved, per-step). Deliverable =
+outputs/reels/nti_render3_final.mp4 (= guardian_reel_v4). Veo authorization consumed — NO further
+Veo this run. G2 seed gate PASSed (zero regens). Reel evolved Layla→pharmacist(domain-drift, fixed
+by R10)→Karim/guardian(testimonial, real NTI, lip-synced).
+
+## OWNER UNBLOCKS (human actions that release blocked units)
+- **REEL VOICE**: upgrade ElevenLabs to Creator (~$22/mo) — free tier CANNOT use library voices via
+  API. Then say "ظبطها": I add a native Egyptian voice (Moatassem/Ziad/ELareef), re-synth the VO,
+  re-run WaveSpeed VEED lip-sync on the 2 to-camera shots. One command, minutes. Prep scripts ready
+  (add_egyptian_voices.py + assemble_v4.py).
+- (F6 will add: U2 Meta ads identity confirm; U8 review-labeling kit; Apify cap; IG/FB token state.)
