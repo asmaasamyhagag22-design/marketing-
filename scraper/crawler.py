@@ -35,6 +35,7 @@ from .config import (
     MAX_INTERNAL_PAGES,
     MIN_SUBPAGE_ATTEMPTS,
     TOTAL_BUDGET_SECONDS,
+    TWO_PHASE_IMAGE_FETCH,
     VIEWPORT_HEIGHT,
     VIEWPORT_WIDTH,
 )
@@ -649,7 +650,8 @@ def _process_fetched_page(
 # Top-level scrape entry point
 # ---------------------------------------------------------------------
 
-def scrape(input_url: str, output_root: str = "scrapes", *, light: bool = False) -> tuple[ScrapeManifest, Path]:
+def scrape(input_url: str, output_root: str = "scrapes", *, light: bool = False,
+           thorough: bool = False) -> tuple[ScrapeManifest, Path]:
     """Scrape one business URL and return (manifest, output_dir).
 
     Always returns a manifest, even on failure — failures are recorded inside.
@@ -658,7 +660,11 @@ def scrape(input_url: str, output_root: str = "scrapes", *, light: bool = False)
     COMPETITOR benchmarking — the comparison matrix needs only surface signals (whatsapp / cta /
     social / offerings COUNTS), and a full 30-page store crawl PER competitor made a competitive
     analysis of an e-commerce brand run >25 min and time out (MEASURED: rawafrican.net).
+
+    thorough=True: restore the OLD load-every-homepage-image behaviour (disables the two-phase
+    below-fold image-byte block). The default is the lighter two-phase footprint (owner ruling).
     """
+    two_phase = TWO_PHASE_IMAGE_FETCH and not thorough
     started = time.monotonic()
     # Validate the USER INPUT once, here at the boundary (ensure_scheme no longer validates,
     # so a malformed scraped LINK can't crash the crawl — but a concatenated/malformed input
@@ -741,7 +747,8 @@ def scrape(input_url: str, output_root: str = "scrapes", *, light: bool = False)
                 # unreachable, fall back to the original seed so we never lose a scrape
                 # that the deep page itself would have served.
                 home_result = fetch_page(context, home_fetch_url, keep_page=True,
-                                         rate_limit_retries=HOMEPAGE_RATE_LIMIT_RETRIES)
+                                         rate_limit_retries=HOMEPAGE_RATE_LIMIT_RETRIES,
+                                         two_phase=two_phase)
                 manifest.scrape_meta.pages_attempted += 1
                 if deep_root and not home_result.ok and home_fetch_url != normalized:
                     manifest.notes.append(
@@ -754,7 +761,8 @@ def scrape(input_url: str, output_root: str = "scrapes", *, light: bool = False)
                     deep_root = None
                     home_fetch_url = normalized
                     home_result = fetch_page(context, normalized, keep_page=True,
-                                             rate_limit_retries=HOMEPAGE_RATE_LIMIT_RETRIES)
+                                             rate_limit_retries=HOMEPAGE_RATE_LIMIT_RETRIES,
+                                             two_phase=two_phase)
                     manifest.scrape_meta.pages_attempted += 1
                 manifest.scrape_meta.bytes_downloaded += home_result.bytes_downloaded
 

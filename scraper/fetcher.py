@@ -145,7 +145,7 @@ def make_browser_context(browser: Browser) -> BrowserContext:
     )
 
 
-def _capture_screenshots(page: Page, result: FetchResult) -> None:
+def _capture_screenshots(page: Page, result: FetchResult, above_fold_only: bool = False) -> None:
     """Capture the full-page + viewport screenshots for a FULL homepage fetch.
 
     A screenshot failure is NON-FATAL: the page's html/text/links/offerings are already
@@ -153,7 +153,21 @@ def _capture_screenshots(page: Page, result: FetchResult) -> None:
     logo pixels + header/footer colors when no screenshot exists. Setting an error_code
     here made result.ok False and DISCARDED the whole fully-scraped page (MEASURED:
     azzafahmy.com -> 0 pages on a SCREENSHOT_FAILED, losing all its text/offerings). We flag
-    the degradation (surfaced as a manifest note) instead of failing the page."""
+    the degradation (surfaced as a manifest note) instead of failing the page.
+
+    `above_fold_only` (two-phase mode): below-fold product-image BYTES were blocked, so a full-page
+    screenshot would render broken images below the fold and skew the raw palette. We use the
+    VIEWPORT (above-fold: logo + header + hero, all loaded) as the palette source instead — which
+    is more brand-representative anyway. The screenshot is only consumed by the raw pixel palette."""
+    if above_fold_only:
+        try:
+            vp = page.screenshot(full_page=False, type="png")
+            result.full_screenshot_bytes = vp          # palette reads full_screenshot_bytes
+            result.viewport_screenshot_bytes = vp
+        except PWError as e:
+            result.screenshot_failed = True
+            result.error_message = f"viewport screenshot failed (non-fatal): {str(e)[:180]}"
+        return
     try:
         result.full_screenshot_bytes = page.screenshot(full_page=True, type="png")
     except PWError as e:
@@ -286,6 +300,19 @@ def _is_tracking_request(url: str) -> bool:
     return any(sign in u for sign in _TRACKING_HOST_SIGNS)
 
 
+# Two-phase carve-out (owner ruling): Phase A blocks PRODUCT-image bytes but MUST still load the
+# 1-2 LOGO/brand images — the logo picker needs real getBoundingClientRect dims (a blocked <img>
+# collapses to ~0x0 and the +12 suitable_logo_shape bonus + floor-rescue are lost). These URL signs
+# whitelist brand-chrome images so they load even after the below-fold block engages.
+_LOGO_URL_SIGNS = ("logo", "brand", "favicon", "apple-touch", "apple_touch", "/icon", "wordmark",
+                   "identity", "/header", "site-icon", "sprite")
+
+
+def _is_logo_like(url: str) -> bool:
+    u = (url or "").lower()
+    return any(s in u for s in _LOGO_URL_SIGNS)
+
+
 def _block_heavy_route(route) -> None:
     """LIGHT-mode router: drop heavy resources AND trackers; let content/scripts/XHR through."""
     try:
@@ -322,7 +349,8 @@ def _is_rate_limited(result: "FetchResult") -> bool:
 
 
 def fetch_page(context: BrowserContext, url: str, keep_page: bool = False,
-               light: bool = False, rate_limit_retries: int = 0) -> FetchResult:
+               light: bool = False, rate_limit_retries: int = 0,
+               two_phase: bool = False) -> FetchResult:
     """Fetch one page, retrying ONLY transient transport failures.
 
     A successful or permanently-failed result returns immediately. A transient
@@ -338,7 +366,7 @@ def fetch_page(context: BrowserContext, url: str, keep_page: bool = False,
     (and every subpage) still fails fast on the normal RETRY_ATTEMPTS budget — no site is
     ever hammered, only politely waited on.
     """
-    result = _fetch_page_once(context, url, keep_page=keep_page, light=light)
+    result = _fetch_page_once(context, url, keep_page=keep_page, light=light, two_phase=two_phase)
     attempt = 0
     while not result.ok and _is_transient(result):
         budget = max(RETRY_ATTEMPTS, rate_limit_retries) if _is_rate_limited(result) \
@@ -347,20 +375,26 @@ def fetch_page(context: BrowserContext, url: str, keep_page: bool = False,
             break
         attempt += 1
         time.sleep(_retry_delay_s(result, attempt))
-        result = _fetch_page_once(context, url, keep_page=keep_page, light=light)
+        result = _fetch_page_once(context, url, keep_page=keep_page, light=light, two_phase=two_phase)
     if attempt and result.error_message:
         result.error_message = f"[retry {attempt}] {result.error_message}"
     return result
 
 
 def _fetch_page_once(context: BrowserContext, url: str, keep_page: bool = False,
-                     light: bool = False) -> FetchResult:
+                     light: bool = False, two_phase: bool = False) -> FetchResult:
     """Fetch one page (single attempt). Caller is responsible for the context
     lifecycle.
 
     `light=True` (sub-page mode): block heavy resources (images/media/fonts) and skip the
     full-page screenshot — sub-pages need text + links, not pixels. Big render-time saving on
     image-heavy e-commerce; scripts/XHR/CSS still load so JS content is preserved.
+
+    `two_phase=True` (FULL homepage, the owner's footprint ruling): let ABOVE-fold images load
+    (logo/header/hero -> real logo dims + a clean palette), then after the initial load block
+    BELOW-fold product-image BYTES during the scroll (their URLs are still collected from the DOM).
+    Logo-like URLs stay whitelisted throughout. Cuts the ~106-product-image bulk with zero content
+    loss and no logo-detection regression. `--thorough` disables it (caller passes two_phase=False).
 
     If keep_page=True, the returned FetchResult carries the live Page
     so extractors can run page.evaluate(). Caller MUST close the page
@@ -378,10 +412,30 @@ def _fetch_page_once(context: BrowserContext, url: str, keep_page: bool = False,
     page = context.new_page()
     page.set_default_timeout(PAGE_TIMEOUT_MS)
     page.set_default_navigation_timeout(NAV_TIMEOUT_MS)
-    # Always route: LIGHT drops heavy resources + trackers; FULL (homepage) drops trackers only
-    # (first-party images/CSS/fonts still load, so the screenshot + product URLs are intact).
+    # Routing: LIGHT drops heavy resources + trackers. FULL homepage drops trackers; in two-phase
+    # mode it ALSO blocks below-fold image bytes once `_img_gate["block"]` is flipped after the
+    # above-fold load (logo-like URLs stay allowed for correct logo dims).
+    _img_gate = {"block": False}
+
+    def _two_phase_route(route) -> None:
+        try:
+            req = route.request
+            if _is_tracking_request(req.url):
+                route.abort(); return
+            if (_img_gate["block"] and req.resource_type == "image"
+                    and not _is_logo_like(req.url)):
+                route.abort(); return
+            route.continue_()
+        except Exception:  # noqa: BLE001
+            try:
+                route.continue_()
+            except Exception:
+                pass
+
     try:
-        page.route("**/*", _block_heavy_route if light else _block_tracking_route)
+        handler = (_block_heavy_route if light
+                   else (_two_phase_route if two_phase else _block_tracking_route))
+        page.route("**/*", handler)
     except Exception:
         pass
 
@@ -433,6 +487,12 @@ def _fetch_page_once(context: BrowserContext, url: str, keep_page: bool = False,
         except PWTimeout:
             pass
 
+        # Two-phase: the above-fold load is done (logo/header/hero have real bytes+dims). From here,
+        # block below-fold product-image bytes — the scroll still fires their lazy src (URLs kept),
+        # only the pixels are skipped.
+        if two_phase:
+            _img_gate["block"] = True
+
         # Trigger lazy content
         _scroll_to_load(page)
 
@@ -468,8 +528,9 @@ def _fetch_page_once(context: BrowserContext, url: str, keep_page: bool = False,
         elif not light:
             # Screenshots — only when content is real, and only for FULL fetches. The homepage
             # needs them for visual identity; LIGHT sub-pages skip them (pixels aren't used, and
-            # the full-page screenshot is the slowest step + can hang on font loads).
-            _capture_screenshots(page, result)
+            # the full-page screenshot is the slowest step + can hang on font loads). In two-phase
+            # mode the below-fold images are blocked, so use the clean above-fold viewport.
+            _capture_screenshots(page, result, above_fold_only=two_phase)
 
         # HTTP status flag (don't fail hard on 4xx — record but continue)
         if result.http_status and result.http_status >= 400 and result.error_code is None:

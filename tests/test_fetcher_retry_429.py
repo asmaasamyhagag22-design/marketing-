@@ -28,7 +28,7 @@ def _script(monkeypatch, results):
     calls = {"n": 0}
     sleeps: list[float] = []
 
-    def fake_once(context, url, keep_page=False, light=False):
+    def fake_once(context, url, keep_page=False, light=False, two_phase=False):
         calls["n"] += 1
         return seq.pop(0)
 

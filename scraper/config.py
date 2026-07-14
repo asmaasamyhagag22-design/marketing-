@@ -80,6 +80,12 @@ RETRY_BACKOFF_SECONDS = 1.5       # sleep grows: 1.5s, 3.0s, ...
 # failure and every subpage still fails fast on RETRY_ATTEMPTS. Politely waiting, never hammering.
 HOMEPAGE_RATE_LIMIT_RETRIES = 4
 
+# Two-phase image fetch (owner footprint ruling): on the FULL homepage, load above-fold images
+# (logo/header/hero) then block BELOW-fold product-image BYTES during the scroll — URLs are still
+# collected from the DOM. Cuts the product-image bulk with no content loss / no logo regression.
+# `--thorough` sets this False to restore the old load-every-image behaviour for a rare hard case.
+TWO_PHASE_IMAGE_FETCH = True
+
 # --- Browser settings -----------------------------------------------
 # A realistic current desktop-Chrome UA so normal sites don't reject an
 # obviously-automated UA string. NOTE: this is the one Tier-0 honesty trade-off

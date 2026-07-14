@@ -185,6 +185,9 @@ def main():
 
     ap = argparse.ArgumentParser(description="URL -> profile -> competitors -> SWOT")
     ap.add_argument("url", help="subject business URL (use one with a REAL website)")
+    ap.add_argument("--thorough", action="store_true",
+                    help="load EVERY homepage image (disables the two-phase below-fold image-byte "
+                         "block) — slower/heavier; the rare site that needs every image.")
     ap.add_argument("--no-themes", action="store_true",
                     help="skip the Gemini review-theme extraction step")
     ap.add_argument("--json", action="store_true",
@@ -208,7 +211,7 @@ def main():
         return 2
 
     say("[1/5] scraping subject site: %s" % args.url)
-    manifest, scrape_dir = scrape(args.url)
+    manifest, scrape_dir = scrape(args.url, thorough=args.thorough)
 
     # A 0-page crawl (blocked / unreachable / bad cert) would otherwise build a hollow profile and a
     # garbage dashboard that LOOKS successful. Fail loudly instead so the studio shows a clear reason.

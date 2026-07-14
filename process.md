@@ -2,8 +2,10 @@
 
 **The single source of truth for this project.** Replaces the historical
 change-log. Read this before acting in this repo. Last full revision: 2026-07-04.
-Test suite: **1425 passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
+Test suite: ** passed, 0 failed** (2026-07-12; grew from 880 as each audit fix
 below shipped with its hermetic regression tests).
+
+**SCRAPER TWO-PHASE FOOTPRINT (owner ruling; Run#2 Front-2; suite ).** FULL homepage now loads ABOVE-fold images (logo/header/hero -> real logo dims + clean palette) then blocks BELOW-fold product-image BYTES during the scroll — URLs still collected from the DOM; logo-like URLs whitelisted (`_is_logo_like`). `TWO_PHASE_IMAGE_FETCH=True` default; `--thorough` restores load-every-image. REGRESSION PROOF (controlled deterministic e2e): thorough 21 imgs vs two-phase 1 (logo) + 20 blocked = ~95% image-byte cut with IDENTICAL text+html+logo (zero content regression). All 429 fixes kept. +7 tests.
 
 **REEL render#2 -> render#3 (the motion-restructure's measured artifact).** #2: protagonist DRIFT (4+ different people across frames), junk sci-fi screens, no visual thread — G2 calibration FAILs it (junk_screens=[5]). #3 (nti_render3_final.mp4): ONE locked protagonist (Karim, G2 same_person=T across all seeds, zero regens), one evolving motif (employee badge->keycard), 3-act colour thread, REAL NTI building+tunnel grounding, testimonial to-camera with REAL VEED lip-sync, blue-logo watermark + creative end-card, clean single masri VO. Voice = temp openai (Egyptian ElevenLabs pending Creator upgrade). Front-1 of Run#2.
 
