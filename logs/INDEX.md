@@ -20,7 +20,7 @@ telemetry JSONL — no duplicate instrumentation).
   use library voices via API). Swap is one-command-away (scratchpad: add_egyptian_voices + assemble_v4).
 - FLAG: owner's 3-question verdict on return; then upgrade ElevenLabs → swap voice → re-lipsync.
 
-## FRONT 2 — SCRAPER TWO-PHASE (2026-07-14, suite )
+## FRONT 2 — SCRAPER TWO-PHASE (2026-07-14, suite 1431)
 Two-phase carve-out: block below-fold product-image BYTES, keep above-fold + logo. PROOF (e2e):
 thorough 21 imgs vs two-phase 1 (+20 blocked) = ~95% cut, IDENTICAL content. --thorough escape hatch.
 All 429 fixes retained. +7 tests. NOTE: live NTI before/after unreliable (NTI empties on rapid

@@ -49,6 +49,12 @@ def local_site():
 
 
 def _fetch(url, two_phase):
+    import playwright.sync_api as _pw
+    # Several other test modules install a FAKE playwright.sync_api via sys.modules.setdefault at
+    # import time (to avoid real Chromium). This e2e proof needs the REAL browser, so skip when the
+    # stub is active (it still runs for real when this file is run standalone).
+    if getattr(_pw, "__file__", None) is None:
+        pytest.skip("playwright.sync_api is stubbed by another test module in the full suite")
     from playwright.sync_api import sync_playwright
     from scraper.fetcher import make_browser_context, _fetch_page_once
     with sync_playwright() as pw:
