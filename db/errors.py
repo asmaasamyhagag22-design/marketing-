@@ -62,6 +62,10 @@ class ConcurrencyConflict(PersistenceError):
     pass
 
 
+class StaleProfileSnapshot(ConcurrencyConflict):
+    pass
+
+
 class AlreadyExists(PersistenceError):
     pass
 
@@ -101,7 +105,7 @@ def raise_mapped_integrity(
 
 __all__ = [
     "AlreadyExists", "AmbiguousCurrentRun", "ApprovalIneligible", "ApprovalMissing",
-    "StaleApprovalSubject", "ArchivedBrand",
+    "StaleApprovalSubject", "StaleProfileSnapshot", "ArchivedBrand",
     "AssetNotDurable", "ClaimLost", "ConcurrencyConflict", "ForeignOwner",
     "InvalidTransition", "NotFound", "NotVisible", "PersistenceError", "TerminalState",
     "UnclaimedBrand", "constraint_name", "raise_mapped_integrity", "sqlstate",

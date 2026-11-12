@@ -372,9 +372,11 @@ class PersistenceProvider(Protocol):
                                  payload: Optional[Mapping[str, Any]] = None) -> bool: ...
     def finish_enrichment_job(self, *, job_id: str, domain_key: str, user_id: str, kind: str,
                               patch: Mapping[str, Any],
+                              profile_snapshot_id: str | None = None,
                               payload: Optional[Mapping[str, Any]] = None) -> Optional[dict]: ...
     def finish_canonical_strategy_job(self, *, job_id: str, domain_key: str, user_id: str,
                                       build: Any,
+                                      profile_snapshot_id: str | None = None,
                                       payload: Optional[Mapping[str, Any]] = None
                                       ) -> Optional[dict]: ...
     def finish_job_success(self, *, job_id: str, payload: Optional[Mapping[str, Any]] = None,
@@ -760,6 +762,7 @@ class LegacyPersistence:
 
     def finish_enrichment_job(self, *, job_id: str, domain_key: str, user_id: str, kind: str,
                               patch: Mapping[str, Any],
+                              profile_snapshot_id: str | None = None,
                               payload: Optional[Mapping[str, Any]] = None) -> Optional[dict]:
         """Persist the stage's patch, then publish success carrying what was persisted."""
         persisted = self.record_enrichment(domain_key=domain_key, user_id=user_id,
@@ -779,6 +782,7 @@ class LegacyPersistence:
 
     def finish_canonical_strategy_job(self, *, job_id: str, domain_key: str, user_id: str,
                                       build: Any,
+                                      profile_snapshot_id: str | None = None,
                                       payload: Optional[Mapping[str, Any]] = None
                                       ) -> Optional[dict]:
         raise CapabilityNotWired("legacy storage cannot persist a canonical strategy")
@@ -1061,7 +1065,7 @@ class PostgresPersistence:
 
     # --- enrichment ---
     def _enrichment_run_data(self, *, domain_key: str, user_id: str, kind: str,
-                             patch: Mapping[str, Any]):
+                             patch: Mapping[str, Any], profile_snapshot_id: str | None = None):
         """The `LiveRunData` both enrichment forms create, or None if this caller may not see it.
 
         ONE construction, deliberately. The route-facing form and the composed form differ only in
@@ -1085,10 +1089,12 @@ class PostgresPersistence:
             return None
         return LiveRunData(
             brand_id=row.id, user_id=actor, kind=kind, status="succeeded",
-            input_profile_id=row.current_profile_id, output=dict(patch),
+            input_profile_id=(row.current_profile_id if profile_snapshot_id is None
+                              else self._uuid(profile_snapshot_id)), output=dict(patch),
             output_schema_version=1)
 
-    def _canonical_strategy_run_data(self, *, domain_key: str, user_id: str, build: Any):
+    def _canonical_strategy_run_data(self, *, domain_key: str, user_id: str, build: Any,
+                                     profile_snapshot_id: str | None = None):
         """Materialize the pure Gate 2 build as one fully attributed immutable Run."""
         from db.services import LiveRunData
 
@@ -1104,7 +1110,8 @@ class PostgresPersistence:
             dependencies.append((ident, str(relation)))
         return LiveRunData(
             brand_id=row.id, user_id=actor, kind="strategy", status="succeeded",
-            input_profile_id=row.current_profile_id,
+            input_profile_id=(row.current_profile_id if profile_snapshot_id is None
+                              else self._uuid(profile_snapshot_id)),
             requested_config=dict(build.requested_config),
             effective_config=dict(build.effective_config), config_schema_version=1,
             output=dict(build.output), output_schema_version=int(build.schema_version),
@@ -1575,9 +1582,10 @@ class PostgresPersistence:
             return None
         current = self._service.current_successful_run(
             brand_id=brand.id, kind="strategy", user_id=actor)
-        approval = (self._service.decision_for_current_strategy(
-            brand_id=brand.id, user_id=actor)
-                    if current is not None and current.id == run.id else None)
+        profile_stale = run.input_profile_id != brand.current_profile_id
+        is_current = bool(current is not None and current.id == run.id and not profile_stale)
+        approval = (self._service.decision_for_current_strategy(brand_id=brand.id, user_id=actor)
+                    if is_current else None)
         profile = (self._service.profile_version(profile_id=run.input_profile_id)
                    if run.input_profile_id is not None else None)
         return {
@@ -1587,8 +1595,10 @@ class PostgresPersistence:
             "run_brand_id": str(run.brand_id),
             "brand_id": str(brand.id),
             "domain_reference": brand.domain_key,
-            "is_current": bool(current is not None and current.id == run.id),
-            "approval_state": (approval.decision if approval is not None else ""),
+            "is_current": is_current,
+            "profile_stale": profile_stale,
+            "approval_state": (approval.decision if approval and approval.subject_run_id == run.id
+                               else ""),
             "profile_snapshot_id": (str(profile.id) if profile is not None else ""),
             "run_input_profile_id": (str(run.input_profile_id) if run.input_profile_id else ""),
             "profile": (dict(profile.profile) if profile is not None else {}),
@@ -1882,25 +1892,29 @@ class PostgresPersistence:
 
     def finish_enrichment_job(self, *, job_id: str, domain_key: str, user_id: str, kind: str,
                               patch: Mapping[str, Any],
+                              profile_snapshot_id: str | None = None,
                               payload: Optional[Mapping[str, Any]] = None) -> Optional[dict]:
         """Enrichment Run + Job succeeded + FINAL/DONE — one transaction, one commit (§4).
 
         `record_enrichment` is NOT used: it commits the Run in a transaction of its own, which is
         right for a route and wrong here — see `db/services.finish_enrichment_job_success`.
         """
-        from db.errors import PersistenceError
+        from db.errors import PersistenceError, StaleProfileSnapshot
 
         ident = self._uuid(job_id)
         if ident is None:
             return None
         data = self._enrichment_run_data(
-            domain_key=domain_key, user_id=user_id, kind=kind, patch=patch)
+            domain_key=domain_key, user_id=user_id, kind=kind, patch=patch,
+            profile_snapshot_id=profile_snapshot_id)
         if data is None:
             return None
         try:
             run, event = self._service.finish_enrichment_job_success(
                 job_id=ident, worker_id=str(ident), data=data,
                 event_payload=dict(payload) if payload else None)
+        except StaleProfileSnapshot:
+            raise
         except PersistenceError:
             return None
         if run is None or event is None:
@@ -1909,22 +1923,26 @@ class PostgresPersistence:
 
     def finish_canonical_strategy_job(self, *, job_id: str, domain_key: str, user_id: str,
                                       build: Any,
+                                      profile_snapshot_id: str | None = None,
                                       payload: Optional[Mapping[str, Any]] = None
                                       ) -> Optional[dict]:
         """Canonical Run + terminal Job event in the existing single transaction."""
-        from db.errors import PersistenceError
+        from db.errors import PersistenceError, StaleProfileSnapshot
 
         ident = self._uuid(job_id)
         if ident is None:
             return None
         data = self._canonical_strategy_run_data(
-            domain_key=domain_key, user_id=user_id, build=build)
+            domain_key=domain_key, user_id=user_id, build=build,
+            profile_snapshot_id=profile_snapshot_id)
         if data is None:
             return None
         try:
             run, event = self._service.finish_enrichment_job_success(
                 job_id=ident, worker_id=str(ident), data=data,
                 event_payload=dict(payload) if payload else None)
+        except StaleProfileSnapshot:
+            raise
         except PersistenceError:
             return None
         if run is None or event is None:

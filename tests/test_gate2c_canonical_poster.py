@@ -219,18 +219,19 @@ def test_postgres_strategy_context_carries_the_persisted_requested_objective(mon
     service = SimpleNamespace(
         run_for_user=lambda **_kwargs: run,
         current_successful_run=lambda **_kwargs: run,
-        decision_for_current_strategy=lambda **_kwargs: SimpleNamespace(decision="approved"),
+        decision_for_current_strategy=lambda **_kwargs: SimpleNamespace(decision="approved", subject_run_id=run_id),
         profile_version=lambda **_kwargs: profile,
     )
     provider = PostgresPersistence(service)
     monkeypatch.setattr(
         provider, "_brand_row",
-        lambda **_kwargs: SimpleNamespace(id=brand_id, domain_key="buffaloburger_com"))
+        lambda **_kwargs: SimpleNamespace(id=brand_id, domain_key="buffaloburger_com", current_profile_id=profile_id))
 
     context = provider.canonical_strategy_context(
         domain_key="buffaloburger_com", user_id=str(user_id), run_id=str(run_id))
 
     assert context["requested_config"] == requested_config
+    assert context["is_current"] and context["approval_state"] == "approved"
     with pytest.raises(CreativeContractError) as exc:
         _contract(requested_factual_claims=["Number one burger in Egypt"])
     assert exc.value.code == "CREATIVE_REQUEST_STRATEGY_CONFLICT"

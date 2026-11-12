@@ -203,14 +203,16 @@
     });
   }
 
-  async function refreshBrands() {
+  async function refreshBrands(scrapedDomain = "") {
     if (!window.adzyLegacyState || !window.adzyLegacyState.authToken) return;
     const payload = await call('GET', '/api/brands');
     A.brands = list(payload.brands);
     window.adzyLegacyState.allBrands = A.brands;
     renderBrandOptions();
     renderBrandStrips();
-    if (!A.brand && A.brands.length) {
+    if (scrapedDomain) {
+      await selectBrand(scrapedDomain, false);
+    } else if (!A.brand && A.brands.length) {
       const preferred = A.brands.find((brand) => brand.domain_key === A.initialLocation.get('brand')) || A.brands[0];
       await selectBrand(preferred.domain_key, false);
     } else if (A.brand) {
@@ -290,7 +292,7 @@
       renderBrandStrips();
       renderResearch();
       const subject = (brand.strategy_candidate || {}).run_id;
-      if (subject) {
+      if (subject && !brand.strategy_candidate.profile_stale) {
         try {
           const review = await call('POST', '/api/review/start', {domain_key: domainKey, subject_id: subject});
           if (epoch !== A.selectionEpoch) return;
@@ -399,7 +401,14 @@
   }
 
   function brandStatus(brand) {
+    if (A.brand && A.brand.domain_key === brand.domain_key) brand = A.brand;
+    if (brand.swot_stale || (brand.strategy_candidate || {}).profile_stale) {
+      return ['Evidence needs review', brand.swot_approved ? 'Regenerate strategy' : 'Review a new SWOT'];
+    }
     const creative = bestCreativeFor(brand);
+    if (creative && creative.strategy_version_id && creative.strategy_version_id !== brand.strategy_version_id) {
+      return ['Poster saved', 'Earlier strategy version'];
+    }
     if (creative) return ['Poster ready', creative.canonical ? 'Strategy grounded' : 'Creative saved'];
     if (brand.strategy_approval_state === 'approved' && brand.strategy_version_id) return ['Strategy locked', 'Ready to create'];
     if (brand.strategy_candidate && brand.strategy_candidate.run_id) return ['Angle found', 'Waiting for approval'];
@@ -468,20 +477,25 @@
       $('adzy-scan-status').textContent = text(job.step, 'Exploring the brand');
       if (job.status === 'done') {
         clearInterval(A.poll); A.poll = null;
-        const brand = await call('GET', `/api/brands/${encodeURIComponent(job.domain_key)}`);
-        A.brand = brand;
-        window.adzyLegacyState.currentBrand = brand;
-        window.adzyLegacyState.studioBrand = brand;
+        await refreshBrands(job.domain_key);
+        const brand = A.brand;
+        if (!brand || brand.domain_key !== job.domain_key) {
+          $('adzy-scan-error').hidden = false;
+          $('adzy-scan-error').textContent = 'The evidence was saved. Open the brand to review it.';
+          return;
+        }
         const pages = countPages(brand);
         const evidence = countEvidence(profileOf(brand));
-        const peers = list(brand.competitors).length || list((brand.strategy_candidate || {}).evidence).filter((row) => row.source_class === 'COMPETITOR_ANALYSIS').length;
+        const candidate = brand.strategy_candidate || {};
+        const peers = list(brand.competitors).length || (candidate.profile_stale ? 0
+          : list(candidate.evidence).filter((row) => row.source_class === 'COMPETITOR_ANALYSIS').length);
         $('adzy-pages-count').textContent = pages;
         $('adzy-evidence-count').textContent = evidence;
         $('adzy-peer-count').textContent = peers;
         $('adzy-scan-metrics').hidden = false;
         $('adzy-scan-title').innerHTML = 'Okay.<br>We see it now.';
         $('adzy-scan-status').textContent = job.warning || 'Real returned data is ready.';
-        await Promise.all([refreshBrands(), refreshHistory()]);
+        await refreshHistory();
         window.setTimeout(() => window.adzyNavigate('think'), 1350);
       } else if (job.status === 'error') {
         clearInterval(A.poll); A.poll = null;
@@ -505,7 +519,8 @@
     renderResearch();
     A.evidence = [];
     const profile = profileOf();
-    const candidate = A.brand.strategy_candidate || {};
+    const stored = A.brand.strategy_candidate || {};
+    const candidate = stored.profile_stale ? {} : stored;
     const ownItems = (A.intel && A.intel.own && A.intel.own.items) || {};
     const pain = list(ownItems.pain_points)[0];
     const testimonial = list(A.brand.testimonials || profile.testimonials)[0];
@@ -595,12 +610,19 @@
         }).join(' ')}</li>`;
       }).join('') + '</ul>' : '<p>No findings stored in this section.</p>'}</section>`;
     }).join('');
-    root.innerHTML = `<h2 id="adzy-research-title">Research &amp; SWOT review</h2><p role="status">${A.busy ? 'Analysis in progress. Please wait for the persisted result.' : b.has_swot ? b.swot_approved ? 'This SWOT version is approved.' : 'Review this SWOT version before approving.' : 'Next: generate SWOT from the stored evidence.'}</p>`
+    const status = A.busy ? 'Analysis in progress. Please wait for the persisted result.'
+      : b.swot_stale ? 'The saved SWOT is out of date for the current brand evidence. Regenerate it, then review the new version.'
+      : b.swot_approved ? 'This SWOT version is approved.'
+      : b.has_swot ? 'Review this SWOT version before approving.'
+      : 'Next: generate SWOT from the stored evidence.';
+    root.innerHTML = `<h2 id="adzy-research-title">Research &amp; SWOT review</h2><p role="status">${status}</p>`
       + (b.has_swot ? `<p class="adzy-mono">Reviewed version: ${esc(b.swot_run_id || 'Legacy — immutable Run identity unavailable')}</p>${summary}<details><summary>Review SWOT, sources &amp; readiness</summary><div class="adzy-research-grid">${quadrants}</div></details>` : '')
-      + `<div class="adzy-review-actions"><button class="adzy-btn flat" type="button" onclick="adzyGenerateSwot()" ${A.busy ? 'disabled' : ''}>${b.has_swot ? 'Regenerate SWOT' : 'Generate SWOT'}</button>`
+      + `<div class="adzy-review-actions"><button class="adzy-btn flat" type="button" onclick="adzyGenerateSwot()" ${A.busy ? 'disabled' : ''}>${b.has_swot || b.swot_stale ? 'Regenerate SWOT' : 'Generate SWOT'}</button>`
       + (b.has_swot && !b.swot_approved ? `<button id="adzy-approve-swot" class="adzy-btn coral" type="button" onclick="adzyApproveSwot()" ${A.busy ? 'disabled' : ''}>Approve this SWOT version</button>` : '')
       + (b.swot_approved ? '<button class="adzy-btn ink" type="button" onclick="adzyNavigate(\'strategy\')">Review strategy →</button>' : '') + '</div>';
-    if (b.has_swot) A.reviewedSwot = Object.freeze({domain: b.domain_key, id: b.swot_run_id || null, epoch: A.selectionEpoch});
+    A.reviewedSwot = b.has_swot && !b.swot_stale
+      ? Object.freeze({domain: b.domain_key, id: b.swot_run_id || null, epoch: A.selectionEpoch})
+      : null;
   }
 
   async function runAnalysis(kind, payload) {
@@ -630,7 +652,11 @@
         await selectBrand(reviewed.domain, false);
         notify('SWOT changed. Review the updated version and approve it explicitly.', 'error');
       } else notify(errorMessage(error), 'error');
-    } finally { A.busy = false; renderResearch(); }
+    } finally {
+      A.busy = false;
+      renderResearch();
+      renderApproval();
+    }
   };
 
   function strategyData() {
@@ -638,6 +664,7 @@
     const decision = candidate.decision || {};
     let options = list(decision.options);
     let selectedId = text(decision.selected_option_id);
+    if (candidate.profile_stale) selectedId = '';
     if (!options.length && A.brand && A.brand.marketing_strategy) {
       const strategy = A.brand.marketing_strategy;
       if (text(strategy.positioning_statement || strategy.value_proposition)) {
@@ -658,9 +685,9 @@
   function renderStrategy() {
     if (!A.brand) return;
     const data = strategyData();
-    A.reviewedStrategy = data.candidate.run_id ? Object.freeze({domain: A.brand.domain_key, id: data.candidate.run_id, eligible: !!A.review && A.review.status === 'NEEDS_REVIEW', epoch: A.selectionEpoch}) : null;
+    A.reviewedStrategy = data.candidate.run_id && !data.candidate.profile_stale ? Object.freeze({domain: A.brand.domain_key, id: data.candidate.run_id, eligible: !!A.review && A.review.status === 'NEEDS_REVIEW', epoch: A.selectionEpoch}) : null;
     $('adzy-strategy-prerequisite').innerHTML = A.brand.swot_approved
-      ? '<p>Current SWOT approved. Review the directions and their evidence before deciding.</p>'
+      ? '<p>Current SWOT approved.</p>'
       : '<p>Next: review and approve the current SWOT before generating strategy.</p><button class="adzy-btn coral" type="button" onclick="adzyNavigate(\'think\')">Review research &amp; SWOT</button>';
     const question = data.candidate.research_question || {};
     const objective = data.candidate.objective || {};
@@ -739,6 +766,16 @@
     const root = $('adzy-approval');
     if (!A.brand || A.loadingBrand) { root.innerHTML = '<p>Choose a brand to review its strategy.</p>'; return; }
     const { candidate } = strategyData();
+    if (candidate.profile_stale) {
+      root.classList.remove('is-ready', 'is-approved');
+      const action = A.brand.swot_approved
+        ? `<button class="adzy-btn coral" id="adzy-find-angle-btn" type="button" onclick="adzyGenerateStrategy()" ${A.busy ? 'disabled' : ''}>Regenerate directions</button>`
+        : '<button class="adzy-btn coral" type="button" onclick="adzyNavigate(\'think\')">Review research &amp; SWOT</button>';
+      const next = A.brand.swot_approved ? 'Generate directions from the approved SWOT and review the new strategy.'
+        : 'Prepare and approve the SWOT for the refreshed evidence first.';
+      root.innerHTML = `<div role="status" id="adzy-workflow-status"><h2>Brand evidence needs review.</h2><p>The saved directions are out of date for the current evidence snapshot. ${next}</p></div><div>${action}</div>`;
+      return;
+    }
     const verification = candidate.verification || {};
     const approved = !!A.review && A.review.status === 'READY_FOR_CREATIVE';
     const defects = list(verification.defects);
@@ -787,7 +824,10 @@
     for (;;) {
       if (epoch !== A.selectionEpoch) return;
       const job = await call('GET', `/api/jobs/${jobId}`);
-      if (job.status === 'error') throw new Error(job.error || 'The analysis did not finish.');
+      if (job.status === 'error') {
+        if (epoch === A.selectionEpoch) await selectBrand(domain, false);
+        throw new Error(job.error || 'The analysis did not finish.');
+      }
       if (job.status === 'done') {
         if (epoch !== A.selectionEpoch) return;
         await selectBrand(domain, false);
@@ -881,6 +921,12 @@
   function renderBrief() {
     const root = $('adzy-brief-rows');
     const contract = A.contract;
+    if ((A.brand.strategy_candidate || {}).profile_stale) {
+      $('adzy-brief-status').textContent = 'Brand evidence needs review';
+      root.innerHTML = '<div class="adzy-empty"><p>Review a strategy based on the new evidence before creating another poster.</p><button class="adzy-btn coral" type="button" onclick="adzyNavigate(\'strategy\')">Review strategy</button></div>';
+      $('adzy-make-btn').disabled = true;
+      return;
+    }
     $('adzy-brief-status').textContent = contract ? 'Locked by approved strategy' : 'Strategy approval and a valid Creative Direction required';
     if (!contract || !A.review || A.review.status !== 'READY_FOR_CREATIVE' || A.loadingBrand || A.brand.strategy_approval_state !== 'approved' || !A.brand.swot_approved) {
       if (!root.querySelector('.adzy-error')) root.innerHTML = '<div class="adzy-empty" style="margin-top:28px;">No approved Creative Direction was returned. Adzy will not invent WHO, SAY, PROVE or DO.</div>';

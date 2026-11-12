@@ -555,12 +555,12 @@ def test_old_strategy_run_without_assessment_remains_readable_when_approved():
 def test_new_current_run_does_not_inherit_old_run_approval():
     canonical = _canonical()
     old_run = SimpleNamespace(
-        id="run-old",
+        id="run-old", input_profile_id=None,
         output={"canonical_strategy": canonical},
         requested_config={"objective": _objective()},
     )
     new_run = SimpleNamespace(
-        id="run-new",
+        id="run-new", input_profile_id=None,
         output={"canonical_strategy": canonical},
         requested_config={"objective": _objective()},
     )
@@ -576,7 +576,7 @@ def test_new_current_run_does_not_inherit_old_run_approval():
 
     class Service:
         current = old_run
-        decision = SimpleNamespace(decision="approved")
+        decision = SimpleNamespace(decision="approved", subject_run_id=old_run.id)
 
         def current_successful_run(self, *, kind, **_kwargs):
             return self.current if kind == "strategy" else None
@@ -597,7 +597,6 @@ def test_new_current_run_does_not_inherit_old_run_approval():
     read_model = BrandReadModel(service)
     old_document = read_model.document(brand=brand, user_id="owner-id")
     service.current = new_run
-    service.decision = None
     new_document = read_model.document(brand=brand, user_id="owner-id")
 
     assert old_document["strategy_version_id"] == "run-old"

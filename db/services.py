@@ -20,7 +20,7 @@ from decimal import Decimal
 from typing import Any
 from uuid import UUID
 
-from db.errors import ApprovalMissing, InvalidTransition, NotFound
+from db.errors import ApprovalMissing, InvalidTransition, NotFound, StaleProfileSnapshot
 from db.repositories import utcnow
 from db.records import (
     GalleryBlobRecord,
@@ -135,6 +135,11 @@ def _create_live_run_locked(uow, data: "LiveRunData"):
     remain inside `runs.create_live_for_locked_brand`. Nothing is reimplemented here.
     """
     uow.brands.lock_owned(brand_id=data.brand_id, user_id=data.user_id, allow_unclaimed=True)
+    return _insert_live_run(uow, data)
+
+
+def _insert_live_run(uow, data: "LiveRunData"):
+    """Insert using the Brand lock already acquired by the caller."""
     return uow.runs.create_live_for_locked_brand(
         brand_id=data.brand_id, kind=data.kind,
         created_by_user_id=data.user_id, status=data.status,
@@ -388,7 +393,7 @@ class PersistenceService:
 
         with self._uow_factory() as uow:
             # Brand is the shared serialization point for both new Run allocation and approval.
-            uow.brands.get_visible(user_id=user_id, brand_id=brand_id, lock=True)
+            brand = uow.brands.get_visible(user_id=user_id, brand_id=brand_id, lock=True)
             # Resolve membership before currentness: unknown/foreign/non-SWOT subjects must not
             # reveal their existence through a stale response. All writers share this brand lock.
             submitted = uow.runs.get_visible(run_id=expected_run_id, user_id=user_id)
@@ -398,7 +403,7 @@ class PersistenceService:
             current = uow.runs.current_successful(brand_id=brand_id, kind="swot", lock=True)
             if current is None:
                 raise ApprovalMissing("brand has no successful SWOT to approve")
-            if current.id != expected_run_id:
+            if current.id != expected_run_id or current.input_profile_id != brand.current_profile_id:
                 raise StaleApprovalSubject("reviewed SWOT is no longer current")
             # Currentness MUST precede this idempotent return, even for a previously approved A.
             existing = uow.approvals.approved_for_run(current.id)
@@ -412,9 +417,11 @@ class PersistenceService:
     def approval_for_current_swot(self, *, brand_id: UUID,
                                   user_id: UUID) -> ApprovalRecord | None:
         with self._uow_factory() as uow:
-            uow.brands.get_visible(user_id=user_id, brand_id=brand_id, lock=True)
+            brand = uow.brands.get_visible(user_id=user_id, brand_id=brand_id, lock=True)
             current = uow.runs.current_successful(brand_id=brand_id, kind="swot")
-            return uow.approvals.approved_for_run(current.id) if current else None
+            if current is None or current.input_profile_id != brand.current_profile_id:
+                return None
+            return uow.approvals.approved_for_run(current.id)
 
     def decide_current_strategy(self, *, brand_id: UUID, user_id: UUID, run_id: UUID,
                                 decision: str, note: str | None = None) -> ApprovalRecord:
@@ -428,11 +435,11 @@ class PersistenceService:
         if decision not in ("approved", "rejected"):
             raise ValueError("decision must be approved or rejected")
         with self._uow_factory() as uow:
-            uow.brands.get_visible(user_id=user_id, brand_id=brand_id, lock=True)
+            brand = uow.brands.get_visible(user_id=user_id, brand_id=brand_id, lock=True)
             current = uow.runs.current_successful(brand_id=brand_id, kind="strategy", lock=True)
             if current is None:
                 raise ApprovalMissing("brand has no successful strategy run")
-            if current.id != run_id:
+            if current.id != run_id or current.input_profile_id != brand.current_profile_id:
                 raise StaleApprovalSubject("submitted strategy run is no longer current")
             canonical = ((current.output or {}).get("canonical_strategy")
                          if isinstance(current.output, dict) else None)
@@ -453,9 +460,11 @@ class PersistenceService:
     def decision_for_current_strategy(self, *, brand_id: UUID,
                                       user_id: UUID) -> ApprovalRecord | None:
         with self._uow_factory() as uow:
-            uow.brands.get_visible(user_id=user_id, brand_id=brand_id)
+            brand = uow.brands.get_visible(user_id=user_id, brand_id=brand_id)
             current = uow.runs.current_successful(brand_id=brand_id, kind="strategy")
-            return uow.approvals.latest_for_run(current.id) if current else None
+            if current is None or current.input_profile_id != brand.current_profile_id:
+                return None
+            return uow.approvals.latest_for_run(current.id)
 
     # ------------------------------------------------------------------ jobs
     def create_user_job(self, *, owner_user_id: UUID,
@@ -626,7 +635,11 @@ class PersistenceService:
                 raise NotFound("job not found")
             if locked.status in ("succeeded", "failed"):
                 return None, None
-            run = _create_live_run_locked(uow, data)
+            brand = uow.brands.lock_owned(
+                brand_id=data.brand_id, user_id=data.user_id, allow_unclaimed=True)
+            if data.kind in ("swot", "strategy") and data.input_profile_id != brand.current_profile_id:
+                raise StaleProfileSnapshot("the analysis input profile is no longer current")
+            run = _insert_live_run(uow, data)
             locked.brand_id = data.brand_id
             locked.run_id = run.id
             event = _apply_event_locked(

@@ -432,6 +432,9 @@ class CreativeContractCompiler:
         if brand_id != _plain(context.get("run_brand_id")):
             raise CreativeContractError("STRATEGY_WRONG_BRAND",
                                         "The StrategyVersion belongs to a different brand.")
+        if current_only and context.get("profile_stale"):
+            raise CreativeContractError("STRATEGY_PROFILE_CHANGED",
+                                        "Brand evidence was refreshed. Review a new strategy before creating a poster.")
         if current_only and not bool(context.get("is_current")):
             raise CreativeContractError("STRATEGY_VERSION_STALE",
                                         "The StrategyVersion is no longer the current strategy.")

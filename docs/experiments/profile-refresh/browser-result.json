@@ -1,0 +1,14 @@
+{
+  "failed_refresh_kept_approval": true,
+  "stale_after_process_restart": true,
+  "saved_brand_card_requests_review": true,
+  "old_poster_draft_checksum_unchanged": true,
+  "new_swot_and_strategy_required_explicit_approval": true,
+  "recovered_contract_binds_new_profile_and_quote": true,
+  "desktop_and_390px": true,
+  "journey_seconds": 45.69,
+  "synthetic": true,
+  "poster_runs": 1,
+  "provider_dispatches": 0,
+  "browser_errors": []
+}

@@ -22,6 +22,8 @@ from typing import Any
 
 from fastapi import Request
 
+from db.errors import StaleProfileSnapshot
+
 from .persistence import get_persistence
 
 logger = logging.getLogger(__name__)
@@ -47,7 +49,7 @@ async def run_brand_job(*, job_id: str, domain_key: str, work,
     persistence = get_persistence()
     persistence_started = False
     try:
-        patch = await asyncio.to_thread(_do_work, domain_key, work, owner_id)
+        patch, profile_id = await asyncio.to_thread(_do_work, domain_key, work, owner_id)
         if patch is None:
             raise RuntimeError("brand job produced no patch to persist")
         persistence_started = True
@@ -58,13 +60,15 @@ async def run_brand_job(*, job_id: str, domain_key: str, work,
         # froze the loop for 1.460s here. The ownership scoping is unchanged — `for_user` is still
         # enforced inside the write, under the storage lock, on the latest committed document.
         persisted = await asyncio.to_thread(
-            _persist, job_id, domain_key, patch, owner_id, kind)
+            _persist, job_id, domain_key, patch, owner_id, kind, profile_id)
         if persisted is None:
             raise RuntimeError("required brand persistence was not applied")
     except Exception as e:  # noqa: BLE001
         logger.exception("brand job %s failed: %s", job_id, e)
         safe_error = ("Brand result could not be saved." if persistence_started
                       else "Generation step failed.")
+        if isinstance(e, StaleProfileSnapshot):
+            safe_error = "Brand evidence changed during analysis. Reload the brand and run analysis again."
         try:
             await asyncio.to_thread(
                 persistence.finish_job_failure, job_id=job_id, error=safe_error,
@@ -73,12 +77,14 @@ async def run_brand_job(*, job_id: str, domain_key: str, work,
             logger.exception("could not terminalize brand job %s", job_id)
 
 
-def _do_work(domain_key: str, work, owner_id: str = "") -> Any:
+def _do_work(domain_key: str, work, owner_id: str = "") -> tuple[Any, str | None]:
     brand = get_persistence().visible_brand(domain_key=domain_key, user_id=owner_id or "") or {}
-    return work(brand)
+    profile_id = brand.get("profile_snapshot_id")
+    return work(brand), profile_id
 
 
-def _persist(job_id: str, domain_key: str, patch: Any, owner_id: str, kind: str):
+def _persist(job_id: str, domain_key: str, patch: Any, owner_id: str, kind: str,
+             profile_id: str | None):
     """Record this stage's contribution AND finish the job, in one transaction where there is one.
 
     Runs OFF the event loop (see the caller). Both backends block — the file store on its process
@@ -92,7 +98,9 @@ def _persist(job_id: str, domain_key: str, patch: Any, owner_id: str, kind: str)
     if isinstance(patch, CanonicalStrategyBuild):
         return persistence.finish_canonical_strategy_job(
             job_id=job_id, domain_key=domain_key, user_id=owner_id or "", build=patch,
+            profile_snapshot_id=profile_id,
             payload={"domain_key": domain_key, "decision_type": "POSITIONING"})
     return persistence.finish_enrichment_job(
         job_id=job_id, domain_key=domain_key, user_id=owner_id or "", kind=kind,
-        patch=patch, payload={"domain_key": domain_key})
+        patch=patch, profile_snapshot_id=profile_id if kind == "swot" else None,
+        payload={"domain_key": domain_key})

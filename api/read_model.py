@@ -20,10 +20,9 @@ Three consequences worth stating, because they are the point rather than side ef
   * `swot_approved` is DERIVED from an Approval row bound to the exact current SWOT Run, never
     stored as a boolean. A newer SWOT becomes current, the approval no longer matches it, and the
     gate closes by itself. The legacy boolean could not express that and did not.
-  * Re-scraping cannot erase analysis. The legacy path needed `_PRESERVE_ON_RESCRAPE` — a hand-kept
-    list of keys a new scrape must not clobber — because a fresh `profile_to_brand` emits empty
-    placeholders over real work. Here the profile is only the BASE of the fold and the analysis Runs
-    are layered on top of it afterwards, so there is nothing to preserve and no list to forget.
+  * Re-scraping keeps historical Runs. SWOT inputs enter the current evidence fold only when their
+    profile binding matches. A strategy for a previous snapshot stays inspectable as a stale
+    candidate, while the approved strategy projection requires the current snapshot.
 
 ORDER MATTERS. `_FOLD_ORDER` runs base → SWOT → strategy → plan/calendar → creative, so a later
 stage's view of a shared key wins, matching the order the legacy store happened to apply patches in.
@@ -55,7 +54,7 @@ _FOLD_ORDER = (
 _DERIVED_KEYS = frozenset({
     "owner_id", "unclaimed", "domain_key", "swot_approved", "owner_inputs", "competitors",
     "has_strategy", "strategy_run_id", "strategy_version_id", "strategy_approval_state",
-    "strategy_candidate", "strategy_authority",
+    "strategy_candidate", "strategy_authority", "profile_snapshot_id", "swot_stale", "_profile",
 })
 
 
@@ -103,7 +102,9 @@ class BrandReadModel:
             # the same reason the scrape path stashes it.
             document["_profile"] = payload
 
+        profile_id = profile.id if profile else None
         swot_run_id = ""
+        swot_stale = False
         canonical_strategy_run = None
         legacy_strategy_seen = False
         if include_runs:
@@ -118,6 +119,10 @@ class BrandReadModel:
                     # while the human was reading would be approved by a decision never made about
                     # it. The legacy document has no such id, and could not express the difference.
                     swot_run_id = str(run.id)
+                    swot_stale = run.input_profile_id != profile_id
+                    if swot_stale:
+                        # Its evidence belongs to the previous snapshot. The Run remains historical.
+                        continue
                 if kind == "strategy" and isinstance(run.output, dict):
                     if isinstance(run.output.get("canonical_strategy"), dict):
                         canonical_strategy_run = run
@@ -128,6 +133,7 @@ class BrandReadModel:
                 if run.output:
                     document.update(_sanitised(run.output))
 
+        document["profile_snapshot_id"] = str(profile_id) if profile_id else ""
         document["domain_key"] = brand.domain_key
         document["owner_id"] = str(brand.owner_id) if brand.owner_id else ""
         if not brand.owner_id:
@@ -139,29 +145,40 @@ class BrandReadModel:
 
         if include_runs:
             document["swot_run_id"] = swot_run_id
-            document["swot_approved"] = self._approved(brand_id=brand.id, user_id=user_id)
+            document["swot_stale"] = swot_stale
+            if swot_stale:
+                document["has_swot"] = False
+            approval = (self._service.approval_for_current_swot(brand_id=brand.id, user_id=user_id)
+                        if swot_run_id and not swot_stale else None)
+            document["swot_approved"] = bool(
+                approval and str(approval.subject_run_id) == swot_run_id
+                and approval.decision == "approved")
             document["owner_inputs"] = self._service.owner_inputs(
                 brand_id=brand.id, user_id=user_id) or {}
             document["competitors"] = self._service.list_competitors(
                 brand_id=brand.id, user_id=user_id) or []
             if canonical_strategy_run is not None:
                 canonical = dict(canonical_strategy_run.output.get("canonical_strategy") or {})
-                decision_record = self._service.decision_for_current_strategy(
-                    brand_id=brand.id, user_id=user_id)
-                approval_state = (decision_record.decision if decision_record is not None
-                                  else "pending")
+                profile_stale = canonical_strategy_run.input_profile_id != profile_id
+                decision_record = (self._service.decision_for_current_strategy(
+                    brand_id=brand.id, user_id=user_id) if not profile_stale else None)
+                approval_state = "stale" if profile_stale else "pending"
+                if (decision_record is not None
+                        and decision_record.subject_run_id == canonical_strategy_run.id):
+                    approval_state = decision_record.decision
                 run_id = str(canonical_strategy_run.id)
                 document["strategy_run_id"] = run_id
                 document["strategy_version_id"] = run_id if approval_state == "approved" else ""
                 document["strategy_approval_state"] = approval_state
                 document["strategy_authority"] = "postgresql_canonical"
                 document["strategy_candidate"] = {
+                    **canonical,
                     "run_id": run_id, "approval_state": approval_state,
-                    "eligible_for_approval": bool(
+                    "profile_stale": profile_stale,
+                    "eligible_for_approval": not profile_stale and bool(
                         (canonical.get("verification") or {}).get("eligible_for_approval")),
                     "objective": dict(
                         canonical_strategy_run.requested_config.get("objective") or {}),
-                    **canonical,
                 }
                 projection_output = dict(canonical_strategy_run.output)
                 projection_output["_requested_objective"] = dict(
@@ -181,16 +198,6 @@ class BrandReadModel:
                 document["strategy_authority"] = "legacy_compat" if legacy_strategy_seen else ""
                 document["strategy_candidate"] = {}
         return document
-
-    def _approved(self, *, brand_id, user_id) -> bool:
-        """True only when an Approval row points at the SWOT Run that is current RIGHT NOW.
-
-        This is the whole of §16-§18. There is no stored flag to go stale: generate a newer SWOT and
-        this answer flips to False on the next read, because `approval_for_current_swot` resolves the
-        current run first and then asks whether anything approved *that* run.
-        """
-        approval = self._service.approval_for_current_swot(brand_id=brand_id, user_id=user_id)
-        return approval is not None and approval.decision == "approved"
 
     # ------------------------------------------------------------------ many brands
     def documents(self, *, brands, user_id) -> list[dict]:

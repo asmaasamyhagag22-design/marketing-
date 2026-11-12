@@ -109,6 +109,8 @@ def swot_approve(req: ApproveRequest, user: dict = Depends(require_user)) -> dic
 async def strategy_generate(req: StrategyRequest, request: Request,
                             user: dict = Depends(require_user)) -> dict:
     brand = _brand_or_404(req.domain_key, user["id"])
+    if brand.get("swot_stale"):
+        raise HTTPException(status_code=409, detail="Regenerate and approve a SWOT for the current brand evidence.")
     if not brand.get("swot_approved"):
         raise HTTPException(status_code=409, detail="Approve the SWOT before generating the strategy.")
     persistence = get_persistence()
@@ -128,7 +130,13 @@ async def strategy_generate(req: StrategyRequest, request: Request,
             status_code=409,
             detail="The approved SWOT has no immutable Run identity; regenerate and approve it.")
 
+    profile_id = brand.get("profile_snapshot_id")
+
     def _work(current: dict):
+        from db.errors import StaleProfileSnapshot
+
+        if current.get("profile_snapshot_id") != profile_id:
+            raise StaleProfileSnapshot("the strategy input profile changed before analysis started")
         if (str(current.get("swot_run_id") or "") != swot_run_id
                 or not bool(current.get("swot_approved"))):
             # Generation is asynchronous. Never build from a newer/unapproved SWOT while filing

@@ -27,6 +27,8 @@ python -m workflows.app_demo serve --directory .review-app-demo --port 8000 --sy
 
 `init` prints a fictional email and the demo password `SyntheticDemo42`. Open [Adzy](http://127.0.0.1:8000/app), sign in, open **Think → Review strategy**, inspect the directions and choose **Lock this strategy** or **Reject this version**. Refresh preserves the workflow. Stop the server and rerun the same `serve` command while paused to test restart. After approval, **Prepare the poster** displays the graph's authoritative WHO/SAY/PROVE/DO contract. Paid generation is disabled in this demo; the review journey does not require a click on Make the ad.
 
+If you explore a saved brand again and the profile refresh succeeds, open **Think** to regenerate and review its SWOT, then regenerate and approve a strategy for the new evidence. Previously saved posters remain available for inspection. Current delivery checks determine which exports are available. [Offline refresh and recovery walkthrough](experiments/profile-refresh/RESULT.md).
+
 `--capture-sdk` uses the real SDK with an in-memory exporter, writes only local redacted synthetic observations to `.review-app-demo/sdk-capture.json`, and connects no external account. Omit it for the default no-export operation. Cleanup after stopping the server:
 
 ```bash

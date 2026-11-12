@@ -40,7 +40,7 @@ def test_http_preflight_a_transaction_b_returns_409_and_no_approval(client, monk
         doc = original(**kw)
         if not changed:
             changed = True
-            provider._service.create_live_run(LiveRunData(brand_id=brand.id, user_id=UUID(actor),kind='swot',status='succeeded',output={'has_swot':True,'swot':{'marker':'B'}}))
+            provider._service.create_live_run(LiveRunData(brand_id=brand.id, user_id=UUID(actor),kind='swot',status='succeeded',input_profile_id=brand.current_profile_id,output={'has_swot':True,'swot':{'marker':'B'}}))
         return doc
     monkeypatch.setattr(provider, 'visible_brand', preflight)
     response = client.post('/api/swot/approve',json={'domain_key':brand.domain_key,'swot_run_id':a['swot_run_id']},headers=headers)

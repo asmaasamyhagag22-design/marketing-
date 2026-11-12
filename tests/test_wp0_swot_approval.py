@@ -26,11 +26,12 @@ class MemoryUow:
     def commit(self): pass
     def brand(self, *, user_id, brand_id, **kw):
         if (brand_id, user_id) != (self.brand_id, self.user_id): raise NotVisible()
+        return SimpleNamespace(current_profile_id=None)
     def run(self, *, run_id, user_id):
         if run_id not in self.runs_by_id: raise NotVisible()
         return self.runs_by_id[run_id]
     def add(self, *, brand_id=None, kind="swot", status="succeeded"):
-        row = SimpleNamespace(id=uuid4(), brand_id=brand_id or self.brand_id, kind=kind, status=status)
+        row = SimpleNamespace(id=uuid4(), brand_id=brand_id or self.brand_id, kind=kind, status=status, input_profile_id=None)
         self.runs_by_id[row.id] = row
         if row.brand_id == self.brand_id and kind == "swot" and status == "succeeded": self.current = row
         return row

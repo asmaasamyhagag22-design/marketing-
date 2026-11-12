@@ -384,11 +384,13 @@ def test_service_new_swot_never_inherits_previous_approval(service):
     user = _user(service, "approval")
     committed = _commit_brand(service, user)
     first = service.create_live_run(LiveRunData(
-        brand_id=committed.brand.id, user_id=user.id, kind="swot", status="succeeded"))
+        brand_id=committed.brand.id, user_id=user.id, kind="swot", status="succeeded",
+        input_profile_id=committed.brand.current_profile_id))
     approval = service.approve_current_swot(brand_id=committed.brand.id, user_id=user.id, expected_run_id=first.id)
     assert approval.subject_run_id == first.id and approval.decided_by_user_id == user.id
     second = service.create_live_run(LiveRunData(
-        brand_id=committed.brand.id, user_id=user.id, kind="swot", status="succeeded"))
+        brand_id=committed.brand.id, user_id=user.id, kind="swot", status="succeeded",
+        input_profile_id=committed.brand.current_profile_id))
     assert second.id != first.id
     assert service.approval_for_current_swot(
         brand_id=committed.brand.id, user_id=user.id) is None
@@ -900,7 +902,8 @@ def test_concurrent_double_approval_creates_one_semantic_approval(service, engin
     user = _user(service, "double-approve")
     brand = _commit_brand(service, user).brand
     run = service.create_live_run(LiveRunData(
-        brand_id=brand.id, user_id=user.id, kind="swot", status="succeeded"))
+        brand_id=brand.id, user_id=user.id, kind="swot", status="succeeded",
+        input_profile_id=brand.current_profile_id))
     results, errors = _race(
         lambda: service.approve_current_swot(brand_id=brand.id, user_id=user.id, expected_run_id=run.id),
         lambda: service.approve_current_swot(brand_id=brand.id, user_id=user.id, expected_run_id=run.id),
@@ -920,12 +923,14 @@ def test_concurrent_new_swot_and_approval_serialize_without_leak(service):
     user = _user(service, "approve-race")
     brand = _commit_brand(service, user).brand
     old = service.create_live_run(LiveRunData(
-        brand_id=brand.id, user_id=user.id, kind="swot", status="succeeded"))
+        brand_id=brand.id, user_id=user.id, kind="swot", status="succeeded",
+        input_profile_id=brand.current_profile_id))
     results, errors = _race(
         lambda: service.approve_current_swot(
             brand_id=brand.id, user_id=user.id, expected_run_id=old.id),
         lambda: service.create_live_run(LiveRunData(
-            brand_id=brand.id, user_id=user.id, kind="swot", status="succeeded")),
+            brand_id=brand.id, user_id=user.id, kind="swot", status="succeeded",
+            input_profile_id=brand.current_profile_id)),
     )
     assert all(isinstance(error, StaleApprovalSubject) for error in errors)
     assert len(errors) <= 1

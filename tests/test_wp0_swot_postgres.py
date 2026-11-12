@@ -21,7 +21,7 @@ from db.services import LiveRunData
 def seed(service):
     user = _user(service, 'wp0')
     brand = _commit_brand(service, user).brand
-    a = service.create_live_run(LiveRunData(brand_id=brand.id, user_id=user.id, kind='swot', status='succeeded'))
+    a = service.create_live_run(LiveRunData(brand_id=brand.id, user_id=user.id, input_profile_id=brand.current_profile_id, kind='swot', status='succeeded'))
     return user, brand, a
 
 
@@ -33,7 +33,7 @@ def rows(engine):
 def test_replayed_approved_a_is_stale_after_b_and_never_approves_b(service, engine):
     user, brand, a = seed(service)
     approved = service.approve_current_swot(brand_id=brand.id, user_id=user.id, expected_run_id=a.id)
-    b = service.create_live_run(LiveRunData(brand_id=brand.id, user_id=user.id, kind='swot', status='succeeded'))
+    b = service.create_live_run(LiveRunData(brand_id=brand.id, user_id=user.id, input_profile_id=brand.current_profile_id, kind='swot', status='succeeded'))
     with pytest.raises(StaleApprovalSubject):
         service.approve_current_swot(brand_id=brand.id, user_id=user.id, expected_run_id=a.id)
     assert rows(engine) == [(approved.id, a.id)]
@@ -54,7 +54,7 @@ def test_generation_holds_same_brand_lock_then_old_approval_is_stale(service, en
     """Hold writer after its brand lock, start approval on another connection, commit B first."""
     from db.repositories import BrandRepository
     user, brand, a = seed(service)
-    queued = service.create_live_run(LiveRunData(brand_id=brand.id, user_id=user.id, kind='swot')) if writer == 'finalize_success' else None
+    queued = service.create_live_run(LiveRunData(brand_id=brand.id, user_id=user.id, input_profile_id=brand.current_profile_id, kind='swot')) if writer == 'finalize_success' else None
     job = None
     if writer == 'finish_enrichment':
         job = service.create_user_job(owner_user_id=user.id, requested_domain_key=brand.domain_key)
@@ -68,7 +68,7 @@ def test_generation_holds_same_brand_lock_then_old_approval_is_stale(service, en
             assert release.wait(15), 'test failed to release brand lock'
         return result
     monkeypatch.setattr(BrandRepository, 'lock_owned', holding)
-    data = LiveRunData(brand_id=brand.id, user_id=user.id, kind='swot', status='succeeded', output={'has_swot': True, 'swot': {'summary': 'B'}})
+    data = LiveRunData(brand_id=brand.id, user_id=user.id, input_profile_id=brand.current_profile_id, kind='swot', status='succeeded', output={'has_swot': True, 'swot': {'summary': 'B'}})
     def generate():
         if writer == 'create_succeeded': return service.create_live_run(data)
         if writer == 'finalize_success': return service.finalize_run_success(run_id=queued.id, user_id=user.id, output=data.output)

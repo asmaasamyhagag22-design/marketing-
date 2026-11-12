@@ -81,6 +81,8 @@ def prepare(destination):
     paths.update(p for p in (root/'tools').glob('*.py'))
     paths.update(root/n for n in ('.env.example','docs/getting-started.md','docs/results/README.md','docs/results/provenance.json','docs/results/studio-fixture-poster.png','docs/results/studio-fixture-result.json','docs/results/copy-editor-draft.png','docs/results/copy-editor-draft.json','docs/licenses/Noto-OFL.txt','examples/volume-cafe/README.md','examples/volume-cafe/profile-excerpt.json'))
     paths.update(root/p for p in DOCS if (root/p).is_file())
+    paths.update(root/'docs/experiments/profile-refresh'/name for name in (
+        'RESULT.md', 'browser-result.json', 'desktop-recovery.png', 'mobile-recovery.png'))
     extra=('POSTER_ECONOMIC_REPAIR_RESULT.md','tests/test_poster_economic_repair.py',
         'tests/test_poster_qa_brand_roles.py','tests/test_poster_candidate_persistence.py',
         'tests/test_poster_design_controls.py','tests/test_poster_acceptance_red_boundary.py',
