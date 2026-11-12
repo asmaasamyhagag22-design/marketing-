@@ -54,7 +54,7 @@ def seed(service,provider, *, insufficient=False, brand_source=None, owner=None)
     from db.services import ProfileData, ScrapeSuccess, LiveRunData
     from strategy.positioning.objective import objective_from_mapping
     from strategy.positioning.service import build_positioning_strategy
-    from .synthetic import brand, objective
+    from .synthetic import brand, objective, source_capture
     url = f'https://synthetic-{uuid4().hex}.test'
     domain = domain_key_from_url(url)
     source = (brand_source or brand)(domain)
@@ -66,7 +66,7 @@ def seed(service,provider, *, insufficient=False, brand_source=None, owner=None)
     service.claim_job(job_id=job.id,worker_id=str(job.id),lease_seconds=600)
     committed = service.commit_scrape_success(ScrapeSuccess(domain_key=domain,user_id=user.id,job_id=job.id,
         worker_id=str(job.id),profile=ProfileData(payload=source['_profile'],schema_version=1),
-        display_name='SYNTHETIC Studio',source_url=url))
+        display_name='SYNTHETIC Studio',source_url=url,source_capture=source_capture(source)))
     swot = service.create_live_run(LiveRunData(brand_id=committed.brand.id,user_id=user.id,kind='swot',
         status='succeeded',input_profile_id=committed.brand.current_profile_id,
         output={'has_swot':True,'swot':{'strengths':[],'weaknesses':[],'opportunities':[],'threats':[]}},output_schema_version=1))

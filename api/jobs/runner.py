@@ -120,6 +120,13 @@ def run_pipeline_job(
             if value is not None
         }
         manifest, out_dir = scrape_fn(url, output_root, **crawl_options)
+        if isinstance(store, JobRecorder):
+            from scraper.source_capture import source_capture
+
+            try:
+                store.source_capture = source_capture(manifest)
+            except Exception:
+                logger.warning("Source fingerprint unavailable for advisory comparison")
         scrape_ms = int((time.monotonic() - t0) * 1000)
         manifest_path = str(Path(out_dir) / "manifest.json")
         emit(

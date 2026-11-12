@@ -20,7 +20,7 @@ def serve_fixture(directory, port):
     from api.routes import scrape
     from api import webapp_analysis
     from workflows import app_demo
-    from workflows.synthetic import brand, field
+    from workflows.synthetic import brand, field, source_capture
 
     case = json.loads((directory / "demo.json").read_text())
     source = brand(case["domain"])
@@ -34,8 +34,10 @@ def serve_fixture(directory, port):
         fetches += 1
         if fetches == 1:
             return None
-        recorder.set_result_threadsafe(job_id, source["_profile"])
-        return source["_profile"]
+        captured = brand(case["domain"]) if fetches == 2 else source
+        recorder.source_capture = source_capture(captured)
+        recorder.set_result_threadsafe(job_id, captured["_profile"])
+        return captured["_profile"]
 
     def swot(document):
         assert document["_profile"]["trust_signals"] == source["_profile"]["trust_signals"]
@@ -111,6 +113,21 @@ def browser_journey(page, expect, case, evidence, restart):
     assert page.evaluate("Adzy.brand.strategy_version_id") == old["strategy"]
 
     explore(page, case["url"])
+    expect(page.locator("#adzy-research").get_by_role("status")).to_contain_text("out of date")
+    page.get_by_role("button", name="Pick the angle", exact=False).click()
+    shadow = page.locator("#adzy-refresh-shadow")
+    expect(shadow).to_contain_text("Captured content matched")
+    assert page.evaluate("Adzy.brand.strategy_candidate.review_shadow.decision") == "SKIP"
+    assert page.evaluate("Adzy.brand.strategy_approval_state") == "stale"
+    assert page.evaluate("""async ([domain, strategy]) => {
+        const response = await fetch('/api/poster/contract', {
+            method: 'POST', headers: {...window.authHeaders(), 'Content-Type': 'application/json'},
+            body: JSON.stringify({domain_key: domain, strategy_version_id: strategy}),
+        });
+        return response.status;
+    }""", [case["domain"], old["strategy"]]) == 409
+
+    explore(page, case["url"])
     research = page.locator("#adzy-research")
     expect(research).to_be_visible()
     expect(research.get_by_role("status")).to_contain_text("out of date")
@@ -123,6 +140,13 @@ def browser_journey(page, expect, case, evidence, restart):
     page.get_by_role("button", name="Pick the angle", exact=False).click()
     expect(page.locator("#adzy-workflow-status")).to_contain_text("Brand evidence needs review")
     expect(page.locator("#adzy-lock-btn")).to_have_count(0)
+    expect(shadow).to_contain_text("Captured content changed")
+    proof = shadow.get_by_text("Reason to believe", exact=True).locator("..")
+    expect(proof).to_contain_text("Published guided specialist onboarding process")
+    expect(proof).to_contain_text("Published guided specialist onboarding checklist")
+    expect(shadow.get_by_role("link", name="https://studio.example.test/process")).to_be_visible()
+    assert page.evaluate("Adzy.brand.strategy_candidate.review_shadow.from_profile_snapshot_id") == old["profile"]
+    shadow.screenshot(path=str(evidence / "desktop-changed-evidence.png"))
     page.locator("#adzy-approval").screenshot(path=str(evidence / "desktop-recovery.png"))
 
     restart()
@@ -131,6 +155,8 @@ def browser_journey(page, expect, case, evidence, restart):
     expect(page.locator("#adzy-workflow-status")).to_contain_text("Brand evidence needs review")
     assert page.evaluate("document.documentElement.scrollWidth") <= 390
     page.locator("#adzy-approval").screenshot(path=str(evidence / "mobile-recovery.png"))
+    expect(shadow).to_contain_text("Captured content changed")
+    shadow.screenshot(path=str(evidence / "mobile-changed-evidence.png"))
     page.get_by_role("button", name="Create", exact=True).click()
     expect(page.locator("#adzy-brief-status")).to_have_text("Brand evidence needs review")
     expect(page.locator("#adzy-make-btn")).to_be_disabled()
@@ -163,6 +189,8 @@ def browser_journey(page, expect, case, evidence, restart):
     assert page.evaluate("Adzy.contract.creative_contract_id") == contract["creative_contract_id"]
     return {
         "failed_refresh_kept_approval": True,
+        "shadow_skip_kept_actual_contract_blocked": True,
+        "changed_evidence_showed_old_and_new_proof_from_approved_strategy": True,
         "stale_after_process_restart": True,
         "saved_brand_card_requests_review": True,
         "old_poster_draft_checksum_unchanged": True,

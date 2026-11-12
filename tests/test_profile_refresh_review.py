@@ -9,7 +9,7 @@ from test_review_workflow import approvals, database, decision
 from workflows.synthetic import brand, objective
 
 
-def replace_profile(service, data, payload=None):
+def replace_profile(service, data, payload=None, *, source_capture=None):
     from db.services import ProfileData, ScrapeSuccess
 
     actor = UUID(data["actor"])
@@ -23,6 +23,7 @@ def replace_profile(service, data, payload=None):
             schema_version=1),
         source_url="https://studio.example.test",
         display_name="Refreshed Studio",
+        source_capture=source_capture,
     ))
 
 

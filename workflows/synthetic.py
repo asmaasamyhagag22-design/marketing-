@@ -29,3 +29,26 @@ def objective():
                         'geography':[],'market':'','constraints':[]},
             'marketing_role':'DEMAND_CAPTURE','behavioral_objective':unknown,
             'media_optimization':{'status':'NOT_SET','value':None}}
+
+
+def source_capture(source):
+    """Simulated capture fingerprints built from explicitly fictional source blocks."""
+    from hashlib import sha256
+    import json
+
+    pages = {}
+    pending = [source["_profile"], source["_full_result"]]
+    while pending:
+        value = pending.pop()
+        if isinstance(value, dict):
+            url, quote = value.get("page_url"), value.get("quote")
+            if url and quote:
+                pages.setdefault(url, []).append(quote)
+            pending.extend(value.values())
+        elif isinstance(value, list):
+            pending.extend(value)
+    return {
+        "representation": "fictional-source-blocks@1", "complete": True,
+        "pages": {url: sha256(json.dumps(quotes, ensure_ascii=False).encode()).hexdigest()
+                  for url, quotes in pages.items()},
+    }

@@ -1,0 +1,16 @@
+{
+  "failed_refresh_kept_approval": true,
+  "shadow_skip_kept_actual_contract_blocked": true,
+  "changed_evidence_showed_old_and_new_proof_from_approved_strategy": true,
+  "stale_after_process_restart": true,
+  "saved_brand_card_requests_review": true,
+  "old_poster_draft_checksum_unchanged": true,
+  "new_swot_and_strategy_required_explicit_approval": true,
+  "recovered_contract_binds_new_profile_and_quote": true,
+  "desktop_and_390px": true,
+  "journey_seconds": 46.57,
+  "synthetic": true,
+  "poster_runs": 1,
+  "provider_dispatches": 0,
+  "browser_errors": []
+}

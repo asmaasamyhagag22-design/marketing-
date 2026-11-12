@@ -36,7 +36,7 @@ class JobRecorder:
     """The runner's write surface for ONE job. Duck-types the JobStore methods it used to call."""
 
     __slots__ = ("job_id", "_provider", "result", "manifest_path", "profile_path",
-                 "last_started_stage")
+                 "last_started_stage", "source_capture")
 
     def __init__(self, *, job_id: str, provider: Any) -> None:
         self.job_id = str(job_id)
@@ -45,6 +45,7 @@ class JobRecorder:
         #: terminal state. Under legacy the provider ALSO lands it on the in-memory Job, because
         #: there the Job is the result store; under PostgreSQL nothing durable is written here.
         self.result: Optional[dict[str, Any]] = None
+        self.source_capture: Optional[dict[str, Any]] = None
         self.manifest_path: Optional[str] = None
         self.profile_path: Optional[str] = None
         self.last_started_stage: Optional[Stage] = None

@@ -83,6 +83,9 @@ def prepare(destination):
     paths.update(root/p for p in DOCS if (root/p).is_file())
     paths.update(root/'docs/experiments/profile-refresh'/name for name in (
         'RESULT.md', 'browser-result.json', 'desktop-recovery.png', 'mobile-recovery.png'))
+    paths.update(root/'docs/experiments/review-shadow'/name for name in (
+        'RESULT.md', 'PROTOCOL.md', 'cases.json', 'labels.json', 'comparison.json',
+        'browser-result.json', 'desktop-changed-evidence.png', 'mobile-changed-evidence.png'))
     extra=('POSTER_ECONOMIC_REPAIR_RESULT.md','tests/test_poster_economic_repair.py',
         'tests/test_poster_qa_brand_roles.py','tests/test_poster_candidate_persistence.py',
         'tests/test_poster_design_controls.py','tests/test_poster_acceptance_red_boundary.py',

@@ -16,6 +16,7 @@ def application(database,tmp_path,monkeypatch):
     from api.persistence import reset_persistence
     from api.user_auth import hash_password
     from db.models import User
+    from db.session import dispose
     service,provider = connect(database)
     data = seed(service,provider)
     with service._uow_factory() as uow:
@@ -26,14 +27,18 @@ def application(database,tmp_path,monkeypatch):
     monkeypatch.setenv('PERSISTENCE_BACKEND','postgres')
     monkeypatch.setenv('BASEERA_DATABASE_URL',database['dsn'])
     monkeypatch.setenv('ADZY_REVIEW_STATE_DIR',str(tmp_path/'checkpoints'))
+    dispose()
     reset_persistence()
     from api.main import app
-    with TestClient(app) as client:
-        login = client.post('/api/auth/login',json={'email':email,'password':'SyntheticPassword42'})
-        assert login.status_code==200,login.text
-        headers = {'Authorization':'Bearer '+login.json()['access_token']}
-        yield client,headers,service,provider,data,app
-    reset_persistence()
+    try:
+        with TestClient(app) as client:
+            login = client.post('/api/auth/login',json={'email':email,'password':'SyntheticPassword42'})
+            assert login.status_code==200,login.text
+            headers = {'Authorization':'Bearer '+login.json()['access_token']}
+            yield client,headers,service,provider,data,app
+    finally:
+        reset_persistence()
+        dispose()
 
 
 def begin(client,headers,data):

@@ -73,6 +73,7 @@ class ScrapeSuccess:
     requested_config: Mapping[str, Any] = field(default_factory=dict)
     run_output: Mapping[str, Any] | None = None
     warning: str | None = None
+    source_capture: Mapping[str, Any] | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -288,6 +289,14 @@ class PersistenceService:
             # between the scrape Run and the snapshot committed with it. The immutable Run output
             # remains a payload; no arbitrary Brand JSON is updated.
             run_output = dict(data.run_output or {"profile_snapshot_id": str(profile.id)})
+            if data.source_capture is not None:
+                run_output["source_capture"] = dict(data.source_capture)
+            if not canonical.created:
+                from db.refresh_shadow import observe_refresh
+
+                shadow = observe_refresh(uow, brand=brand, profile=profile, capture=data.source_capture)
+                if shadow is not None:
+                    run_output["review_shadow"] = shadow
             run = uow.runs.create_live_for_locked_brand(
                 brand_id=brand.id, kind="scrape", created_by_user_id=data.user_id,
                 status="succeeded", input_profile_id=profile.id,

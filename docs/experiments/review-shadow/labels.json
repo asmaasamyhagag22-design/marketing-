@@ -1,0 +1,82 @@
+{
+  "rate-limit-decreased": {
+    "expected": "REQUIRED",
+    "rationale": "الحد المعلن انخفض من 3600 إلى 1152."
+  },
+  "certificate-profile-qualifier": {
+    "expected": "REQUIRED",
+    "rationale": "بداية الاقتباس بقيت حرفية، وأصبح الحد تابعًا لملف تعريف الشهادة."
+  },
+  "search-paragraph-relocated": {
+    "expected": "REDUNDANT",
+    "rationale": "انتقلت فقرة البحث وتغير تاريخ التحديث، وبقي حد الإصدار وشروطه."
+  },
+  "cached-authorization-profile": {
+    "expected": "REQUIRED",
+    "rationale": "صارت المدة حدًا أقصى يعتمد على ملف التعريف."
+  },
+  "certificate-lifetime-option": {
+    "expected": "REQUIRED",
+    "rationale": "صارت مدة 90 يومًا افتراضية مع خيار ستة أيام."
+  },
+  "faq-link-attribute-typo": {
+    "expected": "REDUNDANT",
+    "rationale": "تصحيح تهجئة سمة رابط في فقرة أخرى، والادعاء وشروطه ثابتان."
+  },
+  "pages-link-anchor-edit": {
+    "expected": "REDUNDANT",
+    "rationale": "حُذفت إحالة إلى مرساة داخل صفحة أخرى، والحد نفسه ثابت."
+  },
+  "faq-unchanged-across-commits": {
+    "expected": "REDUNDANT",
+    "rationale": "نسختان متعاقبتان من مستودع الناشر، والملف مطابق بالبايت."
+  },
+  "same-page-new-snapshot": {
+    "expected": "REDUNDANT",
+    "rationale": "المحتوى وشروط السعر ثابتة عبر وقتي التقاط."
+  },
+  "layout-order-only": {
+    "expected": "REDUNDANT",
+    "rationale": "تبدّل ترتيب وحدتين مستقلتين، مع ثبات السعر والشروط."
+  },
+  "formatting-only": {
+    "expected": "REDUNDANT",
+    "rationale": "تنسيق HTML فقط."
+  },
+  "price-increase": {
+    "expected": "REQUIRED",
+    "rationale": "السعر ارتفع من 40 إلى 55 يورو."
+  },
+  "branch-relocation-ar": {
+    "expected": "REQUIRED",
+    "rationale": "الفرع المذكور في الاستراتيجية تغيّر."
+  },
+  "expired-offer-removed": {
+    "expected": "REQUIRED",
+    "rationale": "انتهى العرض واختفى نصه."
+  },
+  "expired-offer-still-displayed": {
+    "expected": "REQUIRED",
+    "rationale": "انتهت الصلاحية بحسب التاريخ المكتوب مع تطابق بايتات الصفحة."
+  },
+  "exception-next-to-quote": {
+    "expected": "REQUIRED",
+    "rationale": "ظهر استثناء لعطلة الأسبوع بينما بقي الاقتباس."
+  },
+  "exception-on-linked-page": {
+    "expected": "REQUIRED",
+    "rationale": "ظهر استثناء على صفحة شروط ملتقطة أخرى."
+  },
+  "source-unavailable": {
+    "expected": "UNKNOWN",
+    "rationale": "الالتقاط الجديد فشل؛ لا مادة كافية لتحديد ما تغيّر."
+  },
+  "support-outside-coverage": {
+    "expected": "UNKNOWN",
+    "rationale": "مصدر دليل الجمهور خارج النسختين."
+  },
+  "partial-capture-with-known-change": {
+    "expected": "REQUIRED",
+    "rationale": "السعر المشاهد تغيّر مع تعذّر الحصول على صفحة الشروط."
+  }
+}

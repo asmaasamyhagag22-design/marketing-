@@ -972,3 +972,21 @@ body.adzy-ready #toast { z-index: 1000; background: var(--adzy-ink); color: var(
 
 .adzy-copy-lead { color:#67418d; }
 .adzy-copy-limit { padding:12px 16px;background:#eee7f4;border-radius:10px;font-weight:600; }
+
+.adzy-refresh-shadow {
+  grid-column: 1 / -1;
+  min-width: 0;
+  background: var(--adzy-paper, #fffaf0);
+  border: 1px solid var(--adzy-ink);
+  border-radius: 16px;
+  padding: clamp(16px, 3vw, 28px);
+  overflow-wrap: anywhere;
+}
+.adzy-refresh-shadow h3 { margin: 0 0 6px; }
+.adzy-refresh-shadow ul { list-style: none; padding: 0; }
+.adzy-refresh-sources > li { margin-top: 16px; }
+.adzy-refresh-sources ul > li { padding: 12px 0; border-top: 1px solid #b9b3be; }
+.adzy-refresh-excerpts { display: flex; flex-wrap: wrap; gap: 12px; }
+.adzy-refresh-excerpts > div { flex: 1 1 210px; min-width: 0; }
+.adzy-refresh-excerpts span { font-size: .8rem; }
+.adzy-refresh-excerpts blockquote { margin: 4px 0 0; font-weight: 600; }

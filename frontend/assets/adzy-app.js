@@ -762,6 +762,49 @@
     panel.innerHTML = `<h3>${esc(directionLead)}</h3><p><strong>For:</strong> ${esc(directionTarget)}${text(directionProof) !== text(directionLead) ? ` · ${esc(directionProof)}` : ''}</p><p><strong>Decision rationale:</strong> ${esc(sentence(decision.rationale, 'No rationale text was returned.'))}</p>${fullPositioning && fullPositioning !== directionLead ? `<details class="adzy-raw-detail"><summary>${A.review && A.review.status === 'READY_FOR_CREATIVE' ? 'Full approved positioning' : 'Full positioning proposal'}</summary><p>${esc(fullPositioning)}</p></details>` : ''}`;
   }
 
+  function renderRefreshShadow(observation) {
+    if (!observation || observation.mode !== 'shadow') return '';
+    const verdicts = {
+      REVIEW: 'Captured content changed',
+      SKIP: 'Captured content matched',
+      UNKNOWN: 'Comparison inconclusive',
+    };
+    const reasonLabels = {
+      CAPTURE_MISSING: 'A capture is unavailable for one of the versions.',
+      CAPTURE_REPRESENTATION_CHANGED: 'The versions used different capture methods.',
+      CAPTURE_INCOMPLETE: 'One of the captures was incomplete.',
+      CAPTURE_COVERAGE_CHANGED: 'The captures cover different pages.',
+      STRATEGY_EVIDENCE_UNCOVERED: 'Some saved strategy evidence could not be compared.',
+      SHADOW_COMPARISON_UNAVAILABLE: 'The comparison could not finish.',
+    };
+    const reasons = list(observation.reasons).map(code => reasonLabels[code]).filter(Boolean);
+    const sources = list(observation.changes).map(change => {
+      const url = safeUrl(change.page_url);
+      const source = url ? `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${esc(change.page_url)}</a>` : esc(change.page_url);
+      const impacts = list(change.impacts);
+      const changed = impacts.filter(impact => impact.before_quote !== impact.current_excerpt);
+      const retained = impacts.filter(impact => impact.before_quote === impact.current_excerpt);
+      const changedRows = changed.map(impact => `<li><strong>${esc(impact.part)}</strong>
+        ${impact.claim && impact.claim !== impact.before_quote ? `<p dir="auto">${esc(impact.claim)}</p>` : ''}
+        <div class="adzy-refresh-excerpts">
+          <div><span>Saved excerpt</span><blockquote dir="auto">${esc(impact.before_quote || 'Unavailable')}</blockquote></div>
+          <div><span>Excerpt in refreshed profile</span><blockquote dir="auto">${esc(impact.current_excerpt || 'No exact excerpt available for comparison')}</blockquote></div>
+        </div></li>`).join('');
+      const retainedRows = retained.map(impact => `<li><strong>${esc(impact.part)}</strong>
+        <blockquote dir="auto">${esc(impact.before_quote)}</blockquote></li>`).join('');
+      return `<li><p>${source}</p>
+        ${changedRows ? `<ul>${changedRows}</ul>` : ''}
+        ${retainedRows ? `<details ${changedRows ? '' : 'open'}><summary>Saved excerpts still present (${retained.length})</summary><ul>${retainedRows}</ul></details>` : ''}
+        ${impacts.length ? '' : '<p>Review the relevance of this changed source.</p>'}</li>`;
+    }).join('');
+    return `<section class="adzy-refresh-shadow" id="adzy-refresh-shadow" aria-label="Evidence comparison">
+      <h3>${esc(verdicts[observation.decision] || verdicts.UNKNOWN)}</h3>
+      <p>Shadow comparison · the current approval rules still require a new review.</p>
+      ${reasons.length ? `<ul>${reasons.map(reason => `<li>${esc(reason)}</li>`).join('')}</ul>` : ''}
+      ${sources ? `<ul class="adzy-refresh-sources">${sources}</ul>` : ''}
+    </section>`;
+  }
+
   function renderApproval() {
     const root = $('adzy-approval');
     if (!A.brand || A.loadingBrand) { root.innerHTML = '<p>Choose a brand to review its strategy.</p>'; return; }
@@ -773,7 +816,8 @@
         : '<button class="adzy-btn coral" type="button" onclick="adzyNavigate(\'think\')">Review research &amp; SWOT</button>';
       const next = A.brand.swot_approved ? 'Generate directions from the approved SWOT and review the new strategy.'
         : 'Prepare and approve the SWOT for the refreshed evidence first.';
-      root.innerHTML = `<div role="status" id="adzy-workflow-status"><h2>Brand evidence needs review.</h2><p>The saved directions are out of date for the current evidence snapshot. ${next}</p></div><div>${action}</div>`;
+      root.innerHTML = `<div role="status" id="adzy-workflow-status"><h2>Brand evidence needs review.</h2><p>The saved directions are out of date for the current evidence snapshot. ${next}</p></div><div>${action}</div>`
+        + renderRefreshShadow(candidate.review_shadow);
       return;
     }
     const verification = candidate.verification || {};

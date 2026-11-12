@@ -1,0 +1,680 @@
+[
+  {
+    "id": "rate-limit-decreased",
+    "kind": "public",
+    "before": {
+      "representation": "publisher-markdown@1",
+      "complete": true,
+      "pages": {
+        "https://letsencrypt.org/docs/rate-limits/": {
+          "sha256": "4e9f07cd1d2a9326c3ced50dfb5fbc85bb1f4bbb039ac758217fb676180dfb3b",
+          "revision": "7638a3473c884663b733c29272cedd1b51dde8e3",
+          "revision_at": "2025-06-16T17:40:05Z",
+          "revision_url": "https://github.com/letsencrypt/website/blob/7638a3473c884663b733c29272cedd1b51dde8e3/content/en/docs/rate-limits.md",
+          "raw_url": "https://raw.githubusercontent.com/letsencrypt/website/7638a3473c884663b733c29272cedd1b51dde8e3/content/en/docs/rate-limits.md"
+        }
+      }
+    },
+    "after": {
+      "representation": "publisher-markdown@1",
+      "complete": true,
+      "pages": {
+        "https://letsencrypt.org/docs/rate-limits/": {
+          "sha256": "804c6b8e954cbfb37fc0e064437c588bab13725c19c0a4479c12508ab57bc85c",
+          "revision": "369fe2a9960b65a5692a94cf93df685710da0d01",
+          "revision_at": "2025-07-10T15:09:37Z",
+          "revision_url": "https://github.com/letsencrypt/website/blob/369fe2a9960b65a5692a94cf93df685710da0d01/content/en/docs/rate-limits.md",
+          "raw_url": "https://raw.githubusercontent.com/letsencrypt/website/369fe2a9960b65a5692a94cf93df685710da0d01/content/en/docs/rate-limits.md"
+        }
+      }
+    },
+    "dependencies": [
+      {
+        "page_url": "https://letsencrypt.org/docs/rate-limits/",
+        "part": "Account capacity",
+        "before_quote": "3,600 consecutive authorization failures"
+      }
+    ]
+  },
+  {
+    "id": "certificate-profile-qualifier",
+    "kind": "public",
+    "before": {
+      "representation": "publisher-markdown@1",
+      "complete": true,
+      "pages": {
+        "https://letsencrypt.org/docs/rate-limits/": {
+          "sha256": "7e3a62f06f89d28f68b4439071e67653ff9386ae44f73e98132dcab1918a0ed9",
+          "revision": "98f4fc3a0c1e86ed1b2eed26eb239f2fb566fff9",
+          "revision_at": "2026-04-10T16:52:20Z",
+          "revision_url": "https://github.com/letsencrypt/website/blob/98f4fc3a0c1e86ed1b2eed26eb239f2fb566fff9/content/en/docs/rate-limits.md",
+          "raw_url": "https://raw.githubusercontent.com/letsencrypt/website/98f4fc3a0c1e86ed1b2eed26eb239f2fb566fff9/content/en/docs/rate-limits.md"
+        }
+      }
+    },
+    "after": {
+      "representation": "publisher-markdown@1",
+      "complete": true,
+      "pages": {
+        "https://letsencrypt.org/docs/rate-limits/": {
+          "sha256": "c760231bf6ac65fba78a0a088ccc5b89dc28a9006471bcf9daf4134816f59f0f",
+          "revision": "6ccb286fed2ba6fd5d768a576f315c4efb795d6b",
+          "revision_at": "2026-08-05T15:33:56Z",
+          "revision_url": "https://github.com/letsencrypt/website/blob/6ccb286fed2ba6fd5d768a576f315c4efb795d6b/content/en/docs/rate-limits.md",
+          "raw_url": "https://raw.githubusercontent.com/letsencrypt/website/6ccb286fed2ba6fd5d768a576f315c4efb795d6b/content/en/docs/rate-limits.md"
+        }
+      }
+    },
+    "dependencies": [
+      {
+        "page_url": "https://letsencrypt.org/docs/rate-limits/",
+        "part": "Certificate capacity",
+        "before_quote": "A single certificate can include up to 100 identifiers"
+      }
+    ]
+  },
+  {
+    "id": "search-paragraph-relocated",
+    "kind": "public",
+    "before": {
+      "representation": "publisher-markdown@1",
+      "complete": true,
+      "pages": {
+        "https://letsencrypt.org/docs/rate-limits/": {
+          "sha256": "c760231bf6ac65fba78a0a088ccc5b89dc28a9006471bcf9daf4134816f59f0f",
+          "revision": "6ccb286fed2ba6fd5d768a576f315c4efb795d6b",
+          "revision_at": "2026-08-05T15:33:56Z",
+          "revision_url": "https://github.com/letsencrypt/website/blob/6ccb286fed2ba6fd5d768a576f315c4efb795d6b/content/en/docs/rate-limits.md",
+          "raw_url": "https://raw.githubusercontent.com/letsencrypt/website/6ccb286fed2ba6fd5d768a576f315c4efb795d6b/content/en/docs/rate-limits.md"
+        }
+      }
+    },
+    "after": {
+      "representation": "publisher-markdown@1",
+      "complete": true,
+      "pages": {
+        "https://letsencrypt.org/docs/rate-limits/": {
+          "sha256": "5da7f37cb5c10c657fa505f0dfe624a918a6bca745fcf5f5234eb7dc97e2b1d5",
+          "revision": "225986dfb2766be7c981d3fb2976a26878e9f743",
+          "revision_at": "2026-08-05T15:43:11Z",
+          "revision_url": "https://github.com/letsencrypt/website/blob/225986dfb2766be7c981d3fb2976a26878e9f743/content/en/docs/rate-limits.md",
+          "raw_url": "https://raw.githubusercontent.com/letsencrypt/website/225986dfb2766be7c981d3fb2976a26878e9f743/content/en/docs/rate-limits.md"
+        }
+      }
+    },
+    "dependencies": [
+      {
+        "page_url": "https://letsencrypt.org/docs/rate-limits/",
+        "part": "Certificate issuance limit",
+        "before_quote": "Up to 50 certificates can be issued"
+      }
+    ]
+  },
+  {
+    "id": "cached-authorization-profile",
+    "kind": "public",
+    "before": {
+      "representation": "publisher-markdown@1",
+      "complete": true,
+      "pages": {
+        "https://letsencrypt.org/docs/faq/": {
+          "sha256": "d7d3ba4e60c48bbec62d13cf957a20b198fe40880e7561993d52676f71eeebc6",
+          "revision": "d47aa63156b9e76eb20707fa489aff573e1fad89",
+          "revision_at": "2025-01-27T20:21:40Z",
+          "revision_url": "https://github.com/letsencrypt/website/blob/d47aa63156b9e76eb20707fa489aff573e1fad89/content/en/docs/faq.md",
+          "raw_url": "https://raw.githubusercontent.com/letsencrypt/website/d47aa63156b9e76eb20707fa489aff573e1fad89/content/en/docs/faq.md"
+        }
+      }
+    },
+    "after": {
+      "representation": "publisher-markdown@1",
+      "complete": true,
+      "pages": {
+        "https://letsencrypt.org/docs/faq/": {
+          "sha256": "403823fc608a91ec598732d36d13c212998552bf868eccf013644879db89665e",
+          "revision": "c5a1cad4f0800baf9cf072c596bc69e83c8d16f1",
+          "revision_at": "2025-04-28T17:01:21Z",
+          "revision_url": "https://github.com/letsencrypt/website/blob/c5a1cad4f0800baf9cf072c596bc69e83c8d16f1/content/en/docs/faq.md",
+          "raw_url": "https://raw.githubusercontent.com/letsencrypt/website/c5a1cad4f0800baf9cf072c596bc69e83c8d16f1/content/en/docs/faq.md"
+        }
+      }
+    },
+    "dependencies": [
+      {
+        "page_url": "https://letsencrypt.org/docs/faq/",
+        "part": "Validation reuse",
+        "before_quote": "last for 30 days"
+      }
+    ]
+  },
+  {
+    "id": "certificate-lifetime-option",
+    "kind": "public",
+    "before": {
+      "representation": "publisher-markdown@1",
+      "complete": true,
+      "pages": {
+        "https://letsencrypt.org/docs/faq/": {
+          "sha256": "403823fc608a91ec598732d36d13c212998552bf868eccf013644879db89665e",
+          "revision": "c5a1cad4f0800baf9cf072c596bc69e83c8d16f1",
+          "revision_at": "2025-04-28T17:01:21Z",
+          "revision_url": "https://github.com/letsencrypt/website/blob/c5a1cad4f0800baf9cf072c596bc69e83c8d16f1/content/en/docs/faq.md",
+          "raw_url": "https://raw.githubusercontent.com/letsencrypt/website/c5a1cad4f0800baf9cf072c596bc69e83c8d16f1/content/en/docs/faq.md"
+        }
+      }
+    },
+    "after": {
+      "representation": "publisher-markdown@1",
+      "complete": true,
+      "pages": {
+        "https://letsencrypt.org/docs/faq/": {
+          "sha256": "c0535cb07c12addae756c28aa606b3b2169e465a5759bcdbe3662f87a7d4db8e",
+          "revision": "7eada5c6e283fee96f9386d4012226bca7903972",
+          "revision_at": "2025-08-01T16:50:06Z",
+          "revision_url": "https://github.com/letsencrypt/website/blob/7eada5c6e283fee96f9386d4012226bca7903972/content/en/docs/faq.md",
+          "raw_url": "https://raw.githubusercontent.com/letsencrypt/website/7eada5c6e283fee96f9386d4012226bca7903972/content/en/docs/faq.md"
+        }
+      }
+    },
+    "dependencies": [
+      {
+        "page_url": "https://letsencrypt.org/docs/faq/",
+        "part": "Certificate lifetime",
+        "before_quote": "Our certificates are valid for 90 days."
+      }
+    ]
+  },
+  {
+    "id": "faq-link-attribute-typo",
+    "kind": "public",
+    "before": {
+      "representation": "publisher-markdown@1",
+      "complete": true,
+      "pages": {
+        "https://letsencrypt.org/docs/faq/": {
+          "sha256": "c0535cb07c12addae756c28aa606b3b2169e465a5759bcdbe3662f87a7d4db8e",
+          "revision": "7eada5c6e283fee96f9386d4012226bca7903972",
+          "revision_at": "2025-08-01T16:50:06Z",
+          "revision_url": "https://github.com/letsencrypt/website/blob/7eada5c6e283fee96f9386d4012226bca7903972/content/en/docs/faq.md",
+          "raw_url": "https://raw.githubusercontent.com/letsencrypt/website/7eada5c6e283fee96f9386d4012226bca7903972/content/en/docs/faq.md"
+        }
+      }
+    },
+    "after": {
+      "representation": "publisher-markdown@1",
+      "complete": true,
+      "pages": {
+        "https://letsencrypt.org/docs/faq/": {
+          "sha256": "e3c6f0d8710d3a2c7e00104c2e32cf3f5c67b83bd8751c6ccd15f9f9cede74ad",
+          "revision": "0422bceacf64d2f5b82bd79fc376a3cd858c77ed",
+          "revision_at": "2026-02-09T14:01:06Z",
+          "revision_url": "https://github.com/letsencrypt/website/blob/0422bceacf64d2f5b82bd79fc376a3cd858c77ed/content/en/docs/faq.md",
+          "raw_url": "https://raw.githubusercontent.com/letsencrypt/website/0422bceacf64d2f5b82bd79fc376a3cd858c77ed/content/en/docs/faq.md"
+        }
+      }
+    },
+    "dependencies": [
+      {
+        "page_url": "https://letsencrypt.org/docs/faq/",
+        "part": "Free certificates",
+        "before_quote": "We do not charge a fee for our certificates."
+      }
+    ]
+  },
+  {
+    "id": "pages-link-anchor-edit",
+    "kind": "public",
+    "before": {
+      "representation": "publisher-markdown@1",
+      "complete": true,
+      "pages": {
+        "https://docs.github.com/en/pages/getting-started-with-github-pages/github-pages-limits": {
+          "sha256": "4a126a5ea75487fa2f8f5064a0e5c12786cf44c965984d4176e6331c9071d982",
+          "revision": "a5290f876bdfa8ec062ab38043de2b886e17be9e",
+          "revision_at": "2026-07-09T13:41:59Z",
+          "revision_url": "https://github.com/github/docs/blob/a5290f876bdfa8ec062ab38043de2b886e17be9e/content/pages/getting-started-with-github-pages/github-pages-limits.md",
+          "raw_url": "https://raw.githubusercontent.com/github/docs/a5290f876bdfa8ec062ab38043de2b886e17be9e/content/pages/getting-started-with-github-pages/github-pages-limits.md"
+        }
+      }
+    },
+    "after": {
+      "representation": "publisher-markdown@1",
+      "complete": true,
+      "pages": {
+        "https://docs.github.com/en/pages/getting-started-with-github-pages/github-pages-limits": {
+          "sha256": "e1bf094f0d2d92186bc1ffbeb89ed25fd928a9b6823d69322cbf9e2ebb77be5d",
+          "revision": "2c6caa0863fe281adfe47a1810c5e991008686e7",
+          "revision_at": "2026-07-24T14:09:21Z",
+          "revision_url": "https://github.com/github/docs/blob/2c6caa0863fe281adfe47a1810c5e991008686e7/content/pages/getting-started-with-github-pages/github-pages-limits.md",
+          "raw_url": "https://raw.githubusercontent.com/github/docs/2c6caa0863fe281adfe47a1810c5e991008686e7/content/pages/getting-started-with-github-pages/github-pages-limits.md"
+        }
+      }
+    },
+    "dependencies": [
+      {
+        "page_url": "https://docs.github.com/en/pages/getting-started-with-github-pages/github-pages-limits",
+        "part": "Repository limit",
+        "before_quote": "recommended limit of 1 GB"
+      }
+    ]
+  },
+  {
+    "id": "faq-unchanged-across-commits",
+    "kind": "public",
+    "before": {
+      "representation": "publisher-markdown@1",
+      "complete": true,
+      "pages": {
+        "https://letsencrypt.org/docs/faq/": {
+          "sha256": "bcbdf276d061ec0d42ff1caef1b10e8c3f3bfec6189b92c08ad3198a145e21ed",
+          "revision": "16d1f99a5724035528442779289f95b8bf2ed823",
+          "revision_at": "2026-08-04T19:37:47Z",
+          "revision_url": "https://github.com/letsencrypt/website/blob/16d1f99a5724035528442779289f95b8bf2ed823/content/en/docs/faq.md",
+          "raw_url": "https://raw.githubusercontent.com/letsencrypt/website/16d1f99a5724035528442779289f95b8bf2ed823/content/en/docs/faq.md"
+        }
+      }
+    },
+    "after": {
+      "representation": "publisher-markdown@1",
+      "complete": true,
+      "pages": {
+        "https://letsencrypt.org/docs/faq/": {
+          "sha256": "bcbdf276d061ec0d42ff1caef1b10e8c3f3bfec6189b92c08ad3198a145e21ed",
+          "revision": "6ccb286fed2ba6fd5d768a576f315c4efb795d6b",
+          "revision_at": "2026-08-05T15:33:56Z",
+          "revision_url": "https://github.com/letsencrypt/website/blob/6ccb286fed2ba6fd5d768a576f315c4efb795d6b/content/en/docs/faq.md",
+          "raw_url": "https://raw.githubusercontent.com/letsencrypt/website/6ccb286fed2ba6fd5d768a576f315c4efb795d6b/content/en/docs/faq.md"
+        }
+      }
+    },
+    "dependencies": [
+      {
+        "page_url": "https://letsencrypt.org/docs/faq/",
+        "part": "Free certificates",
+        "before_quote": "We do not charge a fee for our certificates."
+      }
+    ]
+  },
+  {
+    "id": "same-page-new-snapshot",
+    "kind": "synthetic",
+    "before": {
+      "representation": "fixture-html@1",
+      "complete": true,
+      "captured_at": "2026-06-01T12:00:00Z",
+      "pages": {
+        "https://atelier.example.test/services": {
+          "body": "<h1>Sessions</h1><p>Studio sessions cost 40 EUR.</p><p>Walk-ins welcome.</p>"
+        }
+      }
+    },
+    "after": {
+      "representation": "fixture-html@1",
+      "complete": true,
+      "captured_at": "2026-06-02T12:00:00Z",
+      "pages": {
+        "https://atelier.example.test/services": {
+          "body": "<h1>Sessions</h1><p>Studio sessions cost 40 EUR.</p><p>Walk-ins welcome.</p>"
+        }
+      }
+    },
+    "dependencies": [
+      {
+        "page_url": "https://atelier.example.test/services",
+        "part": "Price",
+        "before_quote": "Studio sessions cost 40 EUR."
+      }
+    ]
+  },
+  {
+    "id": "layout-order-only",
+    "kind": "synthetic",
+    "before": {
+      "representation": "fixture-html@1",
+      "complete": true,
+      "captured_at": "2026-06-01T12:00:00Z",
+      "pages": {
+        "https://atelier.example.test/services": {
+          "body": "<h1>Sessions</h1><p>Studio sessions cost 40 EUR.</p><p>Walk-ins welcome.</p>"
+        }
+      }
+    },
+    "after": {
+      "representation": "fixture-html@1",
+      "complete": true,
+      "captured_at": "2026-06-01T12:00:00Z",
+      "pages": {
+        "https://atelier.example.test/services": {
+          "body": "<p>Walk-ins welcome.</p><h1>Sessions</h1><p>Studio sessions cost 40 EUR.</p>"
+        }
+      }
+    },
+    "dependencies": [
+      {
+        "page_url": "https://atelier.example.test/services",
+        "part": "Price",
+        "before_quote": "Studio sessions cost 40 EUR."
+      }
+    ]
+  },
+  {
+    "id": "formatting-only",
+    "kind": "synthetic",
+    "before": {
+      "representation": "fixture-html@1",
+      "complete": true,
+      "captured_at": "2026-06-01T12:00:00Z",
+      "pages": {
+        "https://atelier.example.test/services": {
+          "body": "<h1>Sessions</h1><p>Studio sessions cost 40 EUR.</p><p>Walk-ins welcome.</p>"
+        }
+      }
+    },
+    "after": {
+      "representation": "fixture-html@1",
+      "complete": true,
+      "captured_at": "2026-06-01T12:00:00Z",
+      "pages": {
+        "https://atelier.example.test/services": {
+          "body": "<h1>Sessions</h1><p><strong>Studio sessions cost 40 EUR.</strong></p><p>Walk-ins welcome.</p>"
+        }
+      }
+    },
+    "dependencies": [
+      {
+        "page_url": "https://atelier.example.test/services",
+        "part": "Price",
+        "before_quote": "Studio sessions cost 40 EUR."
+      }
+    ]
+  },
+  {
+    "id": "price-increase",
+    "kind": "synthetic",
+    "before": {
+      "representation": "fixture-html@1",
+      "complete": true,
+      "captured_at": "2026-06-01T12:00:00Z",
+      "pages": {
+        "https://atelier.example.test/services": {
+          "body": "<h1>Sessions</h1><p>Studio sessions cost 40 EUR.</p><p>Walk-ins welcome.</p>"
+        }
+      }
+    },
+    "after": {
+      "representation": "fixture-html@1",
+      "complete": true,
+      "captured_at": "2026-06-01T12:00:00Z",
+      "pages": {
+        "https://atelier.example.test/services": {
+          "body": "<h1>Sessions</h1><p>Studio sessions cost 55 EUR.</p><p>Walk-ins welcome.</p>"
+        }
+      }
+    },
+    "dependencies": [
+      {
+        "page_url": "https://atelier.example.test/services",
+        "part": "Price",
+        "before_quote": "Studio sessions cost 40 EUR."
+      }
+    ]
+  },
+  {
+    "id": "branch-relocation-ar",
+    "kind": "synthetic",
+    "before": {
+      "representation": "fixture-html@1",
+      "complete": true,
+      "captured_at": "2026-06-01T12:00:00Z",
+      "pages": {
+        "https://atelier.example.test/services": {
+          "body": "<p>الاستلام متاح من فرع الميناء.</p>"
+        }
+      }
+    },
+    "after": {
+      "representation": "fixture-html@1",
+      "complete": true,
+      "captured_at": "2026-06-01T12:00:00Z",
+      "pages": {
+        "https://atelier.example.test/services": {
+          "body": "<p>الاستلام متاح من فرع المحطة.</p>"
+        }
+      }
+    },
+    "dependencies": [
+      {
+        "page_url": "https://atelier.example.test/services",
+        "part": "Pickup location",
+        "before_quote": "الاستلام متاح من فرع الميناء."
+      }
+    ]
+  },
+  {
+    "id": "expired-offer-removed",
+    "kind": "synthetic",
+    "before": {
+      "representation": "fixture-html@1",
+      "complete": true,
+      "captured_at": "2026-06-01T12:00:00Z",
+      "pages": {
+        "https://atelier.example.test/services": {
+          "body": "<p>15% off studio sessions through June 5, 2026.</p>"
+        }
+      }
+    },
+    "after": {
+      "representation": "fixture-html@1",
+      "complete": true,
+      "captured_at": "2026-06-06T12:00:00Z",
+      "pages": {
+        "https://atelier.example.test/services": {
+          "body": "<p>Studio bookings are open.</p>"
+        }
+      }
+    },
+    "dependencies": [
+      {
+        "page_url": "https://atelier.example.test/services",
+        "part": "Promotional offer",
+        "before_quote": "15% off studio sessions through June 5, 2026."
+      }
+    ]
+  },
+  {
+    "id": "expired-offer-still-displayed",
+    "kind": "synthetic",
+    "before": {
+      "representation": "fixture-html@1",
+      "complete": true,
+      "captured_at": "2026-06-01T12:00:00Z",
+      "pages": {
+        "https://atelier.example.test/services": {
+          "body": "<p>15% off studio sessions through June 5, 2026.</p>"
+        }
+      }
+    },
+    "after": {
+      "representation": "fixture-html@1",
+      "complete": true,
+      "captured_at": "2026-06-06T12:00:00Z",
+      "pages": {
+        "https://atelier.example.test/services": {
+          "body": "<p>15% off studio sessions through June 5, 2026.</p>"
+        }
+      }
+    },
+    "dependencies": [
+      {
+        "page_url": "https://atelier.example.test/services",
+        "part": "Promotional offer",
+        "before_quote": "15% off studio sessions through June 5, 2026."
+      }
+    ]
+  },
+  {
+    "id": "exception-next-to-quote",
+    "kind": "synthetic",
+    "before": {
+      "representation": "fixture-html@1",
+      "complete": true,
+      "captured_at": "2026-06-01T12:00:00Z",
+      "pages": {
+        "https://atelier.example.test/services": {
+          "body": "<h1>Sessions</h1><p>Studio sessions cost 40 EUR.</p><p>Walk-ins welcome.</p>"
+        }
+      }
+    },
+    "after": {
+      "representation": "fixture-html@1",
+      "complete": true,
+      "captured_at": "2026-06-01T12:00:00Z",
+      "pages": {
+        "https://atelier.example.test/services": {
+          "body": "<p>Studio sessions cost 40 EUR.</p><p>Weekend sessions cost 70 EUR.</p><p>Walk-ins welcome.</p>"
+        }
+      }
+    },
+    "dependencies": [
+      {
+        "page_url": "https://atelier.example.test/services",
+        "part": "Price",
+        "before_quote": "Studio sessions cost 40 EUR."
+      }
+    ]
+  },
+  {
+    "id": "exception-on-linked-page",
+    "kind": "synthetic",
+    "before": {
+      "representation": "fixture-html@1",
+      "complete": true,
+      "captured_at": "2026-06-01T12:00:00Z",
+      "pages": {
+        "https://atelier.example.test/services": {
+          "body": "<p>Studio sessions cost 40 EUR.</p><a href=\"/terms\">Terms</a>"
+        },
+        "https://atelier.example.test/terms": {
+          "body": "<p>All sessions qualify.</p>"
+        }
+      }
+    },
+    "after": {
+      "representation": "fixture-html@1",
+      "complete": true,
+      "captured_at": "2026-06-01T12:00:00Z",
+      "pages": {
+        "https://atelier.example.test/services": {
+          "body": "<p>Studio sessions cost 40 EUR.</p><a href=\"/terms\">Terms</a>"
+        },
+        "https://atelier.example.test/terms": {
+          "body": "<p>The advertised rate excludes weekend sessions.</p>"
+        }
+      }
+    },
+    "dependencies": [
+      {
+        "page_url": "https://atelier.example.test/services",
+        "part": "Price",
+        "before_quote": "Studio sessions cost 40 EUR."
+      }
+    ]
+  },
+  {
+    "id": "source-unavailable",
+    "kind": "synthetic",
+    "before": {
+      "representation": "fixture-html@1",
+      "complete": true,
+      "captured_at": "2026-06-01T12:00:00Z",
+      "pages": {
+        "https://atelier.example.test/services": {
+          "body": "<h1>Sessions</h1><p>Studio sessions cost 40 EUR.</p><p>Walk-ins welcome.</p>"
+        }
+      }
+    },
+    "after": {
+      "representation": "fixture-html@1",
+      "complete": false,
+      "captured_at": "2026-06-01T12:00:00Z",
+      "pages": {}
+    },
+    "dependencies": [
+      {
+        "page_url": "https://atelier.example.test/services",
+        "part": "Price",
+        "before_quote": "Studio sessions cost 40 EUR."
+      }
+    ]
+  },
+  {
+    "id": "support-outside-coverage",
+    "kind": "synthetic",
+    "before": {
+      "representation": "fixture-html@1",
+      "complete": true,
+      "captured_at": "2026-06-01T12:00:00Z",
+      "pages": {
+        "https://atelier.example.test/services": {
+          "body": "<h1>Sessions</h1><p>Studio sessions cost 40 EUR.</p><p>Walk-ins welcome.</p>"
+        }
+      }
+    },
+    "after": {
+      "representation": "fixture-html@1",
+      "complete": true,
+      "captured_at": "2026-06-01T12:00:00Z",
+      "pages": {
+        "https://atelier.example.test/services": {
+          "body": "<h1>Sessions</h1><p>Studio sessions cost 40 EUR.</p><p>Walk-ins welcome.</p>"
+        }
+      }
+    },
+    "dependencies": [
+      {
+        "page_url": "https://atelier.example.test/services",
+        "part": "Price",
+        "before_quote": "Studio sessions cost 40 EUR."
+      },
+      {
+        "page_url": "https://voice.example.test/review",
+        "part": "Audience evidence",
+        "before_quote": "Quoted support"
+      }
+    ]
+  },
+  {
+    "id": "partial-capture-with-known-change",
+    "kind": "synthetic",
+    "before": {
+      "representation": "fixture-html@1",
+      "complete": true,
+      "captured_at": "2026-06-01T12:00:00Z",
+      "pages": {
+        "https://atelier.example.test/services": {
+          "body": "<p>Studio sessions cost 40 EUR.</p>"
+        },
+        "https://atelier.example.test/terms": {
+          "body": "<p>All sessions qualify.</p>"
+        }
+      }
+    },
+    "after": {
+      "representation": "fixture-html@1",
+      "complete": false,
+      "captured_at": "2026-06-01T12:00:00Z",
+      "pages": {
+        "https://atelier.example.test/services": {
+          "body": "<p>Studio sessions cost 55 EUR.</p>"
+        }
+      }
+    },
+    "dependencies": [
+      {
+        "page_url": "https://atelier.example.test/services",
+        "part": "Price",
+        "before_quote": "Studio sessions cost 40 EUR."
+      }
+    ]
+  }
+]

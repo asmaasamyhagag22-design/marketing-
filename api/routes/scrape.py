@@ -193,6 +193,7 @@ async def _finish_scrape(job_id: str, url: str, recorder: JobRecorder, *,
         domain_key=domain_key, user_id=owner_id or "", ticket=job_id,
         brand=brand, profile=profile, source_url=url,
         display_name=str(brand.get("name") or ""),
+        source_capture=recorder.source_capture,
         warning=warning)
     if persisted is None:
         raise OSError("brand changed ownership or the update was not applied")

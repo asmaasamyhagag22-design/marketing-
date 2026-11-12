@@ -180,6 +180,14 @@ class BrandReadModel:
                     "objective": dict(
                         canonical_strategy_run.requested_config.get("objective") or {}),
                 }
+                if profile_stale:
+                    scrape = self._service.current_successful_run(
+                        brand_id=brand.id, kind="scrape", user_id=user_id)
+                    if scrape is not None and scrape.input_profile_id == profile_id:
+                        shadow = (scrape.output or {}).get("review_shadow") or {}
+                        if (shadow.get("strategy_run_id") == run_id
+                                and shadow.get("to_profile_snapshot_id") == str(profile_id)):
+                            document["strategy_candidate"]["review_shadow"] = shadow
                 projection_output = dict(canonical_strategy_run.output)
                 projection_output["_requested_objective"] = dict(
                     canonical_strategy_run.requested_config.get("objective") or {})

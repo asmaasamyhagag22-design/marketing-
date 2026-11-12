@@ -302,6 +302,7 @@ class PersistenceProvider(Protocol):
     def commit_scrape(self, *, domain_key: str, user_id: str, ticket: str,
                       brand: Mapping[str, Any], profile: Mapping[str, Any],
                       source_url: str, display_name: str,
+                      source_capture: Mapping[str, Any] | None = None,
                       warning: str = "") -> Optional[dict]: ...
     def abandon_scrape(self, *, ticket: str, user_id: str, error: str) -> None: ...
 
@@ -512,6 +513,7 @@ class LegacyPersistence:
     def commit_scrape(self, *, domain_key: str, user_id: str, ticket: str,
                       brand: Mapping[str, Any], profile: Mapping[str, Any],
                       source_url: str, display_name: str,
+                      source_capture: Mapping[str, Any] | None = None,
                       warning: str = "") -> Optional[dict]:
         """C2 unchanged: `upsert` re-reads the owner under the storage lock and claims on success."""
         from api.brand_store import BrandStore
@@ -1441,6 +1443,7 @@ class PostgresPersistence:
     def commit_scrape(self, *, domain_key: str, user_id: str, ticket: str,
                       brand: Mapping[str, Any], profile: Mapping[str, Any],
                       source_url: str, display_name: str,
+                      source_capture: Mapping[str, Any] | None = None,
                       warning: str = "") -> Optional[dict]:
         """Brand + claim + immutable profile + scrape Run + Job terminal state, in ONE transaction.
 
@@ -1471,6 +1474,7 @@ class PostgresPersistence:
                     primary_language=str(payload.get("primary_language") or "") or None,
                     language_source="profile" if payload.get("primary_language") else None),
                 requested_config={"source_url": source_url},
+                source_capture=source_capture,
                 warning=warning or None,
             ))
         except (ClaimLost, ForeignOwner):

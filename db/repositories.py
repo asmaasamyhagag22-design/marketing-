@@ -439,6 +439,15 @@ class RunRepository:
                 "multiple pre-sequence successful runs have no truthful current ordering")
         return _run(rows[0]) if rows else None
 
+    def scrape_for_profile(self, *, brand_id: UUID, profile_id: UUID | None) -> RunRecord | None:
+        if profile_id is None:
+            return None
+        row = self.session.scalar(select(Run).where(
+            Run.brand_id == brand_id, Run.kind == "scrape", Run.status == "succeeded",
+            Run.input_profile_id == profile_id,
+        ).order_by(Run.kind_seq.desc().nulls_last(), Run.id.desc()).limit(1))
+        return _run(row) if row else None
+
     def finalize_success(
         self, *, run_id: UUID, output: Mapping[str, Any], output_schema_version: int,
         selected_attempt_id: UUID | None = None,
