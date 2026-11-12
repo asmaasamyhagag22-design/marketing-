@@ -34,7 +34,7 @@ def release_test_paths(root):
     pending = [root/'tests'/name for name in CHECKS]
     pending += [root/'tests'/name for name in (
         'conftest.py','poster_operations_frontend.test.cjs','wp0_swot_frontend.test.cjs',
-        'copy_editor_review_fixture.py')]
+        'copy_editor_review_fixture.py','test_adzy_v2_research.py','test_adzy_v2_campaign.py')]
     found = set()
     while pending:
         path = pending.pop()
@@ -86,6 +86,10 @@ def prepare(destination):
     paths.update(root/'docs/experiments/review-shadow'/name for name in (
         'RESULT.md', 'PROTOCOL.md', 'cases.json', 'labels.json', 'comparison.json',
         'browser-result.json', 'desktop-changed-evidence.png', 'mobile-changed-evidence.png'))
+    paths.update(root/'docs/v2'/name for name in (
+        'EXECUTION.md', 'research-release.json', 'research-result.json', 'public-research.json',
+        'copy-release.json', 'copy-result.json', 'browser-result.json', 'campaign-desktop.png',
+        'campaign-mobile.png', 'exception.png'))
     extra=('POSTER_ECONOMIC_REPAIR_RESULT.md','tests/test_poster_economic_repair.py',
         'tests/test_poster_qa_brand_roles.py','tests/test_poster_candidate_persistence.py',
         'tests/test_poster_design_controls.py','tests/test_poster_acceptance_red_boundary.py',
@@ -125,7 +129,7 @@ def prepare(destination):
     # Verify navigable public docs without importing application or touching private data.
     broken_links = []
     public_docs = [target/'README.md', target/'COPY_EDITOR_RESULT.md', target/'POSTER_V1_RELEASE_RESULT.md', target/'POSTER_V1_PUBLICATION_REVIEW.md', target/'POSTER_ECONOMIC_REPAIR_RESULT.md', target/'docs/demo/README.md', target/'docs/getting-started.md', target/'docs/results/README.md', target/'examples/volume-cafe/README.md',
-                   *list((target/'docs/architecture').glob('*.md'))]
+                   target/'docs/v2/EXECUTION.md', *list((target/'docs/architecture').glob('*.md'))]
     for doc in public_docs:
         if not doc.exists(): continue
         for link in re.findall(r'\]\(([^)]+)\)', doc.read_text()):

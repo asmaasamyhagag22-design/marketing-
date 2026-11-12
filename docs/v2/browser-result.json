@@ -1,0 +1,20 @@
+{
+  "synthetic": true,
+  "provider_calls": 0,
+  "campaign_runs": 5,
+  "human_actions_simulated": 3,
+  "brand_reselected": true,
+  "restart": true,
+  "price_repair": true,
+  "exception_blocks": true,
+  "explicit_qualified_revision": true,
+  "expiry_unchanged_capture": true,
+  "desktop_and_390px": true,
+  "browser_errors": [],
+  "elapsed_seconds": 20.14,
+  "image_sha256": {
+    "campaign-desktop.png": "39ca45b32af398179f73a8188f0d1cfafc3c81c9a9d3e42e816f47cde29a9aca",
+    "exception.png": "14e9c9645f8e36df7fc016ee838a4ba0f8fb6ee7ec083a96d970cd48e6ff4032",
+    "campaign-mobile.png": "a7b07dd721d7c2e405e3058a7134dd9a3d63184daa5324944fec1507cfdcb017"
+  }
+}

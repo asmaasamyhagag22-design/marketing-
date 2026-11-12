@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
 <script src="https://unpkg.com/@phosphor-icons/web@2.1.1/src/index.js"></script>
-<link rel="stylesheet" href="/assets/adzy.css?v=8" />
+<link rel="stylesheet" href="/assets/adzy.css?v=9" />
 <style>
   :root {
     --bg:         #0A0A0A;
@@ -1532,6 +1532,7 @@
       <button type="button" data-adzy-nav="discover" aria-current="page" onclick="adzyNavigate('discover')">Discover</button>
       <button type="button" data-adzy-nav="think" onclick="adzyNavigate('think')">Think</button>
       <button type="button" data-adzy-nav="create" onclick="adzyNavigate('create')">Create</button>
+      <button type="button" data-adzy-nav="campaign" onclick="adzyNavigate('campaign')">Campaign</button>
       <button type="button" data-adzy-nav="work" onclick="adzyNavigate('work')">Work</button>
     </nav>
     <div class="adzy-top-actions">
@@ -1702,6 +1703,26 @@
       </div>
     </section>
 
+    <section class="adzy-stage" data-adzy-stage="campaign" id="adzy-campaign" dir="rtl" lang="ar">
+      <div class="adzy-container v2-campaign">
+        <header>
+          <h1>حملة حجز تجربة</h1>
+          <p id="v2-brand"></p>
+        </header>
+        <form id="v2-form">
+          <label>الهدف التسويقي<select name="goal" required>
+            <option value="">اختر الهدف</option>
+            <option value="TRIAL_BOOKINGS">زيادة حجوزات الجلسة التجريبية</option>
+          </select></label>
+          <label>عدد الحجوزات المستهدف، اختياري<input name="booking_target" type="number" min="1" max="1000000" step="1" inputmode="numeric"></label>
+          <label>اسم العرض كما يظهر في المصدر<input name="offer_name" required maxlength="120"></label>
+          <label>رابط صفحة شروط العرض، اختياري<input name="terms_url" type="url" maxlength="500"></label>
+          <button class="adzy-btn blue" type="submit">ابحث عن أدلة العرض</button>
+        </form>
+        <p id="v2-status" role="status" aria-live="polite"></p>
+        <div id="v2-result"></div>
+      </div>
+    </section>
     <section class="adzy-stage adzy-work-stage" id="adzy-stage-work" data-adzy-stage="work">
       <div class="adzy-container">
         <header class="adzy-work-head"><div><p class="adzy-kicker adzy-mono">The work</p><h1 class="adzy-page-title">Things Adzy<br>has made.</h1></div><p class="adzy-body">A living archive of real creatives, their campaign context and the strategy state they shipped with.</p></header>
@@ -6130,7 +6151,8 @@ if (new URLSearchParams(location.search).get('studio') === '1') {
   goStudio();
 }
 </script>
-<script src="/assets/adzy-app.js?v=26"></script>
+<script src="/assets/v2-campaign.js?v=1"></script>
+<script src="/assets/adzy-app.js?v=27"></script>
 <script src="/assets/copy-editor.js?v=1"></script>
 </body>
 </html>

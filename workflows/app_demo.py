@@ -7,7 +7,7 @@ from uuid import UUID
 from .demo import isolate, init, connect
 
 
-def main():
+def main(setup_app=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('action', choices=['init','serve'])
     parser.add_argument('--directory', default='.review-app-demo')
@@ -43,6 +43,8 @@ def main():
         from .synthetic_poster import install
         install(args.synthetic_posters)
     from api.main import app
+    if setup_app is not None:
+        setup_app(app, m)
     exporter = telemetry = None
     if args.capture_sdk:
         from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter

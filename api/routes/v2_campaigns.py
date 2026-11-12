@@ -17,7 +17,8 @@ router = APIRouter(prefix="/v2/campaigns")
 
 class StartRequest(BaseModel):
     expected_run_id: UUID | None
-    goal: str = Field(min_length=3, max_length=220)
+    goal: Literal["TRIAL_BOOKINGS"]
+    booking_target: int | None = Field(default=None, ge=1, le=1_000_000)
     offer_name: str = Field(min_length=2, max_length=120)
     terms_url: str | None = Field(default=None, max_length=500)
 
@@ -63,9 +64,9 @@ def current(domain: str, service=Depends(store)):
 @router.post("/{domain}")
 def start(domain: str, request: StartRequest, service=Depends(store),
           loader=Depends(get_page_loader)):
-    goal, name = request.goal.strip(), request.offer_name.strip()
-    if len(goal) < 3 or len(name) < 2:
-        raise HTTPException(422, detail={"code": "GOAL_AND_OFFER_REQUIRED"})
+    name = request.offer_name.strip()
+    if len(name) < 2:
+        raise HTTPException(422, detail={"code": "OFFER_NAME_REQUIRED"})
     snapshot = execute(lambda: service.snapshot(domain))
     if snapshot.profile_id is None or not snapshot.source_url:
         raise HTTPException(409, detail={"code": "PROFILE_REQUIRED"})
@@ -73,8 +74,9 @@ def start(domain: str, request: StartRequest, service=Depends(store),
         raise HTTPException(409, detail={"code": "CAMPAIGN_CHANGED"})
     if request.terms_url and not same_source(request.terms_url, snapshot.source_url):
         raise HTTPException(422, detail={"code": "TERMS_MUST_USE_BRAND_ORIGIN"})
-    outcome = research(snapshot.source_url, name, loader, now=service.clock(), hint=request.terms_url)
-    return execute(lambda: service.write(domain, snapshot, propose(goal, name, outcome)))
+    outcome = research(snapshot.source_url, name, loader, clock=service.clock, hint=request.terms_url)
+    proposal = propose(name, outcome, brand_name=snapshot.brand_name, booking_target=request.booking_target)
+    return execute(lambda: service.write(domain, snapshot, proposal))
 
 
 @router.post("/{domain}/review")
@@ -93,5 +95,5 @@ def recheck(domain: str, request: RefreshRequest, service=Depends(store),
         raise HTTPException(409, detail={"code": "PROFILE_CHANGED"})
     if not run.output.get("watch_url"):
         raise HTTPException(409, detail={"code": "SOURCE_REQUIRED"})
-    result = refresh(run.output, loader, service.clock())
+    result = refresh(run.output, loader, service.clock)
     return execute(lambda: service.write(domain, snapshot, result, revision=True))
