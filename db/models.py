@@ -233,7 +233,7 @@ class ProfileSnapshot(Base):
 # =====================================================================
 
 RUN_KINDS = ("scrape", "trends", "swot", "strategy", "calendar", "competitors",
-             "poster", "social", "reel", "influencer_poster")
+             "poster", "social", "reel", "influencer_poster", "campaign")
 CREATIVE_KINDS = ("poster", "social", "reel", "influencer_poster")
 TERMINAL_STATUSES = ("queued", "running", "succeeded", "failed")
 
@@ -386,7 +386,7 @@ class RunDependency(Base):
                              name="fk_run_dependencies_depends_on", ondelete="RESTRICT"),
         CheckConstraint("run_id <> depends_on_run_id", name="no_self_dependency"),
         # Only what the traced flows actually prove. Not a vocabulary to grow speculatively.
-        CheckConstraint("relation IN ('uses_trends','uses_swot','uses_strategy')",
+        CheckConstraint("relation IN ('uses_trends','uses_swot','uses_strategy','revises_campaign')",
                         name="relation_is_known"),
         Index("ix_run_dependencies_depends_on_run_id", "depends_on_run_id"),
     )
@@ -747,7 +747,7 @@ class Approval(Base):
             ["subject_run_id", "brand_id", "subject_kind"],
             ["runs.id", "runs.brand_id", "runs.kind"],
             name="fk_approvals_subject_run", ondelete="RESTRICT"),
-        CheckConstraint("subject_kind IN ('swot','strategy')", name="subject_kind_is_known"),
+        CheckConstraint("subject_kind IN ('swot','strategy','campaign')", name="subject_kind_is_known"),
         CheckConstraint("decision IN ('approved','rejected')", name="decision_is_known"),
         CheckConstraint("origin IN ('live','legacy_import')", name="origin_is_known"),
         # A LIVE approval is a person deciding behind `require_user`; the SWOT and strategy routes

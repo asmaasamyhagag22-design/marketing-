@@ -1,0 +1,8 @@
+[
+  {"id":"fractional-eur","price":"42.50","currency":"EUR","branch":"فرع الشاطئ","terms":"العرض بالحجز المسبق فقط.","eligible":true},
+  {"id":"integer-gbp","price":"31","currency":"GBP","branch":"فرع النهر","terms":"الجلسة الأولى فقط.","eligible":true},
+  {"id":"venue-restriction","price":"800","currency":"JPY","branch":"قاعة الفنون","terms":"لا يشمل عطلة نهاية الأسبوع.","eligible":true},
+  {"id":"ambiguous-time","price":"42","currency":"EUR","branch":"فرع الشاطئ","terms":"الحجز المسبق مطلوب.","ends":"2026-11-30T23:59:00","eligible":true},
+  {"id":"outside-scope","price":"42","currency":"EUR","branch":"فرع الشاطئ","terms":"الحجز المسبق مطلوب.","extra":"<p>لا يسري السعر في عطلة الأسبوع.</p>","eligible":false},
+  {"id":"already-ended","price":"42","currency":"EUR","branch":"فرع الشاطئ","terms":"الحجز المسبق مطلوب.","ends":"2026-11-10T23:59:00+02:00","eligible":false}
+]

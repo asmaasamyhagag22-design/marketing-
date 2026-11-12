@@ -1,0 +1,95 @@
+{
+  "synthetic": true,
+  "rows": [
+    {
+      "id": "fractional-eur",
+      "expected_eligible": true,
+      "status": "DRAFT",
+      "checks": {
+        "price_and_currency": true,
+        "branch": true,
+        "terms": true,
+        "validity": true
+      },
+      "literal_baseline": {
+        "body": "جلسة تصميم للمبتدئين | 42.50 | EUR | فرع الشاطئ | 2026-11-30T23:59:00+02:00 | العرض بالحجز المسبق فقط.",
+        "cta": null
+      },
+      "arabic": {
+        "headline": "ابدأ تجربتك مع جلسة تصميم للمبتدئين",
+        "price": "42.50 EUR",
+        "branch": "فرع الشاطئ",
+        "validity": "2026-11-30 23:59:00 (UTC+02:00)",
+        "terms": "العرض بالحجز المسبق فقط.",
+        "cta": "اطّلع على العرض وشروط الحجز"
+      },
+      "strategy_fields_present": true
+    },
+    {
+      "id": "integer-gbp",
+      "expected_eligible": true,
+      "status": "DRAFT",
+      "checks": {
+        "price_and_currency": true,
+        "branch": true,
+        "terms": true,
+        "validity": true
+      },
+      "literal_baseline": {
+        "body": "جلسة تصميم للمبتدئين | 31 | GBP | فرع النهر | 2026-11-30T23:59:00+02:00 | الجلسة الأولى فقط.",
+        "cta": null
+      },
+      "arabic": {
+        "headline": "ابدأ تجربتك مع جلسة تصميم للمبتدئين",
+        "price": "31 GBP",
+        "branch": "فرع النهر",
+        "validity": "2026-11-30 23:59:00 (UTC+02:00)",
+        "terms": "الجلسة الأولى فقط.",
+        "cta": "اطّلع على العرض وشروط الحجز"
+      },
+      "strategy_fields_present": true
+    },
+    {
+      "id": "venue-restriction",
+      "expected_eligible": true,
+      "status": "DRAFT",
+      "checks": {
+        "price_and_currency": true,
+        "branch": true,
+        "terms": true,
+        "validity": true
+      },
+      "literal_baseline": {
+        "body": "جلسة تصميم للمبتدئين | 800 | JPY | قاعة الفنون | 2026-11-30T23:59:00+02:00 | لا يشمل عطلة نهاية الأسبوع.",
+        "cta": null
+      },
+      "arabic": {
+        "headline": "ابدأ تجربتك مع جلسة تصميم للمبتدئين",
+        "price": "800 JPY",
+        "branch": "قاعة الفنون",
+        "validity": "2026-11-30 23:59:00 (UTC+02:00)",
+        "terms": "لا يشمل عطلة نهاية الأسبوع.",
+        "cta": "اطّلع على العرض وشروط الحجز"
+      },
+      "strategy_fields_present": true
+    },
+    {
+      "id": "ambiguous-time",
+      "expected_eligible": true,
+      "status": "REFUSED",
+      "reason": "EXPLICIT_EXPIRY_OFFSET_REQUIRED"
+    },
+    {
+      "id": "outside-scope",
+      "expected_eligible": false,
+      "status": "REFUSED",
+      "reason": "UNPARSED_OFFER_CONTEXT"
+    },
+    {
+      "id": "already-ended",
+      "expected_eligible": false,
+      "status": "REFUSED",
+      "reason": "OFFER_EXPIRED"
+    }
+  ]
+}

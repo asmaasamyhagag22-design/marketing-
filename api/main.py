@@ -47,6 +47,7 @@ from .routes import (  # noqa: E402
     analysis, auth, brands, canonical_reel, generate, health, influencer, jobs, poster, reel,
     run, scrape, showcase, swot, review,
 )
+from .routes import v2_campaigns  # noqa: E402
 from .routes.auth import require_user  # noqa: E402
 
 # The AdArchitect web app (static SPA) served same-origin so no API key ever reaches the browser.
@@ -282,6 +283,7 @@ _authed = [Depends(require_user)]
 _authed_spend = [Depends(require_user), Depends(require_spend_budget)]
 app.include_router(scrape.router, prefix="/api", tags=["webapp"], dependencies=_authed_spend)
 app.include_router(review.router, prefix="/api", tags=["review"], dependencies=_authed)
+app.include_router(v2_campaigns.router, prefix="/api", tags=["campaign-v2"])
 app.include_router(brands.router, prefix="/api", tags=["webapp"], dependencies=_authed)
 # Gate 2D.1 canonical Reel is provider-free.  It is authenticated, but deliberately not mounted
 # behind the spend dependency and cannot reach the legacy renderer or any paid boundary.

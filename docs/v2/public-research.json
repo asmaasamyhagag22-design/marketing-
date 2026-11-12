@@ -1,0 +1,24 @@
+{
+  "status": "BUDGET_EXHAUSTED",
+  "questions": [
+    "Where are the named offer's price, branch, terms and validity published?",
+    "ما مصدر سعر العرض والفرع والشروط ومدة الصلاحية؟"
+  ],
+  "trace": [
+    {
+      "page_url": "https://www.nngroup.com/training/november/",
+      "reason": "BRAND_ENTRY",
+      "outcome": "UNSUPPORTED_OFFER_PAGE_CONTENT"
+    },
+    {
+      "page_url": "https://www.nngroup.com/terms-and-conditions",
+      "reason": "GAP_MATCH",
+      "outcome": "SOURCE_UNAVAILABLE"
+    }
+  ],
+  "page_calls": 2,
+  "elapsed_ms": 2721.731,
+  "provider_calls": 0,
+  "offer": null,
+  "next_action": "ASK_OWNER_FOR_DEDICATED_TERMS_PAGE"
+}
