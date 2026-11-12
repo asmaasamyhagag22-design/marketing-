@@ -117,7 +117,12 @@ class SafeRedirectHandler(urllib.request.HTTPRedirectHandler):
     initial request was never entitled to trust.
     """
 
+    def __init__(self, *, follow_redirects: bool = True):
+        self.follow_redirects = follow_redirects
+
     def redirect_request(self, req, fp, code, msg, headers, newurl):
+        if not self.follow_redirects:
+            return None
         if not is_safe_public_url(newurl):
             raise urllib.error.HTTPError(
                 newurl,
@@ -129,7 +134,7 @@ class SafeRedirectHandler(urllib.request.HTTPRedirectHandler):
         return super().redirect_request(req, fp, code, msg, headers, newurl)
 
 
-def open_public_url(request, *, timeout: float, context=None):
+def open_public_url(request, *, timeout: float, context=None, follow_redirects: bool = True):
     """Open one public HTTP(S) request and re-check every automatic redirect hop.
 
     ``request`` may be a URL string or ``urllib.request.Request``.  The initial
@@ -140,7 +145,7 @@ def open_public_url(request, *, timeout: float, context=None):
     url = request.full_url if isinstance(request, urllib.request.Request) else str(request or "")
     if not is_safe_public_url(url):
         raise urllib.error.URLError("refused non-public URL (request-safety guard)")
-    handlers = [SafeRedirectHandler()]
+    handlers = [SafeRedirectHandler(follow_redirects=follow_redirects)]
     if context is not None:
         handlers.append(urllib.request.HTTPSHandler(context=context))
     opener = urllib.request.build_opener(*handlers)

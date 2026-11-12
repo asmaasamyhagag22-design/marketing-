@@ -1,0 +1,9 @@
+[
+  {"id":"late-terms","links":["team","contact","terms"],"complete":"terms","expected_guided":"READY","expected_fixed":"BUDGET_EXHAUSTED"},
+  {"id":"early-offer","links":["offer","team"],"complete":"offer","expected_guided":"READY","expected_fixed":"READY"},
+  {"id":"arabic-terms","links":["team","arabic_terms"],"complete":"arabic_terms","expected_guided":"READY","expected_fixed":"BUDGET_EXHAUSTED"},
+  {"id":"source-unavailable","links":["terms"],"complete":null,"unavailable":"terms","expected_guided":"NO_SUPPORTED_OFFER","expected_fixed":"NO_SUPPORTED_OFFER"},
+  {"id":"expired","links":["offer"],"complete":"offer","expired":true,"expected_guided":"NO_SUPPORTED_OFFER","expected_fixed":"NO_SUPPORTED_OFFER"},
+  {"id":"no-provenance","links":["team"],"complete":null,"expected_guided":"NO_SUPPORTED_OFFER","expected_fixed":"NO_SUPPORTED_OFFER"},
+  {"id":"unparsed-exception","links":["terms","offer"],"complete":"terms","unparsed":true,"expected_guided":"NO_SUPPORTED_OFFER","expected_fixed":"NO_SUPPORTED_OFFER"}
+]
