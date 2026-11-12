@@ -11,7 +11,7 @@ import time
 from uuid import uuid4
 
 
-def isolate():
+def isolate(*, offline=True):
     import config_env
     config_env._loaded = True
     config_env.load_env = lambda *a, **k: False
@@ -20,6 +20,8 @@ def isolate():
     os.environ['LANGCHAIN_TRACING_V2'] = 'false'
     os.environ['BASEERA_ENABLE_PAID_IMAGES'] = '0'
     os.environ['BASEERA_NO_SPEND'] = '1'
+    if not offline:
+        return
     original_dns = socket.getaddrinfo
     def local_dns(host, *args, **kwargs):
         if host not in ('127.0.0.1','::1','localhost'):
@@ -79,7 +81,7 @@ def seed(service,provider, *, insufficient=False, brand_source=None, owner=None)
     return {'actor':str(user.id),'domain':domain,'subject':str(run.id),'url':url}
 
 
-def init(directory):
+def init(directory, *, seed_demo=seed):
     if directory.exists(): raise ValueError('Use a new demo directory')
     directory.mkdir(parents=True)
     name = 'adzy-review-demo-' + uuid4().hex[:12]
@@ -110,7 +112,7 @@ def init(directory):
             cfg.attributes['connection'] = conn
             alembic_command.upgrade(cfg,'head')
         service,provider = connect(manifest)
-        manifest.update(seed(service,provider))
+        manifest.update(seed_demo(service, provider))
         from .runtime import setup
         setup(directory)
         (directory/'demo.json').write_text(json.dumps(manifest,indent=2))

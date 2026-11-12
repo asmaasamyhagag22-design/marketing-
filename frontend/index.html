@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
 <script src="https://unpkg.com/@phosphor-icons/web@2.1.1/src/index.js"></script>
-<link rel="stylesheet" href="/assets/adzy.css?v=9" />
+<link rel="stylesheet" href="/assets/adzy.css?v=10" />
 <style>
   :root {
     --bg:         #0A0A0A;
@@ -1706,9 +1706,16 @@
     <section class="adzy-stage" data-adzy-stage="campaign" id="adzy-campaign" dir="rtl" lang="ar">
       <div class="adzy-container v2-campaign">
         <header>
-          <h1>حملة حجز تجربة</h1>
+          <h1>الحملات</h1>
           <p id="v2-brand"></p>
         </header>
+        <details id="v2-package-import" class="v2-panel">
+          <summary>حملة من مصادر عامة</summary>
+          <form id="v2-package-form">
+            <label>ملف Creative brief بصيغة JSON<input name="brief" type="file" accept=".json,application/json" required></label>
+            <button class="adzy-btn blue" type="submit">تحقّق من الأدلة وجهّز الحزمة</button>
+          </form>
+        </details>
         <form id="v2-form">
           <label>الهدف التسويقي<select name="goal" required>
             <option value="">اختر الهدف</option>
@@ -6151,7 +6158,7 @@ if (new URLSearchParams(location.search).get('studio') === '1') {
   goStudio();
 }
 </script>
-<script src="/assets/v2-campaign.js?v=1"></script>
+<script src="/assets/v2-campaign.js?v=2"></script>
 <script src="/assets/adzy-app.js?v=27"></script>
 <script src="/assets/copy-editor.js?v=1"></script>
 </body>

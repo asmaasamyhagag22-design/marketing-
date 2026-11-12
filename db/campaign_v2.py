@@ -4,6 +4,7 @@ from uuid import UUID
 
 from db.errors import NotVisible
 from db.records import RunRecord
+from strategy.campaign_package import check as check_package, recheck_at
 from strategy.campaign_v2 import CampaignConflict, CampaignNotFound, inactive_reason
 
 
@@ -51,10 +52,13 @@ class Campaigns:
             return {"run_id": None, "proposal": None, "approved": False, "reason": None}
         approval = uow.approvals.latest_for_run(run.id)
         checked_at = self.clock()
+        package = run.output.get("kind") == "SOURCE_CAMPAIGN"
+        evaluate = check_package if package else inactive_reason
         reason = ("PROFILE_CHANGED" if run.input_profile_id != brand.current_profile_id
-                  else inactive_reason(run.output, checked_at))
+                  else evaluate(run.output, checked_at))
         return {"run_id": str(run.id), "profile_snapshot_id": str(run.input_profile_id),
                 "proposal": run.output, "reason": reason, "checked_at": checked_at.isoformat(),
+                **({"recheck_at": recheck_at(run.output).isoformat()} if package and not reason else {}),
                 "decision": approval.decision if approval else None,
                 "approved": not reason and approval is not None and approval.decision == "approved",
                 "approval_id": str(approval.id) if approval else None}
@@ -72,7 +76,7 @@ class Campaigns:
             run = uow.runs.create_live_for_locked_brand(
                 brand_id=brand.id, kind="campaign", created_by_user_id=self.actor,
                 status="succeeded", input_profile_id=snapshot.profile_id,
-                output=result, output_schema_version=1,
+                output=result, output_schema_version=result["schema_version"],
                 dependencies=[(current.id, "revises_campaign")] if revision else (),
             )
             response = self._view(uow, brand, run)

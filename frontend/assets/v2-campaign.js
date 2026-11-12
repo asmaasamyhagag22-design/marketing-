@@ -20,6 +20,15 @@
     OFFER_EXPIRED: 'انتهت صلاحية العرض',
     EVIDENCE_GAP: 'الأدلة غير كافية لاعتماد الإعلان.',
     PROFILE_CHANGED: 'تغيّر بروفايل البراند. ابدأ بحثًا على النسخة الجديدة.',
+    QUOTE_OBSERVED: 'وُجد الاقتباس في متن الصفحة',
+    QUOTE_NOT_FOUND: 'الاقتباس غير موجود في متن الصفحة',
+    QUOTE_CONTEXT_AMBIGUOUS: 'ظهر الاقتباس في سياقات مختلفة',
+    BRAND_SOURCE_ORIGIN_MISMATCH: 'اختَر رابطًا من نفس أصل موقع البراند.',
+    PEER_SOURCE_MUST_BE_DISTINCT: 'اختَر موقع منافس من نطاق مستقل.',
+    EXPORT_BUSY: 'فيه رسم بوستر شغّال. جرّب بعد ما يخلص.',
+    POSTER_CLIPPING: 'النص أطول من مساحة البوستر. عدّل اتجاه الحملة وراجع المعاينة.',
+    POSTER_RENDER_UNAVAILABLE: 'تعذّر تشغيل محرّك رسم البوستر.',
+    SOURCE_RECHECK_REQUIRED: 'أعد فحص المصادر قبل اعتماد الحزمة.',
     CAMPAIGN_CHANGED: 'تغيّرت نسخة الحملة. راجع النسخة المعروضة.',
   };
   const label = value => messages[value] || value;
@@ -57,16 +66,156 @@
     </article>`;
   }
 
+  function packagePanel(proposal, approved, reason, decision) {
+    const {brief, evidence, package: creative} = proposal;
+    const sources = evidence.map((item, index) => `<li>
+      <strong>${index === 0 ? 'البراند' : 'المنافس المقترح'} · ${esc(label(item.outcome))}</strong>
+      <p>${link(item.page_url, item.page_url)}</p>
+      ${item.quote ? `<p>${esc(item.scope)}</p><blockquote dir="auto">${esc(item.quote)}</blockquote>` : ''}
+      <details><summary>تفاصيل الالتقاط</summary>
+        <p dir="auto">${esc(item.context)}</p><p dir="ltr">${esc(item.captured_at)}</p>
+        ${item.body_sha256 ? `<code dir="ltr">${esc(item.body_sha256)}</code>` : ''}
+      </details>
+    </li>`).join('');
+    const alternatives = brief.alternatives.map((item, i) => `<li><strong>${esc(item.name)}
+      ${i === brief.strategy_index ? ' · الاختيار المقترح' : ''}</strong>
+      <p>${esc(item.plan)}</p><p>${esc(item.tradeoff)}</p></li>`).join('');
+    const directions = brief.directions.map((item, i) => `<li><strong>${esc(item.name)}
+      ${i === brief.selected ? ' · الاتجاه الحالي' : ''}</strong>
+      <p>${esc(item.rationale)}</p><p dir="auto">${esc(item.headline)} · ${esc(item.cta)}</p>
+      ${i !== brief.selected && creative && !reason
+        ? `<button type="button" class="adzy-btn flat" data-v2-direction="${i}">اختَر هذا الاتجاه</button>` : ''}
+      </li>`).join('');
+    const changes = proposal.changes.map(item => `<li>${esc(item.field)} · ${esc(label(item.before))} ← ${esc(label(item.after))}</li>`).join('');
+    const shots = creative?.storyboard.map(item => `<li><bdi>${esc(item.seconds)}</bdi> ثوانٍ
+      <p>${esc(item.visual)}</p><p dir="auto">${esc(item.line)}</p></li>`).join('');
+    return `
+      <section class="v2-panel">
+        <h2>البحث والأدلة</h2>
+        <p>${esc(brief.summary)}</p>
+        <dl><dt>الجمهور المقترح</dt><dd>${esc(brief.audience)}</dd>
+          <dt>السوق</dt><dd>${esc(brief.market)}</dd>
+          <dt>المنافس المقترح</dt><dd>${esc(brief.competitor)} · ${esc(brief.peer_rationale)}</dd></dl>
+        <ul class="v2-items">${sources}</ul>
+        ${reason ? `<p id="v2-blocker">${esc(label(reason))}</p>` : ''}
+        ${changes ? `<h3>أثر التعديل</h3><ul id="v2-changes">${changes}</ul>` : ''}
+        <button type="button" class="adzy-btn flat" id="v2-refresh">أعد فحص الدليل</button>
+      </section>
+      <section class="v2-panel">
+        <h2>الاستراتيجية والـCreative brief</h2>
+        <dl><dt>الهدف المقترح</dt><dd>${esc(brief.objective)}</dd>
+          <dt>مقياس الحملة</dt><dd>${esc(brief.metric)}</dd>
+          <dt>الافتراض</dt><dd>${esc(brief.assumption)}</dd>
+          <dt>سبب الاختيار</dt><dd>${esc(brief.strategy_reason)}</dd>
+          <dt>النبرة</dt><dd>${esc(brief.tone)}</dd></dl>
+        <ul class="v2-items">${alternatives}</ul>
+        <h3>الاتجاهات الإبداعية</h3>
+        <ul class="v2-items">${directions}</ul>
+      </section>
+      ${creative && !reason ? `<section class="v2-panel">
+        <h2>معاينة الحملة</h2>
+        <article class="v2-creative v2-package-card theme-${esc(creative.theme)}" id="v2-package-card" dir="${esc(creative.direction)}">
+          <div class="v2-creative-header" dir="auto">${esc(creative.brand_name)}</div>
+          <h2>${esc(creative.copy.headline)}</h2><p>${esc(creative.copy.message)}</p>
+          <p class="v2-creative-cta">${link(creative.source_url, creative.copy.cta)}</p>
+        </article>
+        <div class="v2-actions">
+          <button type="button" class="adzy-btn flat" data-v2-preview="portrait">اعرض البوستر الطولي</button>
+          <button type="button" class="adzy-btn flat" data-v2-preview="square">اعرض البوستر المربّع</button>
+        </div>
+        <div id="v2-poster-preview"></div>
+        <h3>نص المنشور</h3><p dir="auto">${esc(creative.caption)}</p>
+        <h3>سيناريو وStoryboard نصي</h3><ol class="v2-items">${shots}</ol>
+        <h3>مراجعة بشرية مطلوبة</h3>
+        <ul>${brief.human_review.map(note => `<li>${esc(note)}</li>`).join('')}</ul>
+        <p>التطبيق يطابق الاقتباس في HTML الصفحة. راجع دعم الاقتباس للنص الإعلاني قبل استخدامه.</p>
+        <p>الاعتماد يتيح تصدير الحزمة للمراجعة المحلية.</p>
+        ${decision === 'rejected' ? '<p>رُفضت هذه النسخة.</p>' : ''}
+        <div class="v2-actions">
+          ${approved ? '<button type="button" class="adzy-btn blue" id="v2-download">نزّل حزمة المراجعة</button>'
+            : '<button type="button" class="adzy-btn coral" id="v2-approve">اعتمد هذه النسخة</button>'}
+          <button type="button" class="adzy-btn flat" id="v2-reject">ارفض هذه النسخة</button>
+        </div>
+      </section>` : ''}
+    `;
+  }
+
+  async function packageFile(size) {
+    if (busy || (!size && !state?.approved)) return;
+    const seq = requestNumber;
+    const run = state.run_id;
+    const query = '?run_id=' + encodeURIComponent(run);
+    const endpoint = size ? '/package/preview' + query + '&size=' + size : '/package/export' + query;
+    const buttons = byId('v2-result').querySelectorAll('[data-v2-preview], #v2-download');
+    for (const button of buttons) button.disabled = true;
+    showStatus(size ? 'بنرسم معاينة البوستر…' : 'بنرسم مقاسي البوستر…');
+    try {
+      const response = await fetch(path(endpoint), {headers: window.authHeaders()});
+      if (!response.ok) {
+        const result = await response.json().catch(() => ({}));
+        throw new Error(result.detail?.code || 'EXPORT_FAILED');
+      }
+      const file = await response.blob();
+      if (seq !== requestNumber) return;
+      if (size) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          if (seq !== requestNumber) return;
+          const poster = document.createElement('img');
+          poster.alt = size === 'portrait' ? 'البوستر الطولي' : 'البوستر المربّع';
+          poster.src = reader.result;
+          byId('v2-poster-preview').replaceChildren(poster);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        const url = URL.createObjectURL(file);
+        const anchor = document.createElement('a');
+        anchor.href = url;
+        anchor.download = 'adzy-' + run + '.zip';
+        anchor.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }
+      showStatus(size ? 'معاينة البوستر جاهزة.' : 'حزمة المراجعة جاهزة.');
+    } catch (error) {
+      if (seq === requestNumber) showStatus('تعذّر رسم البوستر · ' + label(error.message));
+    } finally {
+      for (const button of buttons) button.disabled = false;
+    }
+  }
+
+  function wireReview(root) {
+    for (const button of root.querySelectorAll('button')) button.disabled = busy;
+    byId('v2-refresh')?.addEventListener('click', () => submit('/refresh', {run_id: state.run_id}));
+    byId('v2-approve')?.addEventListener('click', () => submit('/review', {run_id: state.run_id, decision: 'approved'}));
+    byId('v2-reject')?.addEventListener('click', () => submit('/review', {run_id: state.run_id, decision: 'rejected'}));
+  }
+
   function render() {
     clearTimeout(timer);
     const form = byId('v2-form');
     form.querySelector('button').disabled = busy || !state;
+    byId('v2-package-form').querySelector('button').disabled = busy || !state;
     const root = byId('v2-result');
     if (!state?.proposal) {
       root.innerHTML = '';
       return;
     }
     const {proposal, approved, reason, decision} = state;
+    if (proposal.kind === 'SOURCE_CAMPAIGN') {
+      root.innerHTML = packagePanel(proposal, approved, reason, decision);
+      wireReview(root);
+      byId('v2-download')?.addEventListener('click', () => packageFile());
+      for (const preview of root.querySelectorAll('[data-v2-preview]')) {
+        preview.addEventListener('click', () => packageFile(preview.dataset.v2Preview));
+      }
+      for (const choice of root.querySelectorAll('[data-v2-direction]')) {
+        choice.addEventListener('click', () => submit('/direction', {
+          run_id: state.run_id, selected: Number(choice.dataset.v2Direction),
+        }));
+      }
+      if (!reason && !busy) scheduleCheck(Date.parse(state.recheck_at) - Date.parse(state.checked_at));
+      return;
+    }
     const offer = proposal.offer;
     const trace = proposal.research.trace.map(row =>
       `<li>${link(row.page_url, row.page_url)} <span>${esc(label(row.reason))} · ${esc(label(row.outcome))}</span></li>`
@@ -114,17 +263,15 @@
         <button type="button" class="adzy-btn flat" id="v2-reject">ارفض هذه النسخة</button></div>
       </section>` : ''}
       ${approved && !busy ? card(proposal) : ''}`;
-    for (const button of root.querySelectorAll('button')) button.disabled = busy;
-    byId('v2-refresh')?.addEventListener('click', () => submit('/refresh', {run_id: state.run_id}));
-    byId('v2-approve')?.addEventListener('click', () => submit('/review', {run_id: state.run_id, decision: 'approved'}));
-    byId('v2-reject')?.addEventListener('click', () => submit('/review', {run_id: state.run_id, decision: 'rejected'}));
-    if (approved && !busy) {
-      const remaining = Date.parse(offer.expires_at) - Date.parse(state.checked_at);
-      if (Number.isFinite(remaining)) {
-        timer = setTimeout(() => {
-          if (window.Adzy?.stage === 'campaign') load();
-        }, Math.min(2147483647, Math.max(0, remaining)));
-      }
+    wireReview(root);
+    if (approved && !busy) scheduleCheck(Date.parse(offer.expires_at) - Date.parse(state.checked_at));
+  }
+
+  function scheduleCheck(remaining) {
+    if (Number.isFinite(remaining)) {
+      timer = setTimeout(() => {
+        if (window.Adzy?.stage === 'campaign') load();
+      }, Math.min(2147483647, Math.max(0, remaining)));
     }
   }
 
@@ -166,7 +313,9 @@
     } catch (error) {
       if (seq !== requestNumber) return;
       await load();
-      showStatus(error.status === 409 ? 'راجع النسخة الحالية بعد تغيّر الحملة أو الدليل.' : 'تعذّر إكمال الطلب.');
+      let code;
+      try { code = JSON.parse(error.message).code; } catch (_) {}
+      showStatus(code ? label(code) : 'تعذّر إكمال الطلب.');
     } finally {
       if (seq === requestNumber) {
         busy = false;
@@ -185,7 +334,10 @@
     },
     async open(nextBrand) {
       const form = byId('v2-form');
-      if (brand?.domain_key !== nextBrand.domain_key) form.reset();
+      if (brand?.domain_key !== nextBrand.domain_key) {
+        form.reset();
+        byId('v2-package-form').reset();
+      }
       brand = nextBrand;
       state = null;
       byId('v2-brand').textContent = nextBrand.organization_name || nextBrand.name || nextBrand.domain_key;
@@ -196,8 +348,20 @@
                     booking_target: fields.get('booking_target') ? Number(fields.get('booking_target')) : null,
                     offer_name: fields.get('offer_name'), terms_url: fields.get('terms_url') || null});
       };
+      byId('v2-package-form').onsubmit = async event => {
+        event.preventDefault();
+        const seq = requestNumber;
+        const file = new FormData(event.currentTarget).get('brief');
+        try {
+          if (!file || file.size > 64000) throw new Error('Invalid brief file');
+          const brief = JSON.parse(await file.text());
+          if (seq === requestNumber) submit('/package', {expected_run_id: state.run_id, brief});
+        } catch (_) {
+          if (seq === requestNumber) showStatus('اختَر ملف Creative brief صالحًا وأصغر من 64 كيلوبايت.');
+        }
+      };
       await load();
-      if (brand === nextBrand && state?.proposal) {
+      if (brand === nextBrand && state?.proposal && state.proposal.kind !== 'SOURCE_CAMPAIGN') {
         form.elements.goal.value ||= 'TRIAL_BOOKINGS';
         form.elements.booking_target.value ||= state.proposal.booking_target ?? '';
         form.elements.offer_name.value ||= state.proposal.offer_name;

@@ -1024,3 +1024,13 @@ body.adzy-ready #toast { z-index: 1000; background: var(--adzy-ink); color: var(
 @media (max-width: 760px) {
   .adzy-nav { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 }
+
+.v2-items { display: grid; gap: .8rem; padding-inline-start: 1.4rem; }
+.v2-items > li > p { margin: .25rem 0; }
+.v2-items a { overflow-wrap: anywhere; }
+.v2-package-card { margin: 1rem 0; }
+.v2-package-card.theme-ember { background: #321517; color: #fff4dc; }
+.v2-package-card.theme-cobalt { background: #130d36; color: #fff7ef; }
+.v2-package-card.theme-forest { background: #112d28; color: #fff9e9; }
+
+#v2-poster-preview img { width: min(100%, 540px); height: auto; display: block; margin: 1rem auto; }

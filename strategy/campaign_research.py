@@ -69,17 +69,17 @@ def same_source(url, root):
         return False
 
 
-def load_public_page(url, timeout):
+def load_public_page(url, timeout, *, max_bytes=MAX_BYTES):
     """Use the crawler's public URL and redirect safety guard."""
     deadline = monotonic() + timeout
     with open_public_url(url, timeout=min(timeout, 2.0), follow_redirects=False) as response:
         if response.headers.get_content_type() != "text/html":
             raise ResearchGap("HTML_REQUIRED")
         body = bytearray()
-        while len(body) <= MAX_BYTES:
+        while len(body) <= max_bytes:
             if monotonic() >= deadline:
                 raise ResearchGap("SOURCE_DEADLINE")
-            chunk = response.read1(min(8192, MAX_BYTES + 1 - len(body)))
+            chunk = response.read1(min(8192, max_bytes + 1 - len(body)))
             if not chunk:
                 return Page(response.geturl(), bytes(body), "public_http")
             body.extend(chunk)

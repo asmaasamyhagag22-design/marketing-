@@ -20,6 +20,7 @@ def render_html_to_png(
     height: int = POSTER_H,
     scale: int = 2,
     offline: bool = False,
+    validate=None,
 ) -> Path:
     from playwright.sync_api import sync_playwright
 
@@ -43,6 +44,8 @@ def render_html_to_png(
                 page.evaluate("async () => { await document.fonts.ready; }")
             except Exception:
                 pass
+            if validate is not None:
+                validate(page)
             page.screenshot(
                 path=str(out_path),
                 clip={"x": 0, "y": 0, "width": width, "height": height},

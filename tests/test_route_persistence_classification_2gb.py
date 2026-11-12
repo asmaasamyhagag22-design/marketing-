@@ -124,6 +124,10 @@ MATRIX: dict[tuple[str, str], tuple[str, str, str]] = {
 
     ("GET", "/api/v2/campaigns/{domain}"): (W, "CAMPAIGN", ""),
     ("POST", "/api/v2/campaigns/{domain}"): (W, "CAMPAIGN", ""),
+    ("POST", "/api/v2/campaigns/{domain}/package"): (W, "CAMPAIGN", ""),
+    ("POST", "/api/v2/campaigns/{domain}/direction"): (W, "CAMPAIGN", ""),
+    ("GET", "/api/v2/campaigns/{domain}/package/preview"): (W, "CAMPAIGN", ""),
+    ("GET", "/api/v2/campaigns/{domain}/package/export"): (W, "CAMPAIGN", ""),
     ("POST", "/api/v2/campaigns/{domain}/review"): (W, "APPROVAL", ""),
     ("POST", "/api/v2/campaigns/{domain}/refresh"): (W, "CAMPAIGN", ""),
 
