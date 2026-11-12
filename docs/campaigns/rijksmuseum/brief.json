@@ -1,0 +1,89 @@
+{
+  "summary": "The Rijksmuseum describes an online Comparator that places artworks side by side and lets visitors zoom into details.",
+  "audience": "Proposed audience of English-reading art learners who already browse museum collections for visual references.",
+  "market": "Proposed international English-language audience for online museum discovery. The campaign points to the museum’s English collection information page.",
+  "competitor": "Musée du Louvre",
+  "peer_rationale": "The Louvre offers another online collection for people exploring artworks. This comparison concerns audience attention and collection discovery.",
+  "source": {
+    "url": "https://www.rijksmuseum.nl/en/about-collection-online",
+    "quote": "Use the Comparator to place artworks side by side and zoom in on the smallest details.",
+    "scope": "The museum describes side-by-side comparison and zoom in Collection Online."
+  },
+  "peer_source": {
+    "url": "https://collections.louvre.fr/en/",
+    "quote": "The Collections database consists of entries for more than 500,000 works",
+    "scope": "The published database covers works from Musée du Louvre and Musée National Eugène-Delacroix. It provides peer context for online collection discovery."
+  },
+  "objective": "Increase clicks from a collection discovery post to the Rijksmuseum page that explains the Comparator.",
+  "metric": "Outbound click-through rate to the collection information page, measured as clicks divided by post impressions.",
+  "assumption": "We expect a specific visual comparison task to interest art learners. Audience size, baseline click-through rate and demand for the tool require measurement.",
+  "alternatives": [
+    {
+      "name": "Side-by-side study",
+      "plan": "Lead with one practical task and direct readers to the Comparator explanation.",
+      "tradeoff": "A concrete reason to visit, with a learning step between the post and the tool."
+    },
+    {
+      "name": "Zoom into a detail",
+      "plan": "Lead with close looking and invite readers to see the tool that makes detail study possible.",
+      "tradeoff": "A visually direct message with less emphasis on how two works relate."
+    },
+    {
+      "name": "A looking exercise",
+      "plan": "Offer a prompt about what changes when readers compare artworks.",
+      "tradeoff": "Invites curiosity and needs editorial guidance for selecting works."
+    }
+  ],
+  "strategy_index": 0,
+  "strategy_reason": "Side-by-side study matches the published Comparator feature and gives readers one action. If analytics show visits with little follow-through, test the close-looking message.",
+  "tone": "Curious and museum-editorial",
+  "directions": [
+    {
+      "name": "Detail study",
+      "rationale": "An alternate hook tests interest in close looking before the selected side-by-side message. Rounded shapes suggest magnification.",
+      "headline": "Look a little closer.",
+      "message": "Zoom into artwork details with the Rijksmuseum Comparator.",
+      "cta": "See how it works",
+      "theme": "cobalt",
+      "caption": "Start with a detail. Collection Online describes how the Rijksmuseum Comparator lets you zoom in and put artworks side by side. Read how it works.",
+      "hook": "What changes when you look closer?",
+      "shot": "A crop marker tightens around an abstract coloured shape.",
+      "middle_shot": "Keep the first panel in view as the second panel shows an enlarged detail of the same abstract shape.",
+      "end_shot": "End with Rijksmuseum and the words “See how it works.”"
+    },
+    {
+      "name": "Side-by-side looking",
+      "rationale": "Overlapping gallery-like frames suggest putting different works in view together.",
+      "headline": "See two artworks side by side.",
+      "message": "Compare artworks in Rijksmuseum Collection Online.",
+      "cta": "Read about the Comparator",
+      "theme": "forest",
+      "caption": "Try a different way of looking. The Rijksmuseum Comparator places artworks side by side. Start with the Collection Online guide.",
+      "hook": "What changes side by side?",
+      "shot": "Show two empty gallery frames entering from opposite sides.",
+      "middle_shot": "Show the frames aligned at the same height. Introduce the name Comparator over the space between them.",
+      "end_shot": "Hold the Rijksmuseum name and the call to action “Read about the Comparator.”"
+    },
+    {
+      "name": "One looking question",
+      "rationale": "A question invites readers to compare what catches their eye first.",
+      "headline": "What catches your eye first?",
+      "message": "Put artworks side by side with the Rijksmuseum Comparator.",
+      "cta": "Read about the tool",
+      "theme": "ember",
+      "caption": "Pick a detail to notice first, then look again with a second artwork alongside. The Collection Online guide explains how the Comparator works.",
+      "hook": "What draws your eye first?",
+      "shot": "A dot highlights the edge of one abstract gallery shape.",
+      "middle_shot": "Move the dot into a second frame and leave both frames visible for the comparison.",
+      "end_shot": "Hold the Rijksmuseum name and invite viewers to read about the tool."
+    }
+  ],
+  "selected": 0,
+  "human_review": [
+    "Confirm the Comparator link and the steps from the information page on mobile before launch.",
+    "Clear institutional name and branding use with the museum. If a future version includes artwork, verify its individual asset rights.",
+    "Check whether a distinct outbound event for the Comparator can be measured before comparing campaign variants."
+  ],
+  "language": "en",
+  "direction": "ltr"
+}

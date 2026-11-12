@@ -1,0 +1,32 @@
+{
+  "firefox": {
+    "minimum_margin_px": 64,
+    "minimum_text_gap_px": 18.0,
+    "final_text_px_at_390": [
+      31.78,
+      15.89,
+      13.36
+    ],
+    "zip_sha256": "22c1af6db96f5a444dd0e2dc1c0692a89e0403059ad6d87833dc2b81177ccc67"
+  },
+  "lego": {
+    "minimum_margin_px": 64,
+    "minimum_text_gap_px": 18.0,
+    "final_text_px_at_390": [
+      31.78,
+      15.89,
+      13.36
+    ],
+    "zip_sha256": "284d1dc9b8843859507d96c6f32519bb42931264a3dde183708c6e2d434ee5d8"
+  },
+  "rijksmuseum": {
+    "minimum_margin_px": 64,
+    "minimum_text_gap_px": 18.0,
+    "final_text_px_at_390": [
+      31.78,
+      15.89,
+      13.36
+    ],
+    "zip_sha256": "29affb0caaca480d36665174ddb7f19fe5d828a8f796694a357964db1832a403"
+  }
+}

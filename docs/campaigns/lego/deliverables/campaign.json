@@ -1,0 +1,292 @@
+{
+  "approval_id": "b6ce3bfb-58df-4b50-a230-957db36abf67",
+  "poster_measurements": {
+    "portrait": {
+      "geometry": [
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 136,
+          "color": "rgb(255, 249, 233)",
+          "field": "brand",
+          "overflow": false,
+          "right": 1004,
+          "size": 40,
+          "x": 76,
+          "y": 64
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 967.25,
+          "color": "rgb(255, 249, 233)",
+          "field": "motif",
+          "overflow": false,
+          "right": 1004,
+          "size": 16,
+          "x": 76,
+          "y": 166
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 1108.125,
+          "color": "rgb(255, 249, 233)",
+          "field": "H1",
+          "overflow": false,
+          "right": 1004,
+          "size": 88,
+          "x": 76,
+          "y": 997.25
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 1190.359375,
+          "color": "rgb(255, 249, 233)",
+          "field": "message",
+          "overflow": false,
+          "right": 1004,
+          "size": 44,
+          "x": 76,
+          "y": 1126.125
+        },
+        {
+          "background": "rgb(231, 237, 134)",
+          "bottom": 1286,
+          "color": "rgb(17, 45, 40)",
+          "field": "cta",
+          "overflow": false,
+          "right": 1004,
+          "size": 37,
+          "x": 662,
+          "y": 1208.359375
+        }
+      ],
+      "height": 1350,
+      "sha256": "2d7b410a53b41b04e6012f445b3ce5c095dd61219c714db3e879af8707957648",
+      "width": 1080
+    },
+    "square": {
+      "geometry": [
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 136,
+          "color": "rgb(255, 249, 233)",
+          "field": "brand",
+          "overflow": false,
+          "right": 1004,
+          "size": 40,
+          "x": 76,
+          "y": 64
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 697.25,
+          "color": "rgb(255, 249, 233)",
+          "field": "motif",
+          "overflow": false,
+          "right": 1004,
+          "size": 16,
+          "x": 76,
+          "y": 166
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 838.125,
+          "color": "rgb(255, 249, 233)",
+          "field": "H1",
+          "overflow": false,
+          "right": 1004,
+          "size": 88,
+          "x": 76,
+          "y": 727.25
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 920.359375,
+          "color": "rgb(255, 249, 233)",
+          "field": "message",
+          "overflow": false,
+          "right": 1004,
+          "size": 44,
+          "x": 76,
+          "y": 856.125
+        },
+        {
+          "background": "rgb(231, 237, 134)",
+          "bottom": 1016,
+          "color": "rgb(17, 45, 40)",
+          "field": "cta",
+          "overflow": false,
+          "right": 1004,
+          "size": 37,
+          "x": 662,
+          "y": 938.359375
+        }
+      ],
+      "height": 1080,
+      "sha256": "766fa17cadd68768bfd176bce6e3793f850479ff94fec1a946b810eb772e72c0",
+      "width": 1080
+    }
+  },
+  "profile_snapshot_id": "9a33b931-e368-4f2e-96b7-4f57d9525e96",
+  "proposal": {
+    "brand_name": "LEGO Pick a Brick",
+    "brief": {
+      "alternatives": [
+        {
+          "name": "قطعة لمشروع قائم",
+          "plan": "ابدأ بالموقف المحدد: مجسم في انتظار قطعة، ثم وجّه الزائر إلى الكتالوج.",
+          "tradeoff": "أضيق جمهورًا ويمكن تفسير النقر بوصفه اهتمامًا بالكتالوج."
+        },
+        {
+          "name": "إلهام لمشروع جديد",
+          "plan": "ابدأ بتجربة بناء جديدة وشجّع تصفح فئات القطع.",
+          "tradeoff": "أوسع استهدافًا ويحتاج أصولًا لعرض أمثلة تفيد من لم يحدد مشروعًا."
+        },
+        {
+          "name": "تعديل مجموعة موجودة",
+          "plan": "اطلب من الهاوي تخيّل إضافة على بناء أنجزه سابقًا.",
+          "tradeoff": "مرتبط بالهواية، ويحتاج استبعاد أي إيحاء بتوافق قطعة بعينها."
+        }
+      ],
+      "assumption": "نفترض أن الحاجة إلى قطعة لعمل قائم أكثر إلحاحًا من فكرة البدء بمشروع جديد لدى الشريحة المقترحة. توافر القطع يحتاج فحصًا داخل الكتالوج.",
+      "audience": "فرضية جمهور: هواة بناء بالغون ناطقون بالعربية في الولايات المتحدة يبحثون عن قطعة لمشروع قائم.",
+      "competitor": "MEGA من Mattel",
+      "direction": "rtl",
+      "directions": [
+        {
+          "caption": "إذا توقّف البناء عند قطعة، جرّب البحث عنها في كتالوج LEGO Pick a Brick. افتح الكتالوج وتصفّح القطع المعروضة.",
+          "cta": "تصفّح القطع",
+          "end_shot": "تثبت بطاقة ختامية فيها اسم البراند ونص الدعوة الظاهر على الشاشة.",
+          "headline": "مجسّمك ناقص قطعة؟",
+          "hook": "أين القطعة التي تكمل المجسّم؟",
+          "message": "ابحث في كتالوج Pick a Brick.",
+          "middle_shot": "يتحوّل الفراغ بين الكتل إلى مربع بحث مرسوم تجريديًا. تظهر عبارة Pick a Brick.",
+          "name": "مكان فاضي في المجسّم",
+          "rationale": "أشكال هندسية متراكبة تلمّح إلى ترتيب قطع البناء، مع سؤال عن قطعة ناقصة.",
+          "shot": "كتلتان تجريديتان تتركان فراغًا واضحًا بينهما، بلا تصوير لقطعة فعلية.",
+          "theme": "forest"
+        },
+        {
+          "caption": "مشروع جديد؟ تصفّح كتالوج Pick a Brick قبل اختيار القطع التي تحتاجها لبنائك.",
+          "cta": "استكشف الكتالوج",
+          "end_shot": "تثبت بطاقة ختامية فيها اسم البراند ونص الدعوة الظاهر على الشاشة.",
+          "headline": "ما فكرتك للقطعة الأولى؟",
+          "hook": "ماذا ستبني هذه المرة؟",
+          "message": "استكشف قطع LEGO في كتالوج Pick a Brick.",
+          "middle_shot": "تتجمع الأشكال حول الكتلة الأولى، ويظهر اسم الكتالوج عند اكتمال الحركة.",
+          "name": "ابدأ من قطعة",
+          "rationale": "تبدأ الفكرة بقطعة واحدة، وتستخدم أشكالًا هندسية متراكبة لفتح دعوة لاستكشاف الكتالوج.",
+          "shot": "تظهر كتلة واحدة ثم تتجمع حولها أشكال ملوّنة مجردة.",
+          "theme": "forest"
+        },
+        {
+          "caption": "قبل إضافة جديدة إلى مجسّم LEGO، تصفّح قطع Pick a Brick وراجع مواصفات القطعة قبل اختيارها.",
+          "cta": "افتح كتالوج القطع",
+          "end_shot": "تثبت بطاقة ختامية فيها اسم البراند ونص الدعوة الظاهر على الشاشة.",
+          "headline": "ماذا ستضيف إلى مجسّمك؟",
+          "hook": "هل تغيّرت فكرتك بعد ما خلّصت البناء؟",
+          "message": "تصفّح كتالوج Pick a Brick بحثًا عن قطع لمشروعك.",
+          "middle_shot": "تتحرك كتلة خارج الشكل ثم يظهر مكان الإضافة المقترحة مع اسم الكتالوج.",
+          "name": "ارجع للمشروع",
+          "rationale": "دعوة لإعادة العمل على مجسّم قائم وتخيّل تعديل صغير.",
+          "shot": "يتبدّل ترتيب الكتل في حركة بسيطة، وتظهر الدعوة للكتالوج.",
+          "theme": "ember"
+        }
+      ],
+      "human_review": [
+        "تحقّق من التوافق والتوفر والشحن في بلد الجمهور قبل إدراج قطعة أو دعوة للشراء.",
+        "راجع الإذن باستخدام الاسم والهوية، واستعن بصورة معتمدة إذا احتاج النشر تصوير قطعة حقيقية."
+      ],
+      "language": "ar",
+      "market": "كتالوج LEGO الإلكتروني الأمريكي. الجمهور المقترح يقرأ العربية ويمكنه التعامل مع الكتالوج الإنجليزي.",
+      "metric": "معدل النقر من المنشور إلى الكتالوج لكل ظهور.",
+      "objective": "جذب هواة البناء إلى كتالوج Pick a Brick عند البحث عن قطعة لمشروع قائم.",
+      "peer_rationale": "بديل في وقت وهواية بناء المجسمات ويبيع مجموعات بناء للهواة. ملاءمته أضعف عند البحث عن قطعة LEGO منفردة.",
+      "peer_source": {
+        "quote": "MEGA Collector Building Sets & Merch",
+        "scope": "صفحة مجموعات البناء الموجّهة إلى هواة الجمع.",
+        "url": "https://creations.mattel.com/collections/mega"
+      },
+      "selected": 1,
+      "source": {
+        "quote": "searching for the perfect piece to complete your masterpiece",
+        "scope": "وصف استخدام Pick a Brick لإكمال مشروع بناء.",
+        "url": "https://www.lego.com/en-us/pick-and-build/pick-a-brick"
+      },
+      "strategy_index": 0,
+      "strategy_reason": "البحث عن قطعة موقف واضح يطابق وصف الكتالوج. يمكن اختبار فكرة التعديل إذا تبيّن أن الجمهور يتصفح لاستكشاف الأفكار.",
+      "summary": "تعرض LEGO كتالوج Pick a Brick لمن يبحث عن قطع لمشروع بناء أو لتعديل مجموعة LEGO موجودة.",
+      "tone": "عملية ومرحة"
+    },
+    "changes": [
+      {
+        "after": "ابدأ من قطعة",
+        "before": "مكان فاضي في المجسّم",
+        "field": "direction"
+      }
+    ],
+    "evidence": [
+      {
+        "body_sha256": "1ccaad562dd7fefcfdd2417aba8a525ed3e7df6b67c32fb524d5eecd34db24dd",
+        "capture_kind": "public_http",
+        "captured_at": "2026-11-12T14:22:25.073541+00:00",
+        "context": "Unleash your creativity and bring your ideas to life with LEGO® Pick a Brick! Whether you're searching for the perfect piece to complete your masterpiece, starting a brand-new build, or customize an existing LEGO® set, it's all possible with Pick a Brick. Our extensive selection of bricks, plates, tiles, minifigure pieces and more has everything you need. Looking for something specific? You can easily browse by piece type, color , and more so you can find the perfect brick for your next creation. There’s no limit to what you can build!",
+        "outcome": "QUOTE_OBSERVED",
+        "page_url": "https://www.lego.com/en-us/pick-and-build/pick-a-brick",
+        "quote": "searching for the perfect piece to complete your masterpiece",
+        "scope": "وصف استخدام Pick a Brick لإكمال مشروع بناء.",
+        "text_sha256": "847ee73feb3eaae31de5793d373d5dd72a929ad89aae2f0e525446c103c53a8d"
+      },
+      {
+        "body_sha256": "f4ac8974e6b1efc7303390f3a75406b681988b89d084b22cfe9a86e0e5d96fb7",
+        "capture_kind": "public_http",
+        "captured_at": "2026-11-12T14:22:27.353254+00:00",
+        "context": "MEGA Collector Building Sets & Merch",
+        "outcome": "QUOTE_OBSERVED",
+        "page_url": "https://creations.mattel.com/collections/mega",
+        "quote": "MEGA Collector Building Sets & Merch",
+        "scope": "صفحة مجموعات البناء الموجّهة إلى هواة الجمع.",
+        "text_sha256": "2e037854982b94605fbef1d9b60ceb7de925e2cb3f5612b294dfb80526701e89"
+      }
+    ],
+    "kind": "SOURCE_CAMPAIGN",
+    "package": {
+      "brand_name": "LEGO Pick a Brick",
+      "caption": "مشروع جديد؟ تصفّح كتالوج Pick a Brick قبل اختيار القطع التي تحتاجها لبنائك.",
+      "copy": {
+        "cta": "استكشف الكتالوج",
+        "headline": "ما فكرتك للقطعة الأولى؟",
+        "message": "استكشف قطع LEGO في كتالوج Pick a Brick."
+      },
+      "direction": "rtl",
+      "factual_review": "AUTHORED_COPY_REQUIRES_HUMAN_REVIEW",
+      "language": "ar",
+      "poster_layout": "source-campaign@1",
+      "source_evidence_index": 0,
+      "source_url": "https://www.lego.com/en-us/pick-and-build/pick-a-brick",
+      "storyboard": [
+        {
+          "line": "ماذا ستبني هذه المرة؟",
+          "seconds": "0–3",
+          "visual": "تظهر كتلة واحدة ثم تتجمع حولها أشكال ملوّنة مجردة."
+        },
+        {
+          "line": "استكشف قطع LEGO في كتالوج Pick a Brick.",
+          "seconds": "3–8",
+          "visual": "تتجمع الأشكال حول الكتلة الأولى، ويظهر اسم الكتالوج عند اكتمال الحركة."
+        },
+        {
+          "line": "استكشف الكتالوج",
+          "seconds": "8–12",
+          "visual": "تثبت بطاقة ختامية فيها اسم البراند ونص الدعوة الظاهر على الشاشة."
+        }
+      ],
+      "theme": "forest"
+    },
+    "schema_version": 2,
+    "sha256": "defa67a2f60323f484add6bc54213fa2b1ef64e2a9c8df914a0b35ab4b936c37",
+    "status": "READY"
+  },
+  "review_status": "LOCAL_REVIEW",
+  "run_id": "d252e551-dd68-41ee-8748-383669d261a1",
+  "video": "SCRIPT_AND_STORYBOARD_ONLY"
+}

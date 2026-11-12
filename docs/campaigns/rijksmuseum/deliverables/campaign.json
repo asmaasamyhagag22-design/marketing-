@@ -1,0 +1,293 @@
+{
+  "approval_id": "7728dd87-0588-45ea-99db-538e13f6601b",
+  "poster_measurements": {
+    "portrait": {
+      "geometry": [
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 136,
+          "color": "rgb(255, 249, 233)",
+          "field": "brand",
+          "overflow": false,
+          "right": 1004,
+          "size": 40,
+          "x": 76,
+          "y": 64
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 792.140625,
+          "color": "rgb(255, 249, 233)",
+          "field": "motif",
+          "overflow": false,
+          "right": 1004,
+          "size": 16,
+          "x": 76,
+          "y": 166
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 1043.890625,
+          "color": "rgb(255, 249, 233)",
+          "field": "H1",
+          "overflow": false,
+          "right": 1004,
+          "size": 88,
+          "x": 76,
+          "y": 822.140625
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 1190.359375,
+          "color": "rgb(255, 249, 233)",
+          "field": "message",
+          "overflow": false,
+          "right": 1004,
+          "size": 44,
+          "x": 76,
+          "y": 1061.890625
+        },
+        {
+          "background": "rgb(231, 237, 134)",
+          "bottom": 1286,
+          "color": "rgb(17, 45, 40)",
+          "field": "cta",
+          "overflow": false,
+          "right": 641,
+          "size": 37,
+          "x": 76,
+          "y": 1208.359375
+        }
+      ],
+      "height": 1350,
+      "sha256": "ab0d7a9fab817ee4a5fd4417e3be18f13ccef32e388a113168a05ba2fa38ac1e",
+      "width": 1080
+    },
+    "square": {
+      "geometry": [
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 136,
+          "color": "rgb(255, 249, 233)",
+          "field": "brand",
+          "overflow": false,
+          "right": 1004,
+          "size": 40,
+          "x": 76,
+          "y": 64
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 522.140625,
+          "color": "rgb(255, 249, 233)",
+          "field": "motif",
+          "overflow": false,
+          "right": 1004,
+          "size": 16,
+          "x": 76,
+          "y": 166
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 773.890625,
+          "color": "rgb(255, 249, 233)",
+          "field": "H1",
+          "overflow": false,
+          "right": 1004,
+          "size": 88,
+          "x": 76,
+          "y": 552.140625
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 920.359375,
+          "color": "rgb(255, 249, 233)",
+          "field": "message",
+          "overflow": false,
+          "right": 1004,
+          "size": 44,
+          "x": 76,
+          "y": 791.890625
+        },
+        {
+          "background": "rgb(231, 237, 134)",
+          "bottom": 1016,
+          "color": "rgb(17, 45, 40)",
+          "field": "cta",
+          "overflow": false,
+          "right": 641,
+          "size": 37,
+          "x": 76,
+          "y": 938.359375
+        }
+      ],
+      "height": 1080,
+      "sha256": "e7d76608d5c688b9f27aee60d61679a7c20844ce674dfe249dbd8befcd282a1b",
+      "width": 1080
+    }
+  },
+  "profile_snapshot_id": "b9d834f4-b378-4473-9015-afd96d9b0f10",
+  "proposal": {
+    "brand_name": "Rijksmuseum",
+    "brief": {
+      "alternatives": [
+        {
+          "name": "Side-by-side study",
+          "plan": "Lead with one practical task and direct readers to the Comparator explanation.",
+          "tradeoff": "A concrete reason to visit, with a learning step between the post and the tool."
+        },
+        {
+          "name": "Zoom into a detail",
+          "plan": "Lead with close looking and invite readers to see the tool that makes detail study possible.",
+          "tradeoff": "A visually direct message with less emphasis on how two works relate."
+        },
+        {
+          "name": "A looking exercise",
+          "plan": "Offer a prompt about what changes when readers compare artworks.",
+          "tradeoff": "Invites curiosity and needs editorial guidance for selecting works."
+        }
+      ],
+      "assumption": "We expect a specific visual comparison task to interest art learners. Audience size, baseline click-through rate and demand for the tool require measurement.",
+      "audience": "Proposed audience of English-reading art learners who already browse museum collections for visual references.",
+      "competitor": "Musée du Louvre",
+      "direction": "ltr",
+      "directions": [
+        {
+          "caption": "Start with a detail. Collection Online describes how the Rijksmuseum Comparator lets you zoom in and put artworks side by side. Read how it works.",
+          "cta": "See how it works",
+          "end_shot": "End with Rijksmuseum and the words “See how it works.”",
+          "headline": "Look a little closer.",
+          "hook": "What changes when you look closer?",
+          "message": "Zoom into artwork details with the Rijksmuseum Comparator.",
+          "middle_shot": "Keep the first panel in view as the second panel shows an enlarged detail of the same abstract shape.",
+          "name": "Detail study",
+          "rationale": "An alternate hook tests interest in close looking before the selected side-by-side message. Rounded shapes suggest magnification.",
+          "shot": "A crop marker tightens around an abstract coloured shape.",
+          "theme": "cobalt"
+        },
+        {
+          "caption": "Try a different way of looking. The Rijksmuseum Comparator places artworks side by side. Start with the Collection Online guide.",
+          "cta": "Read about the Comparator",
+          "end_shot": "Hold the Rijksmuseum name and the call to action “Read about the Comparator.”",
+          "headline": "See two artworks side by side.",
+          "hook": "What changes side by side?",
+          "message": "Compare artworks in Rijksmuseum Collection Online.",
+          "middle_shot": "Show the frames aligned at the same height. Introduce the name Comparator over the space between them.",
+          "name": "Side-by-side looking",
+          "rationale": "Overlapping gallery-like frames suggest putting different works in view together.",
+          "shot": "Show two empty gallery frames entering from opposite sides.",
+          "theme": "forest"
+        },
+        {
+          "caption": "Pick a detail to notice first, then look again with a second artwork alongside. The Collection Online guide explains how the Comparator works.",
+          "cta": "Read about the tool",
+          "end_shot": "Hold the Rijksmuseum name and invite viewers to read about the tool.",
+          "headline": "What catches your eye first?",
+          "hook": "What draws your eye first?",
+          "message": "Put artworks side by side with the Rijksmuseum Comparator.",
+          "middle_shot": "Move the dot into a second frame and leave both frames visible for the comparison.",
+          "name": "One looking question",
+          "rationale": "A question invites readers to compare what catches their eye first.",
+          "shot": "A dot highlights the edge of one abstract gallery shape.",
+          "theme": "ember"
+        }
+      ],
+      "human_review": [
+        "Confirm the Comparator link and the steps from the information page on mobile before launch.",
+        "Clear institutional name and branding use with the museum. If a future version includes artwork, verify its individual asset rights.",
+        "Check whether a distinct outbound event for the Comparator can be measured before comparing campaign variants."
+      ],
+      "language": "en",
+      "market": "Proposed international English-language audience for online museum discovery. The campaign points to the museum’s English collection information page.",
+      "metric": "Outbound click-through rate to the collection information page, measured as clicks divided by post impressions.",
+      "objective": "Increase clicks from a collection discovery post to the Rijksmuseum page that explains the Comparator.",
+      "peer_rationale": "The Louvre offers another online collection for people exploring artworks. This comparison concerns audience attention and collection discovery.",
+      "peer_source": {
+        "quote": "The Collections database consists of entries for more than 500,000 works",
+        "scope": "The published database covers works from Musée du Louvre and Musée National Eugène-Delacroix. It provides peer context for online collection discovery.",
+        "url": "https://collections.louvre.fr/en/"
+      },
+      "selected": 1,
+      "source": {
+        "quote": "Use the Comparator to place artworks side by side and zoom in on the smallest details.",
+        "scope": "The museum describes side-by-side comparison and zoom in Collection Online.",
+        "url": "https://www.rijksmuseum.nl/en/about-collection-online"
+      },
+      "strategy_index": 0,
+      "strategy_reason": "Side-by-side study matches the published Comparator feature and gives readers one action. If analytics show visits with little follow-through, test the close-looking message.",
+      "summary": "The Rijksmuseum describes an online Comparator that places artworks side by side and lets visitors zoom into details.",
+      "tone": "Curious and museum-editorial"
+    },
+    "changes": [
+      {
+        "after": "Side-by-side looking",
+        "before": "Detail study",
+        "field": "direction"
+      }
+    ],
+    "evidence": [
+      {
+        "body_sha256": "91cce0ab001ac03c606b5000037a9bba54d2b879426403fd1c8c3b28c852fb02",
+        "capture_kind": "public_http",
+        "captured_at": "2026-11-12T14:22:57.192464+00:00",
+        "context": "Discover & Create For instance, create your own Collections , which automatically generate an interactive video clip featuring your selected artworks. Use the Comparator to place artworks side by side and zoom in on the smallest details. What will you discover? Share your findings with the rest of the world. Visitors are also welcomed into My Gallery of Honour , a virtual space inspired by the Rijksmuseum's most iconic room. Curate your own Gallery of Honour and tell your story in this legendary setting. Thanks to the Art Explorer , exploring the collection has become even more accessible. This new AI-powered tool invites visitors to answer thought-provoking questions. Their answers lead to surprising and unexpected suggestions from the collection. Please note that the results are unfiltered and may sometimes show unexpectedly shocking and/or explicit images.",
+        "outcome": "QUOTE_OBSERVED",
+        "page_url": "https://www.rijksmuseum.nl/en/about-collection-online",
+        "quote": "Use the Comparator to place artworks side by side and zoom in on the smallest details.",
+        "scope": "The museum describes side-by-side comparison and zoom in Collection Online.",
+        "text_sha256": "d44795ff8109d8ec2d9c9c7160387f58a82537b18db471283d1624567fb5794c"
+      },
+      {
+        "body_sha256": "7e5a4e9472d0f35e836f0e721f1485ca34a0794a4f4944f82f0045cd74e7bf9e",
+        "capture_kind": "public_http",
+        "captured_at": "2026-11-12T14:22:58.650851+00:00",
+        "context": "The Collections database consists of entries for more than 500,000 works in the Musée du Louvre and Musée National Eugène-Delacroix. Updated on a daily basis, it is the result of the continuous research and documentation efforts carried out by teams of experts from both museums.",
+        "outcome": "QUOTE_OBSERVED",
+        "page_url": "https://collections.louvre.fr/en/",
+        "quote": "The Collections database consists of entries for more than 500,000 works",
+        "scope": "The published database covers works from Musée du Louvre and Musée National Eugène-Delacroix. It provides peer context for online collection discovery.",
+        "text_sha256": "70e28e145d73260bac51e097f4d9ffeb04a2c9c2961c11488bcdae96f1452dec"
+      }
+    ],
+    "kind": "SOURCE_CAMPAIGN",
+    "package": {
+      "brand_name": "Rijksmuseum",
+      "caption": "Try a different way of looking. The Rijksmuseum Comparator places artworks side by side. Start with the Collection Online guide.",
+      "copy": {
+        "cta": "Read about the Comparator",
+        "headline": "See two artworks side by side.",
+        "message": "Compare artworks in Rijksmuseum Collection Online."
+      },
+      "direction": "ltr",
+      "factual_review": "AUTHORED_COPY_REQUIRES_HUMAN_REVIEW",
+      "language": "en",
+      "poster_layout": "source-campaign@1",
+      "source_evidence_index": 0,
+      "source_url": "https://www.rijksmuseum.nl/en/about-collection-online",
+      "storyboard": [
+        {
+          "line": "What changes side by side?",
+          "seconds": "0–3",
+          "visual": "Show two empty gallery frames entering from opposite sides."
+        },
+        {
+          "line": "Compare artworks in Rijksmuseum Collection Online.",
+          "seconds": "3–8",
+          "visual": "Show the frames aligned at the same height. Introduce the name Comparator over the space between them."
+        },
+        {
+          "line": "Read about the Comparator",
+          "seconds": "8–12",
+          "visual": "Hold the Rijksmuseum name and the call to action “Read about the Comparator.”"
+        }
+      ],
+      "theme": "forest"
+    },
+    "schema_version": 2,
+    "sha256": "722b28f48a6bbbbbcbd37b65cfcce833c9eb96f70b50029dfce1925be27eca7c",
+    "status": "READY"
+  },
+  "review_status": "LOCAL_REVIEW",
+  "run_id": "9d702852-2d8c-4e08-b964-039ddc0630ca",
+  "video": "SCRIPT_AND_STORYBOARD_ONLY"
+}
