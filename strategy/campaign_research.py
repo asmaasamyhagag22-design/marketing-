@@ -129,6 +129,15 @@ def parse_offer(page: Page, expected_name: str, now: datetime) -> Offer:
     return Offer(page.url, sha256(page.body).hexdigest(), now.isoformat(), fields, expires.isoformat())
 
 
+def unparsed_excerpt(page):
+    body = BeautifulSoup(page.body, "lxml").body
+    if body is None:
+        return ""
+    for tag in body.select('[itemscope][itemtype="https://schema.org/Offer"] [itemprop]'):
+        tag.decompose()
+    return _text(body.get_text(" ", strip=True))[:240]
+
+
 def _rank(links, name):
     """Reuse the RAG cosine ranker with local binary term vectors."""
     vocabulary = sorted(set(re.findall(r"\w+", (QUERY_TERMS + " " + name).casefold())))

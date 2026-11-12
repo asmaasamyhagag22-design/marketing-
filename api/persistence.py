@@ -1539,6 +1539,11 @@ class PostgresPersistence:
         approval = self._service.approval_for_current_swot(brand_id=row.id, user_id=actor)
         return approval is not None and approval.decision == "approved"
 
+    def campaigns(self, *, user_id: str, clock):
+        from db.campaign_v2 import Campaigns
+
+        return Campaigns(self._service._uow_factory, self._uuid(user_id), clock)
+
     def supports_canonical_strategy(self) -> bool:
         return True
 

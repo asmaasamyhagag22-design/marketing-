@@ -182,7 +182,7 @@ CREATE TABLE runs (
 	CONSTRAINT uq_runs_id_brand_id UNIQUE (id, brand_id),
 	CONSTRAINT uq_runs_id_brand_id_kind UNIQUE (id, brand_id, kind),
 	CONSTRAINT fk_runs_input_profile FOREIGN KEY(input_profile_id, brand_id) REFERENCES profile_snapshots (id, brand_id) ON DELETE RESTRICT,
-	CONSTRAINT ck_runs_kind_is_known CHECK (kind IN ('scrape', 'trends', 'swot', 'strategy', 'calendar', 'competitors', 'poster', 'social', 'reel', 'influencer_poster')),
+	CONSTRAINT ck_runs_kind_is_known CHECK (kind IN ('scrape', 'trends', 'swot', 'strategy', 'calendar', 'competitors', 'poster', 'social', 'reel', 'influencer_poster', 'campaign')),
 	CONSTRAINT ck_runs_status_is_known CHECK (status IN ('queued', 'running', 'succeeded', 'failed')),
 	CONSTRAINT ck_runs_only_creative_runs_target_a_post CHECK (calendar_post_id IS NULL OR kind IN ('poster', 'social', 'reel', 'influencer_poster')),
 	CONSTRAINT ck_runs_origin_is_known CHECK (origin IN ('live','adopted','legacy_import')),
@@ -214,7 +214,7 @@ CREATE TABLE run_dependencies (
 	CONSTRAINT fk_run_dependencies_run FOREIGN KEY(run_id, brand_id) REFERENCES runs (id, brand_id) ON DELETE RESTRICT,
 	CONSTRAINT fk_run_dependencies_depends_on FOREIGN KEY(depends_on_run_id, brand_id) REFERENCES runs (id, brand_id) ON DELETE RESTRICT,
 	CONSTRAINT ck_run_dependencies_no_self_dependency CHECK (run_id <> depends_on_run_id),
-	CONSTRAINT ck_run_dependencies_relation_is_known CHECK (relation IN ('uses_trends','uses_swot','uses_strategy'))
+	CONSTRAINT ck_run_dependencies_relation_is_known CHECK (relation IN ('uses_trends','uses_swot','uses_strategy','revises_campaign'))
 );
 
 CREATE INDEX ix_run_dependencies_depends_on_run_id ON run_dependencies (depends_on_run_id);
@@ -323,7 +323,7 @@ CREATE TABLE approvals (
 	note TEXT,
 	CONSTRAINT pk_approvals PRIMARY KEY (id),
 	CONSTRAINT fk_approvals_subject_run FOREIGN KEY(subject_run_id, brand_id, subject_kind) REFERENCES runs (id, brand_id, kind) ON DELETE RESTRICT,
-	CONSTRAINT ck_approvals_subject_kind_is_known CHECK (subject_kind IN ('swot','strategy')),
+	CONSTRAINT ck_approvals_subject_kind_is_known CHECK (subject_kind IN ('swot','strategy','campaign')),
 	CONSTRAINT ck_approvals_decision_is_known CHECK (decision IN ('approved','rejected')),
 	CONSTRAINT ck_approvals_origin_is_known CHECK (origin IN ('live','legacy_import')),
 	CONSTRAINT ck_approvals_live_approvals_name_actor_and_time CHECK (origin <> 'live' OR (decided_at IS NOT NULL AND decided_by_user_id IS NOT NULL AND imported_at IS NULL)),
