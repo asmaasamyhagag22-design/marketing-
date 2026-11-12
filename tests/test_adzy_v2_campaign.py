@@ -40,7 +40,7 @@ def post(campaign, suffix="", **body):
 
 
 def start(campaign, previous=None):
-    return post(campaign, goal="زيادة حجوزات التجربة", offer_name=NAME, expected_run_id=previous)
+    return post(campaign, goal="TRIAL_BOOKINGS", booking_target=30, offer_name=NAME, expected_run_id=previous)
 
 
 def status(campaign):
@@ -70,6 +70,7 @@ def test_price_refresh_revises_exact_campaign_and_requires_another_approval(camp
     control["body"] = offer_page(price="55")
     changed = post(campaign, "/refresh", run_id=first["run_id"]).json()
     assert changed["run_id"] != first["run_id"] and not changed["approved"]
+    assert changed["proposal"]["booking_target"] == 30
     assert changed["proposal"]["creative"]["copy"]["price"] == "55 EUR"
     impact, = changed["proposal"]["changes"]
     assert (impact["field"], impact["before"], impact["after"]) == ("price", "40", "55")
@@ -128,7 +129,7 @@ def test_non_owner_cannot_read_or_trigger_research(campaign):
     path = f"/api/v2/campaigns/{data['domain']}"
     assert client.get(path, headers=headers).status_code == 404
     response = client.post(path, headers=headers, json={
-        "expected_run_id": None, "goal": "زيادة حجوزات التجربة", "offer_name": NAME})
+        "expected_run_id": None, "goal": "TRIAL_BOOKINGS", "offer_name": NAME})
     assert response.status_code == 404 and not control["calls"]
 
 
@@ -140,3 +141,20 @@ def test_localized_copy_keeps_expiry_seconds_and_source_offset():
     offer = parse_offer(Page("https://studio.example.test/terms", offer_page(ends=expiry)),
                         NAME, datetime.fromisoformat(NOW))
     assert compile_copy(offer.as_dict())["validity"] == "2026-12-01 09:23:45 (UTC+05:30)"
+
+
+def test_source_expires_during_research_before_it_can_become_ready(campaign):
+    _, _, _, _, control = campaign
+    control["on_offer"] = lambda: control.update(now=ENDS)
+    result = start(campaign).json()
+    assert result["proposal"]["status"] == "BLOCKED"
+    assert result["proposal"]["research"]["trace"][-1]["outcome"] == "OFFER_EXPIRED"
+    assert approve(campaign, result["run_id"]).status_code == 409
+
+
+@pytest.mark.parametrize(("goal", "target"), [("IMPRESSIONS", 30), ("TRIAL_BOOKINGS", 0)])
+def test_unsupported_goal_or_target_is_rejected_before_visiting_sources(campaign, goal, target):
+    _, _, _, _, control = campaign
+    response = post(campaign, goal=goal, booking_target=target, offer_name=NAME, expected_run_id=None)
+    assert response.status_code == 422
+    assert not control["calls"]

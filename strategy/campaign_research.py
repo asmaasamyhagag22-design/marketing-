@@ -21,7 +21,7 @@ MAX_PAGES = 2
 MAX_SECONDS = 6.0
 MAX_BYTES = 256_000
 OFFER_FIELDS = ("name", "price", "priceCurrency", "availableAtOrFrom",
-                "availabilityEnds", "description")
+                "validThrough", "description")
 QUESTIONS = ("Where are the named offer's price, branch, terms and validity published?",
              "ما مصدر سعر العرض والفرع والشروط ومدة الصلاحية؟")
 QUERY_TERMS = ("offer price pricing terms conditions book booking workshop "
@@ -32,6 +32,7 @@ QUERY_TERMS = ("offer price pricing terms conditions book booking workshop "
 class Page:
     url: str
     body: bytes
+    source_kind: str = "unspecified"
 
 
 @dataclass(frozen=True)
@@ -41,6 +42,7 @@ class Offer:
     captured_at: str
     fields: dict[str, str]
     expires_at: str
+    source_kind: str
 
     def as_dict(self):
         return asdict(self)
@@ -79,13 +81,13 @@ def load_public_page(url, timeout):
                 raise ResearchGap("SOURCE_DEADLINE")
             chunk = response.read1(min(8192, MAX_BYTES + 1 - len(body)))
             if not chunk:
-                return Page(response.geturl(), bytes(body))
+                return Page(response.geturl(), bytes(body), "public_http")
             body.extend(chunk)
         raise ResearchGap("PAGE_TOO_LARGE")
 
 
 def _expires(value):
-    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2})?(?:Z|[+-]\d{2}:\d{2})", value):
+    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2})?(?:Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)", value):
         raise ResearchGap("EXPLICIT_EXPIRY_OFFSET_REQUIRED")
     try:
         return datetime.fromisoformat(value)
@@ -98,7 +100,8 @@ def parse_offer(page: Page, expected_name: str, now: datetime) -> Offer:
     body = soup.body
     if body is None:
         raise ResearchGap("OFFER_NOT_FOUND")
-    if body.select_one("script, style, template, [hidden], [aria-hidden=true], [style]"):
+    if (soup.select_one("script, style, link[rel~=stylesheet], base, template, iframe, object, embed")
+            or body.select_one("img, svg, canvas, video, audio, [hidden], [aria-hidden=true], [style], [itemref]")):
         raise ResearchGap("UNSUPPORTED_OFFER_PAGE_CONTENT")
     scopes = body.select('[itemscope][itemtype="https://schema.org/Offer"]')
     if not scopes:
@@ -111,6 +114,8 @@ def parse_offer(page: Page, expected_name: str, now: datetime) -> Offer:
             or set(tag["itemprop"] for tag in props) != set(OFFER_FIELDS)
             or any(tag.parent is not scope for tag in props)):
         raise ResearchGap("OFFER_FIELDS_INCOMPLETE_OR_AMBIGUOUS")
+    if scope.select_one("a[href], [content], [datetime], [itemscope]"):
+        raise ResearchGap("UNSUPPORTED_OFFER_PAGE_CONTENT")
     fields = {tag["itemprop"]: _text(tag.get_text(" ", strip=True)) for tag in props}
     if _text(body.get_text(" ", strip=True)) != _text(" ".join(fields.values())):
         raise ResearchGap("UNPARSED_OFFER_CONTEXT")
@@ -123,10 +128,10 @@ def parse_offer(page: Page, expected_name: str, now: datetime) -> Offer:
         raise ResearchGap("EXACT_PRICE_REQUIRED")
     if not re.fullmatch(r"[A-Z]{3}", fields["priceCurrency"]):
         raise ResearchGap("EXPLICIT_CURRENCY_REQUIRED")
-    expires = _expires(fields["availabilityEnds"])
+    expires = _expires(fields["validThrough"])
     if now >= expires:
         raise ResearchGap("OFFER_EXPIRED")
-    return Offer(page.url, sha256(page.body).hexdigest(), now.isoformat(), fields, expires.isoformat())
+    return Offer(page.url, sha256(page.body).hexdigest(), now.isoformat(), fields, expires.isoformat(), page.source_kind)
 
 
 def unparsed_excerpt(page):
@@ -149,9 +154,9 @@ def _rank(links, name):
     return [links[index] for index in order]
 
 
-def research(root, name, loader, *, now=None, method="guided", hint=None,
+def research(root, name, loader, *, now=None, clock=None, method="guided", hint=None,
              max_pages=MAX_PAGES, seconds=MAX_SECONDS):
-    now = now or datetime.now(timezone.utc)
+    clock = clock or (lambda: datetime.now(timezone.utc))
     started = monotonic()
     trace = []
     pending = [(root, "BRAND_ENTRY")]
@@ -166,7 +171,7 @@ def research(root, name, loader, *, now=None, method="guided", hint=None,
                 raise ResearchGap("SOURCE_ORIGIN_MISMATCH")
             if monotonic() - started >= seconds:
                 break
-            offer = parse_offer(page, name, now)
+            offer = parse_offer(page, name, now if now is not None else clock())
         except (OSError, URLError, ResearchGap) as exc:
             step["outcome"] = str(exc) if isinstance(exc, ResearchGap) else "SOURCE_UNAVAILABLE"
             if len(trace) == 1:

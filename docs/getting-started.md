@@ -37,6 +37,10 @@ python -m workflows.demo cleanup --directory .review-app-demo
 
 Cleanup stops the guarded labeled container and removes the CLI-owned files. Application checkpoint/auth/capture subdirectories remain for inspection; delete this disposable demo directory yourself when no longer needed.
 
+### Try the Adzy V2 trial campaign
+
+Open the Campaign tab with the fictional training publisher. The walkthrough exercises source research, an Arabic creative, price and terms changes, expiry, and recovery after restarting the app. [Adzy V2 walkthrough and results](v2/EXECUTION.md).
+
 ### Configure your own local application
 
 Provision a new local PostgreSQL database. Privately set `PERSISTENCE_BACKEND=postgres`, `BASEERA_DATABASE_URL` to its `postgresql+psycopg://...` DSN, `BASEERA_WEBAPP_DIR` to an absolute private application directory, and `ADZY_REVIEW_STATE_DIR` to an absolute persistent application-owned checkpoint directory. Keep the signing secret stable across restarts. Apply schema explicitly, then start one application instance:

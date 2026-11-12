@@ -12,6 +12,7 @@ class CampaignSnapshot:
     brand_id: UUID
     profile_id: UUID | None
     source_url: str
+    brand_name: str
     run: RunRecord | None
 
 
@@ -37,7 +38,8 @@ class Campaigns:
         with self.factory() as uow:
             brand = self._brand(uow, domain)
             run = self._latest(uow, brand)
-            return CampaignSnapshot(brand.id, brand.current_profile_id, brand.source_url or "", run)
+            return CampaignSnapshot(brand.id, brand.current_profile_id, brand.source_url or "",
+                                    brand.display_name or "", run)
 
     def view(self, domain):
         with self.factory() as uow:
@@ -48,10 +50,11 @@ class Campaigns:
         if not run:
             return {"run_id": None, "proposal": None, "approved": False, "reason": None}
         approval = uow.approvals.latest_for_run(run.id)
+        checked_at = self.clock()
         reason = ("PROFILE_CHANGED" if run.input_profile_id != brand.current_profile_id
-                  else inactive_reason(run.output, self.clock()))
+                  else inactive_reason(run.output, checked_at))
         return {"run_id": str(run.id), "profile_snapshot_id": str(run.input_profile_id),
-                "proposal": run.output, "reason": reason,
+                "proposal": run.output, "reason": reason, "checked_at": checked_at.isoformat(),
                 "decision": approval.decision if approval else None,
                 "approved": not reason and approval is not None and approval.decision == "approved",
                 "approval_id": str(approval.id) if approval else None}
@@ -89,5 +92,7 @@ class Campaigns:
                 uow.approvals.create_live(brand_id=brand.id, run_id=run.id, actor_id=self.actor,
                                           subject_kind="campaign", decision=decision)
                 view = self._view(uow, brand, run)
+                if view["reason"]:
+                    raise CampaignConflict(view["reason"])
                 uow.commit()
             return view

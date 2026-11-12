@@ -145,7 +145,7 @@
 
   window.adzyNavigate = async function (stage) {
     initialStageRestored = true;
-    if (['think', 'strategy', 'create'].includes(stage) && !A.brand) {
+    if (['think', 'strategy', 'create', 'campaign'].includes(stage) && !A.brand) {
       notify('Choose a brand first.', 'error');
       setActiveStage('discover');
       $('adzy-brand-select').focus();
@@ -156,6 +156,10 @@
     if (stage === 'strategy') renderStrategy();
     if (stage === 'create') await renderCreative();
     if (stage === 'work') renderWork();
+    if (stage === 'campaign') {
+      if (A.loadingBrand) window.adzyCampaign.reset();
+      else await window.adzyCampaign.open(A.brand);
+    }
   };
 
   function finishIntro() {
@@ -268,6 +272,7 @@
     const epoch = ++A.selectionEpoch;
     try {
       A.loadingBrand = true; A.latestAttempt = null;
+      if (A.stage === 'campaign') window.adzyCampaign.reset();
       A.reviewedSwot = null; A.reviewedStrategy = null; A.contract = null; A.contractError = ''; A.review = null; A.reviewError = '';
       $('adzy-research').innerHTML = '<p role="status">Loading brand evidence...</p>';
       $('adzy-directions').innerHTML = '';
@@ -308,8 +313,15 @@
       try { await restorePosterAttempt(epoch); } catch (error) {
         if (epoch === A.selectionEpoch) { $('adzy-generation-error').hidden = false; $('adzy-generation-error').textContent = 'Attempt status unavailable. Check status before generating.'; }
       }
-      if (navigate) await window.adzyNavigate('think');
-    } catch (error) { if (epoch !== A.selectionEpoch) return; A.brand = null; A.loadingBrand = false; A.reviewedSwot = null; A.reviewedStrategy = null; A.contract = null; notify(`Could not open the brand: ${error.message}`, 'error'); }
+      if (epoch !== A.selectionEpoch) return;
+      if (A.stage === 'campaign') await window.adzyNavigate('campaign');
+      else if (navigate) await window.adzyNavigate('think');
+    } catch (error) {
+      if (epoch !== A.selectionEpoch) return;
+      A.brand = null; A.loadingBrand = false; A.reviewedSwot = null; A.reviewedStrategy = null; A.contract = null;
+      if (A.stage === 'campaign') setActiveStage('discover');
+      notify(`Could not open the brand: ${error.message}`, 'error');
+    }
   }
 
   window.adzySelectBrand = selectBrand;
@@ -1396,7 +1408,7 @@
         const stage = A.initialLocation.get('stage');
         if (!initialStageRestored && A.brand) {
           initialStageRestored = true;
-          if (['think', 'strategy', 'create', 'work'].includes(stage)) await window.adzyNavigate(stage);
+          if (['think', 'strategy', 'create', 'work', 'campaign'].includes(stage)) await window.adzyNavigate(stage);
         }
       } catch (_) { /* auth gate remains the authority for an unavailable session */ }
     })();

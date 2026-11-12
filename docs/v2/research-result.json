@@ -24,7 +24,7 @@
           }
         ],
         "page_calls": 2,
-        "elapsed_ms": 73.793,
+        "elapsed_ms": 73.904,
         "provider_calls": 0,
         "offer": null,
         "next_action": "ASK_OWNER_FOR_DEDICATED_TERMS_PAGE",
@@ -49,21 +49,22 @@
           }
         ],
         "page_calls": 2,
-        "elapsed_ms": 27.993,
+        "elapsed_ms": 28.612,
         "provider_calls": 0,
         "offer": {
           "page_url": "https://studio.example.test/terms",
-          "sha256": "0f23939d8f162ece56d549bb0aa43f6e2bdf6322a9e14b4312a089859a64e010",
+          "sha256": "4780bcb0cc4b437bb1869e53f94350c7dfabb8baf005adcf51a3439fc6825f39",
           "captured_at": "2026-11-12T10:00:00+02:00",
           "fields": {
             "name": "جلسة تصميم للمبتدئين",
             "price": "40",
             "priceCurrency": "EUR",
             "availableAtOrFrom": "فرع الميناء",
-            "availabilityEnds": "2026-11-30T23:59:00+02:00",
+            "validThrough": "2026-11-30T23:59:00+02:00",
             "description": "الحجز المسبق مطلوب. العرض للجلسة الأولى فقط."
           },
-          "expires_at": "2026-11-30T23:59:00+02:00"
+          "expires_at": "2026-11-30T23:59:00+02:00",
+          "source_kind": "synthetic_fixture"
         },
         "next_action": null,
         "expected": "READY"
@@ -90,21 +91,22 @@
           }
         ],
         "page_calls": 2,
-        "elapsed_ms": 4.277,
+        "elapsed_ms": 4.54,
         "provider_calls": 0,
         "offer": {
           "page_url": "https://studio.example.test/offer",
-          "sha256": "0f23939d8f162ece56d549bb0aa43f6e2bdf6322a9e14b4312a089859a64e010",
+          "sha256": "4780bcb0cc4b437bb1869e53f94350c7dfabb8baf005adcf51a3439fc6825f39",
           "captured_at": "2026-11-12T10:00:00+02:00",
           "fields": {
             "name": "جلسة تصميم للمبتدئين",
             "price": "40",
             "priceCurrency": "EUR",
             "availableAtOrFrom": "فرع الميناء",
-            "availabilityEnds": "2026-11-30T23:59:00+02:00",
+            "validThrough": "2026-11-30T23:59:00+02:00",
             "description": "الحجز المسبق مطلوب. العرض للجلسة الأولى فقط."
           },
-          "expires_at": "2026-11-30T23:59:00+02:00"
+          "expires_at": "2026-11-30T23:59:00+02:00",
+          "source_kind": "synthetic_fixture"
         },
         "next_action": null,
         "expected": "READY"
@@ -128,21 +130,22 @@
           }
         ],
         "page_calls": 2,
-        "elapsed_ms": 3.838,
+        "elapsed_ms": 4.98,
         "provider_calls": 0,
         "offer": {
           "page_url": "https://studio.example.test/offer",
-          "sha256": "0f23939d8f162ece56d549bb0aa43f6e2bdf6322a9e14b4312a089859a64e010",
+          "sha256": "4780bcb0cc4b437bb1869e53f94350c7dfabb8baf005adcf51a3439fc6825f39",
           "captured_at": "2026-11-12T10:00:00+02:00",
           "fields": {
             "name": "جلسة تصميم للمبتدئين",
             "price": "40",
             "priceCurrency": "EUR",
             "availableAtOrFrom": "فرع الميناء",
-            "availabilityEnds": "2026-11-30T23:59:00+02:00",
+            "validThrough": "2026-11-30T23:59:00+02:00",
             "description": "الحجز المسبق مطلوب. العرض للجلسة الأولى فقط."
           },
-          "expires_at": "2026-11-30T23:59:00+02:00"
+          "expires_at": "2026-11-30T23:59:00+02:00",
+          "source_kind": "synthetic_fixture"
         },
         "next_action": null,
         "expected": "READY"
@@ -169,7 +172,7 @@
           }
         ],
         "page_calls": 2,
-        "elapsed_ms": 3.351,
+        "elapsed_ms": 3.535,
         "provider_calls": 0,
         "offer": null,
         "next_action": "ASK_OWNER_FOR_DEDICATED_TERMS_PAGE",
@@ -194,21 +197,22 @@
           }
         ],
         "page_calls": 2,
-        "elapsed_ms": 4.619,
+        "elapsed_ms": 4.872,
         "provider_calls": 0,
         "offer": {
           "page_url": "https://studio.example.test/arabic_terms",
-          "sha256": "0f23939d8f162ece56d549bb0aa43f6e2bdf6322a9e14b4312a089859a64e010",
+          "sha256": "4780bcb0cc4b437bb1869e53f94350c7dfabb8baf005adcf51a3439fc6825f39",
           "captured_at": "2026-11-12T10:00:00+02:00",
           "fields": {
             "name": "جلسة تصميم للمبتدئين",
             "price": "40",
             "priceCurrency": "EUR",
             "availableAtOrFrom": "فرع الميناء",
-            "availabilityEnds": "2026-11-30T23:59:00+02:00",
+            "validThrough": "2026-11-30T23:59:00+02:00",
             "description": "الحجز المسبق مطلوب. العرض للجلسة الأولى فقط."
           },
-          "expires_at": "2026-11-30T23:59:00+02:00"
+          "expires_at": "2026-11-30T23:59:00+02:00",
+          "source_kind": "synthetic_fixture"
         },
         "next_action": null,
         "expected": "READY"
@@ -235,7 +239,7 @@
           }
         ],
         "page_calls": 2,
-        "elapsed_ms": 1.518,
+        "elapsed_ms": 1.506,
         "provider_calls": 0,
         "offer": null,
         "next_action": "ASK_OWNER_FOR_DEDICATED_TERMS_PAGE",
@@ -260,7 +264,7 @@
           }
         ],
         "page_calls": 2,
-        "elapsed_ms": 1.513,
+        "elapsed_ms": 1.741,
         "provider_calls": 0,
         "offer": null,
         "next_action": "ASK_OWNER_FOR_DEDICATED_TERMS_PAGE",
@@ -288,7 +292,7 @@
           }
         ],
         "page_calls": 2,
-        "elapsed_ms": 3.208,
+        "elapsed_ms": 4.524,
         "provider_calls": 0,
         "offer": null,
         "next_action": "ASK_OWNER_FOR_DEDICATED_TERMS_PAGE",
@@ -313,7 +317,7 @@
           }
         ],
         "page_calls": 2,
-        "elapsed_ms": 3.901,
+        "elapsed_ms": 4.902,
         "provider_calls": 0,
         "offer": null,
         "next_action": "ASK_OWNER_FOR_DEDICATED_TERMS_PAGE",
@@ -341,7 +345,7 @@
           }
         ],
         "page_calls": 2,
-        "elapsed_ms": 2.454,
+        "elapsed_ms": 3.625,
         "provider_calls": 0,
         "offer": null,
         "next_action": "ASK_OWNER_FOR_DEDICATED_TERMS_PAGE",
@@ -366,7 +370,7 @@
           }
         ],
         "page_calls": 2,
-        "elapsed_ms": 1.957,
+        "elapsed_ms": 2.569,
         "provider_calls": 0,
         "offer": null,
         "next_action": "ASK_OWNER_FOR_DEDICATED_TERMS_PAGE",
@@ -394,7 +398,7 @@
           }
         ],
         "page_calls": 2,
-        "elapsed_ms": 3.539,
+        "elapsed_ms": 5.309,
         "provider_calls": 0,
         "offer": null,
         "next_action": "ASK_OWNER_FOR_DEDICATED_TERMS_PAGE",
@@ -419,7 +423,7 @@
           }
         ],
         "page_calls": 2,
-        "elapsed_ms": 3.388,
+        "elapsed_ms": 5.291,
         "provider_calls": 0,
         "offer": null,
         "next_action": "ASK_OWNER_FOR_DEDICATED_TERMS_PAGE",

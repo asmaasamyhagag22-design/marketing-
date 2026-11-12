@@ -23,10 +23,10 @@ def main():
         except ResearchGap as exc:
             rows.append({**row, "status": "REFUSED", "reason": str(exc)})
             continue
-        result = propose("زيادة حجوزات التجربة", NAME, {"offer": offer.as_dict()})
+        result = propose(NAME, {"offer": offer.as_dict()})
         fields = offer.fields
         copy = result["creative"]["copy"]
-        expiry = datetime.fromisoformat(fields["availabilityEnds"])
+        expiry = datetime.fromisoformat(fields["validThrough"])
         offset = expiry.strftime("%z")
         checks = {
             "price_and_currency": copy["price"] == f"{case['price']} {case['currency']}",
