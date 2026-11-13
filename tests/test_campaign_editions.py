@@ -143,13 +143,26 @@ def test_campaign_observations_redact_publisher_and_copy(edition, monkeypatch):
     body["copy_edit"]["headline"] = "PRIVATE_EXPANDED_CLAIM"
     response = request("POST", "/" + draft["domain_key"] + "/brief", body)
     assert response.status_code == 409
+    path = "/" + draft["domain_key"]
+    body.pop("copy_edit")
+    reviewed = request("POST", path + "/brief", body).json()
+    approval = request("POST", path + "/review", {"run_id": reviewed["run_id"], "decision": "approved"})
+    assert approval.json()["approved"]
+    # The exporter is exercised with Chromium and the real ZIP in the offline demo.
+    monkeypatch.setattr("poster.campaign_package.export_package", lambda view, root: b"fixture-zip")
+    exported = request("GET", path + "/package/export?run_id=" + reviewed["run_id"])
+    assert exported.content == b"fixture-zip"
     telemetry.flush()
     spans = exporter.get_finished_spans()
     assert {span.name for span in spans} == {
         "campaign.plan", "campaign.research", "campaign.fetch", "campaign.select_evidence",
         "campaign.write_copy", "campaign.persist", "campaign.review_copy", "campaign.verify",
+        "campaign.approval", "campaign.export",
     }
     assert len({span.context.trace_id for span in spans}) == 1
+    research = next(span for span in spans if span.name == "campaign.research")
+    assert all(span.parent and span.parent.span_id == research.context.span_id
+               for span in spans if span.name == "campaign.fetch")
     serialized = str([dict(span.attributes) for span in spans])
     assert root not in serialized and "PRIVATE_EXPANDED_CLAIM" not in serialized
     assert "NEEDS_REVIEW" in serialized and "COPY_REQUIRES_EVIDENCE_REVIEW" in serialized

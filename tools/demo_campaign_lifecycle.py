@@ -196,13 +196,13 @@ def exercise(app):
     assert set(monitor["alerts"][0]["trace_ids"]) == set(blocked)
     assert monitor["metrics"]["simulated_transport"]["latency"]["campaign.fetch"]["p95_ms"] is not None
 
-    def stages(state, *, version=True):
+    def stages(state):
         planner = state["proposal"]["planner"]
         trace = [row for row in rows if row["trace_id"] == planner["trace_id"]]
         return {"run_id": state["run_id"], "profile_snapshot_id": state["profile_snapshot_id"],
                 "approval_id": state["approval_id"], "proposal_sha256": state["proposal"]["sha256"],
                 "snapshot_id": planner["snapshot_id"], "trace_id": planner["trace_id"],
-                "stages": trace, **({"version": planner["version"]} if version else {})}
+                "stages": trace, "version": planner["version"]}
 
     buffalo_result = stages(initial)
     assert {row["stage"] for row in buffalo_result["stages"]} >= {
@@ -231,6 +231,11 @@ def main():
     args = parser.parse_args()
     output = args.output_dir.resolve()
     output.mkdir(parents=True, exist_ok=False)
+    # Promotion is conditional on the same gate that the CI workflow runs.
+    gate_path = output / "release-gate.json"
+    subprocess.run([sys.executable, "-m", "workflows.campaign_eval", "--output", str(gate_path)],
+                   check=True, cwd=ROOT)
+    gate = json.loads(gate_path.read_text())
     demo.isolate()
     command = [sys.executable, "-m", "workflows.public_campaign_demo"]
     state = output / "state"
@@ -238,7 +243,7 @@ def main():
     try:
         app = LocalCampaign(output)
         try:
-            receipt = exercise(app)
+            receipt = {**exercise(app), "eval_set_id": gate["eval_set_id"], "release_gate": gate["gate"]}
         finally:
             app.client.close()
         (output / "result.json").write_text(json.dumps(receipt, indent=2) + "\n")
