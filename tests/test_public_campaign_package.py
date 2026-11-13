@@ -151,6 +151,32 @@ assert report["geometry"][-1]["bottom"] <= 1020
                    cwd=CASE.parents[3], timeout=20)
 
 
+def test_comparison_frames_fit_the_short_square_motif(tmp_path):
+    import subprocess
+    import sys
+
+    script = """
+from pathlib import Path
+import sys
+from poster.campaign_package import render_poster
+
+package = {
+    "brand_name": "Museum", "language": "en", "direction": "ltr",
+    "theme": "cobalt", "poster_layout": "source-campaign@2", "concept": "compare",
+    "copy": {"headline": "Compare Artworks Side by Side",
+             "message": "Use the Comparator to place artworks next to each other and zoom in on the smallest details.",
+             "cta": "Read about the Comparator"},
+}
+for size in ("square", "portrait"):
+    image, measurements = render_poster(package, size, Path(sys.argv[1]) / (size + ".png"))
+    motif = next(box for box in measurements["geometry"] if box["field"] == "motif")
+    assert image.startswith(bytes.fromhex("89504e470d0a1a0a"))
+    assert not motif["overflow"]
+"""
+    subprocess.run([sys.executable, "-c", script, str(tmp_path)], check=True,
+                   cwd=CASE.parents[3], timeout=25)
+
+
 def test_cached_bytes_survive_renderer_change_and_detect_corruption(monkeypatch, tmp_path):
     from poster import campaign_package
 

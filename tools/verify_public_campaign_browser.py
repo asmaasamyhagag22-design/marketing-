@@ -132,8 +132,9 @@ def main():
                                              "public_pages": generated["proposal"]["planner"]["page_calls"],
                                              "seconds": round(monotonic() - before, 2)}
                             continue
-                        editor = page.locator("#v2-brief-form")
+                        editor = page.locator(f'#v2-brief-form[data-run="{generated["run_id"]}"]')
                         expect(editor).to_be_visible()
+                        expect(editor.locator('button[type="submit"]')).to_be_enabled()
                         assert generated["reason"] == "BRIEF_REVIEW_REQUIRED"
                         editor.locator('[name="audience"]').fill(
                             "فرضية جمهور بعد مراجعة المسودة." if case["language"] == "ar"
@@ -144,10 +145,12 @@ def main():
                             if case.get("rejected_headline"):
                                 headline = editor.locator('[name="headline"]')
                                 headline.fill(case["rejected_headline"])
-                                with page.expect_response(lambda r: r.url.endswith("/brief")) as rejected:
+                                with page.expect_request(lambda r: r.url.endswith("/brief")) as unsafe_request, \
+                                        page.expect_response(lambda r: r.url.endswith("/brief")) as rejected:
                                     editor.locator('button[type="submit"]').click()
+                                assert unsafe_request.value.post_data_json["copy_edit"]["headline"] == case["rejected_headline"]
                                 rejected_copy = rejected.value.status
-                                assert rejected_copy == 409, rejected.value.text()
+                                assert rejected_copy == 409, rejected_copy
                                 assert "COPY_REQUIRES_EVIDENCE_REVIEW" in rejected.value.text()
                                 expect(page.locator("#v2-status")).to_contain_text("الصياغة تحتاج مراجعة دليل")
                                 expect(headline).to_have_value(case["rejected_headline"])

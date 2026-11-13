@@ -236,7 +236,7 @@
   }
 
   function wireReview(root) {
-    for (const button of root.querySelectorAll('button')) button.disabled = busy;
+    for (const control of root.querySelectorAll('button, input, select, textarea')) control.disabled = busy;
     byId('v2-refresh')?.addEventListener('click', () => submit('/refresh', {run_id: state.run_id}));
     byId('v2-approve')?.addEventListener('click', () => submit('/review', {run_id: state.run_id, decision: 'approved'}));
     byId('v2-reject')?.addEventListener('click', () => submit('/review', {run_id: state.run_id, decision: 'rejected'}));
@@ -259,6 +259,7 @@
       wireReview(root);
       const editor = byId('v2-brief-form');
       if (editor) {
+        editor.dataset.run = state.run_id;
         const keys = ['headline', 'message', 'cta', 'caption'];
         const syncCopy = () => {
           const direction = proposal.brief.directions[Number(editor.elements.selected.value)];
@@ -303,8 +304,7 @@
       <section class="v2-panel">
         <h2>قرار البحث</h2>
         <p id="v2-question">${esc(proposal.research.questions.at(-1))}</p>
-        <p dir="auto">${esc(planner.opportunity_hypothesis)}</p>
-      <p id="v2-stop">${esc(label(proposal.research.status))}</p>
+        <p id="v2-stop">${esc(label(proposal.research.status))}</p>
         <ol id="v2-trace">${trace}</ol>
         ${reason ? `<p id="v2-blocker">${esc(label(reason))}</p>` : ''}
         ${proposal.research.next_action ? '<p>أضف رابط صفحة مخصصة لشروط العرض وأعد البحث.</p>' : ''}

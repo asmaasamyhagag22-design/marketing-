@@ -63,6 +63,7 @@ main{{width:{width}px;height:{height}px;padding:64px 76px;display:grid;
 .motif{{position:relative;isolation:isolate;overflow:hidden;min-height:140px;
  background-image:radial-gradient({light}45 1.5px,transparent 2px);
  background-size:30px 30px;mask-image:linear-gradient(90deg,transparent,#000 24%,#000 76%,transparent)}}
+.motif:has(.frames){{container-type:size}}
 .motif i{{position:absolute;inset-block-start:50%;inset-inline-start:50%;
  width:42%;height:82%;border-radius:50%;border:5px solid {light};translate:-50% -50%;
  transform:rotate(-28deg);background:linear-gradient(150deg,{light}55,{shape}44);
@@ -80,7 +81,7 @@ main[data-theme=forest] .motif i:nth-child(2){{transform:rotate(12deg)}}
 main[data-theme=forest] .motif i:nth-child(3){{transform:translateX(-51%) rotate(-9deg)}}
 .frames,.tiles,.filter{{position:absolute;inset:8% 7%;display:grid;align-content:center;justify-content:center}}
 .frames{{grid-template-columns:repeat(2,minmax(120px,1fr));gap:7%;direction:ltr}}
-.frames span{{height:clamp(160px,29vh,375px);border:7px solid {accent};outline:2px solid {light};
+.frames span{{height:min(72cqh,375px);border:7px solid {accent};outline:2px solid {light};
  outline-offset:10px;border-radius:8px;background:linear-gradient(155deg,{shape} 0 43%,{light} 43% 46%,{bg} 46% 100%)}}
 .frames span+span{{background:radial-gradient(circle at 44% 42%,{accent} 0 11%,{light} 11% 18%,transparent 18%),linear-gradient(28deg,{shape} 0 50%,{bg} 50%)}}
 .tiles{{grid-template-columns:repeat(2,clamp(90px,15vh,190px));gap:18px;direction:ltr}}
@@ -117,7 +118,12 @@ def measure_poster(page):
             return {field: element.className || element.tagName, x: r.x, y: r.y,
                 right: r.right, bottom: r.bottom, size: parseFloat(css.fontSize),
                 color: css.color, background: css.backgroundColor,
-                overflow: element.scrollWidth > element.clientWidth + 1};
+                overflow: element.scrollWidth > element.clientWidth + 1 ||
+                    Array.from(element.querySelectorAll('.frames span')).some(frame => {
+                        const f = frame.getBoundingClientRect();
+                        const outline = parseFloat(getComputedStyle(frame).outlineOffset) + 2;
+                        return f.top - outline < r.top || f.bottom + outline > r.bottom;
+                    })};
         })"""
     )
     return boxes
