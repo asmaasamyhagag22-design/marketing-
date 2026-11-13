@@ -26,6 +26,7 @@
       "headline": "Compare Artworks Side by Side",
       "message": "Use the Comparator to place artworks next to each other and zoom in on the smallest details."
     },
-    "rejected_headline": "Compare every artwork ever created"
+    "rejected_headline": "Compare every artwork ever created",
+    "copy_receipt": "docs/campaigns/quality/ledger/compact-rijksmuseum-vertex.receipt.json"
   }
 }

@@ -102,6 +102,8 @@ def main():
                     target = evidence / name
                     target.mkdir(exist_ok=True)
                     rejected_copy = None
+                    accepted_copy_fields = []
+                    stale_copy_packet_rejected = False
                     if plans is None:
                         domain = manifest["brands"][name]
                         page.locator("#adzy-brand-select").select_option(domain)
@@ -142,6 +144,25 @@ def main():
                         )
                         if case.get("copy_edit"):
                             editor.locator("#v2-copy-details summary").click()
+                            if case.get("copy_receipt"):
+                                from tools.experiment_campaign_copy import copy_packet
+
+                                with page.expect_download() as draft_download:
+                                    editor.locator("#v2-copy-draft").click()
+                                exported_draft = target / "exported-draft.json"
+                                draft_download.value.save_as(exported_draft)
+                                assert json.loads(exported_draft.read_text())["proposal"] == generated["proposal"]
+                                packet = copy_packet(exported_draft, ROOT / case["copy_receipt"])
+                                stale_packet = {**packet, "run_id": "old-version"}
+                                upload = editor.locator("#v2-copy-packet")
+
+                                def upload_packet(payload):
+                                    upload.set_input_files({"name": "suggestions.json", "mimeType": "application/json",
+                                                            "buffer": json.dumps(payload).encode()})
+
+                                upload_packet(stale_packet)
+                                expect(editor.locator("#v2-copy-packet-status")).to_contain_text("تخص نسخة تانية")
+                                stale_copy_packet_rejected = True
                             if case.get("rejected_headline"):
                                 headline = editor.locator('[name="headline"]')
                                 headline.fill(case["rejected_headline"])
@@ -156,8 +177,18 @@ def main():
                                 expect(headline).to_have_value(case["rejected_headline"])
                                 current = page.evaluate("domain => window.api('GET', '/api/v2/campaigns/' + domain)", domain)
                                 assert current["run_id"] == generated["run_id"] and not current["approved"]
-                            for field, value in case["copy_edit"].items():
-                                editor.locator(f'[name="{field}"]').fill(value)
+                            if case.get("copy_receipt"):
+                                upload_packet(packet)
+                                options = editor.locator("#v2-copy-options details")
+                                expect(options).to_have_count(3)
+                                choice = options.first
+                                choice.locator("summary").click()
+                                for field, value in case["copy_edit"].items():
+                                    choice.locator(f'[data-copy-field="{field}"]').click()
+                                    expect(editor.locator(f'[name="{field}"]')).to_have_value(value)
+                            else:
+                                for field, value in case["copy_edit"].items():
+                                    editor.locator(f'[name="{field}"]').fill(value)
                         with page.expect_request(lambda r: r.url.endswith("/brief")) as review_request, \
                                 page.expect_response(lambda r: r.url.endswith("/brief")) as review_response:
                             editor.locator('button[type="submit"]').click()
@@ -188,6 +219,7 @@ def main():
                         for field, value in case.get("copy_edit", {}).items():
                             actual = initial["proposal"]["package"]["caption"] if field == "caption" else initial["proposal"]["package"]["copy"][field]
                             assert actual == value, (field, actual, value)
+                            accepted_copy_fields.append(field)
                     previews = {}
                     for size in ("portrait", "square"):
                         with page.expect_response(lambda response: response.url.endswith("&size=" + size)) as preview:
@@ -244,6 +276,8 @@ def main():
                     results[name] = {"status": "EXPORTED", "seconds": round(monotonic() - before, 2),
                                      "public_pages": planner["page_calls"] if planner else 2,
                                      "stale_export_http": stale, "rejected_copy_http": rejected_copy,
+                                     "stale_copy_packet_rejected": stale_copy_packet_rejected,
+                                     "accepted_copy_fields": accepted_copy_fields,
                                      "restored_png_sha256": hashes}
             from sqlalchemy import func, select
             from db.models import Approval, Run, UsageRecord

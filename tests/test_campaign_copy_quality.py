@@ -52,11 +52,10 @@ def test_model_comparator_rewrite_passes_and_retains_bound_destination():
 def test_qualified_context_does_not_license_unconditional_copy():
     from strategy.campaign_copy import writing_for
 
-    evidence = {"quote": "The browser blocks thousands of known trackers.",
-                "context": "The browser blocks thousands of known trackers. This only applies when enabled."}
+    quote = "The browser blocks thousands of known trackers while you browse."
+    assert writing_for({"quote": quote}, "READ_FEATURE", "ar")
+    evidence = {"quote": quote, "context": quote + " This only applies when enabled."}
     assert writing_for(evidence, "READ_FEATURE", "ar") is None
-
-
 
 def test_catalog_cta_requires_destination_and_does_not_guarantee_stock():
     from strategy.campaign_copy import writing_for

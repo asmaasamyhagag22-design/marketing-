@@ -22,8 +22,12 @@ CAP = Decimal("10")
 
 
 def inputs(path):
-    with ZipFile(path) as archive:
-        proposal = json.loads(archive.read("campaign.json"))["proposal"]
+    if path.suffix == ".json":
+        view = json.loads(path.read_text())
+    else:
+        with ZipFile(path) as archive:
+            view = json.loads(archive.read("campaign.json"))
+    proposal = view["proposal"]
     brief = proposal["brief"]
     decision = proposal["planner"]["options"][brief["selected"]]
     return {
@@ -32,7 +36,9 @@ def inputs(path):
         "evidence": [{k: e.get(k) for k in ("page_url", "label", "quote", "context", "constraints")}
                      for e in proposal["evidence"]],
         "destination": decision["destination"], "action": decision["action"],
-        "baseline": proposal["package"]["copy"],
+        "baseline": (proposal["package"]["copy"] if proposal["package"] else {
+            key: brief["directions"][brief["selected"]][key] for key in ("headline", "message", "cta")
+        }),
     }
 
 
@@ -53,20 +59,47 @@ def exposure(directory):
             if result["estimated_charge"] is not None:
                 total += Decimal(result["estimated_charge"])
                 continue
-        total += RESERVE
+        total += Decimal(json.loads(intent.read_text())["reserve_usd"])
     return total
+
+
+def copy_packet(draft_path, receipt_path):
+    draft = json.loads(draft_path.read_text())
+    receipt = json.loads(receipt_path.read_text())
+    intent = receipt_path.with_name(receipt_path.name.replace(".receipt.", ".dispatch."))
+    archived = json.loads(intent.read_text())["input"]
+    current = inputs(draft_path)
+    if any(archived.get(key) != current[key] for key in ("brief", "evidence", "destination", "action")):
+        raise ValueError("The model receipt must use this brief, evidence and destination")
+    if receipt["outcome"] != "COMPLETE":
+        raise ValueError("The model receipt is incomplete")
+    directions = json.loads(receipt["content"])["directions"]
+    return {"run_id": draft["run_id"], "proposal_sha256": draft["proposal"]["sha256"], "directions": directions}
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--ledger", type=Path, required=True)
-    parser.add_argument("--key-file", type=Path, required=True)
+    parser.add_argument("--ledger", type=Path)
+    parser.add_argument("--key-file", type=Path)
     parser.add_argument("--provider", choices=("openai", "anthropic", "vertex"), default="openai")
-    parser.add_argument("--round", required=True, choices=("development", "heldout", "compact", "direct"))
+    parser.add_argument("--round", choices=("development", "heldout", "compact", "direct"))
+    parser.add_argument("--packet-output", type=Path)
+    parser.add_argument("--from-receipt", type=Path)
     parser.add_argument("packages", nargs="+", type=Path)
     args = parser.parse_args()
     if len(args.packages) > 4:
         parser.error("at most four text requests in a batch")
+    if args.packet_output and (len(args.packages) != 1 or args.packages[0].suffix != ".json"):
+        parser.error("--packet-output requires one draft JSON")
+    if args.from_receipt:
+        if not args.packet_output:
+            parser.error("--from-receipt requires --packet-output")
+        save(args.packet_output, copy_packet(args.packages[0], args.from_receipt))
+        return
+    if not args.key_file or not args.round or not args.ledger:
+        parser.error("live mode requires --key-file, --round and --ledger")
+    if args.packet_output and args.round not in {"compact", "heldout"}:
+        parser.error("generating a packet requires a compact or heldout round")
     args.ledger.mkdir(exist_ok=True, parents=True)
     lock = (args.ledger / ".lock").open("a")
     flock(lock, LOCK_EX)
@@ -97,6 +130,8 @@ def main():
         label = f"{args.round}-{case_name}" + ("" if client else f"-{provider}")
         intent = args.ledger / f"{label}.dispatch.json"
         if intent.exists():
+            if args.packet_output:
+                save(args.packet_output, copy_packet(package, intent.with_name(intent.name.replace(".dispatch.", ".receipt."))))
             print(label, "already attempted", flush=True)
             continue
         spec = inputs(package)
@@ -107,14 +142,16 @@ def main():
             payload = {key: value for key, value in spec.items() if key not in {"baseline", "request"}}
             run_prompt = prompt
         wire = json.dumps(payload, ensure_ascii=False)
-        if len((run_prompt + wire).encode()) > 8000:
+        input_bound = len((run_prompt + wire).encode())
+        if input_bound > 8000:
             raise ValueError("input exceeds experiment bound")
+        reserve = max(RESERVE, (rates[0] * input_bound + rates[1] * output_limit) / 1_000_000)
         before = exposure(args.ledger)
-        if before + RESERVE > CAP:
+        if before + reserve > CAP:
             raise RuntimeError("task spend cap")
         save(intent, {"model": model, "prompt_sha256": sha256(run_prompt.encode()).hexdigest(),
                       "input": {**payload, "baseline": spec["baseline"]}, "output_limit": output_limit,
-                      "reserve_usd": str(RESERVE), "task_exposure_before": str(before)})
+                      "reserve_usd": str(reserve), "task_exposure_before": str(before)})
         started = monotonic()
         result = {"outcome": "UNKNOWN", "estimated_charge": None}
         try:
@@ -156,7 +193,16 @@ def main():
                 finish, resolved = response["stop_reason"], response["model"]
                 used_in, used_out = response["usage"]["input_tokens"], response["usage"]["output_tokens"]
             cost = (rates[0] * used_in + rates[1] * used_out) / 1_000_000
-            result.update(outcome="COMPLETE" if finish in {"stop", "end_turn", "STOP"} else "TRUNCATED",
+            outcome = "TRUNCATED"
+            if finish in {"stop", "end_turn", "STOP"}:
+                outcome = "INVALID_RESPONSE"
+                try:
+                    parsed = json.loads(content or "")
+                    if isinstance(parsed, dict) and isinstance(parsed.get("directions"), list) and len(parsed["directions"]) == 3:
+                        outcome = "COMPLETE"
+                except ValueError:
+                    pass
+            result.update(outcome=outcome,
                           content=content, finish_reason=finish, model=resolved,
                           prompt_tokens=used_in, completion_tokens=used_out, estimated_charge=str(cost))
         except HTTPError as error:
@@ -166,7 +212,10 @@ def main():
         except Exception as error:
             result["error_class"] = type(error).__name__
         result["seconds"] = round(monotonic() - started, 2)
-        save(args.ledger / f"{label}.receipt.json", result)
+        receipt_path = args.ledger / f"{label}.receipt.json"
+        save(receipt_path, result)
+        if args.packet_output and result["outcome"] == "COMPLETE":
+            save(args.packet_output, copy_packet(package, receipt_path))
         print(label, result["outcome"], result.get("http_status"), result["estimated_charge"],
               "remaining_after_reserve", str(CAP - exposure(args.ledger)), flush=True)
         if result["outcome"] in {"REJECTED", "UNKNOWN"}:

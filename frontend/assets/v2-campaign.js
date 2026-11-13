@@ -130,6 +130,10 @@
       <label>الدعوة للفعل<input name="cta" maxlength="30"></label>
       <label>نص المنشور<textarea name="caption" maxlength="220" rows="3"></textarea></label>
       <p>لو الصياغة الجديدة تجاوزت حدود الدليل، التطبيق هيطلب مراجعتها.</p>
+      <button type="button" class="adzy-btn flat" id="v2-copy-draft">نزّل المسودة لأداة اقتراحات الكتابة</button>
+      <label>ملف اقتراحات الكتابة لهذه المسودة<input id="v2-copy-packet" type="file" accept=".json,application/json"></label>
+      <p role="status" id="v2-copy-packet-status"></p>
+      <div id="v2-copy-options"></div>
     </details>` : '';
     const editor = planner && brief && (!reason || reason === 'BRIEF_REVIEW_REQUIRED') ? `
       <form id="v2-brief-form">
@@ -242,6 +246,67 @@
     byId('v2-reject')?.addEventListener('click', () => submit('/review', {run_id: state.run_id, decision: 'rejected'}));
   }
 
+  function wireCopySuggestions(editor, keys) {
+    const status = byId('v2-copy-packet-status');
+    const panel = byId('v2-copy-options');
+    const limits = {headline: 55, message: 105, cta: 30, caption: 220};
+    const names = {headline: 'العنوان', message: 'الرسالة', cta: 'الدعوة للفعل', caption: 'نص المنشور'};
+    byId('v2-copy-draft').onclick = () => {
+      const url = URL.createObjectURL(new Blob([JSON.stringify(state)], {type: 'application/json'}));
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = 'campaign-draft.json';
+      anchor.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    };
+    byId('v2-copy-packet').onchange = async event => {
+      const seq = requestNumber;
+      const file = event.currentTarget.files[0];
+      panel.replaceChildren();
+      status.textContent = '';
+      try {
+        if (!file || file.size > 32000) throw new Error('invalid');
+        const packet = JSON.parse(await file.text());
+        if (seq !== requestNumber || !editor.isConnected) return;
+        if (packet.run_id !== state.run_id || packet.proposal_sha256 !== state.proposal.sha256) {
+          status.textContent = 'الاقتراحات دي تخص نسخة تانية من الـbrief.';
+          return;
+        }
+        if (!Array.isArray(packet.directions) || packet.directions.length !== 3 ||
+            packet.directions.some(option => !option || typeof option.angle !== 'string' ||
+              keys.some(key => typeof option[key] !== 'string') ||
+              !Number.isInteger(option.evidence_index) || !state.proposal.evidence[option.evidence_index])) {
+          throw new Error('invalid');
+        }
+        for (const option of packet.directions) {
+          const section = document.createElement('details');
+          const title = document.createElement('summary');
+          title.textContent = option.angle;
+          section.append(title);
+          const quote = document.createElement('blockquote');
+          quote.dir = 'auto';
+          quote.textContent = state.proposal.evidence[option.evidence_index].quote;
+          section.append(quote);
+          for (const key of keys) {
+            const row = document.createElement('p');
+            row.dir = 'auto';
+            row.textContent = names[key] + ' · ' + option[key];
+            const select = document.createElement('button');
+            select.type = 'button';
+            select.textContent = 'جرّب الحقل';
+            select.dataset.copyField = key;
+            select.disabled = option[key].length > limits[key];
+            select.onclick = () => { editor.elements[key].value = option[key]; };
+            section.append(row, select);
+          }
+          panel.append(section);
+        }
+      } catch (_) {
+        if (seq === requestNumber && editor.isConnected) status.textContent = 'ملف اقتراحات الكتابة غير صالح.';
+      }
+    };
+  }
+
   function render() {
     clearTimeout(timer);
     byId('v2-plan-form').querySelector('button').disabled = busy;
@@ -266,6 +331,7 @@
           for (const key of keys) editor.elements[key].value = direction[key];
         };
         syncCopy();
+        wireCopySuggestions(editor, keys);
         editor.elements.selected.addEventListener('change', syncCopy);
         editor.onsubmit = event => {
           event.preventDefault();
