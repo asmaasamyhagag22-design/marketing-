@@ -1,0 +1,56 @@
+{
+  "schema": "adzy.campaign-replay@1",
+  "cases": [
+    {
+      "id": "buffalo-menu", "split": "development", "snapshot": "docs/demo/campaign-snapshots/buffalo",
+      "editions": "docs/campaigns/buffalo/editions.json",
+      "input": {"url": "https://buffaloburger.com", "objective": "تشجيع المستخدم على تصفّح المنيو واختيار برجر يناسبه", "language": "ar"},
+      "expected": {"action": "BROWSE_CATALOG", "destination": "https://buffaloburger.com/menu", "proof_urls": ["https://buffaloburger.com/menu", "https://buffaloburger.com/menu/old-school", "https://buffaloburger.com/menu/the-rastafari"], "evidence_source": "QUOTE_OBSERVED"},
+      "edits": [
+        {"id": "shared-sauce-registered", "field": "message", "text": "الاتنين فيهم صوص بافالو.", "supported": true},
+        {"id": "shared-sauce-unregistered", "field": "message", "text": "الاختيارين فيهم صوص بافالو.", "supported": true},
+        {"id": "whole-menu-jalapeno", "field": "headline", "text": "كل برجر في المنيو فيه هالبينو", "supported": false, "critical": true}
+      ]
+    },
+    {
+      "id": "five-guys-bacon", "split": "development", "snapshot": "docs/demo/campaign-snapshots/five-guys",
+      "input": {"url": "https://www.fiveguys.com/menu/burgers/", "objective": "Help people discover what comes in the Bacon Burger", "language": "en"},
+      "expected": {"subject": "Bacon Burger", "quote": "Fresh, 100% beef patties hot off the grill, layered with strips of crispy Applewood smoked bacon and placed on a soft, toasted sesame seed bun.", "action": "READ_FEATURE", "destination": "https://www.fiveguys.com/menu/burgers/"},
+      "edits": [{"id": "wrong-variant", "field": "headline", "text": "Little Bacon Burger", "supported": false, "critical": true}]
+    },
+    {
+      "id": "nandos-wrap", "split": "development", "snapshot": "docs/demo/campaign-snapshots/nandos",
+      "input": {"url": "https://www.nandos.co.uk/food/menu/", "objective": "Help people discover what comes in the Grilled Chicken Wrap", "language": "en"},
+      "expected": {"subject": "Grilled Chicken Wrap", "quote": "Served in a wrap with lettuce, lightly spiced yoghurt mayo and chilli jam.", "action": "READ_FEATURE", "destination": "https://www.nandos.co.uk/food/menu/"},
+      "edits": [
+        {"id": "verbatim-heading", "field": "headline", "text": "Grilled Chicken Wrap", "selected": 1, "supported": true},
+        {"id": "unsupported-price", "field": "headline", "text": "Every wrap is free today", "supported": false, "critical": true}
+      ]
+    },
+    {
+      "id": "nandos-page-cap", "split": "development", "snapshot": "docs/demo/campaign-snapshots/nandos", "simulated_transport": "oversize_html",
+      "input": {"url": "https://www.nandos.co.uk/food/menu/", "objective": "Help people discover what comes in the Grilled Chicken Wrap", "language": "en"},
+      "expected": {"gap": "FEATURE_EVIDENCE", "fetch": "PAGE_TOO_LARGE"}
+    },
+    {
+      "id": "nandos-timeout", "split": "development", "snapshot": "docs/demo/campaign-snapshots/nandos", "simulated_transport": "socket_timeout",
+      "input": {"url": "https://www.nandos.co.uk/food/menu/", "objective": "Help people discover what comes in the Grilled Chicken Wrap", "language": "en"},
+      "expected": {"gap": "FEATURE_EVIDENCE", "fetch": "SOURCE_TIMEOUT"}
+    },
+    {
+      "id": "python-applications", "split": "generalization", "snapshot": "docs/campaigns/lifecycle/snapshots/python",
+      "input": {"url": "https://www.python.org/about/", "objective": "Explore Python applications and third-party modules", "language": "en"},
+      "expected": {"subject": "Applications", "quote": "The Python Package Index (PyPI) hosts thousands of third-party modules for Python.", "action": "READ_FEATURE", "destination": "https://www.python.org/about/"},
+      "edits": [{"id": "all-modules-verified", "field": "headline", "text": "Every third-party module is verified", "supported": false, "critical": true}]
+    },
+    {
+      "id": "osm-local-knowledge", "split": "generalization", "snapshot": "docs/campaigns/lifecycle/snapshots/osm",
+      "input": {"url": "https://www.openstreetmap.org/about", "objective": "Explore Local Knowledge and how contributors use aerial imagery and GPS", "language": "en"},
+      "expected": {"subject": "Local Knowledge", "quote": "Contributors use aerial imagery, GPS devices, and low-tech field maps to verify that OSM is accurate and up to date.", "action": "READ_FEATURE", "destination": "https://www.openstreetmap.org/about"},
+      "edits": [
+        {"id": "verbatim-heading", "field": "headline", "text": "Local Knowledge", "selected": 1, "supported": true},
+        {"id": "every-road-verified", "field": "headline", "text": "Every road is verified in real time", "supported": false, "critical": true}
+      ]
+    }
+  ]
+}
