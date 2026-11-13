@@ -39,8 +39,11 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--directory", type=Path, required=True)
     parser.add_argument("--evidence-dir", type=Path, required=True)
-    parser.add_argument("cases", nargs="+", type=Path)
+    parser.add_argument("cases", nargs="*", type=Path)
+    parser.add_argument("--planner-cases", type=Path)
     args = parser.parse_args()
+    if bool(args.cases) == bool(args.planner_cases):
+        parser.error("Supply case directories or --planner-cases")
     directory, evidence = args.directory.resolve(), args.evidence_dir.resolve()
     evidence.mkdir(parents=True, exist_ok=True)
     command = [sys.executable, "-m", "workflows.public_campaign_demo"]
@@ -48,6 +51,8 @@ def main():
                     *(item for case in args.cases for item in ("--case", str(case.resolve())))],
                    cwd=ROOT, check=True)
     manifest = json.loads((directory / "demo.json").read_text())
+    plans = json.loads(args.planner_cases.read_text()) if args.planner_cases else None
+    cases = plans if plans is not None else {case.name: case for case in args.cases}
     with socket.socket() as sock:
         sock.bind(("127.0.0.1", 0))
         port = sock.getsockname()[1]
@@ -90,28 +95,70 @@ def main():
                 page.fill("#auth-email", manifest["email"])
                 page.fill("#auth-password", "LocalCampaignReview42")
                 page.click("#auth-submit-btn")
-                page.wait_for_function("() => window.Adzy && Adzy.brand")
-                for case in args.cases:
+                if plans is None:
+                    page.wait_for_function("() => window.Adzy && Adzy.brand")
+                for name, case in cases.items():
                     before = monotonic()
-                    target = evidence / case.name
+                    target = evidence / name
                     target.mkdir(exist_ok=True)
-                    domain = manifest["brands"][case.name]
-                    page.locator("#adzy-brand-select").select_option(domain)
+                    if plans is None:
+                        domain = manifest["brands"][name]
+                        page.locator("#adzy-brand-select").select_option(domain)
                     page.get_by_role("button", name="Campaign", exact=True).click()
+                    if plans is not None:
+                        form = page.locator("#v2-plan-form")
+                        form.locator("button").wait_for(state="visible")
+                        expect(form.locator("button")).to_be_enabled()
+                        if page.evaluate("() => Adzy.loadingBrand"):
+                            page.wait_for_function("() => !Adzy.loadingBrand")
+                        # Await Campaign's GET before filling values that open() hydrates.
+                        page.evaluate("() => window.adzyNavigate('campaign')")
+                        form.locator('[name="url"]').fill(case["url"])
+                        form.locator('[name="objective"]').fill(case["objective"])
+                        form.locator('[name="language"]').select_option(case["language"])
+                        with page.expect_request(lambda r: r.url.endswith("/campaigns/plan")) as posted, \
+                                page.expect_response(lambda r: r.url.endswith("/campaigns/plan")) as response:
+                            form.locator('button').click()
+                        assert response.value.ok, response.value.text()
+                        sent = posted.value.post_data_json
+                        assert all(sent[key] == case[key] for key in ("url", "objective", "language")), sent
+                        generated = response.value.json()
+                        domain = generated["domain_key"]
+                        (target / "draft.json").write_text(json.dumps(generated, ensure_ascii=False, indent=2) + "\n")
+                        if not generated["proposal"]["brief"]:
+                            expect(page.locator("#v2-plan-gap")).to_be_visible()
+                            results[name] = {"status": "BLOCKED", "reason": generated["proposal"]["planner"]["gap"],
+                                             "public_pages": generated["proposal"]["planner"]["page_calls"],
+                                             "seconds": round(monotonic() - before, 2)}
+                            continue
+                        editor = page.locator("#v2-brief-form")
+                        expect(editor).to_be_visible()
+                        assert generated["reason"] == "BRIEF_REVIEW_REQUIRED"
+                        editor.locator('[name="audience"]').fill(
+                            "فرضية جمهور بعد مراجعة المسودة." if case["language"] == "ar"
+                            else "Audience hypothesis after reviewing the draft.",
+                        )
+                        editor.locator('button').click()
+                        expect(page.locator("#v2-approve")).to_be_visible()
                     api_path = "/api/v2/campaigns/" + domain
 
                     def saved():
                         return page.evaluate("path => window.api('GET', path)", api_path)
 
-                    if page.locator("#v2-package-import").get_attribute("open") is None:
-                        page.locator("#v2-package-import summary").click()
-                    page.locator("#v2-package-form input").set_input_files(str(case / "brief.json"))
-                    with page.expect_response(lambda response: response.url.endswith(api_path + "/package")) as requested:
-                        page.locator("#v2-package-form button").click()
-                    assert requested.value.ok, requested.value.text()
+                    if plans is None:
+                        if page.locator("#v2-package-import").get_attribute("open") is None:
+                            page.locator("#v2-package-import summary").click()
+                        page.locator("#v2-package-form input").set_input_files(str(case / "brief.json"))
+                        with page.expect_response(lambda response: response.url.endswith(api_path + "/package")) as requested:
+                            page.locator("#v2-package-form button").click()
+                        assert requested.value.ok, requested.value.text()
                     initial = saved()
                     assert initial["proposal"]["status"] == "READY", initial["proposal"]["evidence"]
                     assert all(item["capture_kind"] == "public_http" for item in initial["proposal"]["evidence"])
+                    if plans is not None:
+                        assert initial["run_id"] != generated["run_id"]
+                        assert initial["proposal"]["evidence"] == generated["proposal"]["evidence"]
+                        assert initial["proposal"]["planner"]["input"] == generated["proposal"]["planner"]["input"]
                     previews = {}
                     for size in ("portrait", "square"):
                         with page.expect_response(lambda response: response.url.endswith("&size=" + size)) as preview:
@@ -134,12 +181,13 @@ def main():
 
                     initial_hashes = download(target / "initial")
                     assert initial_hashes == previews, (initial_hashes, previews)
-                    page.locator("[data-v2-direction='1']").click()
+                    alternate = (initial["proposal"]["brief"]["selected"] + 1) % 3
+                    page.locator(f"[data-v2-direction='{alternate}']").click()
                     expect(page.locator("#v2-approve")).to_be_visible()
                     revision = saved()
                     assert revision["run_id"] != initial["run_id"] and not revision["approved"]
                     assert revision["proposal"]["evidence"] == initial["proposal"]["evidence"]
-                    assert revision["proposal"]["brief"]["selected"] == 1
+                    assert revision["proposal"]["brief"]["selected"] == alternate
                     stale = page.evaluate(
                         """url => fetch(url, {headers: window.authHeaders()}).then(r => r.status)""",
                         api_path + "/package/export?run_id=" + initial["run_id"],
@@ -163,7 +211,9 @@ def main():
                     assert page.evaluate("document.documentElement.scrollWidth") <= 390
                     card.screenshot(path=str(target / "mobile-preview.png"))
                     page.set_viewport_size({"width": 1440, "height": 1000})
-                    results[case.name] = {"seconds": round(monotonic() - before, 2), "public_pages": 2,
+                    planner = final["proposal"].get("planner")
+                    results[name] = {"status": "EXPORTED", "seconds": round(monotonic() - before, 2),
+                                     "public_pages": planner["page_calls"] if planner else 2,
                                           "stale_export_http": stale, "restored_png_sha256": hashes}
             from sqlalchemy import func, select
             from db.models import Approval, Run, UsageRecord
@@ -174,7 +224,9 @@ def main():
                 runs = uow.session.scalar(select(func.count()).select_from(Run).where(Run.kind == "campaign"))
                 decisions = uow.session.scalar(select(func.count()).select_from(Approval).where(
                     Approval.subject_kind == "campaign"))
-            assert (usage, runs, decisions) == (0, 2 * len(args.cases), 2 * len(args.cases))
+            exported = sum(item["status"] == "EXPORTED" for item in results.values())
+            assert (usage, runs, decisions) == (0, 2 * exported + (len(cases) if plans is not None else 0),
+                                               2 * exported)
             assert not errors, errors
             report = {"cases": results, "elapsed_seconds": round(monotonic() - started, 2),
                       "campaign_runs": runs, "automated_review_actions": decisions,

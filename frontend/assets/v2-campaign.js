@@ -29,10 +29,25 @@
     POSTER_CLIPPING: 'النص أطول من مساحة البوستر. عدّل اتجاه الحملة وراجع المعاينة.',
     POSTER_RENDER_UNAVAILABLE: 'تعذّر تشغيل محرّك رسم البوستر.',
     SOURCE_RECHECK_REQUIRED: 'أعد فحص المصادر قبل اعتماد الحزمة.',
+    BRIEF_REVIEW_REQUIRED: 'راجع الـCreative brief عشان تجهّز الحزمة.',
+    PLANNED_BRIEF_REQUIRED: 'ابدأ البحث عشان يظهر الـbrief المقترح.',
+    CAMPAIGN_RESEARCH_BUSY: 'فيه بحث شغّال. جرّب بعد ما يخلص.',
+    INVALID_SOURCE_URL: 'أدخل رابطًا عامًا صالحًا للبراند.',
+    FEATURE_EVIDENCE: 'لسه محتاجين دليل للميزة المرتبطة بالهدف',
+    ACTION_DESTINATION: 'محتاجين صفحة الإجراء الرسمية',
+    COMMERCIAL_TERMS: 'محتاجين شروط العرض أو الإجراء المنشورة',
+    SOURCE_READ: 'تمت قراءة المصدر',
+    SOURCE_CONFLICT: 'المصادر المنشورة تشير إلى تعارض يحتاج مراجعة',
+    SOURCE_REDIRECT: 'الرابط يحوّل إلى صفحة أخرى',
+    FILL_FEATURE_GAP: 'فتح صفحة يُحتمل إنها تشرح الميزة',
+    MORE_SPECIFIC_FEATURE: 'بحث عن صفحة أكثر تحديدًا للميزة',
+    FIND_COMMERCIAL_TERMS: 'بحث عن الشروط المنشورة',
+    DECISION_EVIDENCE_FOUND: 'وُجد دليل مبدئي للقرار',
+    NO_MORE_RELEVANT_SOURCES: 'خلصت الروابط ذات الصلة',
     CAMPAIGN_CHANGED: 'تغيّرت نسخة الحملة. راجع النسخة المعروضة.',
   };
   const label = value => messages[value] || value;
-  let brand, state, timer, requestNumber = 0, busy = false;
+  let brand, state, timer, lastPlan, requestNumber = 0, busy = false;
 
   function path(suffix = '') {
     return '/api/v2/campaigns/' + encodeURIComponent(brand.domain_key) + suffix;
@@ -67,9 +82,9 @@
   }
 
   function packagePanel(proposal, approved, reason, decision) {
-    const {brief, evidence, package: creative} = proposal;
+    const {brief, evidence, planner, package: creative} = proposal;
     const sources = evidence.map((item, index) => `<li>
-      <strong>${index === 0 ? 'البراند' : 'المنافس المقترح'} · ${esc(label(item.outcome))}</strong>
+      <strong>${index === 0 ? 'البراند' : planner ? 'صفحة الإجراء' : 'المنافس المقترح'} · ${esc(label(item.outcome))}</strong>
       <p>${link(item.page_url, item.page_url)}</p>
       ${item.quote ? `<p>${esc(item.scope)}</p><blockquote dir="auto">${esc(item.quote)}</blockquote>` : ''}
       <details><summary>تفاصيل الالتقاط</summary>
@@ -77,10 +92,28 @@
         ${item.body_sha256 ? `<code dir="ltr">${esc(item.body_sha256)}</code>` : ''}
       </details>
     </li>`).join('');
-    const alternatives = brief.alternatives.map((item, i) => `<li><strong>${esc(item.name)}
+    const research = planner ? `<section class="v2-panel">
+      <h2>قرار البحث</h2><p dir="auto">${esc(planner.question)}</p>
+      <p dir="auto">${esc(planner.opportunity_hypothesis)}</p>
+      <p id="v2-stop">${esc(label(planner.stop))} · ${esc(planner.page_calls)} زيارة</p>
+      ${planner.missing_question ? `<p id="v2-plan-gap" dir="auto">${esc(planner.missing_question)}</p>` : ''}
+      ${planner.conflicts?.map(item => `<blockquote dir="auto">${esc(item.quote)}
+        ${link(item.page_url, item.page_url)}</blockquote>`).join('') || ''}
+      <details><summary>خطوات البحث</summary>
+        <ol id="v2-plan-trace" class="v2-items">${planner.trace.map(item => `<li>
+          ${link(item.page_url, item.page_url)}
+          <p>${esc(label(item.reason))} · ${esc(label(item.outcome))}</p>
+          ${item.gap_after ? `<p>${esc(label(item.gap_after))}</p>` : ''}
+        </li>`).join('')}</ol>
+      </details>
+    </section>` : '';
+    const alternatives = brief?.alternatives.map((item, i) => `<li><strong>${esc(item.name)}
       ${i === brief.strategy_index ? ' · الاختيار المقترح' : ''}</strong>
-      <p>${esc(item.plan)}</p><p>${esc(item.tradeoff)}</p></li>`).join('');
-    const directions = brief.directions.map((item, i) => `<li><strong>${esc(item.name)}
+      <p dir="auto">${esc(item.plan)}</p><p dir="auto">${esc(item.tradeoff)}</p>
+      ${planner ? `<p dir="auto">${esc(planner.options[i].audience)}</p>
+        <p dir="auto">${link(planner.options[i].destination, planner.options[i].cta)} · ${esc(planner.options[i].metric)}</p>` : ''}
+      </li>`).join('');
+    const directions = brief?.directions.map((item, i) => `<li><strong>${esc(item.name)}
       ${i === brief.selected ? ' · الاتجاه الحالي' : ''}</strong>
       <p>${esc(item.rationale)}</p><p dir="auto">${esc(item.headline)} · ${esc(item.cta)}</p>
       ${i !== brief.selected && creative && !reason
@@ -89,19 +122,27 @@
     const changes = proposal.changes.map(item => `<li>${esc(item.field)} · ${esc(label(item.before))} ← ${esc(label(item.after))}</li>`).join('');
     const shots = creative?.storyboard.map(item => `<li><bdi>${esc(item.seconds)}</bdi> ثوانٍ
       <p>${esc(item.visual)}</p><p dir="auto">${esc(item.line)}</p></li>`).join('');
-    return `
+    const editor = planner && brief && (!reason || reason === 'BRIEF_REVIEW_REQUIRED') ? `
+      <form id="v2-brief-form">
+        <label>فرضية الجمهور<input name="audience" value="${esc(brief.audience)}" minlength="4" maxlength="200" required></label>
+        <label>النبرة<input name="tone" value="${esc(brief.tone)}" minlength="2" maxlength="75" required></label>
+        <label>الاتجاه<select name="selected">${brief.directions.map((item, i) =>
+          `<option value="${i}" ${i === brief.selected ? 'selected' : ''}>${esc(item.name)}</option>`).join('')}</select></label>
+        <button class="adzy-btn blue" type="submit">احفظ الـbrief وجهّز الحزمة</button>
+      </form>` : '';
+    return `${research}
       <section class="v2-panel">
         <h2>البحث والأدلة</h2>
-        <p>${esc(brief.summary)}</p>
+        ${brief ? `<p dir="auto">${esc(brief.summary)}</p>
         <dl><dt>الجمهور المقترح</dt><dd>${esc(brief.audience)}</dd>
           <dt>السوق</dt><dd>${esc(brief.market)}</dd>
-          <dt>المنافس المقترح</dt><dd>${esc(brief.competitor)} · ${esc(brief.peer_rationale)}</dd></dl>
+          ${brief.competitor ? `<dt>المنافس المقترح</dt><dd>${esc(brief.competitor)} · ${esc(brief.peer_rationale)}</dd>` : ''}</dl>` : ''}
         <ul class="v2-items">${sources}</ul>
         ${reason ? `<p id="v2-blocker">${esc(label(reason))}</p>` : ''}
         ${changes ? `<h3>أثر التعديل</h3><ul id="v2-changes">${changes}</ul>` : ''}
         <button type="button" class="adzy-btn flat" id="v2-refresh">أعد فحص الدليل</button>
       </section>
-      <section class="v2-panel">
+      ${brief ? `<section class="v2-panel">
         <h2>الاستراتيجية والـCreative brief</h2>
         <dl><dt>الهدف المقترح</dt><dd>${esc(brief.objective)}</dd>
           <dt>مقياس الحملة</dt><dd>${esc(brief.metric)}</dd>
@@ -111,7 +152,8 @@
         <ul class="v2-items">${alternatives}</ul>
         <h3>الاتجاهات الإبداعية</h3>
         <ul class="v2-items">${directions}</ul>
-      </section>
+        ${editor}
+      </section>` : ''}
       ${creative && !reason ? `<section class="v2-panel">
         <h2>معاينة الحملة</h2>
         <article class="v2-creative v2-package-card theme-${esc(creative.theme)}" id="v2-package-card" dir="${esc(creative.direction)}">
@@ -192,6 +234,7 @@
 
   function render() {
     clearTimeout(timer);
+    byId('v2-plan-form').querySelector('button').disabled = busy;
     const form = byId('v2-form');
     form.querySelector('button').disabled = busy || !state;
     byId('v2-package-form').querySelector('button').disabled = busy || !state;
@@ -204,6 +247,13 @@
     if (proposal.kind === 'SOURCE_CAMPAIGN') {
       root.innerHTML = packagePanel(proposal, approved, reason, decision);
       wireReview(root);
+      const editor = byId('v2-brief-form');
+      if (editor) editor.onsubmit = event => {
+        event.preventDefault();
+        const fields = new FormData(editor);
+        submit('/brief', {run_id: state.run_id, audience: fields.get('audience'),
+                          tone: fields.get('tone'), selected: Number(fields.get('selected'))});
+      };
       byId('v2-download')?.addEventListener('click', () => packageFile());
       for (const preview of root.querySelectorAll('[data-v2-preview]')) {
         preview.addEventListener('click', () => packageFile(preview.dataset.v2Preview));
@@ -213,7 +263,7 @@
           run_id: state.run_id, selected: Number(choice.dataset.v2Direction),
         }));
       }
-      if (!reason && !busy) scheduleCheck(Date.parse(state.recheck_at) - Date.parse(state.checked_at));
+      if (state.recheck_at && !busy) scheduleCheck(Date.parse(state.recheck_at) - Date.parse(state.checked_at));
       return;
     }
     const offer = proposal.offer;
@@ -231,7 +281,8 @@
       <section class="v2-panel">
         <h2>قرار البحث</h2>
         <p id="v2-question">${esc(proposal.research.questions.at(-1))}</p>
-        <p id="v2-stop">${esc(label(proposal.research.status))}</p>
+        <p dir="auto">${esc(planner.opportunity_hypothesis)}</p>
+      <p id="v2-stop">${esc(label(proposal.research.status))}</p>
         <ol id="v2-trace">${trace}</ol>
         ${reason ? `<p id="v2-blocker">${esc(label(reason))}</p>` : ''}
         ${proposal.research.next_action ? '<p>أضف رابط صفحة مخصصة لشروط العرض وأعد البحث.</p>' : ''}
@@ -312,10 +363,43 @@
         : state.approved ? 'تم اعتماد نسخة الحملة الحالية.' : 'حُفظت نتيجة النسخة الحالية.');
     } catch (error) {
       if (seq !== requestNumber) return;
-      await load();
-      let code;
-      try { code = JSON.parse(error.message).code; } catch (_) {}
+      if (error.status === 409) await load();
+      const code = errorCode(error);
       showStatus(code ? label(code) : 'تعذّر إكمال الطلب.');
+    } finally {
+      if (seq === requestNumber) {
+        busy = false;
+        render();
+      }
+    }
+  }
+
+  function errorCode(error) {
+    try { return JSON.parse(error.message).code; } catch (_) { return null; }
+  }
+
+  async function startPlan(event) {
+    event.preventDefault();
+    if (busy) return;
+    const fields = new FormData(event.currentTarget);
+    const input = {url: fields.get('url').trim(), objective: fields.get('objective').trim(), language: fields.get('language')};
+    const key = JSON.stringify(input);
+    if (lastPlan?.key !== key) lastPlan = {key, id: crypto.randomUUID()};
+    const seq = ++requestNumber;
+    busy = true;
+    render();
+    showStatus('بنقرأ المصادر العامة ونجهّز قرار الحملة…');
+    try {
+      const {run_id: expected} = await window.api('GET', '/api/v2/campaigns/planning-state?url=' + encodeURIComponent(input.url));
+      if (seq !== requestNumber) return;
+      const next = await window.api('POST', '/api/v2/campaigns/plan', {
+        ...input, request_id: lastPlan.id, expected_run_id: expected,
+      });
+      if (seq !== requestNumber) return;
+      lastPlan = null;
+      await window.adzyLoadCampaignBrand(next.domain_key);
+    } catch (error) {
+      if (seq === requestNumber) showStatus(label(errorCode(error)) || 'تعذّر إنشاء مسودة الحملة.');
     } finally {
       if (seq === requestNumber) {
         busy = false;
@@ -327,12 +411,24 @@
   window.adzyCampaign = {
     reset() {
       requestNumber += 1;
+      busy = true;
       state = null;
       render();
       byId('v2-brand').textContent = '';
       showStatus('بنحمّل البراند…');
     },
     async open(nextBrand) {
+      const planner = byId('v2-plan-form');
+      planner.onsubmit = startPlan;
+      if (!nextBrand) {
+        brand = null;
+        state = null;
+        busy = false;
+        byId('v2-brand').textContent = '';
+        showStatus('');
+        render();
+        return;
+      }
       const form = byId('v2-form');
       if (brand?.domain_key !== nextBrand.domain_key) {
         form.reset();
@@ -361,6 +457,12 @@
         }
       };
       await load();
+      if (brand === nextBrand && state?.proposal?.planner) {
+        const {url, objective, language} = state.proposal.planner.input;
+        planner.elements.url.value = url;
+        planner.elements.objective.value = objective;
+        planner.elements.language.value = language;
+      }
       if (brand === nextBrand && state?.proposal && state.proposal.kind !== 'SOURCE_CAMPAIGN') {
         form.elements.goal.value ||= 'TRIAL_BOOKINGS';
         form.elements.booking_target.value ||= state.proposal.booking_target ?? '';

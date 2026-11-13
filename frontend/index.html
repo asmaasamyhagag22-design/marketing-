@@ -1709,6 +1709,12 @@
           <h1>الحملات</h1>
           <p id="v2-brand"></p>
         </header>
+        <form id="v2-plan-form" class="v2-panel">
+          <label>رابط البراند<input name="url" type="url" maxlength="500" placeholder="https://" required></label>
+          <label>الهدف التسويقي<input name="objective" minlength="8" maxlength="200" required></label>
+          <label>لغة الحملة<select name="language"><option value="ar">العربية</option><option value="en">English</option></select></label>
+          <button class="adzy-btn blue" type="submit">ابحث واقترح Creative brief</button>
+        </form>
         <details id="v2-package-import" class="v2-panel">
           <summary>حملة من مصادر عامة</summary>
           <form id="v2-package-form">
@@ -6158,8 +6164,8 @@ if (new URLSearchParams(location.search).get('studio') === '1') {
   goStudio();
 }
 </script>
-<script src="/assets/v2-campaign.js?v=2"></script>
-<script src="/assets/adzy-app.js?v=27"></script>
+<script src="/assets/v2-campaign.js?v=3"></script>
+<script src="/assets/adzy-app.js?v=28"></script>
 <script src="/assets/copy-editor.js?v=1"></script>
 </body>
 </html>

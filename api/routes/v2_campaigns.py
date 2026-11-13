@@ -3,20 +3,24 @@ from datetime import datetime, timezone
 from threading import BoundedSemaphore
 from typing import Literal
 from uuid import UUID
+from urllib.parse import urlsplit
 
 from fastapi import APIRouter, Depends, HTTPException, Response
 from pydantic import BaseModel, Field
 
+from api.brand_translate import domain_key_from_url
 from api.persistence import get_persistence
 from api.routes.auth import require_user
 from api.user_auth import webapp_dir
-from strategy.campaign_package import Brief, load_package_page, proposal, research_package, validate_sources
+from strategy.campaign_package import Brief, load_package_page, proposal, research_package, valid_source_url, validate_sources
+from strategy.campaign_planner import BriefReview, PlanInput, build_plan, refresh_plan, review_draft
 from strategy.campaign_research import load_public_page, research, same_source
 from strategy.campaign_v2 import CampaignConflict, CampaignNotFound, propose, refresh
 
 
 router = APIRouter(prefix="/v2/campaigns")
 export_slot = BoundedSemaphore(1)
+research_slots = BoundedSemaphore(3)
 
 
 class StartRequest(BaseModel):
@@ -30,6 +34,15 @@ class StartRequest(BaseModel):
 class PackageRequest(BaseModel):
     expected_run_id: UUID | None
     brief: Brief
+
+
+class PlanRequest(PlanInput):
+    request_id: UUID
+    expected_run_id: UUID | None = None
+
+
+class BriefReviewRequest(BriefReview):
+    run_id: UUID
 
 
 class DirectionRequest(BaseModel):
@@ -72,6 +85,67 @@ def execute(action):
         raise HTTPException(404, detail={"code": "BRAND_NOT_FOUND"}) from None
     except CampaignConflict as exc:
         raise HTTPException(409, detail={"code": str(exc)}) from None
+
+
+@router.get("/planning-state")
+def planning_state(url: str, service=Depends(store)):
+    if len(url) > 500 or not valid_source_url(url):
+        raise HTTPException(422, detail={"code": "INVALID_SOURCE_URL"})
+    snapshot = execute(lambda: service.planning_snapshot(domain_key_from_url(url)))
+    return {"run_id": str(snapshot.run.id) if snapshot and snapshot.run else None}
+
+
+@router.post("/plan")
+def plan_campaign(request: PlanRequest, service=Depends(store), loader=Depends(get_package_loader)):
+    def generate():
+        if not valid_source_url(request.url):
+            raise CampaignConflict("INVALID_SOURCE_URL")
+        domain = domain_key_from_url(request.url)
+        snapshot = service.planning_snapshot(domain)
+        current = snapshot.run if snapshot else None
+        inputs = PlanInput(url=request.url, objective=request.objective, language=request.language)
+        if snapshot:
+            replay = service.replay_plan(domain, request.request_id, inputs.model_dump(mode="json"))
+            if replay:
+                return {"domain_key": domain, **replay}
+        if (current.id if current else None) != request.expected_run_id:
+            raise CampaignConflict("CAMPAIGN_CHANGED")
+        if snapshot and not snapshot.profile_id:
+            raise CampaignConflict("PROFILE_REQUIRED")
+        if snapshot and snapshot.source_url and not same_source(request.url, snapshot.source_url):
+            raise CampaignConflict("BRAND_SOURCE_ORIGIN_MISMATCH")
+        if not research_slots.acquire(blocking=False):
+            raise HTTPException(503, detail={"code": "CAMPAIGN_RESEARCH_BUSY"})
+        try:
+            name = (snapshot.brand_name if snapshot else "") or urlsplit(request.url).hostname
+            result = build_plan(inputs, name, loader, service.clock, request_id=str(request.request_id))
+            return {"domain_key": domain, **service.write_plan(domain, snapshot, result, request.url)}
+        finally:
+            research_slots.release()
+
+    return execute(generate)
+
+
+@router.post("/{domain}/brief")
+def save_brief(domain: str, request: BriefReviewRequest, service=Depends(store)):
+    def revise():
+        snapshot = package_snapshot(service, domain, request.run_id)
+        run = snapshot.run
+        if run.input_profile_id != snapshot.profile_id:
+            raise CampaignConflict("PROFILE_CHANGED")
+        view = service.view(domain)
+        if view["run_id"] != str(run.id):
+            raise CampaignConflict("CAMPAIGN_CHANGED")
+        if not run.output.get("planner") or not run.output["brief"]:
+            raise CampaignConflict("PLANNED_BRIEF_REQUIRED")
+        if view["reason"] not in (None, "BRIEF_REVIEW_REQUIRED"):
+            raise CampaignConflict(view["reason"])
+        result = review_draft(run.output, request)
+        if not result["changes"] and run.output["planner"]["brief_reviewed"]:
+            return service.write(domain, snapshot, None)
+        return service.write(domain, snapshot, result, revision=True)
+
+    return execute(revise)
 
 
 @router.get("/{domain}")
@@ -134,6 +208,11 @@ def revise_direction(domain: str, request: DirectionRequest, service=Depends(sto
         if previous.get("kind") != "SOURCE_CAMPAIGN" or previous["status"] != "READY":
             raise CampaignConflict("PACKAGE_REQUIRED")
         brief = Brief.model_validate(previous["brief"])
+        if previous.get("planner"):
+            if request.selected == brief.selected:
+                return service.write(domain, snapshot, None)
+            result = review_draft(previous, BriefReview(audience=brief.audience, tone=brief.tone, selected=request.selected))
+            return service.write(domain, snapshot, result, revision=True)
         if request.selected == brief.selected:
             return service.write(domain, snapshot, None)
         old_direction = brief.directions[brief.selected].name
@@ -218,6 +297,14 @@ def recheck(domain: str, request: RefreshRequest, service=Depends(store),
         raise HTTPException(409, detail={"code": "CAMPAIGN_CHANGED"})
     if snapshot.profile_id != run.input_profile_id:
         raise HTTPException(409, detail={"code": "PROFILE_CHANGED"})
+    if run.output.get("planner"):
+        if not research_slots.acquire(blocking=False):
+            raise HTTPException(503, detail={"code": "CAMPAIGN_RESEARCH_BUSY"})
+        try:
+            result = refresh_plan(run.output, package_loader, service.clock)
+            return execute(lambda: service.write(domain, snapshot, result, revision=True))
+        finally:
+            research_slots.release()
     if run.output.get("kind") == "SOURCE_CAMPAIGN":
         brief = Brief.model_validate(run.output["brief"])
         result = research_package(brief, run.output["brand_name"], package_loader, service.clock, run.output)

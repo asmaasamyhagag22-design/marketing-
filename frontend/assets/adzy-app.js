@@ -145,7 +145,7 @@
 
   window.adzyNavigate = async function (stage) {
     initialStageRestored = true;
-    if (['think', 'strategy', 'create', 'campaign'].includes(stage) && !A.brand) {
+    if (['think', 'strategy', 'create'].includes(stage) && !A.brand) {
       notify('Choose a brand first.', 'error');
       setActiveStage('discover');
       $('adzy-brand-select').focus();
@@ -325,6 +325,7 @@
   }
 
   window.adzySelectBrand = selectBrand;
+  window.adzyLoadCampaignBrand = refreshBrands;
 
   function updateBrandSurfaces() {
     if (!A.brand) return;
@@ -1406,7 +1407,7 @@
         if (window.adzyLegacyState.authToken !== token) return;
         updateBrandSurfaces();
         const stage = A.initialLocation.get('stage');
-        if (!initialStageRestored && A.brand) {
+        if (!initialStageRestored && (A.brand || stage === 'campaign')) {
           initialStageRestored = true;
           if (['think', 'strategy', 'create', 'work', 'campaign'].includes(stage)) await window.adzyNavigate(stage);
         }
@@ -1431,6 +1432,7 @@
         if (window.adzyCopyLogout) window.adzyCopyLogout();
         ++A.selectionEpoch;
         initialStageRestored = false;
+        window.adzyCampaign.reset();
         A.reviewedSwot = null; A.reviewedStrategy = null; A.loadingBrand = false; A.busy = false; A.contractError = '';
         A.review = null; A.reviewError = ''; A.brand = null; A.brands = []; A.history = []; A.contract = null; A.creative = null; A.latestAttempt = null;
         return legacyLogout.apply(this, arguments);

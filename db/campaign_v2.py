@@ -2,7 +2,7 @@
 from dataclasses import dataclass
 from uuid import UUID
 
-from db.errors import NotVisible
+from db.errors import ArchivedBrand, ForeignOwner, NotVisible
 from db.records import RunRecord
 from strategy.campaign_package import check as check_package, recheck_at
 from strategy.campaign_v2 import CampaignConflict, CampaignNotFound, inactive_reason
@@ -42,6 +42,50 @@ class Campaigns:
             return CampaignSnapshot(brand.id, brand.current_profile_id, brand.source_url or "",
                                     brand.display_name or "", run)
 
+    def planning_snapshot(self, domain):
+        with self.factory() as uow:
+            ownership = uow.brands.owner_of(domain)
+            if not ownership.exists:
+                return None
+            brand = self._brand(uow, domain)
+            return CampaignSnapshot(brand.id, brand.current_profile_id, brand.source_url or "",
+                                    brand.display_name or "", self._latest(uow, brand))
+
+    def replay_plan(self, domain, request_id, inputs):
+        with self.factory() as uow:
+            brand = self._brand(uow, domain, lock=True)
+            prior = uow.runs.campaign_for_request(brand_id=brand.id, request_id=str(request_id))
+            if prior is None:
+                return None
+            if prior.output["planner"]["input"] != inputs:
+                raise CampaignConflict("CAMPAIGN_REQUEST_MISMATCH")
+            current = self._latest(uow, brand)
+            if current.id != prior.id:
+                raise CampaignConflict("CAMPAIGN_CHANGED")
+            return self._view(uow, brand, current)
+
+    def write_plan(self, domain, snapshot, result, url):
+        if snapshot is not None:
+            return self.write(domain, snapshot, result, revision=snapshot.run is not None)
+        with self.factory() as uow:
+            try:
+                canonical = uow.brands.lock_or_create_for_scrape(
+                    domain_key=domain, user_id=self.actor, display_name=result["brand_name"], source_url=url,
+                )
+            except (ArchivedBrand, ForeignOwner):
+                raise CampaignNotFound() from None
+            if not canonical.created:
+                raise CampaignConflict("CAMPAIGN_CHANGED")
+            brand = canonical.brand
+            profile = uow.profiles.create_version_for_locked_brand(
+                brand_id=brand.id, schema_version=1,
+                profile={"source_url": url, "name": {"value": result["brand_name"], "source_type": "owner_input"}},
+            )
+            brand = uow.brands.set_current_profile(brand_id=brand.id, profile_id=profile.id)
+            response = self._save(uow, brand, profile.id, result, None)
+            uow.commit()
+            return response
+
     def view(self, domain):
         with self.factory() as uow:
             brand = self._brand(uow, domain, lock=True)
@@ -58,7 +102,7 @@ class Campaigns:
                   else evaluate(run.output, checked_at))
         return {"run_id": str(run.id), "profile_snapshot_id": str(run.input_profile_id),
                 "proposal": run.output, "reason": reason, "checked_at": checked_at.isoformat(),
-                **({"recheck_at": recheck_at(run.output).isoformat()} if package and not reason else {}),
+                **({"recheck_at": recheck_at(run.output).isoformat()} if package and reason in (None, "BRIEF_REVIEW_REQUIRED") else {}),
                 "decision": approval.decision if approval else None,
                 "approved": not reason and approval is not None and approval.decision == "approved",
                 "approval_id": str(approval.id) if approval else None}
@@ -73,15 +117,18 @@ class Campaigns:
                 raise CampaignConflict("CAMPAIGN_CHANGED")
             if result is None:
                 return self._view(uow, brand, current)
-            run = uow.runs.create_live_for_locked_brand(
-                brand_id=brand.id, kind="campaign", created_by_user_id=self.actor,
-                status="succeeded", input_profile_id=snapshot.profile_id,
-                output=result, output_schema_version=result["schema_version"],
-                dependencies=[(current.id, "revises_campaign")] if revision else (),
-            )
-            response = self._view(uow, brand, run)
+            response = self._save(uow, brand, snapshot.profile_id, result, current.id if revision else None)
             uow.commit()
             return response
+
+    def _save(self, uow, brand, profile_id, result, previous_id):
+        run = uow.runs.create_live_for_locked_brand(
+            brand_id=brand.id, kind="campaign", created_by_user_id=self.actor,
+            status="succeeded", input_profile_id=profile_id,
+            output=result, output_schema_version=result["schema_version"],
+            dependencies=[(previous_id, "revises_campaign")] if previous_id else (),
+        )
+        return self._view(uow, brand, run)
 
     def decide(self, domain, run_id, decision):
         with self.factory() as uow:

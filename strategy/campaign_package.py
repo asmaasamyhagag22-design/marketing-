@@ -54,10 +54,10 @@ class Brief(Input):
     summary: Note
     audience: Line
     market: Line
-    competitor: Label
-    peer_rationale: Line
+    competitor: Label | None = None
+    peer_rationale: Line | None = None
     source: Source
-    peer_source: Source
+    peer_source: Source | None = None
     objective: Line
     metric: Line
     assumption: Note
@@ -78,15 +78,10 @@ def digest(value):
 
 
 def validate_sources(brief, brand_url):
+    if brief.peer_source is None or not brief.competitor or not brief.peer_rationale:
+        raise CampaignConflict("PEER_SOURCE_REQUIRED")
     for url in (brief.source.url, brief.peer_source.url):
-        try:
-            parts = urlsplit(url)
-            valid = (parts.scheme in {"http", "https"} and parts.hostname and not parts.fragment
-                     and parts.username is None and parts.password is None
-                     and (parts.port is None or parts.port == {"http": 80, "https": 443}[parts.scheme]))
-        except ValueError:
-            valid = False
-        if not valid:
+        if not valid_source_url(url):
             raise CampaignConflict("INVALID_SOURCE_URL")
     if not same_source(brief.source.url, brand_url):
         raise CampaignConflict("BRAND_SOURCE_ORIGIN_MISMATCH")
@@ -98,24 +93,39 @@ def validate_sources(brief, brand_url):
         raise CampaignConflict("STRATEGIES_MUST_BE_DISTINCT")
 
 
+def valid_source_url(url):
+    try:
+        parts = urlsplit(url)
+        return bool(parts.scheme in {"http", "https"} and parts.hostname and not parts.fragment
+                    and parts.username is None and parts.password is None
+                    and (parts.port is None or parts.port == {"http": 80, "https": 443}[parts.scheme]))
+    except ValueError:
+        return False
+
+
+def public_soup(html):
+    soup = BeautifulSoup(html, "lxml")
+    for tag in soup.select("script,style,template,noscript,svg,[hidden],[aria-hidden=true],[style]"):
+        if not tag.name:
+            continue
+        if tag.has_attr("style") and not tag.has_attr("hidden") and tag.get("aria-hidden") != "true":
+            hidden = {"display:none", "visibility:hidden", "visibility:collapse", "opacity:0"}
+            rules = {"".join(rule.lower().split()).removesuffix("!important")
+                     for rule in tag["style"].split(";")}
+            if tag.name not in {"script", "style", "template", "noscript", "svg"} and not hidden & rules:
+                continue
+        if tag.parent is not None:
+            tag.decompose()
+    return soup
+
+
 def capture(source, load, clock):
     trace = {"page_url": source.url}
     try:
         page = load(source.url, 5.0)
         if page.url != source.url:
             raise ResearchGap("SOURCE_URL_CHANGED")
-        soup = BeautifulSoup(page.body, "lxml")
-        for tag in soup.select("script,style,template,noscript,svg,[hidden],[aria-hidden=true],[style]"):
-            if not tag.name:
-                continue
-            if tag.has_attr("style") and not tag.has_attr("hidden") and tag.get("aria-hidden") != "true":
-                hidden = {"display:none", "visibility:hidden", "visibility:collapse", "opacity:0"}
-                rules = {"".join(rule.lower().split()).removesuffix("!important")
-                         for rule in tag["style"].split(";")}
-                if tag.name not in {"script", "style", "template", "noscript", "svg"} and not hidden & rules:
-                    continue
-            if tag.parent is not None:
-                tag.decompose()
+        soup = public_soup(page.body)
         body = soup.body
         if body is None:
             raise ResearchGap("SOURCE_TEXT_MISSING")
@@ -162,15 +172,24 @@ def compile_package(brief, brand_name, sources):
     }
 
 
-def proposal(brief, brand_name, sources, *, changes=()):
-    ready = all(row["outcome"] == "QUOTE_OBSERVED" for row in sources)
+def proposal(brief, brand_name, sources, *, changes=(), planner=None):
+    ready = bool(brief and sources and all(row["outcome"] == "QUOTE_OBSERVED" for row in sources))
+    status = "READY" if ready else "BLOCKED"
+    if planner is not None and ready and not planner["brief_reviewed"]:
+        status = "DRAFT"
+    package = compile_package(brief, brand_name, sources) if status == "READY" else None
+    if package is not None and planner is not None:
+        choice = planner["options"][brief.selected]
+        package.update(source_url=choice["destination"], source_evidence_index=choice["evidence_index"],
+                       factual_review="SOURCE_LABEL_REUSE_REQUIRES_HUMAN_REVIEW")
     result = {
         "schema_version": 2, "kind": "SOURCE_CAMPAIGN", "brand_name": brand_name,
-        "brief": brief.model_dump(mode="json"), "evidence": sources,
-        "status": "READY" if ready else "BLOCKED",
-        "package": compile_package(brief, brand_name, sources) if ready else None,
+        "brief": brief.model_dump(mode="json") if brief else None, "evidence": sources,
+        "status": status, "package": package,
         "changes": list(changes),
     }
+    if planner is not None:
+        result["planner"] = planner
     return {**result, "sha256": digest(result)}
 
 
@@ -181,11 +200,11 @@ def recheck_at(result):
 def check(result, now):
     if result.get("sha256") != digest({k: v for k, v in result.items() if k != "sha256"}):
         return "CREATIVE_BINDING_CHANGED"
-    if result["status"] != "READY":
+    if result["status"] == "BLOCKED":
         return "EVIDENCE_GAP"
     if now >= recheck_at(result):
         return "SOURCE_RECHECK_REQUIRED"
-    return None
+    return "BRIEF_REVIEW_REQUIRED" if result["status"] == "DRAFT" else None
 
 
 def research_package(brief, brand_name, load, clock, previous=None):

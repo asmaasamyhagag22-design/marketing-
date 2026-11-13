@@ -45,8 +45,6 @@ def main():
     demo.isolate(offline=args.action != "serve")
     directory = args.directory.resolve()
     if args.action == "init":
-        if not args.case:
-            parser.error("init requires at least one --case")
         demo.init(directory, seed_demo=lambda service, _: seed_brands(service, args.case))
         manifest = json.loads((directory / "demo.json").read_text())
         print(json.dumps({"email": manifest["email"], "password": "LocalCampaignReview42"}))
@@ -65,7 +63,7 @@ def main():
     require_disposable_test_database(manifest["dsn"], environ={
         "BASEERA_DESTRUCTIVE_TEST_DATABASE": "baseera_pytest_foundation",
     })
-    if manifest["synthetic"] or not manifest["brands"]:
+    if manifest["synthetic"] or "brands" not in manifest:
         raise ValueError("Expected a public campaign demo database")
     os.environ.update(PERSISTENCE_BACKEND="postgres", BASEERA_DATABASE_URL=manifest["dsn"],
                       BASEERA_WEBAPP_DIR=str(directory / "application"), ADZY_REVIEW_STATE_DIR=str(directory / "review"))

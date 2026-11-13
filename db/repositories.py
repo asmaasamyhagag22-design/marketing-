@@ -424,6 +424,13 @@ class RunRepository:
             raise NotVisible("run is absent or not visible")
         return _run(row)
 
+    def campaign_for_request(self, *, brand_id: UUID, request_id: str) -> RunRecord | None:
+        row = self.session.scalar(select(Run).where(
+            Run.brand_id == brand_id, Run.kind == "campaign",
+            Run.output["planner"]["request_id"].as_string() == request_id,
+        ))
+        return _run(row) if row else None
+
     def current_successful(self, *, brand_id: UUID, kind: str,
                            lock: bool = False) -> RunRecord | None:
         query = (
