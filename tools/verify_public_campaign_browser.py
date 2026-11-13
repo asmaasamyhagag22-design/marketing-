@@ -101,6 +101,7 @@ def main():
                     before = monotonic()
                     target = evidence / name
                     target.mkdir(exist_ok=True)
+                    rejected_copy = None
                     if plans is None:
                         domain = manifest["brands"][name]
                         page.locator("#adzy-brand-select").select_option(domain)
@@ -140,9 +141,27 @@ def main():
                         )
                         if case.get("copy_edit"):
                             editor.locator("#v2-copy-details summary").click()
+                            if case.get("rejected_headline"):
+                                headline = editor.locator('[name="headline"]')
+                                headline.fill(case["rejected_headline"])
+                                with page.expect_response(lambda r: r.url.endswith("/brief")) as rejected:
+                                    editor.locator('button[type="submit"]').click()
+                                rejected_copy = rejected.value.status
+                                assert rejected_copy == 409, rejected.value.text()
+                                assert "COPY_REQUIRES_EVIDENCE_REVIEW" in rejected.value.text()
+                                expect(page.locator("#v2-status")).to_contain_text("الصياغة تحتاج مراجعة دليل")
+                                expect(headline).to_have_value(case["rejected_headline"])
+                                current = page.evaluate("domain => window.api('GET', '/api/v2/campaigns/' + domain)", domain)
+                                assert current["run_id"] == generated["run_id"] and not current["approved"]
                             for field, value in case["copy_edit"].items():
                                 editor.locator(f'[name="{field}"]').fill(value)
-                        editor.locator('button').click()
+                        with page.expect_request(lambda r: r.url.endswith("/brief")) as review_request, \
+                                page.expect_response(lambda r: r.url.endswith("/brief")) as review_response:
+                            editor.locator('button[type="submit"]').click()
+                        assert review_response.value.ok, review_response.value.text()
+                        for field, value in case.get("copy_edit", {}).items():
+                            sent_edit = review_request.value.post_data_json.get("copy_edit", {})
+                            assert sent_edit.get(field) == value, (field, sent_edit, value)
                         expect(page.locator("#v2-approve")).to_be_visible()
                     api_path = "/api/v2/campaigns/" + domain
 
@@ -165,7 +184,7 @@ def main():
                         assert initial["proposal"]["planner"]["input"] == generated["proposal"]["planner"]["input"]
                         for field, value in case.get("copy_edit", {}).items():
                             actual = initial["proposal"]["package"]["caption"] if field == "caption" else initial["proposal"]["package"]["copy"][field]
-                            assert actual == value
+                            assert actual == value, (field, actual, value)
                     previews = {}
                     for size in ("portrait", "square"):
                         with page.expect_response(lambda response: response.url.endswith("&size=" + size)) as preview:
@@ -221,7 +240,8 @@ def main():
                     planner = final["proposal"].get("planner")
                     results[name] = {"status": "EXPORTED", "seconds": round(monotonic() - before, 2),
                                      "public_pages": planner["page_calls"] if planner else 2,
-                                          "stale_export_http": stale, "restored_png_sha256": hashes}
+                                     "stale_export_http": stale, "rejected_copy_http": rejected_copy,
+                                     "restored_png_sha256": hashes}
             from sqlalchemy import func, select
             from db.models import Approval, Run, UsageRecord
             from workflows.demo import connect

@@ -1,1 +1,31 @@
-{"firefox": {"brand": "firefox", "url": "https://www.firefox.com/en-US/features/", "objective": "Increase visits to the Enhanced Tracking Protection explanation", "language": "ar"}, "firefox-download": {"brand": "firefox", "url": "https://www.firefox.com/en-US/features/", "objective": "Increase Firefox downloads for people concerned about Enhanced Tracking Protection", "language": "ar"}, "lego": {"brand": "lego", "url": "https://www.lego.com/en-us/pick-and-build", "objective": "Increase visits to the Pick a Brick catalog to find a piece for a build", "language": "ar"}, "rijksmuseum": {"brand": "rijksmuseum", "url": "https://www.rijksmuseum.nl/en/collection", "objective": "Increase visits to the Collection Online Comparator explanation", "language": "en", "copy_edit": {"headline": "Compare Artworks Side by Side", "message": "Use the Comparator to place artworks next to each other and zoom in on the smallest details."}}}
+{
+  "firefox": {
+    "brand": "firefox",
+    "url": "https://www.firefox.com/en-US/features/",
+    "objective": "Increase visits to the Enhanced Tracking Protection explanation",
+    "language": "ar"
+  },
+  "firefox-download": {
+    "brand": "firefox",
+    "url": "https://www.firefox.com/en-US/features/",
+    "objective": "Increase Firefox downloads for people concerned about Enhanced Tracking Protection",
+    "language": "ar"
+  },
+  "lego": {
+    "brand": "lego",
+    "url": "https://www.lego.com/en-us/pick-and-build",
+    "objective": "Increase visits to the Pick a Brick catalog to find a piece for a build",
+    "language": "ar"
+  },
+  "rijksmuseum": {
+    "brand": "rijksmuseum",
+    "url": "https://www.rijksmuseum.nl/en/collection",
+    "objective": "Increase visits to the Collection Online Comparator explanation",
+    "language": "en",
+    "copy_edit": {
+      "headline": "Compare Artworks Side by Side",
+      "message": "Use the Comparator to place artworks next to each other and zoom in on the smallest details."
+    },
+    "rejected_headline": "Compare every artwork ever created"
+  }
+}

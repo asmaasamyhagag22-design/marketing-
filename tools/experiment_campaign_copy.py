@@ -27,6 +27,7 @@ def inputs(path):
     brief = proposal["brief"]
     decision = proposal["planner"]["options"][brief["selected"]]
     return {
+        "request": proposal["planner"]["input"],
         "brief": {k: brief[k] for k in ("objective", "summary", "audience", "language", "tone", "strategy_reason")},
         "evidence": [{k: e.get(k) for k in ("page_url", "label", "quote", "context", "constraints")}
                      for e in proposal["evidence"]],
@@ -61,7 +62,7 @@ def main():
     parser.add_argument("--ledger", type=Path, required=True)
     parser.add_argument("--key-file", type=Path, required=True)
     parser.add_argument("--provider", choices=("openai", "anthropic", "vertex"), default="openai")
-    parser.add_argument("--round", required=True, choices=("development", "heldout", "compact"))
+    parser.add_argument("--round", required=True, choices=("development", "heldout", "compact", "direct"))
     parser.add_argument("packages", nargs="+", type=Path)
     args = parser.parse_args()
     if len(args.packages) > 4:
@@ -89,29 +90,37 @@ def main():
         vertex = genai.Client(vertexai=True, project=settings["GOOGLE_CLOUD_PROJECT"], location="global",
                               http_options=types.HttpOptions(timeout=35000, retry_options=types.HttpRetryOptions(attempts=1)))
     if provider != "vertex" and not token:
-        parser.error("missing OpenAI credential")
+        parser.error(f"missing {provider} credential")
     client = OpenAI(api_key=token, max_retries=0, timeout=35.0) if provider == "openai" else None
     for package in args.packages:
-        label = f"{args.round}-{package.parent.name}" + ("" if client else f"-{provider}")
+        case_name = package.parent.parent.name if package.parent.name == "initial" else package.parent.name
+        label = f"{args.round}-{case_name}" + ("" if client else f"-{provider}")
         intent = args.ledger / f"{label}.dispatch.json"
         if intent.exists():
             print(label, "already attempted", flush=True)
             continue
         spec = inputs(package)
-        wire = json.dumps({k: v for k, v in spec.items() if k != "baseline"}, ensure_ascii=False)
-        if len((prompt + wire).encode()) > 8000:
+        if args.round == "direct":
+            payload = {key: spec[key] for key in ("request", "evidence", "destination", "action")}
+            run_prompt = prompt.replace("the supplied brief and evidence", "the supplied user request and evidence")
+        else:
+            payload = {key: value for key, value in spec.items() if key not in {"baseline", "request"}}
+            run_prompt = prompt
+        wire = json.dumps(payload, ensure_ascii=False)
+        if len((run_prompt + wire).encode()) > 8000:
             raise ValueError("input exceeds experiment bound")
         before = exposure(args.ledger)
         if before + RESERVE > CAP:
             raise RuntimeError("task spend cap")
-        save(intent, {"model": model, "prompt_sha256": sha256(prompt.encode()).hexdigest(),
-                      "input": spec, "output_limit": output_limit, "reserve_usd": str(RESERVE), "task_exposure_before": str(before)})
+        save(intent, {"model": model, "prompt_sha256": sha256(run_prompt.encode()).hexdigest(),
+                      "input": {**payload, "baseline": spec["baseline"]}, "output_limit": output_limit,
+                      "reserve_usd": str(RESERVE), "task_exposure_before": str(before)})
         started = monotonic()
         result = {"outcome": "UNKNOWN", "estimated_charge": None}
         try:
             if client:
                 response = client.chat.completions.create(
-                    model=model, messages=[{"role": "system", "content": prompt}, {"role": "user", "content": wire}],
+                    model=model, messages=[{"role": "system", "content": run_prompt}, {"role": "user", "content": wire}],
                     max_completion_tokens=output_limit, temperature=0.5, response_format={"type": "json_object"}, store=False,
                 )
                 choice = response.choices[0]
@@ -124,7 +133,7 @@ def main():
                 try:
                     response = vertex.models.generate_content(
                         model=model, contents=wire, config=types.GenerateContentConfig(
-                            system_instruction=prompt, max_output_tokens=output_limit, temperature=0.5,
+                            system_instruction=run_prompt, max_output_tokens=output_limit, temperature=0.5,
                             response_mime_type="application/json",
                             thinking_config=types.ThinkingConfig(thinking_level="MINIMAL"),
                         ),
@@ -137,7 +146,7 @@ def main():
                 used_in = usage.prompt_token_count
                 used_out = (usage.candidates_token_count or 0) + (usage.thoughts_token_count or 0)
             else:
-                body = {"model": model, "system": prompt, "max_tokens": output_limit, "temperature": 0.5,
+                body = {"model": model, "system": run_prompt, "max_tokens": output_limit, "temperature": 0.5,
                         "messages": [{"role": "user", "content": wire}]}
                 request = Request("https://api.anthropic.com/v1/messages", json.dumps(body).encode(),
                                   {"x-api-key": token, "anthropic-version": "2023-06-01", "Content-Type": "application/json"})

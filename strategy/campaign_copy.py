@@ -52,7 +52,7 @@ def writing_for(fact, action, language):
     if re.search(r"\b(?:only|except|until|some regions|eligible|when enabled|if enabled|does not|no longer)\b|[$€£]", context, re.I):
         return None
     ar = language.split("-")[0] == "ar"
-    if re.fullmatch(r"[\w® .-]{2,48} blocks thousands of known trackers (?:before they can follow you around the web|while you browse the web)\.", quote, re.I) and not re.search(
+    if re.fullmatch(r"[\w® .-]{2,48} blocks thousands of known trackers (?:before they can follow you around the web|while you browse(?: the web)?)\.", quote, re.I) and not re.search(
         r"\b(?:never|not|cannot|claims|said|could|would|might|previously)\b", quote, re.I
     ):
         if action == "DOWNLOAD_OPTIONS":
