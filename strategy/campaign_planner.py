@@ -366,9 +366,6 @@ def build_plan(request, brand_name, load, clock, *, request_id=None):
     planner.update(options=options, claims=[
         {"fields": ["brief.summary", "package.copy.message"], "evidence_index": 0,
          "basis": "PUBLISHER_QUOTE_AND_SECTION_LABEL", "semantic_review": "HUMAN_REVIEW_REQUIRED"},
-        *([{"fields": ["package.source_url"], "evidence_index": 1,
-            "basis": "OFFICIAL_DESTINATION_TITLE", "semantic_review": "HUMAN_REVIEW_REQUIRED"}]
-          if destination else []),
     ])
     return proposal(brief, brand_name, sources, planner=planner)
 

@@ -80,6 +80,8 @@ def test_start_without_profile_is_versioned_replay_safe_and_blocks_claim_expansi
     accepted = edit(request, draft).json()
     assert accepted["run_id"] != draft["run_id"] and accepted["proposal"]["status"] == "READY"
     assert accepted["proposal"]["evidence"] == draft["proposal"]["evidence"]
+    assert accepted["proposal"]["planner"]["destination_evidence_index"] == 0
+    assert accepted["proposal"]["package"]["source_url"] == control["feature"]
     assert request("POST", "/plan", {**body, "expected_run_id": accepted["run_id"]}).status_code == 409
     assert control["calls"] == [control["root"], control["feature"]]
 
@@ -168,3 +170,43 @@ def test_exact_topic_beats_repeated_collection_context():
       </main></body></html>"""
     page = inspect(Page(url, body), lambda: datetime.now(timezone.utc), terms)
     assert best_fact([page], terms)["quote"] == "Use the Comparator to place two artworks side by side."
+
+
+def test_new_brief_during_export_fences_old_approval(planner, monkeypatch):
+    from poster import campaign_package
+
+    request, _, _ = planner
+    draft = request("POST", "/plan", input_body()).json()
+    ready = edit(request, draft).json()
+    prefix = "/" + draft["domain_key"]
+    assert request("POST", prefix + "/review", {"run_id": ready["run_id"], "decision": "approved"}).json()["approved"]
+
+    def replace_while_rendering(view, root):
+        changed = edit(request, {**ready, "domain_key": draft["domain_key"]}, selected=1)
+        assert changed.status_code == 200 and not changed.json()["approved"]
+        return b"previous version bytes"
+
+    monkeypatch.setattr(campaign_package, "export_package", replace_while_rendering)
+    blocked = request("GET", prefix + "/package/export?run_id=" + ready["run_id"])
+    assert blocked.status_code == 409 and blocked.json()["detail"]["code"] == "CAMPAIGN_CHANGED"
+    current = request("GET", prefix).json()
+    assert current["run_id"] != ready["run_id"] and not current["approved"]
+
+
+
+def test_download_revision_binds_the_selected_destination(planner):
+    request, control, pages = planner
+    root = control["root"]
+    pages[root] += '<a href="/download/options/">Download options</a>'
+    pages[root + "download/options/"] = '<title>Download options</title><h1>Download options</h1>'
+    response = request("POST", "/plan", input_body(
+        objective="Increase downloads for people interested in tracker protection",
+    ))
+    assert response.status_code == 200, response.text
+    draft = response.json()
+    selected = edit(request, draft).json()
+    assert selected["proposal"]["package"]["source_url"] == root + "download/options/"
+    assert selected["proposal"]["planner"]["destination_evidence_index"] == 1
+    alternative = edit(request, {**selected, "domain_key": draft["domain_key"]}, selected=0).json()
+    assert alternative["proposal"]["planner"]["destination_evidence_index"] == 0
+    assert alternative["proposal"]["package"]["source_url"] == control["feature"]
