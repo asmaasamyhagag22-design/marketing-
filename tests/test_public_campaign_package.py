@@ -1,5 +1,6 @@
 """Isolated faults on the campaign HTTP and compositor boundaries."""
 from datetime import datetime, timedelta, timezone
+import json
 from pathlib import Path
 from uuid import uuid4
 
@@ -215,3 +216,36 @@ def test_cached_bytes_survive_renderer_change_and_detect_corruption(monkeypatch,
     with pytest.raises(campaign_package.PosterLayoutError, match="POSTER_ARTIFACT_CORRUPT"):
         campaign_package.preview_poster(view, "square", tmp_path)
     assert calls == ["square", "portrait"]
+
+
+def test_scene_export_rejects_bytes_that_differ_from_the_brief(monkeypatch, tmp_path):
+    from hashlib import sha256
+
+    from poster import campaign_scene
+    from poster.campaign_package import PosterLayoutError, render_poster
+
+    root = CASE.parents[3]
+    edition = json.loads((root / "docs/campaigns/buffalo/portfolio/edition.json").read_text())[0]
+    art = edition["options"][0]["art"]
+    reviewed = campaign_scene.scene_bytes(art)
+    digest = sha256(reviewed).hexdigest()
+    alternate = campaign_scene.scene_bytes(edition["options"][1]["art"])
+    assert reviewed != alternate
+    (tmp_path / f"{digest}.jpg").write_bytes(alternate)
+    monkeypatch.setattr(campaign_scene, "SCENES", tmp_path)
+
+    def unexpected_render(*args, **kwargs):
+        pytest.fail("Replacement artwork reached the renderer")
+
+    monkeypatch.setattr("poster.campaign_package.render_html_to_png", unexpected_render)
+    package = {
+        "poster_layout": "source-campaign@5",
+        "copy": {"headline": "Compare",
+                 "message": "Two choices from the catalog", "cta": "See the menu"},
+        "brand_name": "Catalog example", "language": "en", "direction": "ltr",
+        "source_url": "https://example.test/menu", "art": art,
+    }
+    destination = tmp_path / "poster.png"
+    with pytest.raises(PosterLayoutError, match="POSTER_SCENE_UNAVAILABLE"):
+        render_poster(package, "square", destination)
+    assert not destination.exists()

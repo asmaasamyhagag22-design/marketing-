@@ -190,7 +190,11 @@ def proposal(brief, brand_name, sources, *, changes=(), planner=None):
                        factual_review="SOURCE_LABEL_REUSE_REQUIRES_HUMAN_REVIEW")
         if planner.get("edition"):
             art = choice["art"]
-            layout = "source-campaign@4" if art.get("layout") in {"ingredient-columns", "ingredient-rows"} else "source-campaign@3"
+            layout = {
+                "scene-comparison": "source-campaign@5",
+                "ingredient-columns": "source-campaign@4",
+                "ingredient-rows": "source-campaign@4",
+            }.get(art.get("layout"), "source-campaign@3")
             package.update(
                 poster_layout=layout, art=art,
                 factual_review="EXACT_SOURCE_ANCHORS_AND_EDITORIAL_REVIEW",

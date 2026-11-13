@@ -11,6 +11,7 @@ from tempfile import TemporaryDirectory
 from zipfile import BadZipFile, ZIP_DEFLATED, ZipFile, ZipInfo
 
 from poster.campaign_catalog import CATALOG_CSS, INGREDIENT_CSS, INGREDIENT_DRAWINGS, INGREDIENT_LAYOUTS, catalog_cards
+from poster.campaign_scene import measure_scene, scene_html
 from poster.render_playwright import render_html_to_png
 
 
@@ -179,7 +180,10 @@ def layout_poster(page, width, height):
 
 
 def render_poster(package, label, path):
-    if package["poster_layout"] not in {"source-campaign@1", "source-campaign@2", "source-campaign@3", "source-campaign@4"}:
+    scene = package["poster_layout"] == "source-campaign@5"
+    if not scene and package["poster_layout"] not in {
+        "source-campaign@1", "source-campaign@2", "source-campaign@3", "source-campaign@4",
+    }:
         raise PosterLayoutError("POSTER_LAYOUT_UNAVAILABLE")
     if package["poster_layout"] == "source-campaign@4":
         art = package["art"]
@@ -189,10 +193,23 @@ def render_poster(package, label, path):
             raise PosterLayoutError("POSTER_LAYOUT_UNAVAILABLE")
     width, height = SIZES[label]
     geometry = []
-    render_html_to_png(
-        poster_html(package, width, height), path, width=width, height=height, scale=1, offline=True,
-        validate=lambda page: geometry.extend(layout_poster(page, width, height)),
-    )
+    try:
+        if scene:
+            fonts = tuple(font_data(name) for name in (
+                "NotoSansArabic-Regular.ttf", "NotoSansArabic-Bold.ttf",
+                "NotoSans-Regular.ttf", "NotoSans-Bold.ttf",
+            ))
+            html = scene_html(package, width, height, fonts)
+        else:
+            html = poster_html(package, width, height)
+    except (ValueError, KeyError, FileNotFoundError) as exc:
+        raise PosterLayoutError("POSTER_SCENE_UNAVAILABLE") from exc
+    validate = measure_scene if scene else layout_poster
+    try:
+        render_html_to_png(html, path, width=width, height=height, scale=1, offline=True,
+                           validate=lambda page: geometry.extend(validate(page, width, height)))
+    except ValueError as exc:
+        raise PosterLayoutError(str(exc)) from exc
     image = path.read_bytes()
     return image, {"width": width, "height": height, "sha256": sha256(image).hexdigest(),
                    "geometry": geometry}

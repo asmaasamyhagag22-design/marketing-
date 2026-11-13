@@ -1,0 +1,21 @@
+{
+  "buffalo": {
+    "url": "https://buffaloburger.com",
+    "objective": "تشجيع المستخدم على تصفّح المنيو واختيار برجر يناسبه",
+    "language": "ar",
+    "rejected_headline": "أولد سكول فيه هالبينو",
+    "copy_edit": {
+      "message": "الاتنين فيهم صوص بافالو."
+    },
+    "tone": "مصري خفيف ومباشر",
+    "destination": "https://buffaloburger.com/menu",
+    "destination_visible_text": [
+      "أولد سكول",
+      "راستافاري"
+    ],
+    "restore_recommended": true,
+    "choose_reviewed_copy": true,
+    "unregistered_copy": "الاختيارين فيهم صوص بافالو.",
+    "alternate_destination": "https://buffaloburger.com/menu"
+  }
+}

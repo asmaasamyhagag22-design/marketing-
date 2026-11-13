@@ -95,7 +95,7 @@
 
   function packagePanel(proposal, approved, reason, decision) {
     const {brief, evidence, planner, package: creative} = proposal;
-    const fieldNames = {headline:'العنوان', message:'الرسالة', cta:'الدعوة', caption:'نص المنشور', art:'الرسم'};
+    const fieldNames = {headline:'العنوان', message:'الرسالة', cta:'الدعوة', caption:'نص المنشور', art:'المشهد البصري'};
     const sources = evidence.map((item, index) => `<li id="v2-source-${index}">
       <strong>${planner?.edition ? esc(item.scope) : index === 0 ? 'البراند' : planner ? 'صفحة الإجراء' : 'المنافس المقترح'} · ${esc(label(item.outcome))}</strong>
       <p>${link(item.page_url, item.page_url)}</p>
@@ -207,7 +207,7 @@
         ${shots ? `<h3>سيناريو وStoryboard نصي</h3><ol class="v2-items">${shots}</ol>` : ""}
         <h3>مراجعة بشرية مطلوبة</h3>
         <ul>${brief.human_review.map(note => `<li>${esc(note)}</li>`).join('')}</ul>
-        ${planner?.edition ? `<p>الرسم توضيحي. راجع ربط النص بأوصاف الناشر.</p>${claimsFor(planner.options[brief.selected])}` :
+        ${planner?.edition ? `<p>${esc(creative.art?.disclosure || "الرسم توضيحي.")} راجع ربط النص بأوصاف الناشر.</p>${claimsFor(planner.options[brief.selected])}` :
           '<p>التطبيق يطابق الاقتباس في HTML الصفحة. راجع دعم الاقتباس للنص الإعلاني قبل استخدامه.</p>'}
         <p>الاعتماد يتيح تصدير الحزمة للمراجعة المحلية.</p>
         ${decision === 'rejected' ? '<p>رُفضت هذه النسخة.</p>' : ''}

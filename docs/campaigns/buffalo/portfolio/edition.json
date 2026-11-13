@@ -1,0 +1,268 @@
+[
+  {
+    "id": "buffalo-menu-portfolio-20261114",
+    "entry": "https://buffaloburger.com",
+    "intent": "BROWSE_CATALOG",
+    "language": "ar",
+    "brand_name": "Buffalo Burger",
+    "question": "أنهي فرق بين صنفين يساعد الزائر يبدأ منيو البرجر؟",
+    "missing_question": "راجع صفحة المنيو ووصف الصنف المذكور في خطوات البحث. لازم الدليل يتطابق قبل تجهيز الحزمة.",
+    "sources": [
+      {
+        "url": "https://buffaloburger.com/menu",
+        "field": "title",
+        "quote": "قائمة بافلو برجر",
+        "scope": "عنوان صفحة المنيو الرسمية"
+      },
+      {
+        "url": "https://buffaloburger.com/menu/old-school",
+        "field": "og:description",
+        "quote": "Pure beef burger patty, topped with our signature Buffalo sauce and cheddar cheese.",
+        "scope": "وصف أولد سكول من بطاقة مشاركة صفحة الصنف",
+        "title": "أولد سكول - بافلو برجر"
+      },
+      {
+        "url": "https://buffaloburger.com/menu/the-rastafari",
+        "field": "og:description",
+        "quote": "بايتس الجبنة الشيدر المحشوه بالهالپنيو وصوص البافالو الكريمي و مع قطعة البرجر.",
+        "scope": "وصف راستافاري من بطاقة مشاركة صفحة الصنف",
+        "title": "راستافاري - بافلو برجر"
+      }
+    ],
+    "options": [
+      {
+        "name": "ضوء النهار",
+        "audience": "فرضية: ناس بتفتح المنيو ومحتارة تبدأ من أنهي برجر.",
+        "action": "OPEN_CATALOG",
+        "evidence_index": 0,
+        "cta": "شوف المنيو",
+        "art": {
+          "mode": "compare",
+          "subjects": [
+            {
+              "name": "أولد سكول",
+              "detail": "جبنة شيدر",
+              "evidence_index": 1
+            },
+            {
+              "name": "راستافاري",
+              "detail": "بايتس شيدر بالهالبينو",
+              "evidence_index": 2
+            }
+          ],
+          "evidence": [
+            1,
+            2
+          ],
+          "origin": "GENERATED_ILLUSTRATIVE_SCENE",
+          "layout": "scene-comparison",
+          "disclosure": "تصوير توضيحي مولّد بالذكاء الاصطناعي",
+          "palette": "paper",
+          "scene": {
+            "sha256": "062d541a3736171361510154888f6c720352facb4f2d8eca90756a73d616ff89",
+            "original_sha256": "743a7f556553f91ec3a16466fae451ea261c73fc9909d3f5a5aa14bf5ec43ffd",
+            "model": "gemini-3-pro-image",
+            "location": "global"
+          }
+        },
+        "variants": {
+          "message": [
+            "الاتنين فيهم صوص بافالو."
+          ]
+        },
+        "metric": "نقرات على رابط المنيو لكل ظهور.",
+        "claims": [
+          {
+            "field": "headline",
+            "evidence": [
+              1,
+              2
+            ],
+            "basis": "INGREDIENT_CONTRAST"
+          },
+          {
+            "field": "message",
+            "evidence": [
+              1,
+              2
+            ],
+            "basis": "BUFFALO_SAUCE_IN_BOTH_PUBLISHER_DESCRIPTIONS"
+          },
+          {
+            "field": "caption",
+            "evidence": [
+              1,
+              2,
+              0
+            ],
+            "basis": "INGREDIENTS_AND_NAVIGATION"
+          },
+          {
+            "field": "cta",
+            "evidence": [
+              0
+            ],
+            "basis": "OBSERVED_DESTINATION"
+          },
+          {
+            "field": "art",
+            "evidence": [
+              1,
+              2
+            ],
+            "basis": "PUBLISHER_ITEM_NAMES_AND_INGREDIENTS"
+          }
+        ]
+      },
+      {
+        "name": "ستوديو داكن",
+        "audience": "فرضية: ناس بتفتح المنيو ومحتارة تبدأ من أنهي برجر.",
+        "action": "OPEN_CATALOG",
+        "evidence_index": 0,
+        "cta": "شوف المنيو",
+        "art": {
+          "mode": "compare",
+          "subjects": [
+            {
+              "name": "أولد سكول",
+              "detail": "جبنة شيدر",
+              "evidence_index": 1
+            },
+            {
+              "name": "راستافاري",
+              "detail": "بايتس شيدر بالهالبينو",
+              "evidence_index": 2
+            }
+          ],
+          "evidence": [
+            1,
+            2
+          ],
+          "origin": "GENERATED_ILLUSTRATIVE_SCENE",
+          "layout": "scene-comparison",
+          "disclosure": "تصوير توضيحي مولّد بالذكاء الاصطناعي",
+          "palette": "slate",
+          "scene": {
+            "sha256": "78df3da6597e1dc8febf553f69ec11b75cfa556823cb550a0b18c52e44ed8249",
+            "original_sha256": "5366c731b43ab9ccc6e6288c6367cbf32ed63d391b597bc3b83f96c947383caf",
+            "model": "gemini-3-pro-image",
+            "location": "global"
+          }
+        },
+        "variants": {
+          "message": [
+            "الاتنين فيهم صوص بافالو."
+          ]
+        },
+        "metric": "نقرات على رابط المنيو لكل ظهور.",
+        "claims": [
+          {
+            "field": "headline",
+            "evidence": [
+              1,
+              2
+            ],
+            "basis": "INGREDIENT_CONTRAST"
+          },
+          {
+            "field": "message",
+            "evidence": [
+              1,
+              2
+            ],
+            "basis": "BUFFALO_SAUCE_IN_BOTH_PUBLISHER_DESCRIPTIONS"
+          },
+          {
+            "field": "caption",
+            "evidence": [
+              1,
+              2,
+              0
+            ],
+            "basis": "INGREDIENTS_AND_NAVIGATION"
+          },
+          {
+            "field": "cta",
+            "evidence": [
+              0
+            ],
+            "basis": "OBSERVED_DESTINATION"
+          },
+          {
+            "field": "art",
+            "evidence": [
+              1,
+              2
+            ],
+            "basis": "PUBLISHER_ITEM_NAMES_AND_INGREDIENTS"
+          }
+        ]
+      }
+    ],
+    "brief": {
+      "audience": "فرضية: ناس بتفتح المنيو ومحتارة تبدأ من أنهي برجر.",
+      "market": "العربية المصرية، والجمهور المقترح فرضية للتحرير.",
+      "metric": "نقرات على رابط المنيو لكل ظهور.",
+      "assumption": "نفترض إن الزائر محتار يبدأ بإيه. نختبر هل سؤال الشيدر والهالبينو يساعده يفتح المنيو ويقارن.",
+      "alternatives": [
+        {
+          "name": "ضوء النهار",
+          "plan": "إضاءة نهارية ولقطة كاملة تُبرز فرق الشيدر والبايتس.",
+          "tradeoff": "الخلفية الفاتحة تبرز حدود الساندوتشين."
+        },
+        {
+          "name": "ستوديو داكن",
+          "plan": "ضوء جانبي دافئ وخلفية داكنة تُبرز قوام البرجر.",
+          "tradeoff": "اللقطة القريبة تبرز قوام المكونات."
+        }
+      ],
+      "strategy_index": 0,
+      "strategy_reason": "نستخدم نفس سؤال الاختيار ونفس وجهة المنيو في المعالجتين. الإضاءة النهارية تبيّن حدود كل برجر وتُبقي المكونات واضحة.",
+      "tone": "مصري مباشر",
+      "directions": [
+        {
+          "name": "ضوء النهار",
+          "rationale": "إضاءة نهارية ولقطة كاملة تُبرز فرق الشيدر والبايتس.",
+          "headline": "كلاسيك ولا هالبينو؟",
+          "message": "صوص بافالو في الاختيارين.",
+          "cta": "شوف المنيو",
+          "theme": "ember",
+          "caption": "أولد سكول فيه شيدر، وراستافاري فيه بايتس شيدر محشية هالبينو. الاتنين فيهم صوص بافالو. افتح المنيو وقارن قبل ما تختار.",
+          "hook": "كلاسيك ولا هالبينو؟",
+          "shot": "إضاءة نهارية ولقطة كاملة تُبرز فرق الشيدر والبايتس.",
+          "middle_shot": "صوص بافالو في الاختيارين.",
+          "end_shot": "شوف المنيو"
+        },
+        {
+          "name": "ستوديو داكن",
+          "rationale": "ضوء جانبي دافئ وخلفية داكنة تُبرز قوام البرجر.",
+          "headline": "كلاسيك ولا هالبينو؟",
+          "message": "صوص بافالو في الاختيارين.",
+          "cta": "شوف المنيو",
+          "theme": "ember",
+          "caption": "أولد سكول فيه شيدر، وراستافاري فيه بايتس شيدر محشية هالبينو. الاتنين فيهم صوص بافالو. افتح المنيو وقارن قبل ما تختار.",
+          "hook": "كلاسيك ولا هالبينو؟",
+          "shot": "ضوء جانبي دافئ وخلفية داكنة تُبرز قوام البرجر.",
+          "middle_shot": "صوص بافالو في الاختيارين.",
+          "end_shot": "شوف المنيو"
+        }
+      ],
+      "selected": 0,
+      "human_review": [
+        "اتأكد إن بايتس الشيدر بالهالبينو تظهر مع راستافاري فقط وإن الشيدر السايح ظاهر مع أولد سكول.",
+        "التصوير توضيحي مولّد بالذكاء الاصطناعي. هذه دراسة Portfolio مستقلة."
+      ]
+    },
+    "observe_entry": {
+      "field": "title",
+      "quote": "بافلو برجر",
+      "scope": "عنوان الصفحة الرئيسية"
+    },
+    "subject_terms": [
+      "برجر",
+      "البرجر",
+      "burger",
+      "burgers"
+    ]
+  }
+]

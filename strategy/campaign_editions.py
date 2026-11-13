@@ -140,6 +140,8 @@ def build_edition(request, edition, load, clock, request_id, *, trace, release, 
         for item, direction in zip(edition["options"], edition["brief"]["directions"], strict=True):
             refs = [index for claim in item["claims"] for index in claim["evidence"]]
             refs.extend(item["art"]["evidence"])
+            refs.extend(subject["evidence_index"] for subject in item["art"]["subjects"]
+                        if "evidence_index" in subject)
             refs.append(item["evidence_index"])
             if any(not isinstance(index, int) or not 0 <= index < len(rows) for index in refs):
                 raise ValueError("Invalid edition evidence reference")

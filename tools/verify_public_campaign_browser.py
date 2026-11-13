@@ -323,7 +323,11 @@ def main():
                     )
                     assert stale == {"status": 409, "body": {"detail": {"code": "CAMPAIGN_CHANGED"}}}
                     if plans is not None and case.get("restore_recommended"):
-                        assert page.locator("#v2-package-card a").get_attribute("href") != case["destination"]
+                        alternate_destination = page.locator("#v2-package-card a").get_attribute("href")
+                        if "alternate_destination" in case:
+                            assert alternate_destination == case["alternate_destination"]
+                        else:
+                            assert alternate_destination != case["destination"]
                         page.click("#v2-approve")
                         alternative_hashes = download(target / "alternative")
                         assert all(alternative_hashes[k] != initial_hashes[k] for k in alternative_hashes)
