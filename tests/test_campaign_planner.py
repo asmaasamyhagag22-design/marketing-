@@ -151,3 +151,19 @@ def test_contradictory_feature_evidence_requires_review(planner):
     result = response.json()["proposal"]
     assert result["status"] == "BLOCKED" and result["planner"]["gap"] == "SOURCE_CONFLICT"
     assert result["planner"]["conflicts"][0]["page_url"] == control["feature"]
+
+
+
+def test_exact_topic_beats_repeated_collection_context():
+    from strategy.campaign_planner import best_fact, inspect, words
+    from datetime import datetime, timezone
+
+    url = "https://gallery.example.test/collection"
+    terms = words("Increase visits to the Collection Online Comparator explanation")
+    body = b"""<html><body><main><h1>About Collection Online</h1>
+      <p>The Online Collection brings together research and images.</p>
+      <p>The Online Collection covers works from many periods.</p>
+      <p>Use the Comparator to place two artworks side by side.</p>
+      </main></body></html>"""
+    page = inspect(Page(url, body), lambda: datetime.now(timezone.utc), terms)
+    assert best_fact([page], terms)["quote"] == "Use the Comparator to place two artworks side by side."

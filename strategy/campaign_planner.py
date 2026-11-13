@@ -135,8 +135,8 @@ def best_fact(pages, terms):
     page, entry = max(candidates, key=lambda pair: (
         len(words(urlsplit(pair[0]["page_url"]).path) & terms),
         len(words(pair[1]["label"]) & terms),
-        len(words(pair[1]["quote"]) & words(pair[1]["label"]) & terms),
-        pair[1]["specificity"], pair[1]["score"],
+        pair[1]["specificity"],
+        len(words(pair[1]["quote"]) & words(pair[1]["label"]) & terms), pair[1]["score"],
         not bool(urlsplit(pair[0]["page_url"]).query), -len(pair[1]["quote"]),
     ))
     return {**{k: v for k, v in page.items() if k != "entries"}, **entry,
