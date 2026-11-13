@@ -11,6 +11,7 @@ from pathlib import Path
 from time import monotonic
 from unittest.mock import patch
 from urllib.error import URLError
+from uuid import uuid4
 
 from workflows import demo
 
@@ -64,12 +65,12 @@ def case_source(case, *, live=False):
         return reply
 
     def simulated(url, timeout):
-        with patch("strategy.campaign_research.open_public_url", open_response):
-            return load_package_page(url, timeout)
+        return load_package_page(url, timeout)
 
     simulated.campaign_source_mode = "simulated_transport"
     simulated.campaign_snapshot_id = load.campaign_snapshot_id
-    yield simulated, clock, "simulated_transport"
+    with patch("strategy.campaign_research.open_public_url", open_response):
+        yield simulated, clock, "simulated_transport"
 
 
 def review_input(brief, edit=None):
@@ -171,8 +172,6 @@ def run_case(case, binding, dataset_id, release, telemetry, *, live=False):
     case_env = {"ADZY_CAMPAIGN_RELEASE": release, "ADZY_CAMPAIGN_EDITIONS_FILE": ""}
     if case.get("editions"):
         case_env["ADZY_CAMPAIGN_EDITIONS_FILE"] = str(ROOT / case["editions"])
-    from uuid import uuid4
-
     telemetry.correlate(uuid4().hex)
     started = monotonic()
     with patch.dict(os.environ, case_env), case_source(case, live=live) as (load, clock, mode):
@@ -181,12 +180,14 @@ def run_case(case, binding, dataset_id, release, telemetry, *, live=False):
             request = PlanInput.model_validate(case["input"])
             draft = build_plan(request, urlsplit(request.url).hostname, load, clock, trace=trace)
             observed = measure(case, draft, trace=trace)
-            if observed["failures"]:
-                outcome.update(status="ERROR", reason=(
-                    "WRITING_EXCEEDS_EVIDENCE" if any(
-                        edit["classification"] == "WRITING_EXCEEDS_EVIDENCE" for edit in observed["edits"]
-                    ) else observed["failures"][0]
-                ))
+            failures = observed["failures"]
+            if failures:
+                reason = failures[0]
+                if reason == "UNSAFE_COPY_OR_GUARD_FAILURE" and any(
+                    edit["classification"] == "WRITING_EXCEEDS_EVIDENCE" for edit in observed["edits"]
+                ):
+                    reason = "WRITING_EXCEEDS_EVIDENCE"
+                outcome.update(status="ERROR", reason=reason)
     return {
         "case_id": case["id"], "split": case["split"], "eval_set_id": dataset_id,
         "fixtures": binding if not live else None, "source_mode": mode,
@@ -240,8 +241,11 @@ def main():
 
     demo.isolate(offline=not args.live)
     from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
+    from strategy.campaign_release import code_commit
     from workflows.telemetry import Telemetry, create_client
 
+    if code_commit() is None:
+        parser.error("A Git checkout or ADZY_CAMPAIGN_BUILD_COMMIT is required")
     recorded_at = datetime.now(timezone.utc).isoformat()
     cases, bindings, dataset_id = case_set()
     if args.case and set(args.case) - {case["id"] for case in cases if not case.get("simulated_transport")}:
