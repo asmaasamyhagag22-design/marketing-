@@ -10,6 +10,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from zipfile import BadZipFile, ZIP_DEFLATED, ZipFile, ZipInfo
 
+from poster.campaign_catalog import CATALOG_CSS, catalog_cards
 from poster.render_playwright import render_html_to_png
 
 
@@ -45,6 +46,19 @@ def poster_html(package, width, height):
         "assemble": '<div class="tiles"><span></span><span></span><span></span><span></span></div>',
         "filter": '<div class="filter"><span></span><span></span><span></span><b></b></div>',
     }.get(concept, '<i></i><i></i><i></i>')
+    catalog = package["poster_layout"] == "source-campaign@3"
+    if catalog:
+        drawing_label = "رسم توضيحي" if package["language"].startswith("ar") else "Illustration"
+        content = f"""<header class="brand" dir="auto">{brand}</header>
+ <h1>{text["headline"]}</h1>
+ <div class="motif">{catalog_cards(package["art"])}</div>
+ <section class="copy"><p class="illustration-note">{drawing_label}</p>
+ <div class="catalog-action"><p class="message">{text["message"]}</p><p class="cta">{text["cta"]}</p></div></section>"""
+    else:
+        content = f"""<header class="brand" dir="auto">{brand}</header>
+ <div class="motif" aria-hidden="true">{art}</div>
+ <section class="copy"><h1>{text["headline"]}</h1><p class="message">{text["message"]}</p>
+ <p class="cta">{text["cta"]}</p></section>"""
     return f"""<!doctype html>
 <html lang="{lang}" dir="{direction}">
 <meta charset="utf-8">
@@ -64,21 +78,21 @@ main{{width:{width}px;height:{height}px;padding:64px 76px;display:grid;
  background-image:radial-gradient({light}45 1.5px,transparent 2px);
  background-size:30px 30px;mask-image:linear-gradient(90deg,transparent,#000 24%,#000 76%,transparent)}}
 .motif:has(.frames){{container-type:size}}
-.motif i{{position:absolute;inset-block-start:50%;inset-inline-start:50%;
+.motif > i{{position:absolute;inset-block-start:50%;inset-inline-start:50%;
  width:42%;height:82%;border-radius:50%;border:5px solid {light};translate:-50% -50%;
  transform:rotate(-28deg);background:linear-gradient(150deg,{light}55,{shape}44);
  box-shadow:0 0 70px {light}33,inset 0 0 70px {light}55}}
-[dir=rtl] .motif i{{translate:50% -50%}}
-.motif i:nth-child(2){{transform:rotate(28deg);width:58%;height:59%;border-color:{accent}}}
-.motif i:nth-child(3){{transform:rotate(70deg);width:32%;height:93%;border-color:{ink}99}}
-main[data-theme=ember] .motif i{{height:34%;width:59%;border-radius:46%;
+[dir=rtl] .motif > i{{translate:50% -50%}}
+.motif > i:nth-child(2){{transform:rotate(28deg);width:58%;height:59%;border-color:{accent}}}
+.motif > i:nth-child(3){{transform:rotate(70deg);width:32%;height:93%;border-color:{ink}99}}
+main[data-theme=ember] .motif > i{{height:34%;width:59%;border-radius:46%;
  transform:translateY(-68%) rotate(-7deg);background:linear-gradient(172deg,{accent}aa,{shape}33)}}
-main[data-theme=ember] .motif i:nth-child(2){{transform:rotate(7deg);width:74%}}
-main[data-theme=ember] .motif i:nth-child(3){{transform:translateY(68%) rotate(-7deg);width:55%}}
-main[data-theme=forest] .motif i{{border-radius:16%;width:24%;height:64%;
+main[data-theme=ember] .motif > i:nth-child(2){{transform:rotate(7deg);width:74%}}
+main[data-theme=ember] .motif > i:nth-child(3){{transform:translateY(68%) rotate(-7deg);width:55%}}
+main[data-theme=forest] .motif > i{{border-radius:16%;width:24%;height:64%;
  transform:translateX(52%) rotate(-24deg);background:linear-gradient(40deg,{accent}77,{shape})}}
-main[data-theme=forest] .motif i:nth-child(2){{transform:rotate(12deg)}}
-main[data-theme=forest] .motif i:nth-child(3){{transform:translateX(-51%) rotate(-9deg)}}
+main[data-theme=forest] .motif > i:nth-child(2){{transform:rotate(12deg)}}
+main[data-theme=forest] .motif > i:nth-child(3){{transform:translateX(-51%) rotate(-9deg)}}
 .frames,.tiles,.filter{{position:absolute;inset:8% 7%;display:grid;align-content:center;justify-content:center}}
 .frames{{grid-template-columns:repeat(2,minmax(120px,1fr));gap:7%;direction:ltr}}
 .frames span{{height:min(72cqh,375px);border:7px solid {accent};outline:2px solid {light};
@@ -100,13 +114,9 @@ h1{{font-weight:700;font-size:88px;line-height:1.26;letter-spacing:-.012em;text-
 .message{{font-size:44px;line-height:1.46}}
 .cta{{justify-self:start;padding:12px 26px;border-radius:12px;background:{accent};color:{bg};
  font-size:37px;line-height:1.45;font-weight:700}}
+{CATALOG_CSS if catalog else ""}
 </style>
-<main data-theme="{escape(package["theme"])}">
- <header class="brand" dir="auto">{brand}</header>
- <div class="motif" aria-hidden="true">{art}</div>
- <section class="copy"><h1>{text["headline"]}</h1><p class="message">{text["message"]}</p>
- <p class="cta">{text["cta"]}</p></section>
-</main>
+<main data-theme="{escape(package["theme"])}" class="{'catalog' if catalog else ''}">{content}</main>
 </html>"""
 
 
@@ -119,10 +129,24 @@ def measure_poster(page):
                 right: r.right, bottom: r.bottom, size: parseFloat(css.fontSize),
                 color: css.color, background: css.backgroundColor,
                 overflow: element.scrollWidth > element.clientWidth + 1 ||
-                    Array.from(element.querySelectorAll('.frames span')).some(frame => {
+                    Array.from(element.querySelectorAll('.frames span, .catalog-item')).some(frame => {
                         const f = frame.getBoundingClientRect();
-                        const outline = parseFloat(getComputedStyle(frame).outlineOffset) + 2;
-                        return f.top - outline < r.top || f.bottom + outline > r.bottom;
+                        const outline = frame.matches('.frames span') ? parseFloat(getComputedStyle(frame).outlineOffset) + 2 : 0;
+                        return f.top - outline < r.top || f.bottom + outline > r.bottom ||
+                            (outline === 0 && (f.left < r.left || f.right > r.right ||
+                            frame.scrollHeight > frame.clientHeight + 1 || frame.scrollWidth > frame.clientWidth + 1 ||
+                            (() => {
+                                const drawing = frame.querySelector('.food-drawing').getBoundingClientRect();
+                                const name = frame.querySelector('.item-name').getBoundingClientRect();
+                                const details = frame.querySelector('.item-detail').getBoundingClientRect();
+                                return drawing.top < f.top || drawing.bottom > name.top + 1 ||
+                                    drawing.left < f.left || drawing.right > f.right || name.bottom > details.top + 1 ||
+                                    Array.from(frame.querySelectorAll('.food-drawing i')).some(layer => {
+                                        const b = layer.getBoundingClientRect();
+                                        return b.top < drawing.top || b.bottom > drawing.bottom ||
+                                            b.left < drawing.left || b.right > drawing.right;
+                                    });
+                            })()));
                     })};
         })"""
     )
@@ -132,20 +156,24 @@ def measure_poster(page):
 def layout_poster(page, width, height):
     boxes = measure_poster(page)
     for headline, message, cta in ((76, 42, 36), (67, 40, 35), (60, 39, 34), (56, 37, 32)):
-        if boxes[-1]["bottom"] <= height - 60:
+        if max(box["bottom"] for box in boxes) <= height - 60:
             break
         page.add_style_tag(content=f"h1{{font-size:{headline}px}}.message{{font-size:{message}px}}.cta{{font-size:{cta}px}}")
         boxes = measure_poster(page)
     if any(box["x"] < 63 or box["right"] > width - 63 or box["y"] < 60 or
            box["bottom"] > height - 60 or box["overflow"] for box in boxes):
         raise PosterLayoutError("POSTER_CLIPPING")
-    if any(a["bottom"] > b["y"] for a, b in zip(boxes, boxes[1:])):
-        raise PosterLayoutError("POSTER_OVERLAP")
+    for index, a in enumerate(boxes):
+        for b in boxes[index + 1:]:
+            if min(a["bottom"], b["bottom"]) - max(a["y"], b["y"]) > 1 and (
+                min(a["right"], b["right"]) - max(a["x"], b["x"]) > 1
+            ):
+                raise PosterLayoutError("POSTER_OVERLAP")
     return boxes
 
 
 def render_poster(package, label, path):
-    if package["poster_layout"] not in {"source-campaign@1", "source-campaign@2"}:
+    if package["poster_layout"] not in {"source-campaign@1", "source-campaign@2", "source-campaign@3"}:
         raise PosterLayoutError("POSTER_LAYOUT_UNAVAILABLE")
     width, height = SIZES[label]
     geometry = []
@@ -211,7 +239,7 @@ def export_package(view, root):
             {"run_id": view["run_id"], "approval_id": view["approval_id"],
              "profile_snapshot_id": view["profile_snapshot_id"], "proposal": result,
              "poster_measurements": report, "review_status": "LOCAL_REVIEW",
-             "video": "SCRIPT_AND_STORYBOARD_ONLY"},
+             **({"video": "SCRIPT_AND_STORYBOARD_ONLY"} if result["package"].get("storyboard") else {})},
             indent=2, ensure_ascii=False, sort_keys=True,
         ), compress_type=ZIP_DEFLATED)
     return archive.getvalue()

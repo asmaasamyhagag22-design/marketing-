@@ -16,6 +16,7 @@ from strategy.campaign_package import Brief, load_package_page, proposal, resear
 from strategy.campaign_planner import BriefReview, PlanInput, build_plan, refresh_plan, review_draft
 from strategy.campaign_research import load_public_page, research, same_source
 from strategy.campaign_v2 import CampaignConflict, CampaignNotFound, propose, refresh
+from workflows.telemetry import Telemetry
 
 
 router = APIRouter(prefix="/v2/campaigns")
@@ -84,7 +85,7 @@ def execute(action):
     except CampaignNotFound:
         raise HTTPException(404, detail={"code": "BRAND_NOT_FOUND"}) from None
     except CampaignConflict as exc:
-        raise HTTPException(409, detail={"code": str(exc)}) from None
+        raise HTTPException(409, detail={"code": str(exc), **exc.context}) from None
 
 
 @router.get("/planning-state")
@@ -118,8 +119,14 @@ def plan_campaign(request: PlanRequest, service=Depends(store), loader=Depends(g
             raise HTTPException(503, detail={"code": "CAMPAIGN_RESEARCH_BUSY"})
         try:
             name = (snapshot.brand_name if snapshot else "") or urlsplit(request.url).hostname
-            result = build_plan(inputs, name, loader, service.clock, request_id=str(request.request_id))
-            return {"domain_key": domain, **service.write_plan(domain, snapshot, result, request.url)}
+            telemetry = Telemetry.from_env()
+            telemetry.correlate(str(request.request_id))
+            with telemetry.observation("campaign.plan"):
+                with telemetry.observation("campaign.research_and_compile"):
+                    result = build_plan(inputs, name, loader, service.clock, request_id=str(request.request_id))
+                    telemetry.outcome("BLOCKED" if result["status"] == "BLOCKED" else "NEEDS_REVIEW")
+                with telemetry.observation("campaign.persist"):
+                    return {"domain_key": domain, **service.write_plan(domain, snapshot, result, request.url)}
         finally:
             research_slots.release()
 
@@ -140,10 +147,13 @@ def save_brief(domain: str, request: BriefReviewRequest, service=Depends(store))
             raise CampaignConflict("PLANNED_BRIEF_REQUIRED")
         if view["reason"] not in (None, "BRIEF_REVIEW_REQUIRED"):
             raise CampaignConflict(view["reason"])
-        result = review_draft(run.output, request)
-        if not result["changes"] and run.output["planner"]["brief_reviewed"]:
-            return service.write(domain, snapshot, None)
-        return service.write(domain, snapshot, result, revision=True)
+        telemetry = Telemetry.from_env()
+        telemetry.correlate(run.output["planner"].get("request_id") or str(run.id))
+        with telemetry.observation("campaign.review_copy"):
+            result = review_draft(run.output, request)
+            if not result["changes"] and run.output["planner"]["brief_reviewed"]:
+                return service.write(domain, snapshot, None)
+            return service.write(domain, snapshot, result, revision=True)
 
     return execute(revise)
 
@@ -208,6 +218,8 @@ def revise_direction(domain: str, request: DirectionRequest, service=Depends(sto
         if previous.get("kind") != "SOURCE_CAMPAIGN" or previous["status"] != "READY":
             raise CampaignConflict("PACKAGE_REQUIRED")
         brief = Brief.model_validate(previous["brief"])
+        if request.selected >= len(brief.directions):
+            raise CampaignConflict("DIRECTION_NOT_FOUND")
         if previous.get("planner"):
             if request.selected == brief.selected:
                 return service.write(domain, snapshot, None)

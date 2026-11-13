@@ -6,7 +6,7 @@ from typing import Annotated, Literal
 from urllib.parse import urlsplit
 
 from bs4 import BeautifulSoup
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
 from scraper.url_utils import same_registrable_host
 from strategy.campaign_research import ResearchGap, load_public_page, same_source
@@ -61,15 +61,21 @@ class Brief(Input):
     objective: Line
     metric: Line
     assumption: Note
-    alternatives: tuple[Alternative, Alternative, Alternative]
+    alternatives: Annotated[tuple[Alternative, ...], Field(min_length=2, max_length=3)]
     strategy_index: int = Field(ge=0, le=2)
     strategy_reason: Note
     tone: Label
-    directions: tuple[Direction, Direction, Direction]
+    directions: Annotated[tuple[Direction, ...], Field(min_length=2, max_length=3)]
     selected: int = Field(ge=0, le=2)
     human_review: Annotated[list[Note], Field(min_length=1, max_length=6)]
     language: Annotated[str, StringConstraints(pattern=r"^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8}){0,3}$")]
     direction: Literal["rtl", "ltr"]
+
+    @model_validator(mode="after")
+    def check_choices(self):
+        if len(self.directions) != len(self.alternatives) or max(self.selected, self.strategy_index) >= len(self.directions):
+            raise ValueError("Invalid direction selection")
+        return self
 
 
 def digest(value):
@@ -87,9 +93,9 @@ def validate_sources(brief, brand_url):
         raise CampaignConflict("BRAND_SOURCE_ORIGIN_MISMATCH")
     if same_registrable_host(brief.peer_source.url, brand_url):
         raise CampaignConflict("PEER_SOURCE_MUST_BE_DISTINCT")
-    if len({item.name.casefold() for item in brief.directions}) != 3:
+    if len({item.name.casefold() for item in brief.directions}) != len(brief.directions):
         raise CampaignConflict("DIRECTIONS_MUST_BE_DISTINCT")
-    if len({item.name.casefold() for item in brief.alternatives}) != 3:
+    if len({item.name.casefold() for item in brief.alternatives}) != len(brief.alternatives):
         raise CampaignConflict("STRATEGIES_MUST_BE_DISTINCT")
 
 
@@ -146,7 +152,7 @@ def capture(source, load, clock):
 
 
 def load_package_page(url, timeout):
-    return load_public_page(url, timeout, max_bytes=2_000_000)
+    return load_public_page(url, timeout, max_bytes=2_000_000, user_agent="ADZY/1.0", socket_timeout=3.0)
 
 
 def compile_package(brief, brand_name, sources):
@@ -182,7 +188,14 @@ def proposal(brief, brand_name, sources, *, changes=(), planner=None):
         choice = planner["options"][brief.selected]
         package.update(source_url=choice["destination"], source_evidence_index=choice["evidence_index"],
                        factual_review="SOURCE_LABEL_REUSE_REQUIRES_HUMAN_REVIEW")
-        if choice.get("concept"):
+        if planner.get("edition"):
+            package.update(
+                poster_layout="source-campaign@3", art=choice["art"],
+                factual_review="EXACT_SOURCE_ANCHORS_AND_EDITORIAL_REVIEW",
+                claims=choice["claims"],
+            )
+            package.pop("storyboard", None)
+        elif choice.get("concept"):
             package.update(concept=choice["concept"], poster_layout="source-campaign@2",
                            factual_review="BOUNDED_REWRITE_REQUIRES_HUMAN_REVIEW")
         planner = {**planner, "destination_evidence_index": choice["evidence_index"]}

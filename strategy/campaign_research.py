@@ -9,6 +9,7 @@ import re
 from time import monotonic
 from urllib.error import URLError
 from urllib.parse import urldefrag, urlsplit
+from urllib.request import Request
 
 from bs4 import BeautifulSoup
 
@@ -69,10 +70,11 @@ def same_source(url, root):
         return False
 
 
-def load_public_page(url, timeout, *, max_bytes=MAX_BYTES):
+def load_public_page(url, timeout, *, max_bytes=MAX_BYTES, user_agent=None, socket_timeout=2.0):
     """Use the crawler's public URL and redirect safety guard."""
     deadline = monotonic() + timeout
-    with open_public_url(url, timeout=min(timeout, 2.0), follow_redirects=False) as response:
+    request = Request(url, headers={"User-Agent": user_agent, "Accept": "text/html"}) if user_agent else url
+    with open_public_url(request, timeout=min(timeout, socket_timeout), follow_redirects=False) as response:
         if response.headers.get_content_type() != "text/html":
             raise ResearchGap("HTML_REQUIRED")
         body = bytearray()

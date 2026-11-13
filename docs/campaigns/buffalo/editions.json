@@ -1,0 +1,436 @@
+[
+  {
+    "id": "buffalo-menu-20261113",
+    "entry": "https://buffaloburger.com",
+    "intent": "BROWSE_CATALOG",
+    "language": "ar",
+    "brand_name": "Buffalo Burger",
+    "question": "أنهي فرق بين صنفين يساعد الزائر يبدأ منيو البرجر؟",
+    "missing_question": "راجع صفحة المنيو ووصف الصنف المذكور في خطوات البحث. لازم الدليل يتطابق قبل تجهيز الحزمة.",
+    "sources": [
+      {
+        "url": "https://buffaloburger.com/menu",
+        "field": "title",
+        "quote": "قائمة بافلو برجر",
+        "scope": "عنوان صفحة المنيو الرسمية"
+      },
+      {
+        "url": "https://buffaloburger.com/menu/old-school",
+        "field": "og:description",
+        "quote": "Pure beef burger patty, topped with our signature Buffalo sauce and cheddar cheese.",
+        "scope": "وصف أولد سكول من بطاقة مشاركة صفحة الصنف",
+        "title": "أولد سكول - بافلو برجر"
+      },
+      {
+        "url": "https://buffaloburger.com/menu/the-rastafari",
+        "field": "og:description",
+        "quote": "بايتس الجبنة الشيدر المحشوه بالهالپنيو وصوص البافالو الكريمي و مع قطعة البرجر.",
+        "scope": "وصف راستافاري من بطاقة مشاركة صفحة الصنف",
+        "title": "راستافاري - بافلو برجر"
+      }
+    ],
+    "options": [
+      {
+        "name": "اختيار على حسب المزاج",
+        "audience": "فرضية: ناس بتفتح المنيو ومحتارة تبدأ من أنهي برجر.",
+        "action": "OPEN_CATALOG",
+        "evidence_index": 0,
+        "cta": "شوف المنيو",
+        "art": {
+          "mode": "compare",
+          "subjects": [
+            {
+              "name": "أولد سكول",
+              "detail": "شيدر وصوص بافالو",
+              "palette": "classic"
+            },
+            {
+              "name": "راستافاري",
+              "detail": "بايتس شيدر بالهالبينو",
+              "palette": "pepper"
+            }
+          ],
+          "evidence": [
+            1,
+            2
+          ],
+          "origin": "ORIGINAL_SCHEMATIC_ILLUSTRATION"
+        },
+        "variants": {
+          "message": [
+            "بين أولد سكول وراستافاري، اختار اللي على مزاجك."
+          ]
+        },
+        "metric": "نقرات على رابط المنيو لكل ظهور.",
+        "claims": [
+          {
+            "field": "headline",
+            "evidence": [
+              1,
+              2
+            ],
+            "basis": "INGREDIENT_CONTRAST"
+          },
+          {
+            "field": "message",
+            "evidence": [
+              1,
+              2
+            ],
+            "basis": "PUBLISHER_ITEM_NAMES"
+          },
+          {
+            "field": "caption",
+            "evidence": [
+              1,
+              2,
+              0
+            ],
+            "basis": "INGREDIENTS_AND_NAVIGATION"
+          },
+          {
+            "field": "cta",
+            "evidence": [
+              0
+            ],
+            "basis": "OBSERVED_DESTINATION"
+          },
+          {
+            "field": "art",
+            "evidence": [
+              1,
+              2
+            ],
+            "basis": "PUBLISHER_ITEM_NAMES_AND_INGREDIENTS"
+          }
+        ]
+      },
+      {
+        "name": "ابدأ من بايتس الهالبينو",
+        "audience": "فرضية: ناس بتختار الساندوتش من مكوّن معيّن وعايزة تشوف تفاصيله.",
+        "action": "OPEN_ITEM",
+        "evidence_index": 2,
+        "cta": "شوف راستافاري",
+        "art": {
+          "mode": "spotlight",
+          "subjects": [
+            {
+              "name": "راستافاري",
+              "detail": "بايتس شيدر بالهالبينو",
+              "palette": "pepper"
+            }
+          ],
+          "evidence": [
+            2
+          ],
+          "origin": "ORIGINAL_SCHEMATIC_ILLUSTRATION"
+        },
+        "variants": {},
+        "metric": "نقرات على صفحة الصنف لكل ظهور.",
+        "claims": [
+          {
+            "field": "headline",
+            "evidence": [
+              2
+            ],
+            "basis": "INGREDIENT_QUESTION"
+          },
+          {
+            "field": "message",
+            "evidence": [
+              2
+            ],
+            "basis": "BOUNDED_INGREDIENT_PARAPHRASE"
+          },
+          {
+            "field": "caption",
+            "evidence": [
+              2
+            ],
+            "basis": "INGREDIENTS_AND_NAVIGATION"
+          },
+          {
+            "field": "cta",
+            "evidence": [
+              2
+            ],
+            "basis": "OBSERVED_DESTINATION"
+          },
+          {
+            "field": "art",
+            "evidence": [
+              2
+            ],
+            "basis": "PUBLISHER_ITEM_NAMES_AND_INGREDIENTS"
+          }
+        ]
+      }
+    ],
+    "brief": {
+      "audience": "فرضية: ناس بتفتح المنيو ومحتارة تبدأ من أنهي برجر.",
+      "market": "العربية المصرية، والجمهور المقترح فرضية للتحرير.",
+      "metric": "نقرات على رابط المنيو لكل ظهور.",
+      "assumption": "نفترض إن الزائر محتار يبدأ بإيه. نختبر هل سؤال الشيدر والهالبينو يساعده يفتح المنيو ويقارن.",
+      "alternatives": [
+        {
+          "name": "اختيار على حسب المزاج",
+          "plan": "نبدأ بقرار صغير بين شيدر وصوص بافالو أو بايتس شيدر بالهالبينو.",
+          "tradeoff": "يدعم التصفح بين صنفين داخل القائمة."
+        },
+        {
+          "name": "ابدأ من بايتس الهالبينو",
+          "plan": "نخلي مكوّن واحد مدخلًا لقراءة وصف راستافاري.",
+          "tradeoff": "يركز على مكوّن في صنف واحد ويربط بصفحته."
+        }
+      ],
+      "strategy_index": 0,
+      "strategy_reason": "المقارنة بتدي الزائر مدخلين في المنيو حسب المكونات. اتجاه راستافاري أنسب لما يكون الاهتمام بالهالبينو موجود بالفعل.",
+      "tone": "مصري مباشر",
+      "directions": [
+        {
+          "name": "اختيار على حسب المزاج",
+          "rationale": "نبدأ بقرار صغير بين شيدر وصوص بافالو أو بايتس شيدر بالهالبينو.",
+          "headline": "شيدر كلاسيك ولا هالبينو؟",
+          "message": "أولد سكول أو راستافاري. اختار على مزاجك.",
+          "cta": "شوف المنيو",
+          "theme": "ember",
+          "caption": "مزاجك شيدر وصوص بافالو؟ ابدأ بأولد سكول. عايز بايتس شيدر بالهالبينو؟ بصّ على راستافاري. افتح المنيو وقارن قبل ما تختار.",
+          "hook": "شيدر كلاسيك ولا هالبينو؟",
+          "shot": "بطاقتان جنب بعض. رسم ساندوتش لكل بطاقة، مع اسم الصنف والمكوّن اللي يفرّقه.",
+          "middle_shot": "أولد سكول أو راستافاري. اختار على مزاجك.",
+          "end_shot": "شوف المنيو"
+        },
+        {
+          "name": "ابدأ من بايتس الهالبينو",
+          "rationale": "نخلي مكوّن واحد مدخلًا لقراءة وصف راستافاري.",
+          "headline": "الهالبينو جوّه الشيدر؟",
+          "message": "راستافاري فيه بايتس شيدر محشية هالبينو.",
+          "cta": "شوف راستافاري",
+          "theme": "forest",
+          "caption": "لو الهالبينو بيفرق معاك، شوف راستافاري. البايتس فيه شيدر محشي هالبينو، ومعاه صوص بافالو. افتح صفحة الساندوتش واقرأ مكوّناته.",
+          "hook": "الهالبينو جوّه الشيدر؟",
+          "shot": "ساندوتش مرسوم على بطاقة واحدة، وتحتها اسم الصنف وإشارة للهالبينو.",
+          "middle_shot": "راستافاري فيه بايتس شيدر محشية هالبينو.",
+          "end_shot": "شوف راستافاري"
+        }
+      ],
+      "selected": 0,
+      "human_review": [
+        "راجع وصف الصنف والرسم التوضيحي على المقاسين قبل أي استخدام خارجي.",
+        "المؤشر المقترح هو النقر على الوجهة. الحكم على فهم الجمهور يحتاج اختبارًا مستقلًا."
+      ]
+    },
+    "observe_entry": {
+      "field": "title",
+      "quote": "بافلو برجر",
+      "scope": "عنوان الصفحة الرئيسية"
+    },
+    "subject_terms": [
+      "برجر",
+      "البرجر",
+      "burger",
+      "burgers"
+    ]
+  },
+  {
+    "id": "buffalo-truffle-20261113",
+    "entry": "https://buffaloburger.com/menu/truffle-beef-burger",
+    "intent": "INSPECT_ITEM",
+    "language": "ar",
+    "brand_name": "Buffalo Burger",
+    "question": "إيه المكوّنات اللي تخلّي الزائر يفتح صفحة ترافل بيف برجر؟",
+    "missing_question": "راجع صفحة المنيو ووصف الصنف المذكور في خطوات البحث. لازم الدليل يتطابق قبل تجهيز الحزمة.",
+    "sources": [
+      {
+        "url": "https://buffaloburger.com/menu/truffle-beef-burger",
+        "field": "og:description",
+        "quote": "قطع المشروم السوتيه و البصل الكرسبى والجبنة شيدر مع صوص الترافل وبرجر اللحم الصافي",
+        "scope": "وصف ترافل بيف برجر من بطاقة مشاركة صفحة الصنف",
+        "title": "ترافل بيف برجر - بافلو برجر"
+      },
+      {
+        "url": "https://buffaloburger.com/menu",
+        "field": "title",
+        "quote": "قائمة بافلو برجر",
+        "scope": "عنوان صفحة المنيو الرسمية"
+      }
+    ],
+    "options": [
+      {
+        "name": "قرمشة مع المشروم",
+        "audience": "فرضية: ناس عايزة تقرأ المكونات قبل اختيار الساندوتش.",
+        "action": "OPEN_ITEM",
+        "evidence_index": 0,
+        "cta": "شوف ترافل بيف برجر",
+        "art": {
+          "mode": "spotlight",
+          "subjects": [
+            {
+              "name": "ترافل بيف برجر",
+              "detail": "مشروم سوتيه وبصل كرسبي",
+              "palette": "mushroom"
+            }
+          ],
+          "evidence": [
+            0
+          ],
+          "origin": "ORIGINAL_SCHEMATIC_ILLUSTRATION"
+        },
+        "variants": {},
+        "metric": "نقرات على صفحة الصنف لكل ظهور.",
+        "claims": [
+          {
+            "field": "headline",
+            "evidence": [
+              0
+            ],
+            "basis": "INGREDIENT_QUESTION"
+          },
+          {
+            "field": "message",
+            "evidence": [
+              0
+            ],
+            "basis": "BOUNDED_INGREDIENT_PARAPHRASE"
+          },
+          {
+            "field": "caption",
+            "evidence": [
+              0
+            ],
+            "basis": "INGREDIENTS_AND_NAVIGATION"
+          },
+          {
+            "field": "cta",
+            "evidence": [
+              0
+            ],
+            "basis": "OBSERVED_DESTINATION"
+          },
+          {
+            "field": "art",
+            "evidence": [
+              0
+            ],
+            "basis": "PUBLISHER_ITEM_NAMES_AND_INGREDIENTS"
+          }
+        ]
+      },
+      {
+        "name": "من الصنف لباقي المنيو",
+        "audience": "فرضية: ناس بدأت من صنف محدد ولسه بتقارن.",
+        "action": "OPEN_CATALOG",
+        "evidence_index": 1,
+        "cta": "افتح المنيو",
+        "art": {
+          "mode": "spotlight",
+          "subjects": [
+            {
+              "name": "ترافل بيف برجر",
+              "detail": "مشروم سوتيه وبصل كرسبي",
+              "palette": "mushroom"
+            }
+          ],
+          "evidence": [
+            0
+          ],
+          "origin": "ORIGINAL_SCHEMATIC_ILLUSTRATION"
+        },
+        "variants": {},
+        "metric": "نقرات على رابط المنيو لكل ظهور.",
+        "claims": [
+          {
+            "field": "headline",
+            "evidence": [
+              0
+            ],
+            "basis": "PUBLISHER_ITEM_NAME"
+          },
+          {
+            "field": "message",
+            "evidence": [
+              0
+            ],
+            "basis": "BOUNDED_INGREDIENT_PARAPHRASE"
+          },
+          {
+            "field": "caption",
+            "evidence": [
+              0,
+              1
+            ],
+            "basis": "INGREDIENTS_AND_NAVIGATION"
+          },
+          {
+            "field": "cta",
+            "evidence": [
+              1
+            ],
+            "basis": "OBSERVED_DESTINATION"
+          },
+          {
+            "field": "art",
+            "evidence": [
+              0
+            ],
+            "basis": "PUBLISHER_ITEM_NAMES_AND_INGREDIENTS"
+          }
+        ]
+      }
+    ],
+    "brief": {
+      "audience": "فرضية: ناس عايزة تقرأ المكونات قبل اختيار الساندوتش.",
+      "market": "العربية المصرية، والجمهور المقترح فرضية للتحرير.",
+      "metric": "نقرات على صفحة الصنف لكل ظهور.",
+      "assumption": "نفترض إن المشروم والبصل الكرسبي تفاصيل تساعد الزائر يقرر إذا كان عايز يعرف أكتر.",
+      "alternatives": [
+        {
+          "name": "قرمشة مع المشروم",
+          "plan": "ندخل على صفحة الصنف من مكوّنين سهل تمييزهم في الوصف.",
+          "tradeoff": "يقلل الخطوات قبل قراءة وصف الصنف."
+        },
+        {
+          "name": "من الصنف لباقي المنيو",
+          "plan": "نستخدم ترافل بيف برجر كنقطة بداية للتصفح.",
+          "tradeoff": "يفتح التصفح عبر المنيو بعد جذب الاهتمام بالصنف."
+        }
+      ],
+      "strategy_index": 0,
+      "strategy_reason": "الهدف قراءة المكونات، فالرابط المباشر لصفحة الصنف هو الاختيار الأقصر.",
+      "tone": "مصري مباشر",
+      "directions": [
+        {
+          "name": "قرمشة مع المشروم",
+          "rationale": "ندخل على صفحة الصنف من مكوّنين سهل تمييزهم في الوصف.",
+          "headline": "مشروم سوتيه وبصل كرسبي؟",
+          "message": "الاتنين في ترافل بيف برجر، مع صوص الترافل.",
+          "cta": "شوف ترافل بيف برجر",
+          "theme": "ember",
+          "caption": "لو بتدور على المشروم والبصل الكرسبي مع بعض، افتح صفحة ترافل بيف برجر واقرأ المكوّنات قبل ما تختار.",
+          "hook": "مشروم سوتيه وبصل كرسبي؟",
+          "shot": "اسم الصنف على بطاقة كبيرة مع رسم ساندوتش وإشارة للمشروم والبصل.",
+          "middle_shot": "الاتنين في ترافل بيف برجر، مع صوص الترافل.",
+          "end_shot": "شوف ترافل بيف برجر"
+        },
+        {
+          "name": "من الصنف لباقي المنيو",
+          "rationale": "نستخدم ترافل بيف برجر كنقطة بداية للتصفح.",
+          "headline": "بدأت بترافل بيف برجر؟",
+          "message": "شوف صوص الترافل والمشروم في وصف الصنف.",
+          "cta": "افتح المنيو",
+          "theme": "forest",
+          "caption": "مهتم بصوص الترافل والمشروم؟ ابدأ بترافل بيف برجر، وبعدها لفّ في المنيو وشوف الاختيارات التانية.",
+          "hook": "بدأت بترافل بيف برجر؟",
+          "shot": "بطاقة ترافل بيف برجر بجوار بطاقة تدعو لفتح المنيو.",
+          "middle_shot": "شوف صوص الترافل والمشروم في وصف الصنف.",
+          "end_shot": "افتح المنيو"
+        }
+      ],
+      "selected": 0,
+      "human_review": [
+        "راجع وصف الصنف والرسم التوضيحي على المقاسين قبل أي استخدام خارجي.",
+        "المؤشر المقترح هو النقر على الوجهة. الحكم على فهم الجمهور يحتاج اختبارًا مستقلًا."
+      ]
+    }
+  }
+]

@@ -13,6 +13,7 @@ from scraper.extractors.links import extract_links_from_html
 from strategy.campaign_package import Brief, Input, Source, digest, proposal, public_soup, valid_source_url
 from strategy.campaign_research import ResearchGap, same_source
 from strategy.campaign_v2 import CampaignConflict
+from strategy.campaign_editions import build_edition, edit_edition_copy, find_edition
 from strategy.campaign_copy import CopyEdit, plan_copy, validate_copy, writing_for
 
 
@@ -369,6 +370,15 @@ def draft_brief(request, fact, destination):
 
 
 def build_plan(request, brand_name, load, clock, *, request_id=None):
+    intent = goal_kind(request.objective)
+    if intent == "DISCOVERY":
+        if re.search(r"\b(?:menu|catalogue|catalog|range)\b|المنيو|القائمة|كتالوج", request.objective, re.I):
+            intent = "BROWSE_CATALOG"
+        elif re.search(r"\b(?:explore|discover|learn|ingredients)\b|تعرّف|التعرّف|مكونات|استكشاف", request.objective, re.I):
+            intent = "INSPECT_ITEM"
+    edition = find_edition(request, intent)
+    if edition:
+        return build_edition(request, edition, load, clock, request_id)
     planner, fact, destination = research_plan(request, load, clock)
     planner["request_id"] = request_id
     if planner["gap"]:
@@ -395,13 +405,21 @@ def anchored_claim(previous, field, text):
 def review_draft(previous, edit):
     planner = {**previous["planner"], "brief_reviewed": True, "request_id": None}
     brief = Brief.model_validate(previous["brief"])
+    if edit.selected >= len(brief.directions):
+        raise CampaignConflict("DIRECTION_NOT_FOUND")
     option = planner["options"][edit.selected]
     directions = list(brief.directions)
-    if edit.copy_edit:
+    if edit.copy_edit and planner.get("edition"):
+        directions[edit.selected] = edit_edition_copy(directions[edit.selected], edit.copy_edit, option)
+    elif edit.copy_edit:
         writing = writing_for(previous["evidence"][0], option["action"], brief.language)
         directions[edit.selected] = validate_copy(directions[edit.selected], edit.copy_edit, writing)
+    audience = edit.audience
+    if planner.get("edition") and edit.selected != brief.selected:
+        if audience == planner["options"][brief.selected]["audience"]:
+            audience = option["audience"]
     revised = brief.model_copy(update={
-        "audience": edit.audience, "tone": edit.tone, "selected": edit.selected,
+        "audience": audience, "tone": edit.tone, "selected": edit.selected,
         "directions": tuple(directions),
         "strategy_index": edit.selected, "metric": option["metric"],
         "strategy_reason": brief.strategy_reason if brief.strategy_index == edit.selected else (
@@ -412,9 +430,13 @@ def review_draft(previous, edit):
     changes = [{"field": key, "before": getattr(brief, key), "after": getattr(revised, key)}
                for key in ("audience", "tone", "selected") if getattr(brief, key) != getattr(revised, key)]
     if directions[edit.selected] != brief.directions[edit.selected]:
-        changes.append({"field": "copy", "before": brief.directions[edit.selected].message,
-                        "after": directions[edit.selected].message})
+        before, after = brief.directions[edit.selected], directions[edit.selected]
+        changes.extend({"field": field, "before": getattr(before, field), "after": getattr(after, field)}
+                       for field in ("headline", "message", "cta", "caption")
+                       if getattr(before, field) != getattr(after, field))
     result = proposal(revised, previous["brand_name"], previous["evidence"], changes=changes, planner=planner)
+    if planner.get("edition"):
+        return result
     message = result["package"]["copy"]["message"]
     writing = writing_for(previous["evidence"][0], option["action"], brief.language)
     licensed = writing and writing.license("message", message)
@@ -432,9 +454,11 @@ def refresh_plan(previous, load, clock):
     new = {(item["page_url"], item["text_sha256"]) for item in updated["planner"]["pages"]}
     from strategy.campaign_package import check
 
-    if old == new and previous["planner"]["gap"] == updated["planner"]["gap"] and check(previous, clock()) in (
-        None, "BRIEF_REVIEW_REQUIRED",
-    ):
+    unchanged = (
+        old == new and previous["planner"].get("edition_sha256") == updated["planner"].get("edition_sha256")
+        and previous["planner"]["gap"] == updated["planner"]["gap"]
+    )
+    if unchanged and check(previous, clock()) in (None, "BRIEF_REVIEW_REQUIRED"):
         return None
     updated["changes"] = [{"field": "research", "before": previous["planner"]["stop"],
                            "after": updated["planner"]["stop"], "changed_pages": sorted({url for url, _ in old ^ new})}]

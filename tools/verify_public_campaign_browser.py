@@ -41,6 +41,9 @@ def main():
     parser.add_argument("--evidence-dir", type=Path, required=True)
     parser.add_argument("cases", nargs="*", type=Path)
     parser.add_argument("--planner-cases", type=Path)
+    parser.add_argument("--keep-demo", action="store_true", help="Keep the disposable database after verification")
+    parser.add_argument("--port", type=int)
+    parser.add_argument("--case-name", action="append", default=[])
     args = parser.parse_args()
     if bool(args.cases) == bool(args.planner_cases):
         parser.error("Supply case directories or --planner-cases")
@@ -53,9 +56,13 @@ def main():
     manifest = json.loads((directory / "demo.json").read_text())
     plans = json.loads(args.planner_cases.read_text()) if args.planner_cases else None
     cases = plans if plans is not None else {case.name: case for case in args.cases}
-    with socket.socket() as sock:
-        sock.bind(("127.0.0.1", 0))
-        port = sock.getsockname()[1]
+    if args.case_name:
+        cases = {name: cases[name] for name in args.case_name}
+    port = args.port
+    if port is None:
+        with socket.socket() as sock:
+            sock.bind(("127.0.0.1", 0))
+            port = sock.getsockname()[1]
     origin = f"http://127.0.0.1:{port}"
     process = None
     errors = []
@@ -130,10 +137,13 @@ def main():
                         (target / "draft.json").write_text(json.dumps(generated, ensure_ascii=False, indent=2) + "\n")
                         if not generated["proposal"]["brief"]:
                             expect(page.locator("#v2-plan-gap")).to_be_visible()
+                            page.locator("#v2-result").screenshot(path=str(target / "blocked.png"))
                             results[name] = {"status": "BLOCKED", "reason": generated["proposal"]["planner"]["gap"],
                                              "public_pages": generated["proposal"]["planner"]["page_calls"],
                                              "seconds": round(monotonic() - before, 2)}
                             continue
+                        if case.get("destination"):
+                            assert generated["proposal"]["planner"]["options"][0]["destination"] == case["destination"]
                         editor = page.locator(f'#v2-brief-form[data-run="{generated["run_id"]}"]')
                         expect(editor).to_be_visible()
                         expect(editor.locator('button[type="submit"]')).to_be_enabled()
@@ -142,6 +152,8 @@ def main():
                             "فرضية جمهور بعد مراجعة المسودة." if case["language"] == "ar"
                             else "Audience hypothesis after reviewing the draft.",
                         )
+                        if case.get("tone"):
+                            editor.locator('[name="tone"]').fill(case["tone"])
                         if case.get("copy_edit"):
                             editor.locator("#v2-copy-details summary").click()
                             if case.get("copy_receipt"):
@@ -177,6 +189,9 @@ def main():
                                 expect(headline).to_have_value(case["rejected_headline"])
                                 current = page.evaluate("domain => window.api('GET', '/api/v2/campaigns/' + domain)", domain)
                                 assert current["run_id"] == generated["run_id"] and not current["approved"]
+                                (target / "rejected.json").write_text(json.dumps(rejected.value.json(), ensure_ascii=False, indent=2) + "\n")
+                                page.locator("#v2-status").screenshot(path=str(target / "rejected.png"))
+                                headline.fill(generated["proposal"]["brief"]["directions"][0]["headline"])
                             if case.get("copy_receipt"):
                                 upload_packet(packet)
                                 options = editor.locator("#v2-copy-options details")
@@ -220,6 +235,8 @@ def main():
                             actual = initial["proposal"]["package"]["caption"] if field == "caption" else initial["proposal"]["package"]["copy"][field]
                             assert actual == value, (field, actual, value)
                             accepted_copy_fields.append(field)
+                    if plans is not None and case.get("destination"):
+                        expect(page.locator("#v2-package-card a")).to_have_attribute("href", case["destination"])
                     previews = {}
                     for size in ("portrait", "square"):
                         with page.expect_response(lambda response: response.url.endswith("&size=" + size)) as preview:
@@ -232,6 +249,11 @@ def main():
                         url = poster.get_attribute("src")
                         assert url.startswith("data:image/png;base64,")
                         previews[size] = sha256(b64decode(url.split(",", 1)[1])).hexdigest()
+                        if initial["proposal"].get("planner", {}).get("edition"):
+                            page.set_viewport_size({"width": 390, "height": 844})
+                            assert page.evaluate("document.documentElement.scrollWidth") <= 390
+                            poster.screenshot(path=str(target / f"recommended-{size}-mobile.png"))
+                            page.set_viewport_size({"width": 1440, "height": 1000})
                     page.click("#v2-approve")
 
                     def download(dest):
@@ -241,8 +263,10 @@ def main():
                         return unpack(item.value, dest, saved())
 
                     initial_hashes = download(target / "initial")
+                    if plans is not None and case.get("tone"):
+                        assert initial["proposal"]["brief"]["tone"] == case["tone"]
                     assert initial_hashes == previews, (initial_hashes, previews)
-                    alternate = (initial["proposal"]["brief"]["selected"] + 1) % 3
+                    alternate = (initial["proposal"]["brief"]["selected"] + 1) % len(initial["proposal"]["brief"]["directions"])
                     page.locator(f"[data-v2-direction='{alternate}']").click()
                     expect(page.locator("#v2-approve")).to_be_visible()
                     revision = saved()
@@ -254,9 +278,19 @@ def main():
                         api_path + "/package/export?run_id=" + initial["run_id"],
                     )
                     assert stale == 409
+                    if plans is not None and case.get("restore_recommended"):
+                        assert page.locator("#v2-package-card a").get_attribute("href") != case["destination"]
+                        page.click("#v2-approve")
+                        alternative_hashes = download(target / "alternative")
+                        assert all(alternative_hashes[k] != initial_hashes[k] for k in alternative_hashes)
+                        page.locator(f"[data-v2-direction='{initial["proposal"]["brief"]["selected"]}']").click()
+                        expect(page.locator("#v2-approve")).to_be_visible()
                     page.click("#v2-approve")
                     hashes = download(target)
-                    assert all(hashes[k] != initial_hashes[k] for k in hashes)
+                    if plans is not None and case.get("restore_recommended"):
+                        assert hashes == initial_hashes
+                    else:
+                        assert all(hashes[k] != initial_hashes[k] for k in hashes)
                     final = saved()
                     restart(log)
                     page.reload()
@@ -267,6 +301,15 @@ def main():
                     assert download(target / "replay") == hashes
                     assert (target / "replay/campaign.zip").read_bytes() == (target / "campaign.zip").read_bytes()
                     page.set_viewport_size({"width": 390, "height": 844})
+                    if final["proposal"].get("planner", {}).get("edition"):
+                        for size in ("portrait", "square"):
+                            with page.expect_response(lambda response: response.url.endswith("&size=" + size)) as preview:
+                                page.locator(f"[data-v2-preview='{size}']").click()
+                            assert preview.value.ok
+                            png = page.get_by_alt_text("البوستر الطولي" if size == "portrait" else "البوستر المربّع", exact=True)
+                            expect(png).to_be_visible()
+                            assert sha256(b64decode(png.get_attribute("src").split(",", 1)[1])).hexdigest() == hashes[size]
+                            png.screenshot(path=str(target / f"app-{size}-mobile.png"))
                     card = page.locator("#v2-package-card")
                     expect(card).to_be_visible()
                     assert page.evaluate("document.documentElement.scrollWidth") <= 390
@@ -278,6 +321,7 @@ def main():
                                      "stale_export_http": stale, "rejected_copy_http": rejected_copy,
                                      "stale_copy_packet_rejected": stale_copy_packet_rejected,
                                      "accepted_copy_fields": accepted_copy_fields,
+                                     "reviewed_png_sha256": initial_hashes,
                                      "restored_png_sha256": hashes}
             from sqlalchemy import func, select
             from db.models import Approval, Run, UsageRecord
@@ -289,8 +333,10 @@ def main():
                 decisions = uow.session.scalar(select(func.count()).select_from(Approval).where(
                     Approval.subject_kind == "campaign"))
             exported = sum(item["status"] == "EXPORTED" for item in results.values())
-            assert (usage, runs, decisions) == (0, 2 * exported + (len(cases) if plans is not None else 0),
-                                               2 * exported)
+            restored = sum(bool(case.get("restore_recommended")) and results[name]["status"] == "EXPORTED"
+                           for name, case in cases.items()) if plans is not None else 0
+            assert (usage, runs, decisions) == (0, 2 * exported + restored + (len(cases) if plans is not None else 0),
+                                               2 * exported + restored)
             assert not errors, errors
             report = {"cases": results, "elapsed_seconds": round(monotonic() - started, 2),
                       "campaign_runs": runs, "automated_review_actions": decisions,
@@ -299,7 +345,8 @@ def main():
             print(json.dumps(report, indent=2))
     finally:
         stop()
-        subprocess.run([*command, "cleanup", "--directory", str(directory)], cwd=ROOT, check=True)
+        if not args.keep_demo:
+            subprocess.run([*command, "cleanup", "--directory", str(directory)], cwd=ROOT, check=True)
 
 
 if __name__ == "__main__":

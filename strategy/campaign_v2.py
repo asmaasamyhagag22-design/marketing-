@@ -7,7 +7,9 @@ from strategy.campaign_research import ResearchGap, parse_offer, same_source, un
 
 
 class CampaignConflict(Exception):
-    pass
+    def __init__(self, code, context=None):
+        super().__init__(code)
+        self.context = context or {}
 
 
 class CampaignNotFound(Exception):

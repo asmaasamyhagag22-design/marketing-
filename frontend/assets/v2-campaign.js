@@ -37,6 +37,17 @@
     FEATURE_EVIDENCE: 'لسه محتاجين دليل للميزة المرتبطة بالهدف',
     ACTION_DESTINATION: 'محتاجين صفحة الإجراء الرسمية',
     COMMERCIAL_TERMS: 'محتاجين شروط العرض أو الإجراء المنشورة',
+    EDITORIAL_SOURCE: 'مصدر مرتبط بالاتجاه التحريري',
+    EDITORIAL_SOURCE_GAP: 'تغيّر دليل مطلوب أو تعذّر فتحه',
+    SOURCE_FIELD_CHANGED: 'النص المنشور تغيّر',
+    SOURCE_SUBJECT_CHANGED: 'عنوان الصنف المرتبط بالاقتباس تغيّر',
+    RETRY_SOURCE_TIMEOUT: 'محاولة ثانية بعد انتهاء المهلة',
+    SOURCE_DEADLINE: 'انتهت ميزانية وقت البحث عن المصدر',
+    SOURCE_TIMEOUT: 'انتهت مهلة قراءة المصدر',
+    SOURCE_FIELD_MISSING: 'الحقل المطلوب اختفى من الصفحة',
+    FOLLOW_SOURCE_REDIRECT: 'متابعة التحويل داخل نفس الموقع',
+    SOURCE_REDIRECT_OUT_OF_SCOPE: 'التحويل يخرج عن الموقع المحدد',
+    DIRECTION_NOT_FOUND: 'الاتجاه مش موجود في النسخة الحالية.',
     SOURCE_READ: 'تمت قراءة المصدر',
     SOURCE_CONFLICT: 'المصادر المنشورة تشير إلى تعارض يحتاج مراجعة',
     SOURCE_REDIRECT: 'الرابط يحوّل إلى صفحة أخرى',
@@ -84,17 +95,19 @@
 
   function packagePanel(proposal, approved, reason, decision) {
     const {brief, evidence, planner, package: creative} = proposal;
-    const sources = evidence.map((item, index) => `<li>
-      <strong>${index === 0 ? 'البراند' : planner ? 'صفحة الإجراء' : 'المنافس المقترح'} · ${esc(label(item.outcome))}</strong>
+    const fieldNames = {headline:'العنوان', message:'الرسالة', cta:'الدعوة', caption:'نص المنشور', art:'الرسم'};
+    const sources = evidence.map((item, index) => `<li id="v2-source-${index}">
+      <strong>${planner?.edition ? esc(item.scope) : index === 0 ? 'البراند' : planner ? 'صفحة الإجراء' : 'المنافس المقترح'} · ${esc(label(item.outcome))}</strong>
       <p>${link(item.page_url, item.page_url)}</p>
-      ${item.quote ? `<p>${esc(item.scope)}</p><blockquote dir="auto">${esc(item.quote)}</blockquote>` : ''}
+      ${item.quote ? `${planner?.edition ? "" : `<p>${esc(item.scope)}</p>`}<blockquote dir="auto">${esc(item.quote)}</blockquote>` : ''}
       <details><summary>تفاصيل الالتقاط</summary>
-        <p dir="auto">${esc(item.context)}</p><p dir="ltr">${esc(item.captured_at)}</p>
+        <p dir="auto">${esc(item.field || item.context)}</p><p dir="ltr">${esc(item.captured_at)}</p>
         ${item.body_sha256 ? `<code dir="ltr">${esc(item.body_sha256)}</code>` : ''}
       </details>
     </li>`).join('');
     const research = planner ? `<section class="v2-panel">
       <h2>قرار البحث</h2><p dir="auto">${esc(planner.question)}</p>
+      ${planner.edition ? '<p>الاتجاهات محررة لهذا الموقع والهدف المقترح. البحث يعيد قراءة صفحات الناشر عند التشغيل.</p>' : ''}
       <p dir="auto">${esc(planner.opportunity_hypothesis)}</p>
       <p id="v2-stop">${esc(label(planner.stop))} · ${esc(planner.page_calls)} زيارة</p>
       ${planner.missing_question ? `<p id="v2-plan-gap" dir="auto">${esc(planner.missing_question)}</p>` : ''}
@@ -103,11 +116,18 @@
       <details><summary>خطوات البحث</summary>
         <ol id="v2-plan-trace" class="v2-items">${planner.trace.map(item => `<li>
           ${link(item.page_url, item.page_url)}
-          <p>${esc(label(item.reason))} · ${esc(label(item.outcome))}</p>
+          <p>${esc(label(item.reason))} · ${esc(label(item.outcome))}${item.http_status ? ` · HTTP ${esc(item.http_status)}` : ""}</p>
+          ${item.redirect_to ? link(item.redirect_to, item.redirect_to) : ""}
+          ${item.observed_values?.map(value => `<blockquote dir="auto">${esc(value)}</blockquote>`).join('') || ""}
           ${item.gap_after ? `<p>${esc(label(item.gap_after))}</p>` : ''}
         </li>`).join('')}</ol>
       </details>
     </section>` : '';
+    const claimsFor = option => option?.claims ? `<details>
+      <summary>دليل كل حقل</summary>
+      <ul>${option.claims.map(claim => `<li>${esc(fieldNames[claim.field])} · ${claim.evidence.map(index =>
+        `<a href="#v2-source-${index}">${esc(evidence[index].scope)}</a>`).join('، ')}</li>`).join('')}</ul>
+    </details>` : '';
     const alternatives = brief?.alternatives.map((item, i) => `<li><strong>${esc(item.name)}
       ${i === brief.strategy_index ? ' · الاختيار المقترح' : ''}</strong>
       <p dir="auto">${esc(item.plan)}</p><p dir="auto">${esc(item.tradeoff)}</p>
@@ -117,11 +137,12 @@
     const directions = brief?.directions.map((item, i) => `<li><strong>${esc(item.name)}
       ${i === brief.selected ? ' · الاتجاه الحالي' : ''}</strong>
       <p>${esc(item.rationale)}</p><p dir="auto">${esc(item.headline)} · ${esc(item.cta)}</p>
+      ${planner?.edition ? `<p dir="auto">${esc(item.shot)}</p>${claimsFor(planner.options[i])}` : ""}
       ${i !== brief.selected && creative && !reason
         ? `<button type="button" class="adzy-btn flat" data-v2-direction="${i}">اختَر هذا الاتجاه</button>` : ''}
       </li>`).join('');
     const changes = proposal.changes.map(item => `<li>${esc(item.field)} · ${esc(label(item.before))} ← ${esc(label(item.after))}</li>`).join('');
-    const shots = creative?.storyboard.map(item => `<li><bdi>${esc(item.seconds)}</bdi> ثوانٍ
+    const shots = creative?.storyboard?.map(item => `<li><bdi>${esc(item.seconds)}</bdi> ثوانٍ
       <p>${esc(item.visual)}</p><p dir="auto">${esc(item.line)}</p></li>`).join('');
     const copyEditor = planner && brief ? `<details id="v2-copy-details">
       <summary>تعديل نص الاتجاه</summary>
@@ -129,6 +150,7 @@
       <label>الرسالة<input name="message" maxlength="105"></label>
       <label>الدعوة للفعل<input name="cta" maxlength="30"></label>
       <label>نص المنشور<textarea name="caption" maxlength="220" rows="3"></textarea></label>
+      <div id="v2-reviewed-variants"></div>
       <p>لو الصياغة الجديدة تجاوزت حدود الدليل، التطبيق هيطلب مراجعتها.</p>
       <button type="button" class="adzy-btn flat" id="v2-copy-draft">نزّل المسودة لأداة اقتراحات الكتابة</button>
       <label>ملف اقتراحات الكتابة لهذه المسودة<input id="v2-copy-packet" type="file" accept=".json,application/json"></label>
@@ -147,7 +169,7 @@
     return `${research}
       <section class="v2-panel">
         <h2>البحث والأدلة</h2>
-        ${brief ? `<p dir="auto">${esc(brief.summary)}</p>
+        ${brief ? `${planner?.edition ? "" : `<p dir="auto">${esc(brief.summary)}</p>`}
         <dl><dt>الجمهور المقترح</dt><dd>${esc(brief.audience)}</dd>
           <dt>السوق</dt><dd>${esc(brief.market)}</dd>
           ${brief.competitor ? `<dt>المنافس المقترح</dt><dd>${esc(brief.competitor)} · ${esc(brief.peer_rationale)}</dd>` : ''}</dl>` : ''}
@@ -168,7 +190,7 @@
         <ul class="v2-items">${directions}</ul>
         ${editor}
       </section>` : ''}
-      ${creative && !reason ? `<section class="v2-panel">
+      ${creative && !reason ? `<section class="v2-panel${planner?.edition ? " v2-edition-preview" : ""}">
         <h2>معاينة الحملة</h2>
         <article class="v2-creative v2-package-card theme-${esc(creative.theme)}" id="v2-package-card" dir="${esc(creative.direction)}">
           <div class="v2-creative-header" dir="auto">${esc(creative.brand_name)}</div>
@@ -181,10 +203,11 @@
         </div>
         <div id="v2-poster-preview"></div>
         <h3>نص المنشور</h3><p dir="auto">${esc(creative.caption)}</p>
-        <h3>سيناريو وStoryboard نصي</h3><ol class="v2-items">${shots}</ol>
+        ${shots ? `<h3>سيناريو وStoryboard نصي</h3><ol class="v2-items">${shots}</ol>` : ""}
         <h3>مراجعة بشرية مطلوبة</h3>
         <ul>${brief.human_review.map(note => `<li>${esc(note)}</li>`).join('')}</ul>
-        <p>التطبيق يطابق الاقتباس في HTML الصفحة. راجع دعم الاقتباس للنص الإعلاني قبل استخدامه.</p>
+        ${planner?.edition ? `<p>الرسم توضيحي. راجع ربط النص بأوصاف الناشر.</p>${claimsFor(planner.options[brief.selected])}` :
+          '<p>التطبيق يطابق الاقتباس في HTML الصفحة. راجع دعم الاقتباس للنص الإعلاني قبل استخدامه.</p>'}
         <p>الاعتماد يتيح تصدير الحزمة للمراجعة المحلية.</p>
         ${decision === 'rejected' ? '<p>رُفضت هذه النسخة.</p>' : ''}
         <div class="v2-actions">
@@ -329,10 +352,29 @@
         const syncCopy = () => {
           const direction = proposal.brief.directions[Number(editor.elements.selected.value)];
           for (const key of keys) editor.elements[key].value = direction[key];
+          const variants = byId('v2-reviewed-variants');
+          variants.replaceChildren();
+          const reviewed = proposal.planner?.options[Number(editor.elements.selected.value)]?.variants;
+          for (const [field, values] of Object.entries(reviewed || {})) {
+            for (const value of values) {
+              if (value === direction[field]) continue;
+              const button = document.createElement('button');
+              button.type = 'button';
+              button.className = 'adzy-btn flat';
+              button.disabled = busy;
+              button.textContent = value;
+              button.addEventListener('click', () => {
+                editor.elements[field].value = value;
+                editor.elements[field].removeAttribute('aria-invalid');
+              });
+              variants.append(button);
+            }
+          }
         };
         syncCopy();
         wireCopySuggestions(editor, keys);
         editor.elements.selected.addEventListener('change', syncCopy);
+        editor.addEventListener('input', event => event.target.removeAttribute('aria-invalid'));
         editor.onsubmit = event => {
           event.preventDefault();
           const fields = new FormData(editor);
@@ -462,11 +504,15 @@
           editor.elements.selected.value = String(body.selected);
           editor.elements.audience.value = body.audience;
           editor.elements.tone.value = body.tone;
+          editor.elements.selected.dispatchEvent(new Event('change'));
           for (const [key, value] of Object.entries(body.copy_edit)) editor.elements[key].value = value;
+          for (const key of errorDetail(error)?.fields || []) editor.elements[key]?.setAttribute('aria-invalid', 'true');
           byId('v2-copy-details').open = true;
         }
       }
-      showStatus(code ? label(code) : 'تعذّر إكمال الطلب.');
+      const fields = {headline:'العنوان', message:'الرسالة', cta:'الدعوة', caption:'نص المنشور'};
+      const invalid = (errorDetail(error)?.fields || []).map(field => fields[field]).filter(Boolean);
+      showStatus(code ? label(code) + (invalid.length ? ' الحقول المعنية: ' + invalid.join('، ') : '') : 'تعذّر إكمال الطلب.');
     } finally {
       if (seq === requestNumber && busy) {
         busy = false;
@@ -475,8 +521,12 @@
     }
   }
 
+  function errorDetail(error) {
+    try { return JSON.parse(error.message); } catch (_) { return null; }
+  }
+
   function errorCode(error) {
-    try { return JSON.parse(error.message).code; } catch (_) { return null; }
+    return errorDetail(error)?.code || null;
   }
 
   async function startPlan(event) {

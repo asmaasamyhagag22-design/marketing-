@@ -1,0 +1,21 @@
+{
+  "menu": {
+    "url": "https://buffaloburger.com",
+    "objective": "تشجيع المستخدم على تصفّح المنيو واختيار برجر يناسبه",
+    "language": "ar",
+    "rejected_headline": "كل برجر في المنيو فيه هالبينو",
+    "copy_edit": {
+      "message": "بين أولد سكول وراستافاري، اختار اللي على مزاجك."
+    },
+    "tone": "مصري خفيف ومباشر",
+    "destination": "https://buffaloburger.com/menu",
+    "restore_recommended": true
+  },
+  "truffle": {
+    "url": "https://buffaloburger.com/menu/truffle-beef-burger",
+    "objective": "تشجيع المستخدم على التعرّف على مكونات ترافل بيف برجر",
+    "language": "ar",
+    "destination": "https://buffaloburger.com/menu/truffle-beef-burger",
+    "restore_recommended": true
+  }
+}

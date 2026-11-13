@@ -1034,3 +1034,10 @@ body.adzy-ready #toast { z-index: 1000; background: var(--adzy-ink); color: var(
 .v2-package-card.theme-forest { background: #112d28; color: #fff9e9; }
 
 #v2-poster-preview img { width: min(100%, 540px); height: auto; display: block; margin: 1rem auto; }
+
+.v2-edition-preview #v2-poster-preview { margin-inline: -16px; }
+.v2-campaign [aria-invalid="true"] { border-color: #a22c29; outline: 2px solid #a22c29; }
+.v2-campaign li:target { outline: 2px solid #835b24; outline-offset: 6px; }
+@media (max-width: 480px) {
+  .v2-campaign:has(.v2-edition-preview) { padding-inline: 8px; }
+}
