@@ -172,6 +172,50 @@ def test_exact_topic_beats_repeated_collection_context():
     assert best_fact([page], terms)["quote"] == "Use the Comparator to place two artworks side by side."
 
 
+def test_named_item_does_not_inherit_a_variant_description(planner):
+    request, control, pages = planner
+    regular = "Fresh, 100% beef patties hot off the grill, layered with strips of crispy Applewood smoked bacon and placed on a soft, toasted sesame seed bun."
+    smaller = "A fresh, 100% beef patty hot off the grill with strips of crispy Applewood smoked bacon on top."
+    pages[control["root"]] = (
+        "<h1>What comes in the Bacon Burger</h1>"
+        f"<section><div><h3>Bacon Burger</h3></div><p>{regular}</p></section>"
+        f"<section><h3>Little Bacon Burger</h3><p>{smaller}</p></section>"
+    )
+    objective = "Help people discover what comes in the Bacon Burger"
+    draft = request("POST", "/plan", input_body(objective=objective)).json()
+    evidence = draft["proposal"]["evidence"][0]
+    assert (evidence["label"], evidence["quote"]) == ("Bacon Burger", regular)
+    ready = edit(request, draft).json()
+    assert ready["proposal"]["package"]["copy"]["headline"] == "Bacon Burger"
+    assert ready["proposal"]["package"]["source_url"] == evidence["page_url"]
+
+    pages[control["root"]] = (
+        "<section><h3>Bacon Burger</h3></section>"
+        "<aside><p>Customers often ask if bacon is available in every dish on this menu.</p></aside>"
+        "<p>Bacon Burger and other products are discussed in this footer note.</p>"
+        f"<section><h3>Little Bacon Burger</h3><p>{smaller}</p></section>"
+    )
+    result = request("POST", "/plan", input_body(objective=objective, expected=ready["run_id"])).json()
+    assert result["proposal"]["planner"]["gap"] == "FEATURE_EVIDENCE"
+    assert result["proposal"]["package"] is None
+
+    pages[control["root"]] = (
+        "<h3>Bacon Burger</h3><p>Our Little Bacon Burger uses one flame-grilled patty and a mustard sauce.</p>"
+        "<h3>Little Bacon Burger</h3>"
+    )
+    result = request("POST", "/plan", input_body(objective=objective, expected=result["run_id"])).json()
+    assert result["proposal"]["planner"]["gap"] == "FEATURE_EVIDENCE"
+    assert result["proposal"]["package"] is None
+
+    pages[control["root"]] = (
+        '<h3>Bacon Burger</h3><section aria-label="Little Bacon Burger">'
+        "<p>Our Little Bacon Burger uses one flame-grilled patty and a mustard sauce.</p></section>"
+    )
+    result = request("POST", "/plan", input_body(objective=objective, expected=result["run_id"])).json()
+    assert result["proposal"]["planner"]["gap"] == "FEATURE_EVIDENCE"
+    assert result["proposal"]["package"] is None
+
+
 def test_new_brief_during_export_fences_old_approval(planner, monkeypatch):
     from poster import campaign_package
 

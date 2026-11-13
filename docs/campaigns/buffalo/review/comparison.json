@@ -1,0 +1,83 @@
+{
+  "before": {
+    "run_id": "779b874d-2a7a-4735-bda6-8fa88c8149f9",
+    "copy": {
+      "cta": "شوف المنيو",
+      "headline": "شيدر كلاسيك ولا هالبينو؟",
+      "message": "بين أولد سكول وراستافاري، اختار اللي على مزاجك."
+    },
+    "preview_viewport_width": 390,
+    "sizes": {
+      "portrait": {
+        "mobile_png_size": [
+          344,
+          431
+        ],
+        "mobile_png_sha256": "56ff620b35f6b26a9f8885ceafddb81c630026d42c19282be9ca5495fe958451",
+        "export_sha256": "a291e6a0f97b72e9f64658e0315321119151c129e014f63c0ba97e0dda056365"
+      },
+      "square": {
+        "mobile_png_size": [
+          344,
+          345
+        ],
+        "mobile_png_sha256": "91907fed0a4bac8892463343e541ad6f751e85b919d0e576193595c8b0489618",
+        "export_sha256": "c73c2cdac4201091c823cfea2b77d8fd2ff6140e2a52a91aafcdfce5c55f7166"
+      }
+    }
+  },
+  "alternate": {
+    "run_id": "a383af13-067c-491e-9c96-837e6bf2b860",
+    "copy": {
+      "cta": "شوف المنيو",
+      "headline": "شيدر كلاسيك ولا هالبينو؟",
+      "message": "الاتنين فيهم صوص بافالو."
+    },
+    "preview_viewport_width": 390,
+    "sizes": {
+      "portrait": {
+        "mobile_png_size": [
+          344,
+          431
+        ],
+        "mobile_png_sha256": "60b24e228e10a0b0db8b3127ffc5d5a74193e91a0bc169b87d98962949da80e4",
+        "export_sha256": "18e368b274b18c79e53c77ab88dcf15c41b5759bfd076aca9af915f98766058f"
+      },
+      "square": {
+        "mobile_png_size": [
+          344,
+          345
+        ],
+        "mobile_png_sha256": "8efe0ef079f0810977ed5587238f4d6101e425cb2d627cde867e25bb7b6b1488",
+        "export_sha256": "7686a0961513775766027128b7dfecc4e60692ee7ed88859cf389d1e14bcce47"
+      }
+    }
+  },
+  "selected": {
+    "run_id": "a553330a-bda4-4615-824f-f5623aab13f2",
+    "copy": {
+      "cta": "شوف المنيو",
+      "headline": "شيدر كلاسيك ولا هالبينو؟",
+      "message": "الاتنين فيهم صوص بافالو."
+    },
+    "preview_viewport_width": 390,
+    "sizes": {
+      "portrait": {
+        "mobile_png_size": [
+          344,
+          431
+        ],
+        "mobile_png_sha256": "f62dd4695f8189b559f6600f0fa15616e92fa230a8d216445c6317341142be08",
+        "export_sha256": "aa1f475c16884cdcfa685651d437189b759fd81dabd7e1863a5ca178381758a2"
+      },
+      "square": {
+        "mobile_png_size": [
+          344,
+          345
+        ],
+        "mobile_png_sha256": "2b1e9d041c949389770213e44393e33776f4b304a9feeee8c98a9c9cd29554b2",
+        "export_sha256": "6ebd511150744253876d48775e5454b29a839a3e65ee707406d66566918c1f51"
+      }
+    }
+  }
+}

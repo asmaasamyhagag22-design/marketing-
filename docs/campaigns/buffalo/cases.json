@@ -5,11 +5,14 @@
     "language": "ar",
     "rejected_headline": "كل برجر في المنيو فيه هالبينو",
     "copy_edit": {
-      "message": "بين أولد سكول وراستافاري، اختار اللي على مزاجك."
+      "message": "الاتنين فيهم صوص بافالو."
     },
     "tone": "مصري خفيف ومباشر",
     "destination": "https://buffaloburger.com/menu",
-    "restore_recommended": true
+    "destination_visible_text": ["أولد سكول", "راستافاري"],
+    "restore_recommended": true,
+    "choose_reviewed_copy": true,
+    "unregistered_copy": "الاختيارين فيهم صوص بافالو."
   },
   "truffle": {
     "url": "https://buffaloburger.com/menu/truffle-beef-burger",

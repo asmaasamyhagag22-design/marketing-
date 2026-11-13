@@ -1,0 +1,413 @@
+{
+  "approval_id": "fc42f32a-769e-4b77-b346-e32210f0957d",
+  "poster_measurements": {
+    "portrait": {
+      "geometry": [
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 136,
+          "color": "rgb(255, 247, 239)",
+          "field": "brand",
+          "overflow": false,
+          "right": 1004,
+          "size": 40,
+          "x": 76,
+          "y": 64
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 838.78125,
+          "color": "rgb(255, 247, 239)",
+          "field": "motif",
+          "overflow": false,
+          "right": 1004,
+          "size": 16,
+          "x": 76,
+          "y": 166
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 979.65625,
+          "color": "rgb(255, 247, 239)",
+          "field": "H1",
+          "overflow": false,
+          "right": 1004,
+          "size": 88,
+          "x": 76,
+          "y": 868.78125
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 1190.359375,
+          "color": "rgb(255, 247, 239)",
+          "field": "message",
+          "overflow": false,
+          "right": 1004,
+          "size": 44,
+          "x": 76,
+          "y": 997.65625
+        },
+        {
+          "background": "rgb(255, 201, 131)",
+          "bottom": 1286,
+          "color": "rgb(19, 13, 54)",
+          "field": "cta",
+          "overflow": false,
+          "right": 519,
+          "size": 37,
+          "x": 76,
+          "y": 1208.359375
+        }
+      ],
+      "height": 1350,
+      "sha256": "381452be3dbeca1f49b47cd89db05d6b23815f43aa0c6e77d40cc4584e7b343f",
+      "width": 1080
+    },
+    "square": {
+      "geometry": [
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 136,
+          "color": "rgb(255, 247, 239)",
+          "field": "brand",
+          "overflow": false,
+          "right": 1004,
+          "size": 40,
+          "x": 76,
+          "y": 64
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 568.78125,
+          "color": "rgb(255, 247, 239)",
+          "field": "motif",
+          "overflow": false,
+          "right": 1004,
+          "size": 16,
+          "x": 76,
+          "y": 166
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 709.65625,
+          "color": "rgb(255, 247, 239)",
+          "field": "H1",
+          "overflow": false,
+          "right": 1004,
+          "size": 88,
+          "x": 76,
+          "y": 598.78125
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 920.359375,
+          "color": "rgb(255, 247, 239)",
+          "field": "message",
+          "overflow": false,
+          "right": 1004,
+          "size": 44,
+          "x": 76,
+          "y": 727.65625
+        },
+        {
+          "background": "rgb(255, 201, 131)",
+          "bottom": 1016,
+          "color": "rgb(19, 13, 54)",
+          "field": "cta",
+          "overflow": false,
+          "right": 519,
+          "size": 37,
+          "x": 76,
+          "y": 938.359375
+        }
+      ],
+      "height": 1080,
+      "sha256": "9f4dfe4f01a099d6cef7fcbbed916f5b62383f7722a0a7a38c0d9b806dc84fe1",
+      "width": 1080
+    }
+  },
+  "profile_snapshot_id": "96e7f741-1cc6-4a6c-8560-50825e97f045",
+  "proposal": {
+    "brand_name": "www.fiveguys.com",
+    "brief": {
+      "alternatives": [
+        {
+          "name": "Explain the feature",
+          "plan": "Lead with the feature name and link to the publisher’s explanation.",
+          "tradeoff": "Shortens the path to the explanation and leaves the decision to the reader."
+        },
+        {
+          "name": "Evaluate the fit",
+          "plan": "Ask a fit question. Use the publisher’s explanation as one input to a comparison.",
+          "tradeoff": "Supports evaluation and would need comparative evidence for any superiority claim."
+        },
+        {
+          "name": "Explore the topic",
+          "plan": "Use the topic name as an entry point for open-ended reading.",
+          "tradeoff": "Broader discovery with the same explanation page as the destination."
+        }
+      ],
+      "assumption": "The audience is a working hypothesis. Test whether interest in the feature drives the intended click.",
+      "audience": "Audience hypothesis after reviewing the draft.",
+      "competitor": null,
+      "direction": "ltr",
+      "directions": [
+        {
+          "caption": "Little Bacon Burger — A fresh, 100% beef patty hot off the grill with strips of crispy Applewood smoked bacon on top. Read the explanation.",
+          "cta": "Read the explanation",
+          "end_shot": "End on the brand name and exact call to action.",
+          "headline": "Little Bacon Burger",
+          "hook": "Little Bacon Burger",
+          "message": "A fresh, 100% beef patty hot off the grill with strips of crispy Applewood smoked bacon on top.",
+          "middle_shot": "Reveal the topic label and hold the background still.",
+          "name": "Explain the feature",
+          "rationale": "Lead with the feature name and link to the publisher’s explanation.",
+          "shot": "Reveal the campaign prompt over a simple geometric motif.",
+          "theme": "cobalt"
+        },
+        {
+          "caption": "Would it fit your needs — A fresh, 100% beef patty hot off the grill with strips of crispy Applewood smoked bacon on top. Review the details.",
+          "cta": "Review the details",
+          "end_shot": "End on the brand name and exact call to action.",
+          "headline": "Would it fit your needs?",
+          "hook": "Would it fit your needs?",
+          "message": "A fresh, 100% beef patty hot off the grill with strips of crispy Applewood smoked bacon on top.",
+          "middle_shot": "Reveal the topic label and hold the background still.",
+          "name": "Evaluate the fit",
+          "rationale": "Ask a fit question. Use the publisher’s explanation as one input to a comparison.",
+          "shot": "Reveal the campaign prompt over a simple geometric motif.",
+          "theme": "forest"
+        },
+        {
+          "caption": "Where would you start — A fresh, 100% beef patty hot off the grill with strips of crispy Applewood smoked bacon on top. Explore the topic page.",
+          "cta": "Explore the topic page",
+          "end_shot": "End on the brand name and exact call to action.",
+          "headline": "Where would you start?",
+          "hook": "Where would you start?",
+          "message": "A fresh, 100% beef patty hot off the grill with strips of crispy Applewood smoked bacon on top.",
+          "middle_shot": "Reveal the topic label and hold the background still.",
+          "name": "Explore the topic",
+          "rationale": "Use the topic name as an entry point for open-ended reading.",
+          "shot": "Reveal the campaign prompt over a simple geometric motif.",
+          "theme": "ember"
+        }
+      ],
+      "human_review": [
+        "Review the original feature label, language, source scope and rights.",
+        "Check the destination on mobile and confirm the conversion measurement."
+      ],
+      "language": "en",
+      "market": "Confirm market scope before publishing.",
+      "metric": "Explanation clicks per impression.",
+      "objective": "Help people discover what comes in the Bacon Burger",
+      "peer_rationale": null,
+      "peer_source": null,
+      "selected": 0,
+      "source": {
+        "quote": "A fresh, 100% beef patty hot off the grill with strips of crispy Applewood smoked bacon on top.",
+        "scope": "Little Bacon Burger",
+        "url": "https://www.fiveguys.com/menu/burgers/"
+      },
+      "strategy_index": 0,
+      "strategy_reason": "The goal is a visit to a specific explanation. Reopen the choice if it disappears or the goal changes to an action.",
+      "summary": "A fresh, 100% beef patty hot off the grill with strips of crispy Applewood smoked bacon on top.",
+      "tone": "Plain and concise"
+    },
+    "changes": [
+      {
+        "after": "Audience hypothesis after reviewing the draft.",
+        "before": "People who want to understand the feature before acting.",
+        "field": "audience"
+      }
+    ],
+    "evidence": [
+      {
+        "body_sha256": "d2af53a07c62810586cb020daeeebf8dec361ef4de057da035bd6681ad521a68",
+        "capture_kind": "publisher_snapshot",
+        "captured_at": "2026-11-13T14:12:47+00:00",
+        "constraints": {
+          "basis": "FULL_SOURCE_CONTEXT",
+          "branch": null,
+          "market": "UNCONFIRMED",
+          "page_path": "/menu/burgers/",
+          "price": null,
+          "valid_until": null
+        },
+        "context": "A fresh, 100% beef patty hot off the grill with strips of crispy Applewood smoked bacon on top. Add as many toppings as you want.",
+        "label": "Little Bacon Burger",
+        "outcome": "QUOTE_OBSERVED",
+        "page_url": "https://www.fiveguys.com/menu/burgers/",
+        "quote": "A fresh, 100% beef patty hot off the grill with strips of crispy Applewood smoked bacon on top.",
+        "scope": "Little Bacon Burger",
+        "score": 5,
+        "specificity": 0.5,
+        "text_sha256": "6d6188154e5ec221de918a2386e085596770af473f7907cfb1e561b663f3ecc8",
+        "title": "Burger Menu: Hamburgers, Cheeseburgers, and more | Five Guys"
+      }
+    ],
+    "kind": "SOURCE_CAMPAIGN",
+    "package": {
+      "brand_name": "www.fiveguys.com",
+      "caption": "Little Bacon Burger — A fresh, 100% beef patty hot off the grill with strips of crispy Applewood smoked bacon on top. Read the explanation.",
+      "copy": {
+        "cta": "Read the explanation",
+        "headline": "Little Bacon Burger",
+        "message": "A fresh, 100% beef patty hot off the grill with strips of crispy Applewood smoked bacon on top."
+      },
+      "direction": "ltr",
+      "factual_review": "SOURCE_LABEL_REUSE_REQUIRES_HUMAN_REVIEW",
+      "language": "en",
+      "poster_layout": "source-campaign@1",
+      "source_evidence_index": 0,
+      "source_url": "https://www.fiveguys.com/menu/burgers/",
+      "storyboard": [
+        {
+          "line": "Little Bacon Burger",
+          "seconds": "0–3",
+          "visual": "Reveal the campaign prompt over a simple geometric motif."
+        },
+        {
+          "line": "A fresh, 100% beef patty hot off the grill with strips of crispy Applewood smoked bacon on top.",
+          "seconds": "3–8",
+          "visual": "Reveal the topic label and hold the background still."
+        },
+        {
+          "line": "Read the explanation",
+          "seconds": "8–12",
+          "visual": "End on the brand name and exact call to action."
+        }
+      ],
+      "theme": "cobalt"
+    },
+    "planner": {
+      "brief_reviewed": true,
+      "claims": [
+        {
+          "basis": "PUBLISHER_QUOTE_AND_SECTION_LABEL",
+          "evidence_index": 0,
+          "fields": [
+            "brief.summary",
+            "package.copy.message"
+          ],
+          "semantic_review": "HUMAN_REVIEW_REQUIRED"
+        }
+      ],
+      "conflicts": [],
+      "cost_usd": 0,
+      "destination_evidence_index": 0,
+      "elapsed_ms": 8.57,
+      "gap": null,
+      "input": {
+        "language": "en",
+        "objective": "Help people discover what comes in the Bacon Burger",
+        "url": "https://www.fiveguys.com/menu/burgers/"
+      },
+      "intent": "DISCOVERY",
+      "missing_question": null,
+      "opportunity_hypothesis": "Test whether connecting the feature to a specific action improves clicks from the proposed audience.",
+      "options": [
+        {
+          "action": "READ_FEATURE",
+          "audience": "People who want to understand the feature before acting.",
+          "cta": "Read the explanation",
+          "destination": "https://www.fiveguys.com/menu/burgers/",
+          "evidence_index": 0,
+          "headline": "Start with the feature",
+          "message": "Lead with the feature name and link to the publisher’s explanation.",
+          "metric": "Explanation clicks per impression.",
+          "name": "Explain the feature",
+          "theme": "cobalt",
+          "tradeoff": "Shortens the path to the explanation and leaves the decision to the reader."
+        },
+        {
+          "action": "COMPARE_FIT",
+          "audience": "People comparing alternatives who need to inspect the details.",
+          "cta": "Review the details",
+          "destination": "https://www.fiveguys.com/menu/burgers/",
+          "evidence_index": 0,
+          "headline": "Would it fit your needs?",
+          "message": "Ask a fit question. Use the publisher’s explanation as one input to a comparison.",
+          "metric": "Visits to the explanation from the comparison creative.",
+          "name": "Evaluate the fit",
+          "theme": "forest",
+          "tradeoff": "Supports evaluation and would need comparative evidence for any superiority claim."
+        },
+        {
+          "action": "EXPLORE_TOPIC",
+          "audience": "People at the start of discovery.",
+          "cta": "Explore the topic page",
+          "destination": "https://www.fiveguys.com/menu/burgers/",
+          "evidence_index": 0,
+          "headline": "Where would you start?",
+          "message": "Use the topic name as an entry point for open-ended reading.",
+          "metric": "Topic-page clicks from the discovery creative.",
+          "name": "Explore the topic",
+          "theme": "ember",
+          "tradeoff": "Broader discovery with the same explanation page as the destination."
+        }
+      ],
+      "page_calls": 1,
+      "pages": [
+        {
+          "body_sha256": "d2af53a07c62810586cb020daeeebf8dec361ef4de057da035bd6681ad521a68",
+          "capture_kind": "publisher_snapshot",
+          "captured_at": "2026-11-13T14:12:47+00:00",
+          "entries": [
+            {
+              "context": "Fresh, 100% beef patties hot off the grill, layered with strips of crispy Applewood smoked bacon and placed on a soft, toasted sesame seed bun. Add as many toppings as you want.",
+              "label": "Bacon Burger",
+              "quote": "Fresh, 100% beef patties hot off the grill, layered with strips of crispy Applewood smoked bacon and placed on a soft, toasted sesame seed bun.",
+              "score": 5,
+              "specificity": 0.5
+            },
+            {
+              "context": "A fresh, 100% beef patty hot off the grill with strips of crispy Applewood smoked bacon on top. Add as many toppings as you want.",
+              "label": "Little Bacon Burger",
+              "quote": "A fresh, 100% beef patty hot off the grill with strips of crispy Applewood smoked bacon on top.",
+              "score": 5,
+              "specificity": 0.5
+            },
+            {
+              "context": "Fresh, 100% beef patties hot off the grill, layered with strips of crispy Applewood smoked bacon and placed on a soft, toasted sesame seed bun. Add as many toppings as you want.",
+              "label": "Bacon Burger",
+              "quote": "Add as many toppings as you want.",
+              "score": 4,
+              "specificity": 0
+            },
+            {
+              "context": "A fresh, 100% beef patty hot off the grill with strips of crispy Applewood smoked bacon on top. Add as many toppings as you want.",
+              "label": "Little Bacon Burger",
+              "quote": "Add as many toppings as you want.",
+              "score": 4,
+              "specificity": 0
+            }
+          ],
+          "page_url": "https://www.fiveguys.com/menu/burgers/",
+          "text_sha256": "6d6188154e5ec221de918a2386e085596770af473f7907cfb1e561b663f3ecc8",
+          "title": "Burger Menu: Hamburgers, Cheeseburgers, and more | Five Guys"
+        }
+      ],
+      "policy": "source-campaign-planner@1",
+      "provider_calls": 0,
+      "question": "Which brand page describes the feature in the goal?",
+      "request_id": null,
+      "stop": "DECISION_EVIDENCE_FOUND",
+      "trace": [
+        {
+          "anchor": "",
+          "candidate_count": 4,
+          "gap_after": null,
+          "outcome": "SOURCE_READ",
+          "page_url": "https://www.fiveguys.com/menu/burgers/",
+          "reason": "BRAND_ENTRY"
+        }
+      ]
+    },
+    "schema_version": 2,
+    "sha256": "76b346938308c8e9ec9387b3da9525392548a64bd577f7884dcc284cbdc45abf",
+    "status": "READY"
+  },
+  "review_status": "LOCAL_REVIEW",
+  "run_id": "3f705ada-2fe7-4216-9b95-bbf0b04ba3d6",
+  "video": "SCRIPT_AND_STORYBOARD_ONLY"
+}

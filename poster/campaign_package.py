@@ -10,7 +10,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from zipfile import BadZipFile, ZIP_DEFLATED, ZipFile, ZipInfo
 
-from poster.campaign_catalog import CATALOG_CSS, catalog_cards
+from poster.campaign_catalog import CATALOG_CSS, INGREDIENT_CSS, INGREDIENT_DRAWINGS, INGREDIENT_LAYOUTS, catalog_cards
 from poster.render_playwright import render_html_to_png
 
 
@@ -46,7 +46,9 @@ def poster_html(package, width, height):
         "assemble": '<div class="tiles"><span></span><span></span><span></span><span></span></div>',
         "filter": '<div class="filter"><span></span><span></span><span></span><b></b></div>',
     }.get(concept, '<i></i><i></i><i></i>')
-    catalog = package["poster_layout"] == "source-campaign@3"
+    ingredients = package["poster_layout"] == "source-campaign@4"
+    catalog = ingredients or package["poster_layout"] == "source-campaign@3"
+    layout = escape(package["art"]["layout"]) if ingredients else ""
     if catalog:
         drawing_label = "رسم توضيحي" if package["language"].startswith("ar") else "Illustration"
         content = f"""<header class="brand" dir="auto">{brand}</header>
@@ -115,8 +117,9 @@ h1{{font-weight:700;font-size:88px;line-height:1.26;letter-spacing:-.012em;text-
 .cta{{justify-self:start;padding:12px 26px;border-radius:12px;background:{accent};color:{bg};
  font-size:37px;line-height:1.45;font-weight:700}}
 {CATALOG_CSS if catalog else ""}
+{INGREDIENT_CSS if ingredients else ""}
 </style>
-<main data-theme="{escape(package["theme"])}" class="{'catalog' if catalog else ''}">{content}</main>
+<main data-theme="{escape(package["theme"])}" data-layout="{layout}" class="{'catalog ingredients' if ingredients else 'catalog' if catalog else ''}">{content}</main>
 </html>"""
 
 
@@ -139,8 +142,11 @@ def measure_poster(page):
                                 const drawing = frame.querySelector('.food-drawing').getBoundingClientRect();
                                 const name = frame.querySelector('.item-name').getBoundingClientRect();
                                 const details = frame.querySelector('.item-detail').getBoundingClientRect();
-                                return drawing.top < f.top || drawing.bottom > name.top + 1 ||
-                                    drawing.left < f.left || drawing.right > f.right || name.bottom > details.top + 1 ||
+                                const intersects = (a, b) => Math.min(a.right, b.right) - Math.max(a.left, b.left) > 1 &&
+                                    Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > 1;
+                                return drawing.top < f.top || intersects(drawing, name) || intersects(drawing, details) ||
+                                    drawing.left < f.left || drawing.right > f.right || drawing.bottom > f.bottom ||
+                                    name.bottom > details.top + 1 ||
                                     Array.from(frame.querySelectorAll('.food-drawing i')).some(layer => {
                                         const b = layer.getBoundingClientRect();
                                         return b.top < drawing.top || b.bottom > drawing.bottom ||
@@ -173,8 +179,14 @@ def layout_poster(page, width, height):
 
 
 def render_poster(package, label, path):
-    if package["poster_layout"] not in {"source-campaign@1", "source-campaign@2", "source-campaign@3"}:
+    if package["poster_layout"] not in {"source-campaign@1", "source-campaign@2", "source-campaign@3", "source-campaign@4"}:
         raise PosterLayoutError("POSTER_LAYOUT_UNAVAILABLE")
+    if package["poster_layout"] == "source-campaign@4":
+        art = package["art"]
+        if art.get("layout") not in INGREDIENT_LAYOUTS or len(art["subjects"]) != 2 or any(
+            item.get("illustration") not in INGREDIENT_DRAWINGS for item in art["subjects"]
+        ):
+            raise PosterLayoutError("POSTER_LAYOUT_UNAVAILABLE")
     width, height = SIZES[label]
     geometry = []
     render_html_to_png(

@@ -34,6 +34,7 @@ class Page:
     url: str
     body: bytes
     source_kind: str = "unspecified"
+    captured_at: str | None = None
 
 
 @dataclass(frozen=True)

@@ -41,8 +41,9 @@ def main():
     parser.add_argument("--directory", type=Path, required=True)
     parser.add_argument("--case", type=Path, action="append", default=[])
     parser.add_argument("--port", type=int, default=8020)
+    parser.add_argument("--snapshot", type=Path, help="Replay curated publisher HTML on a frozen demo clock")
     args = parser.parse_args()
-    demo.isolate(offline=args.action != "serve")
+    demo.isolate(offline=args.action != "serve" or args.snapshot is not None)
     directory = args.directory.resolve()
     if args.action == "init":
         demo.init(directory, seed_demo=lambda service, _: seed_brands(service, args.case))
@@ -69,6 +70,14 @@ def main():
                       BASEERA_WEBAPP_DIR=str(directory / "application"), ADZY_REVIEW_STATE_DIR=str(directory / "review"))
     import uvicorn
     from api.main import app
+
+    if args.snapshot:
+        from api.routes.v2_campaigns import get_clock, get_package_loader
+        from workflows.campaign_snapshot import open_snapshot
+
+        load, clock = open_snapshot(args.snapshot)
+        app.dependency_overrides[get_package_loader] = lambda: load
+        app.dependency_overrides[get_clock] = lambda: clock
 
     uvicorn.run(app, host="127.0.0.1", port=args.port)
 

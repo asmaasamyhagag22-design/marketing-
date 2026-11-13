@@ -143,7 +143,7 @@ def capture(source, load, clock):
             raise ResearchGap("QUOTE_NOT_FOUND" if not matches else "QUOTE_CONTEXT_AMBIGUOUS")
         return {**trace, "outcome": "QUOTE_OBSERVED", "quote": quote, "scope": source.scope,
                 "context": matches.pop(), "capture_kind": page.source_kind,
-                "captured_at": clock().isoformat(),
+                "captured_at": page.captured_at or clock().isoformat(),
                 "body_sha256": sha256(page.body).hexdigest(),
                 "text_sha256": digest(" ".join(body.get_text(" ", strip=True).split()))}
     except (OSError, ResearchGap) as exc:
@@ -189,8 +189,10 @@ def proposal(brief, brand_name, sources, *, changes=(), planner=None):
         package.update(source_url=choice["destination"], source_evidence_index=choice["evidence_index"],
                        factual_review="SOURCE_LABEL_REUSE_REQUIRES_HUMAN_REVIEW")
         if planner.get("edition"):
+            art = choice["art"]
+            layout = "source-campaign@4" if art.get("layout") in {"ingredient-columns", "ingredient-rows"} else "source-campaign@3"
             package.update(
-                poster_layout="source-campaign@3", art=choice["art"],
+                poster_layout=layout, art=art,
                 factual_review="EXACT_SOURCE_ANCHORS_AND_EDITORIAL_REVIEW",
                 claims=choice["claims"],
             )

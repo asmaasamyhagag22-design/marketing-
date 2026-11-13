@@ -1,103 +1,76 @@
 # ADZY
 
-**Turn brand evidence into a strategy your team can review—and creative you can trace.**
+![Buffalo Burger campaign exported by ADZY. The Arabic poster compares Old School cheddar and Rastafari jalapeño cheddar bites.](docs/campaigns/buffalo/menu/poster-portrait-390.png)
 
-Marketing teams and small agencies often move from scattered website research to creative production without a clear record of why a message was chosen. ADZY brings that workflow into one application: research a brand, inspect the evidence, approve an exact strategy, then create and review a poster tied to that decision.
+[Portrait PNG, 1080 × 1350](docs/campaigns/buffalo/menu/poster-portrait.png) · [Square PNG, 1080 × 1080](docs/campaigns/buffalo/menu/poster-square.png) · [Review ZIP](docs/campaigns/buffalo/menu/campaign.zip) · [Before, alternate, and selected at mobile scale](docs/campaigns/buffalo/review/comparison.png)
 
-**Brand URL → source-linked profile → strategy review → poster → checked download**
+ADZY turns a **publisher URL, campaign objective, and language** into an evidence-linked brief, directions for human review, and two locally rendered poster sizes. The review ZIP includes both PNGs and a JSON receipt with the source quotes, field bindings, selected direction, run, approval, and PNG checksums. The PNG contains a CTA label. The app and JSON carry its destination. [Buffalo export receipt](docs/campaigns/buffalo/menu/campaign.json)
 
-![ADZY application with fictional Studio Fixture data and a locally composed poster fixture](docs/images/adzy-product-demo.png)
-*The running application, captured with fictional Studio Fixture data, a project-authored poster fixture and simulated provider/QA responses. This demonstrates the product workflow, not live model output quality.*
+| Run | What goes in | What the app does |
+|---|---|---|
+| **Buffalo editorial showcase** | The same three inputs plus a local file of editor-written directions, copy, illustration choices, field-to-source mappings, and expected publisher text. | Matches the edition to the request, reads and checks the specified fields and item titles, stores a reviewable brief, checks edits and approval, and renders the selected design. [Edition data](docs/campaigns/buffalo/editions.json) · [Matching and field capture](strategy/campaign_editions.py) |
+| **General planner** | URL, objective, and language. | Reads bounded same-origin HTML, selects a passage for the objective, proposes directions, and produces the same review and export format when the evidence suffices. Its default writing is conservative and can use the publisher's section title in the poster. [Planner](strategy/campaign_planner.py) · [Nando’s export](docs/campaigns/buffalo/review/nandos/campaign.json) |
 
-## What the product does
+For the Five Guys goal naming **Bacon Burger**, the previous planner selected **Little Bacon Burger**. With the same captured HTML, the revised planner prioritizes the publisher section explicitly named in the goal and produces a poster for **Bacon Burger**. The HTTP regression also removes the requested item's evidence and tries a passage explicitly about the smaller variant. Both cases withhold the package. [Before export](docs/campaigns/buffalo/review/five-guys-before/campaign.json) · [After export](docs/campaigns/buffalo/review/five-guys-after/campaign.json) · [Regression test](tests/test_campaign_planner.py)
 
-- Builds a brand profile with source quotations and page URLs, then presents research and strategic directions for review.
-- Records SWOT and strategy decisions against exact versions; paused reviews can recover without inventing or repeating approval.
-- Carries the approved message, evidence and constraints into poster production. Local overlay defects get one bounded recomposition of the same background before a new background is considered.
-- Keeps image-specific QA and rejection reasons after refresh. Accepted downloads revalidate ownership, current approvals, required checks and the exact saved bytes; drafts and rejected previews remain separate.
+## Replay Buffalo from a clean checkout
 
-## Edit the words, keep the evidence
-
-Open **Edit copy** on a saved poster with managed composition inputs. Change the headline, subheadline or CTA label, inspect source quotations, preview locally, save an independent revision and compare it with the original. Saved revisions and their checks survive refresh and server restart.
-
-![Evidence-aware copy editor in the running application, with fictional data](docs/images/copy-editor-desktop.png)
-
-*Actual application screenshot with fictional source assertions and a local compositor. Edits call no models and never inherit the original’s visual QA. Saving, comparing, reopening and exporting drafts work; paid visual re-review is not implemented in the application. Exact source wording does not certify general meaning or independent truth.*
-
-[Saved synthetic draft sample](docs/results/copy-editor-draft.png) · [Sample provenance](docs/results/copy-editor-draft.json) · [Mobile view](docs/images/copy-editor-mobile.png) · [API, lineage, limitations and verification commands](COPY_EDITOR_RESULT.md)
-
-## Architecture
-
-```mermaid
-flowchart LR
-    URL[Brand website] --> E[Source-linked profile]
-    E --> R[Strategy review]
-    R --> C[Approved creative contract]
-    C --> P[Poster and per-image checks]
-    P --> D[Protected revision download]
-    R <--> DB[(PostgreSQL)]
-    R <--> CP[(SQLite checkpoints)]
-    R -. optional observations .-> LF[Langfuse SDK]
-```
-
-| Integration | Its role in ADZY |
-|---|---|
-| **LangGraph** | Persists the review state, pauses for a human decision and resumes the same subject after restart. PostgreSQL services remain the authority for approval. |
-| **LangChain** | Three typed inspection tools check the review subject, research readiness and creative requirements. Tool execution is deterministic; this is not an autonomous model-driven planning loop. |
-| **Langfuse** | Optional SDK observations with local capture, redaction and exporter-failure handling. External telemetry is disabled in the supplied demo. |
-
-PostgreSQL stores business versions, decisions, operations and assets. SQLite stores review checkpoints. [Architecture and recovery details](docs/architecture/app_review.md).
-
-## Verified behavior
-
-The [offline CI workflow](https://github.com/asmaasamyhagag22-design/adzy/actions/workflows/poster-v1.yml) reports the following results for one run of the selected checks:
-
-| Checks | Result |
-|---|---|
-| Python | **320 passed** across 22 focused groups |
-| JavaScript interface behavior | **21 passed** |
-| Actual browser journey | **Desktop and mobile passed**: review, refresh/recovery, rejected previews, cross-owner refusal, draft/final separation and download checksum matching |
-
-These are targeted application checks with fake provider transports and disposable PostgreSQL—not the repository-wide suite or a measurement of live model quality. [Recorded CI run](https://github.com/asmaasamyhagag22-design/adzy/actions/runs/39163997942). Separate push/PR runs and earlier local checks are not added together.
-
-## Run the public demo
-
-Requires Python 3.12, Docker and Playwright Chromium on Linux. Node.js 22 is needed for the interface checks.
+Use Linux, Python 3.12, Docker, and Playwright Chromium. The local demo uses a disposable PostgreSQL container and project fonts. The app binds to loopback and the demo disables paid providers and telemetry.
 
 ```bash
-python3 -m venv .venv-app
-source .venv-app/bin/activate
+python3.12 -m venv .venv-review
+source .venv-review/bin/activate
 python -m pip install -r requirements-app.txt
 python -m pip check
-python -m playwright install --with-deps chromium
+python -m playwright install chromium
 docker pull postgres:16-alpine
-python -m workflows.app_demo init --directory .review-app-demo
-python -m workflows.app_demo serve --directory .review-app-demo --port 8000 --synthetic-posters accepted
+
+demo_dir=$(mktemp -d)/demo
+python -m workflows.public_campaign_demo init --directory "$demo_dir"
+ADZY_CAMPAIGN_EDITIONS_FILE="$PWD/docs/campaigns/buffalo/editions.json" \
+  python -m workflows.public_campaign_demo serve --directory "$demo_dir" \
+  --snapshot docs/demo/campaign-snapshots/buffalo --port 8020
 ```
 
-Open [localhost:8000/app](http://127.0.0.1:8000/app). Sign in with the email printed by `init` and `SyntheticDemo42`, then choose **Think → Review strategy → Lock this strategy → Prepare the poster → Make the ad**. The demo uses fictional data and simulated responses; no provider account or private dataset is required.
+On a Linux host that still needs Chromium's system libraries, install them with `python -m playwright install-deps chromium` using an account with system package access.
 
-After stopping the server, clean up its disposable database:
+1. Open [the local app](http://127.0.0.1:8020/app). Sign in with the demo credentials printed by `init`.
+2. Select **Campaign**. Enter `https://buffaloburger.com`, the goal `تشجيع المستخدم على تصفّح المنيو واختيار برجر يناسبه`, and Arabic. Submit and inspect the source quote for each field.
+3. Open **تعديل نص الاتجاه**, put `كل برجر في المنيو فيه هالبينو` in the headline, and save. The app marks the headline and preserves the attempted edit. Restore the headline and click the reviewed message **الاتنين فيهم صوص بافالو.** Save the brief.
+4. Preview both sizes, approve the current version, and download the ZIP. Choose the Rastafari direction and see that the new version requires review. To reopen the last saved version, stop the server and repeat the same `serve` command with the same directory.
+
+After stopping the server, run `python -m workflows.public_campaign_demo cleanup --directory "$demo_dir"` to remove its container. Keep the same demo directory and container for the restart check.
+
+The source fixtures contain dated, trimmed publisher HTML and capture checksums. The demo uses a frozen clock and refuses URLs outside the snapshot. [Snapshot contents and dates](docs/demo/campaign-snapshots/README.md) · [Asset provenance](THIRD_PARTY_ASSETS.md)
+
+## Verify the browser journey and live sources
 
 ```bash
-python -m workflows.demo cleanup --directory .review-app-demo
+check_dir=$(mktemp -d)
+ADZY_CAMPAIGN_EDITIONS_FILE="$PWD/docs/campaigns/buffalo/editions.json" \
+  python tools/verify_public_campaign_browser.py --directory "$check_dir/buffalo" \
+  --evidence-dir "$check_dir/buffalo-results" \
+  --snapshot docs/demo/campaign-snapshots/buffalo \
+  --planner-cases docs/campaigns/buffalo/cases.json --case-name menu
+
+env -u ADZY_CAMPAIGN_EDITIONS_FILE python tools/verify_public_campaign_browser.py \
+  --directory "$check_dir/general" --evidence-dir "$check_dir/general-results" \
+  --snapshot docs/demo/campaign-snapshots/nandos \
+  --planner-cases docs/demo/campaign-snapshots/nandos-case.json
+
+python -m workflows.verify -q tests/test_campaign_editions.py tests/test_campaign_planner.py \
+  tests/test_public_campaign_package.py tests/test_adzy_v2_campaign.py tests/test_adzy_v2_research.py \
+  tests/test_ssrf_coverage.py tests/test_route_persistence_classification_2gb.py tests/test_security_headers.py
 ```
 
-[Draft/rejected modes and local SDK capture](docs/demo/README.md) · [Application setup and migrations](docs/getting-started.md) · [Asset provenance and notices](THIRD_PARTY_ASSETS.md)
+Use a fresh directory and omit `--snapshot` for a live-source run. For example, pass `docs/demo/campaign-snapshots/five-guys-case.json` to the general-planner browser command. The verifier records both export and evidence-gap outcomes in `result.json`. For a separate live check of the menu link from the Buffalo review card, add `--check-destination` to the Buffalo snapshot command. This opens the publisher's site in Chromium. [Live test results](docs/campaigns/buffalo/review/live/README.md)
 
-To run the same focused checks locally:
+## What the checks establish
 
-```bash
-python tools/check_poster_v1.py --evidence-dir /tmp/poster-v1-checks
-python tools/verify_poster_v1_browser.py --directory /tmp/poster-v1-demo --evidence-dir /tmp/poster-v1-browser
-```
+The clean checkout passed **142 focused tests** and the Chromium journeys for Buffalo, Five Guys, and Nando’s. [Verification receipt](docs/campaigns/buffalo/review/clean-checkout.json)
 
-## Current limits
+- The Buffalo browser journey saved a reviewed alternative and refused the menu-wide jalapeño claim in the headline field. A different, reasonable paraphrase outside the edition’s reviewed wording also returned 409. [Browser receipt](docs/campaigns/buffalo/menu/browser-result.json) · [Rejected field](docs/campaigns/buffalo/menu/rejected.png)
+- The browser verified both PNG hashes, refused export of a superseded run, and downloaded an identical ZIP after a server restart. HTTP tests change the run or approval during rendering and assert refusal. [Export boundary](api/routes/v2_campaigns.py) · [HTTP tests](tests/test_public_campaign_package.py) · [Run and approval storage](db/campaign_v2.py)
+- The general planner matches explicit section phrases using bounded HTML. Named-section coverage depends on publisher markup and vocabulary, and the ranking does not prove semantic entailment. The Nando’s snapshot exported, while live acquisition stopped at the HTML size limit. Audience fit, copy beyond approved wording, and ad performance require independent review. [Execution notes and measured limits](docs/campaigns/buffalo/EXECUTION.md)
 
-- The synthetic journey verifies application behavior. Two historical live Firefox renders were visually rejected; a later manually directed local preview was not canonical acceptance. Those optional media remain excluded from the public package.
-- Semantic assessment remains experimental, **shadow/unqualified**, with no acceptance authority. Literal copy/source checks do not certify image pixels, general meaning or independent truth.
-- Langfuse SDK behavior has local test coverage; **hosted/server ingestion is not verified**.
-- Live generation requires separate credentials and explicit financial authorization. Estimates are not invoice guarantees; unknown provider outcomes stop without blind retries.
-- The supported setup is one application instance with persistent PostgreSQL, managed blobs and SQLite review state. Demo authentication is not a production security certification.
-
-Existing authorship and third-party notices are retained. No new repository-wide license grant is implied.
+The repository also includes separate strategy and creative workflows. [Arabic engineering walkthrough](docs/campaigns/INTERVIEW.md) · [Application architecture](docs/architecture/app_review.md) · [Other demo modes](docs/demo/README.md)

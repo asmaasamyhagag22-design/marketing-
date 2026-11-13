@@ -92,8 +92,21 @@ def test_expiry_and_concurrent_approval_invalidate_export(campaign, monkeypatch)
         return b"should never be delivered"
 
     monkeypatch.setattr(campaign_package, "export_package", reject_during_render)
-    assert request("GET", "/package/export?run_id=" + first["run_id"]).status_code == 409
+    path = "/package/export?run_id=" + first["run_id"]
+    blocked = request("GET", path)
+    assert blocked.status_code == 409
+    assert blocked.json()["detail"]["code"] == "CURRENT_PACKAGE_APPROVAL_REQUIRED"
     assert approve(request, first).json()["approved"]
+
+    def reapprove_during_render(view, root):
+        reject_during_render(view, root)
+        assert approve(request, first).json()["approval_id"] != view["approval_id"]
+        return b"should never be delivered"
+
+    monkeypatch.setattr(campaign_package, "export_package", reapprove_during_render)
+    blocked = request("GET", path)
+    assert blocked.status_code == 409
+    assert blocked.json()["detail"]["code"] == "CURRENT_PACKAGE_APPROVAL_REQUIRED"
     control["time"] += timedelta(days=7)
     assert request("GET").json()["reason"] == "SOURCE_RECHECK_REQUIRED"
     assert approve(request, first).status_code == 409

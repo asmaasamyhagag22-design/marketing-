@@ -3,20 +3,25 @@ from html import escape
 
 
 PALETTES = {"classic", "pepper", "mushroom"}
+INGREDIENT_LAYOUTS = {"ingredient-columns", "ingredient-rows"}
+INGREDIENT_DRAWINGS = {"cheddar", "filled-bites"}
 
 
 def catalog_cards(art):
-    subjects = art["subjects"]
-    return "".join(
-        f'''<article class="catalog-item {item["palette"] if item["palette"] in PALETTES else "classic"}">
-          <div class="food-drawing" aria-hidden="true">
-            <i class="bun"></i><i class="filling"></i><i class="cheese"></i><i class="patty"></i><i class="heel"></i>
-          </div>
+    cards = []
+    for item in art["subjects"]:
+        palette = item["palette"] if item["palette"] in PALETTES else "classic"
+        drawing = item.get("illustration", "")
+        if art.get("layout") in INGREDIENT_LAYOUTS:
+            layers = '<i></i>' * (3 if drawing == "cheddar" else 2)
+        else:
+            layers = ''.join(f'<i class="{name}"></i>' for name in ("bun", "filling", "cheese", "patty", "heel"))
+        cards.append(f'''<article class="catalog-item {palette}">
+          <div class="food-drawing" data-illustration="{escape(drawing)}" aria-hidden="true">{layers}</div>
           <div class="item-name" dir="auto">{escape(item["name"])}</div>
           <div class="item-detail" dir="auto">{escape(item["detail"])}</div>
-        </article>'''
-        for item in subjects
-    )
+        </article>''')
+    return "".join(cards)
 
 
 CATALOG_CSS = """
@@ -65,4 +70,65 @@ main.catalog {
   background:linear-gradient(#cb602e,#f1a450 80%); border:3px solid #401e16}
 .catalog .illustration-note {font-size:24px; text-align:center; color:#261814; margin-block-start:-8px}
 .catalog .catalog-action {display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap}
+"""
+
+
+INGREDIENT_CSS = """
+main.ingredients {
+  background:#f9ebd2; color:#2b1512; padding:64px 76px;
+  grid-template-rows:auto auto minmax(285px,1fr) auto; gap:22px;
+}
+.ingredients .brand {font-size:36px; border-color:#a9332a; border-width:3px; padding-block-end:12px}
+.ingredients h1 {font-size:82px; line-height:1.25; color:#2b1512; letter-spacing:normal}
+.ingredients .motif {gap:14px; min-height:285px}
+.ingredients .catalog-item {
+  border:none; border-radius:10px; padding:18px 16px 22px;
+  grid-template-rows:auto auto auto; row-gap:2px; align-content:center;
+  background:#ffbd4f; color:#2b1512;
+}
+.ingredients .catalog-item.pepper {background:#811f2b; color:#fff5df}
+.ingredients .item-name {font-size:46px}
+.ingredients .item-detail {font-size:42px; font-weight:700}
+.ingredients .food-drawing {
+  width:min(84%, 370px, calc((100cqh - 194px) * 1.75)); min-width:120px;
+  aspect-ratio:1.75; margin:auto auto 26px; direction:ltr;
+}
+.ingredients .food-drawing::after {content:none}
+.ingredients .food-drawing i {position:absolute; display:block}
+.ingredients [data-illustration=cheddar] i {
+  inset:19% 12% 27%; background:linear-gradient(155deg,#fff090 0 46%,#ffdf66 47% 100%);
+  border:4px solid #834318; border-radius:15%; transform:skewX(-19deg) rotate(-11deg);
+  box-shadow:0 10px #b7521c;
+}
+.ingredients [data-illustration=cheddar] i:nth-child(2) {inset:23% 17% 14%; transform:skewX(-10deg) rotate(9deg)}
+.ingredients [data-illustration=cheddar] i:nth-child(3) {
+  inset:33% 21% 15% 11%; transform:skewX(-12deg) rotate(-10deg);
+  background:linear-gradient(155deg,#ffe786 0 46%,#ffd34b 47% 100%);
+}
+.ingredients [data-illustration=filled-bites] i {
+  inset:13% 39% 16% 9%; transform:rotate(-19deg);
+  border:5px solid #522415; border-radius:28%;
+  background:radial-gradient(circle,#f4bc5a 0 2px,transparent 3px) 0 0/14px 13px,
+             linear-gradient(135deg,#faad42,#c67a36);
+  box-shadow:0 8px #552311;
+}
+.ingredients [data-illustration=filled-bites] i:nth-child(2) {
+  inset:23% 9% 14% 46%; transform:rotate(19deg); border-radius:43%;
+  background:radial-gradient(ellipse,#465a25 0 17%,#afd474 18% 30%,#39612b 31% 40%,
+             #fff0a1 41% 61%,#e89638 62% 100%);
+}
+.ingredients .copy {gap:10px}
+.ingredients .illustration-note {font-size:30px; text-align:start; margin:0}
+.ingredients .message {font-size:39px; color:#2b1512}
+.ingredients .cta {font-size:38px; border-radius:7px; padding:7px 28px}
+.ingredients[data-layout=ingredient-rows] .motif {grid-auto-flow:row; grid-auto-rows:minmax(0,1fr)}
+.ingredients[data-layout=ingredient-rows] .catalog-item {
+  grid-template:1fr 1fr / minmax(0,1fr) minmax(0,.63fr);
+  column-gap:28px; text-align:start; padding:16px 26px; align-items:center;
+}
+.ingredients[data-layout=ingredient-rows] .food-drawing {
+  grid-column:2; grid-row:1 / 3; width:min(100%, calc(88cqh * 1.75)); margin:auto;
+}
+.ingredients[data-layout=ingredient-rows] .item-name {grid-column:1; grid-row:1; align-self:end}
+.ingredients[data-layout=ingredient-rows] .item-detail {grid-column:1; grid-row:2; align-self:start}
 """

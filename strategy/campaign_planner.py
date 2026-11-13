@@ -19,7 +19,7 @@ from strategy.campaign_copy import CopyEdit, plan_copy, validate_copy, writing_f
 
 PAGE_LIMIT = 4
 SECONDS = 12.0
-POLICY = "source-campaign-planner@1"
+POLICY = "source-campaign-planner@2"
 STOP = set("""increase grow drive boost get for from about the and into with people visit visits
 explanation clicks click catalog page more a an to of in find want interested concerned
 using use explain how what who discover build builds download downloads install
@@ -74,14 +74,22 @@ def public_link(url, root):
     return valid_source_url(url) and same_source(url, root) and not UNSAFE_URL.search(parts.path)
 
 
-def inspect(page, clock, terms):
+def phrase(text):
+    return " ".join(re.findall(r"[^\W_]+", unicodedata.normalize("NFKC", text).casefold()))
+
+
+def inspect(page, clock, terms, objective=""):
     soup = public_soup(page.body)
     body = soup.body
     if body is None:
         raise ResearchGap("SOURCE_TEXT_MISSING")
     text_hash = digest(clean(body.get_text(" ", strip=True)))
     heading = ""
+    heading_parent = None
     entries = []
+    named = set()
+    headings = set()
+    objective_phrase = f" {phrase(objective)} "
     title = clean(soup.title.get_text(" ", strip=True))[:180] if soup.title else ""
     for node in (body.select_one("main") or body).select("h1,h2,h3,h4,p"):
         if node.find_parent(["header", "nav", "footer", "aside"]):
@@ -89,24 +97,46 @@ def inspect(page, clock, terms):
         text = clean(node.get_text(" ", strip=True))
         if node.name != "p":
             heading = text
+            heading_parent = node.find_parent(["section", "article"]) or node.parent
+            label = phrase(heading)
+            if node.name != "h1" and 3 <= len(heading) <= 75:
+                headings.add(label)
+            if (node.name != "h1" and 3 <= len(heading) <= 75
+                    and len(words(heading)) >= 2 and f" {label} " in objective_phrase):
+                named.add(heading)
             continue
         if not 3 <= len(heading) <= 75 or not 30 <= len(text) <= 1600:
             continue
+        if heading in named:
+            scope = node.find_parent(["section", "article"])
+            if (scope is not None and scope is not heading_parent) or not any(
+                parent is heading_parent for parent in node.parents
+            ):
+                continue
         for sentence in re.split(r"(?<=[.!?؟])\s+", text):
             if not 30 <= len(sentence) <= 180 or re.match(r"^(?:just|simply)\b", sentence, re.I):
                 continue
             score = len(words(sentence) & terms) + 2 * len(words(heading) & terms)
             if score:
                 entries.append({"label": heading, "quote": sentence, "context": text, "score": score})
+    for entry in entries:
+        if entry["label"] in named:
+            label = f" {phrase(entry['label'])} "
+            context = f" {phrase(entry['context'])} "
+            if any(label != f" {other} " and label in f" {other} " and f" {other} " in context
+                   for other in headings):
+                entry["mentions_other_variant"] = True
     # Retain short passages from every fetched source for the one-shot comparison.
     counts = Counter(word for entry in entries for word in words(entry["quote"]) & terms)
     for entry in entries:
         entry["specificity"] = round(sum(1 / counts[word] for word in words(entry["quote"]) & terms), 3)
-    entries.sort(key=lambda entry: (-entry["specificity"], -entry["score"]))
+    entries.sort(key=lambda entry: (-len(phrase(entry["label"]).split()) if entry["label"] in named else 0,
+                                    -entry["specificity"], -entry["score"]))
     return {
-        "page_url": page.url, "capture_kind": page.source_kind, "captured_at": clock().isoformat(),
+        "page_url": page.url, "capture_kind": page.source_kind, "captured_at": page.captured_at or clock().isoformat(),
         "body_sha256": sha256(page.body).hexdigest(), "text_sha256": text_hash, "title": title,
         "entries": entries[:8],
+        "named_sections": sorted(named),
     }
 
 
@@ -129,9 +159,14 @@ def rank_links(page, root, terms, visited, *, action=False):
 
 
 def best_fact(pages, terms):
+    named = {phrase(label) for page in pages for label in page.get("named_sections", [])}
+    longest = max((len(label.split()) for label in named), default=0)
+    named = {label for label in named if len(label.split()) == longest}
     candidates = [(page, item) for page in pages for item in page["entries"] if item["score"] >= 2]
     candidates = [(page, item) for page, item in candidates
-                  if words(item["quote"]) & terms and not CONDITIONAL.search(item["context"])
+                  if (not named or phrase(item["label"]) in named) and words(item["quote"]) & terms
+                  and not item.get("mentions_other_variant")
+                  and not CONDITIONAL.search(item["context"])
                   and not CONFLICT_SIGNAL.search(item["quote"])]
     if not candidates:
         return None
@@ -142,7 +177,7 @@ def best_fact(pages, terms):
         len(words(pair[1]["quote"]) & words(pair[1]["label"]) & terms), pair[1]["score"],
         not bool(urlsplit(pair[0]["page_url"]).query), -len(pair[1]["quote"]),
     ))
-    return {**{k: v for k, v in page.items() if k != "entries"}, **entry,
+    return {**{k: v for k, v in page.items() if k not in {"entries", "named_sections"}}, **entry,
             "scope": entry["label"], "outcome": "QUOTE_OBSERVED",
             "constraints": {"basis": "FULL_SOURCE_CONTEXT", "page_path": urlsplit(page["page_url"]).path,
                             "price": None, "branch": None, "valid_until": None,
@@ -190,7 +225,7 @@ def research_plan(request, load, clock):
             page = load(url, min(5.0, max(.05, SECONDS - (monotonic() - started))))
             if page.url != url:
                 raise ResearchGap("SOURCE_URL_CHANGED")
-            captured = inspect(page, clock, terms)
+            captured = inspect(page, clock, terms, request.objective if kind == "DISCOVERY" else "")
             pages.append(captured)
             step["outcome"] = "SOURCE_READ"
             step["candidate_count"] = len(captured["entries"])
@@ -202,13 +237,14 @@ def research_plan(request, load, clock):
                     if score[0] >= 20:
                         action_links[link] = score
                 if reason == "ACTION_DESTINATION" and re.search(r"download|تحميل|تنزيل", captured["title"], re.I):
-                    destination = {k: v for k, v in captured.items() if k != "entries"}
+                    destination = {k: v for k, v in captured.items() if k not in {"entries", "named_sections"}}
                     destination.update(quote=captured["title"], context=captured["title"],
                                        scope="OFFICIAL_DESTINATION_TITLE", outcome="QUOTE_OBSERVED",
                                        anchor=anchor)
         except HTTPError as exc:
             step["outcome"] = "SOURCE_REDIRECT" if 300 <= exc.code < 400 else "SOURCE_UNAVAILABLE"
             step["http_status"] = exc.code
+            exc.close()
         except (OSError, ResearchGap) as exc:
             step["outcome"] = str(exc) if isinstance(exc, ResearchGap) else "SOURCE_UNAVAILABLE"
         fact = best_fact(pages, terms)
@@ -457,6 +493,8 @@ def refresh_plan(previous, load, clock):
     unchanged = (
         old == new and previous["planner"].get("edition_sha256") == updated["planner"].get("edition_sha256")
         and previous["planner"]["gap"] == updated["planner"]["gap"]
+        and [(row["page_url"], row["capture_kind"], row["quote"], row["scope"]) for row in previous["evidence"]]
+        == [(row["page_url"], row["capture_kind"], row["quote"], row["scope"]) for row in updated["evidence"]]
     )
     if unchanged and check(previous, clock()) in (None, "BRIEF_REVIEW_REQUIRED"):
         return None

@@ -43,6 +43,8 @@ def main():
     parser.add_argument("--planner-cases", type=Path)
     parser.add_argument("--keep-demo", action="store_true", help="Keep the disposable database after verification")
     parser.add_argument("--port", type=int)
+    parser.add_argument("--snapshot", type=Path)
+    parser.add_argument("--check-destination", action="store_true", help="Follow the campaign CTA in Chromium")
     parser.add_argument("--case-name", action="append", default=[])
     args = parser.parse_args()
     if bool(args.cases) == bool(args.planner_cases):
@@ -75,7 +77,8 @@ def main():
     def restart(log):
         nonlocal process
         stop()
-        process = subprocess.Popen([*command, "serve", "--directory", str(directory), "--port", str(port)],
+        snapshot_args = ["--snapshot", str(args.snapshot.resolve())] if args.snapshot else []
+        process = subprocess.Popen([*command, "serve", "--directory", str(directory), "--port", str(port), *snapshot_args],
                                    cwd=ROOT, stdout=log, stderr=subprocess.STDOUT)
         deadline = monotonic() + 40
         while monotonic() < deadline and process.poll() is None:
@@ -109,6 +112,8 @@ def main():
                     target = evidence / name
                     target.mkdir(exist_ok=True)
                     rejected_copy = None
+                    unregistered_copy = None
+                    visited_destination = None
                     accepted_copy_fields = []
                     stale_copy_packet_rejected = False
                     if plans is None:
@@ -187,11 +192,28 @@ def main():
                                 assert "COPY_REQUIRES_EVIDENCE_REVIEW" in rejected.value.text()
                                 expect(page.locator("#v2-status")).to_contain_text("الصياغة تحتاج مراجعة دليل")
                                 expect(headline).to_have_value(case["rejected_headline"])
+                                if generated["proposal"]["planner"].get("edition"):
+                                    assert rejected.value.json()["detail"]["fields"] == ["headline"]
+                                    expect(headline).to_have_attribute("aria-invalid", "true")
+                                    for field in ("message", "cta", "caption"):
+                                        expect(editor.locator(f'[name="{field}"]')).not_to_have_attribute("aria-invalid", "true")
                                 current = page.evaluate("domain => window.api('GET', '/api/v2/campaigns/' + domain)", domain)
                                 assert current["run_id"] == generated["run_id"] and not current["approved"]
                                 (target / "rejected.json").write_text(json.dumps(rejected.value.json(), ensure_ascii=False, indent=2) + "\n")
-                                page.locator("#v2-status").screenshot(path=str(target / "rejected.png"))
+                                editor.locator("#v2-copy-details").screenshot(path=str(target / "rejected.png"))
                                 headline.fill(generated["proposal"]["brief"]["directions"][0]["headline"])
+                            if case.get("unregistered_copy"):
+                                message = editor.locator('[name="message"]')
+                                message.fill(case["unregistered_copy"])
+                                with page.expect_response(lambda r: r.url.endswith("/brief")) as response:
+                                    editor.locator('button[type="submit"]').click()
+                                unregistered_copy = response.value.json()
+                                assert response.value.status == 409
+                                assert unregistered_copy["detail"]["fields"] == ["message"]
+                                expect(message).to_have_attribute("aria-invalid", "true")
+                                expect(message).to_have_value(case["unregistered_copy"])
+                                (target / "unregistered.json").write_text(
+                                    json.dumps(unregistered_copy, ensure_ascii=False, indent=2) + "\n")
                             if case.get("copy_receipt"):
                                 upload_packet(packet)
                                 options = editor.locator("#v2-copy-options details")
@@ -200,6 +222,10 @@ def main():
                                 choice.locator("summary").click()
                                 for field, value in case["copy_edit"].items():
                                     choice.locator(f'[data-copy-field="{field}"]').click()
+                                    expect(editor.locator(f'[name="{field}"]')).to_have_value(value)
+                            elif case.get("choose_reviewed_copy"):
+                                for field, value in case["copy_edit"].items():
+                                    editor.locator("#v2-reviewed-variants").get_by_role("button", name=value, exact=True).click()
                                     expect(editor.locator(f'[name="{field}"]')).to_have_value(value)
                             else:
                                 for field, value in case["copy_edit"].items():
@@ -226,7 +252,8 @@ def main():
                         assert requested.value.ok, requested.value.text()
                     initial = saved()
                     assert initial["proposal"]["status"] == "READY", initial["proposal"]["evidence"]
-                    assert all(item["capture_kind"] == "public_http" for item in initial["proposal"]["evidence"])
+                    capture_kind = "publisher_snapshot" if args.snapshot else "public_http"
+                    assert all(item["capture_kind"] == capture_kind for item in initial["proposal"]["evidence"])
                     if plans is not None:
                         assert initial["run_id"] != generated["run_id"]
                         assert initial["proposal"]["evidence"] == generated["proposal"]["evidence"]
@@ -236,7 +263,21 @@ def main():
                             assert actual == value, (field, actual, value)
                             accepted_copy_fields.append(field)
                     if plans is not None and case.get("destination"):
-                        expect(page.locator("#v2-package-card a")).to_have_attribute("href", case["destination"])
+                        cta = page.locator("#v2-package-card a")
+                        expect(cta).to_have_attribute("href", case["destination"])
+                        assert initial["proposal"]["package"]["source_url"] == case["destination"]
+                        if args.check_destination:
+                            with page.expect_popup() as opened:
+                                cta.click()
+                            destination = opened.value
+                            destination.wait_for_load_state("domcontentloaded")
+                            expect(destination).to_have_url(case["destination"], timeout=15000)
+                            for name_on_page in case.get("destination_visible_text", []):
+                                matches = destination.get_by_text(name_on_page, exact=True).filter(visible=True)
+                                expect(matches.first).to_be_visible(timeout=15000)
+                            visited_destination = {"url": destination.url,
+                                                   "visible_text": case.get("destination_visible_text", [])}
+                            destination.close()
                     previews = {}
                     for size in ("portrait", "square"):
                         with page.expect_response(lambda response: response.url.endswith("&size=" + size)) as preview:
@@ -274,10 +315,13 @@ def main():
                     assert revision["proposal"]["evidence"] == initial["proposal"]["evidence"]
                     assert revision["proposal"]["brief"]["selected"] == alternate
                     stale = page.evaluate(
-                        """url => fetch(url, {headers: window.authHeaders()}).then(r => r.status)""",
+                        """async url => {
+                            const r = await fetch(url, {headers: window.authHeaders()});
+                            return {status: r.status, body: await r.json()};
+                        }""",
                         api_path + "/package/export?run_id=" + initial["run_id"],
                     )
-                    assert stale == 409
+                    assert stale == {"status": 409, "body": {"detail": {"code": "CAMPAIGN_CHANGED"}}}
                     if plans is not None and case.get("restore_recommended"):
                         assert page.locator("#v2-package-card a").get_attribute("href") != case["destination"]
                         page.click("#v2-approve")
@@ -318,7 +362,13 @@ def main():
                     planner = final["proposal"].get("planner")
                     results[name] = {"status": "EXPORTED", "seconds": round(monotonic() - before, 2),
                                      "public_pages": planner["page_calls"] if planner else 2,
-                                     "stale_export_http": stale, "rejected_copy_http": rejected_copy,
+                                     "plan_run_id": generated["run_id"] if plans is not None else None,
+                                     "reviewed_run_id": initial["run_id"], "direction_revision_run_id": revision["run_id"],
+                                     "restored_run_id": final["run_id"], "restored_approval_id": final["approval_id"],
+                                     "restored_zip_sha256": sha256((target / "campaign.zip").read_bytes()).hexdigest(),
+                                     "visited_destination": visited_destination,
+                                     "stale_export_http": stale["status"], "rejected_copy_http": rejected_copy,
+                                     "unregistered_copy_response": unregistered_copy,
                                      "stale_copy_packet_rejected": stale_copy_packet_rejected,
                                      "accepted_copy_fields": accepted_copy_fields,
                                      "reviewed_png_sha256": initial_hashes,

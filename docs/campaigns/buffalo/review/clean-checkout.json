@@ -1,0 +1,236 @@
+{
+  "verification_checkout": "c983b94",
+  "environment": {
+    "python": "3.12.3",
+    "playwright": "1.59.0",
+    "database": "postgres:16-alpine"
+  },
+  "offline_checks": {
+    "pytest_passed": 142,
+    "pytest_warnings": 5,
+    "full_suite": false
+  },
+  "browser_replay": {
+    "checkout-buffalo": {
+      "cases": {
+        "menu": {
+          "status": "EXPORTED",
+          "seconds": 35.4,
+          "public_pages": 4,
+          "plan_run_id": "1741a1b9-ec20-4477-abf0-10fbf6123f93",
+          "reviewed_run_id": "175df021-74c3-488c-a61f-39b9393a8690",
+          "direction_revision_run_id": "7cf61b71-7366-4c9f-97a7-6f844f54d1a9",
+          "restored_run_id": "712cde09-56ca-4be4-b10f-166519bc80df",
+          "restored_approval_id": "12de3a9d-ec9b-45ff-ab68-ce24d832f2bf",
+          "restored_zip_sha256": "9d59b9ba0dc7eba51dd58f9efe54c9dffbdf172e2cc50ff6d500c13109f0a743",
+          "visited_destination": null,
+          "stale_export_http": 409,
+          "rejected_copy_http": 409,
+          "unregistered_copy_response": {
+            "detail": {
+              "code": "COPY_REQUIRES_EVIDENCE_REVIEW",
+              "fields": [
+                "message"
+              ]
+            }
+          },
+          "stale_copy_packet_rejected": false,
+          "accepted_copy_fields": [
+            "message"
+          ],
+          "reviewed_png_sha256": {
+            "portrait": "aa1f475c16884cdcfa685651d437189b759fd81dabd7e1863a5ca178381758a2",
+            "square": "6ebd511150744253876d48775e5454b29a839a3e65ee707406d66566918c1f51"
+          },
+          "restored_png_sha256": {
+            "portrait": "aa1f475c16884cdcfa685651d437189b759fd81dabd7e1863a5ca178381758a2",
+            "square": "6ebd511150744253876d48775e5454b29a839a3e65ee707406d66566918c1f51"
+          }
+        },
+        "truffle": {
+          "status": "EXPORTED",
+          "seconds": 26.17,
+          "public_pages": 2,
+          "plan_run_id": "6bf44723-43dd-473e-a83f-bd7000eda241",
+          "reviewed_run_id": "b4f6cc0e-67bc-4889-815c-abf0d9449ae7",
+          "direction_revision_run_id": "a6559d9b-45de-4a8a-b207-fe87e6600617",
+          "restored_run_id": "cdab5cc9-c960-4c7a-9c26-5f24e8f7b70b",
+          "restored_approval_id": "c6e52bcf-a69a-4257-ad69-688e8522e3c6",
+          "restored_zip_sha256": "3d214b633b25091ff826d62836d3e461621615536cfeb18752e36d338f9fdbf4",
+          "visited_destination": null,
+          "stale_export_http": 409,
+          "rejected_copy_http": null,
+          "unregistered_copy_response": null,
+          "stale_copy_packet_rejected": false,
+          "accepted_copy_fields": [],
+          "reviewed_png_sha256": {
+            "portrait": "7142db9fc0501a9302bfb5d5240bb5437c7daaf0df13e34e15bd4dbdf02f5346",
+            "square": "84b5cdb32dcdf4d9ba9889b1d1c76ecc5d7d17e40d3a2e8b5bc451e106dc47a7"
+          },
+          "restored_png_sha256": {
+            "portrait": "7142db9fc0501a9302bfb5d5240bb5437c7daaf0df13e34e15bd4dbdf02f5346",
+            "square": "84b5cdb32dcdf4d9ba9889b1d1c76ecc5d7d17e40d3a2e8b5bc451e106dc47a7"
+          }
+        }
+      },
+      "elapsed_seconds": 71.66,
+      "campaign_runs": 8,
+      "automated_review_actions": 6,
+      "provider_usage_rows": 0,
+      "browser_errors": []
+    },
+    "checkout-five": {
+      "cases": {
+        "five-guys": {
+          "status": "EXPORTED",
+          "seconds": 29.14,
+          "public_pages": 1,
+          "plan_run_id": "7cb63fba-1997-40bc-9d4b-7d60b6878157",
+          "reviewed_run_id": "03da897b-82d1-4e1a-a815-48249475c5e2",
+          "direction_revision_run_id": "f6b4e49a-e9e1-45c6-9405-e1f7c1fc36e0",
+          "restored_run_id": "f6b4e49a-e9e1-45c6-9405-e1f7c1fc36e0",
+          "restored_approval_id": "c1d01154-15a4-4a4b-837f-6b58ed317923",
+          "restored_zip_sha256": "74eee9176a1134dac04b125c1b9e7cf15669aac0e33cb4ccd6196434a7e58c81",
+          "visited_destination": null,
+          "stale_export_http": 409,
+          "rejected_copy_http": null,
+          "unregistered_copy_response": null,
+          "stale_copy_packet_rejected": false,
+          "accepted_copy_fields": [],
+          "reviewed_png_sha256": {
+            "portrait": "c34feac8679ccf002f0c731a82d13d595f72b6cdc54fce98ac4d95d9dbb518c1",
+            "square": "4965c961389d89a83ece5ebc996251dfd2645509e55d3a5107bbcf48ef79147a"
+          },
+          "restored_png_sha256": {
+            "portrait": "55cb66ded63295f2cf88324666bae02311d069ec2071e04aac6d91da139087b1",
+            "square": "2127ff76965c08d3504a0b46f669d5dcbd55622574cf102202df3194832e1331"
+          }
+        }
+      },
+      "elapsed_seconds": 38.25,
+      "campaign_runs": 3,
+      "automated_review_actions": 2,
+      "provider_usage_rows": 0,
+      "browser_errors": []
+    },
+    "checkout-nandos": {
+      "cases": {
+        "nandos": {
+          "status": "EXPORTED",
+          "seconds": 28.77,
+          "public_pages": 1,
+          "plan_run_id": "41a11d73-b408-431e-846b-817e591089f8",
+          "reviewed_run_id": "99324e0a-9c0e-4336-aff7-df042d2a95c3",
+          "direction_revision_run_id": "b780d592-e468-4f8c-9079-ee19965e7116",
+          "restored_run_id": "b780d592-e468-4f8c-9079-ee19965e7116",
+          "restored_approval_id": "424036bf-3c8e-483d-aa4d-eae8a1514109",
+          "restored_zip_sha256": "913cafb474c1b722716318129cb1fbbbb5c19f57d1edc355bdb8fe65ba7f32b8",
+          "visited_destination": null,
+          "stale_export_http": 409,
+          "rejected_copy_http": null,
+          "unregistered_copy_response": null,
+          "stale_copy_packet_rejected": false,
+          "accepted_copy_fields": [],
+          "reviewed_png_sha256": {
+            "portrait": "119bb0325b2581a22ef93278f5e5c8b8e5cdc0f59f388c192589bc3a6d81705c",
+            "square": "629201a01e2326516fdf1972f18343cda06a2d514d9bc63f6995b6d16a8fa617"
+          },
+          "restored_png_sha256": {
+            "portrait": "a601b092db152756957fd2a081627b61a3265e8d3f24d031338a1b2af6f1f7a9",
+            "square": "ea150617e8b4dc5db2a3492a94715aa1d71ab3cc0f056221db0ab75a8361aa76"
+          }
+        }
+      },
+      "elapsed_seconds": 38.74,
+      "campaign_runs": 3,
+      "automated_review_actions": 2,
+      "provider_usage_rows": 0,
+      "browser_errors": []
+    }
+  },
+  "delivery": {
+    "menu/browser-result.json": "1edc8484ec3b2d6f93258187fd5bce4e31781a58d126cd71ee48ead2d487bf5f",
+    "menu/campaign.zip": "49a3c2eb5d3d45f3fd7f200bc9fb29099a5db6a2ecbe3a955a5ab0279dfabef7",
+    "review/comparison.json": "41ee69f1066bf8b60338d9502bb2af1412751ff8b204063d24f1c791a6c3723b"
+  },
+  "provider_usage_rows": 0,
+  "live_browser": {
+    "checkout-live-buffalo": {
+      "cases": {
+        "menu": {
+          "status": "EXPORTED",
+          "seconds": 80.37,
+          "public_pages": 4,
+          "plan_run_id": "2c6038fe-c913-4312-9f0e-ef89cbbb81c6",
+          "reviewed_run_id": "d8929341-d524-4057-a2b5-4f9f50854eba",
+          "direction_revision_run_id": "00a3b6d7-4013-497b-a0c1-eb2402a7d229",
+          "restored_run_id": "cf5d939b-5257-46f9-acfb-04337f71d65a",
+          "restored_approval_id": "d0b9a66a-007f-4c16-846e-5eb454778c80",
+          "restored_zip_sha256": "92092c88a67833b6222946b8c7935368398a141b9ec376ea24c8f828a16a026b",
+          "visited_destination": null,
+          "stale_export_http": 409,
+          "rejected_copy_http": 409,
+          "unregistered_copy_response": {
+            "detail": {
+              "code": "COPY_REQUIRES_EVIDENCE_REVIEW",
+              "fields": [
+                "message"
+              ]
+            }
+          },
+          "stale_copy_packet_rejected": false,
+          "accepted_copy_fields": [
+            "message"
+          ],
+          "reviewed_png_sha256": {
+            "portrait": "aa1f475c16884cdcfa685651d437189b759fd81dabd7e1863a5ca178381758a2",
+            "square": "6ebd511150744253876d48775e5454b29a839a3e65ee707406d66566918c1f51"
+          },
+          "restored_png_sha256": {
+            "portrait": "aa1f475c16884cdcfa685651d437189b759fd81dabd7e1863a5ca178381758a2",
+            "square": "6ebd511150744253876d48775e5454b29a839a3e65ee707406d66566918c1f51"
+          }
+        }
+      },
+      "elapsed_seconds": 93.47,
+      "campaign_runs": 4,
+      "automated_review_actions": 3,
+      "provider_usage_rows": 0,
+      "browser_errors": []
+    },
+    "checkout-live-five": {
+      "cases": {
+        "five-guys": {
+          "status": "EXPORTED",
+          "seconds": 57.32,
+          "public_pages": 1,
+          "plan_run_id": "b49309bb-4c0f-489c-a0a3-dbfe1ae317f0",
+          "reviewed_run_id": "5c42c92b-a910-47ea-9c26-4345cca8b017",
+          "direction_revision_run_id": "9fa004b7-0dd9-40f3-bfb6-3d75f1a03c1a",
+          "restored_run_id": "9fa004b7-0dd9-40f3-bfb6-3d75f1a03c1a",
+          "restored_approval_id": "527aebdd-3a30-4b81-b958-cdc323966715",
+          "restored_zip_sha256": "495a6e690807f6b1110f639b769c2aa6c57971ce1f10a06f2308a9d1de6aac85",
+          "visited_destination": null,
+          "stale_export_http": 409,
+          "rejected_copy_http": null,
+          "unregistered_copy_response": null,
+          "stale_copy_packet_rejected": false,
+          "accepted_copy_fields": [],
+          "reviewed_png_sha256": {
+            "portrait": "c34feac8679ccf002f0c731a82d13d595f72b6cdc54fce98ac4d95d9dbb518c1",
+            "square": "4965c961389d89a83ece5ebc996251dfd2645509e55d3a5107bbcf48ef79147a"
+          },
+          "restored_png_sha256": {
+            "portrait": "55cb66ded63295f2cf88324666bae02311d069ec2071e04aac6d91da139087b1",
+            "square": "2127ff76965c08d3504a0b46f669d5dcbd55622574cf102202df3194832e1331"
+          }
+        }
+      },
+      "elapsed_seconds": 73.12,
+      "campaign_runs": 3,
+      "automated_review_actions": 2,
+      "provider_usage_rows": 0,
+      "browser_errors": []
+    }
+  }
+}

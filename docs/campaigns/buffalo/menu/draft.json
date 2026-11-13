@@ -1,7 +1,7 @@
 {
   "domain_key": "buffaloburger_com",
-  "run_id": "0148ddf3-767a-461b-9421-49a0b1effc96",
-  "profile_snapshot_id": "b0ac2139-3857-46a4-853f-e3261466d804",
+  "run_id": "890e88e0-6209-4fd8-9111-c25d344b1e53",
+  "profile_snapshot_id": "77182593-bb8b-4bfc-bcc0-75cad4c8ff15",
   "proposal": {
     "schema_version": 2,
     "kind": "SOURCE_CAMPAIGN",
@@ -41,13 +41,13 @@
           "name": "اختيار على حسب المزاج",
           "rationale": "نبدأ بقرار صغير بين شيدر وصوص بافالو أو بايتس شيدر بالهالبينو.",
           "headline": "شيدر كلاسيك ولا هالبينو؟",
-          "message": "أولد سكول أو راستافاري. اختار على مزاجك.",
+          "message": "صوص بافالو في الاختيارين.",
           "cta": "شوف المنيو",
           "theme": "ember",
-          "caption": "مزاجك شيدر وصوص بافالو؟ ابدأ بأولد سكول. عايز بايتس شيدر بالهالبينو؟ بصّ على راستافاري. افتح المنيو وقارن قبل ما تختار.",
+          "caption": "أولد سكول فيه شيدر، وراستافاري فيه بايتس شيدر محشية هالبينو. الاتنين فيهم صوص بافالو. افتح المنيو وقارن قبل ما تختار.",
           "hook": "شيدر كلاسيك ولا هالبينو؟",
-          "shot": "بطاقتان جنب بعض. رسم ساندوتش لكل بطاقة، مع اسم الصنف والمكوّن اللي يفرّقه.",
-          "middle_shot": "أولد سكول أو راستافاري. اختار على مزاجك.",
+          "shot": "رسمان للمكونات مع اسم كل ساندوتش ووصف الشيدر الخاص به.",
+          "middle_shot": "صوص بافالو في الاختيارين.",
           "end_shot": "شوف المنيو"
         },
         {
@@ -75,10 +75,10 @@
     "evidence": [
       {
         "page_url": "https://buffaloburger.com/menu",
-        "capture_kind": "public_http",
+        "capture_kind": "publisher_snapshot",
         "field": "title",
-        "captured_at": "2026-11-13T13:57:05.866725+00:00",
-        "body_sha256": "4ae0a0f6ae960281022247a99d92a7e5c4db6dd241cfb983f047440e797cc272",
+        "captured_at": "2026-11-13T13:51:03+00:00",
+        "body_sha256": "82439b02324bf88df9dcc0047fcbf0096ba6ccf45ed0bddf444ca463c99b6975",
         "text_sha256": "80ce24e3740b1a56c6b1770a46edce63633e31fa53da8149f1f2daaa0eee2369",
         "quote": "قائمة بافلو برجر",
         "context": "قائمة بافلو برجر",
@@ -88,10 +88,10 @@
       },
       {
         "page_url": "https://buffaloburger.com/menu/old-school",
-        "capture_kind": "public_http",
+        "capture_kind": "publisher_snapshot",
         "field": "og:description",
-        "captured_at": "2026-11-13T13:57:08.621758+00:00",
-        "body_sha256": "f6522bf83706a9ebda1d43a0fcf4d07a9524c25381eb924f5a27f01c5c0cacb7",
+        "captured_at": "2026-11-13T13:51:04+00:00",
+        "body_sha256": "0a70ee0c64cacc6703a6891aca25b8539fb660b4998486a500bf2c52a87f792c",
         "text_sha256": "d24be8ec430a48288407b66d952219fa7280da5db1a3e170cb1d2f613e81a9f6",
         "quote": "Pure beef burger patty, topped with our signature Buffalo sauce and cheddar cheese.",
         "context": "Pure beef burger patty, topped with our signature Buffalo sauce and cheddar cheese.",
@@ -101,10 +101,10 @@
       },
       {
         "page_url": "https://buffaloburger.com/menu/the-rastafari",
-        "capture_kind": "public_http",
+        "capture_kind": "publisher_snapshot",
         "field": "og:description",
-        "captured_at": "2026-11-13T13:57:09.771147+00:00",
-        "body_sha256": "6932acbba86837c241e4b122c20afecf0daf21aacbc6cbef7e5c051a095c4922",
+        "captured_at": "2026-11-13T13:51:09+00:00",
+        "body_sha256": "a55a9f865a9b386f7e3545c99fb3921248ead2e7c143556f852fb679763c68d7",
         "text_sha256": "b2f8df1638e3e0886caccc9c03e00f4d30d91450b473d6a1fc692e6de747b0b7",
         "quote": "بايتس الجبنة الشيدر المحشوه بالهالپنيو وصوص البافالو الكريمي و مع قطعة البرجر.",
         "context": "بايتس الجبنة الشيدر المحشوه بالهالپنيو وصوص البافالو الكريمي و مع قطعة البرجر.",
@@ -119,7 +119,7 @@
     "planner": {
       "policy": "editorial-campaign@1",
       "edition": "buffalo-menu-20261113",
-      "edition_sha256": "b3b3b1f6485baa045ce4fe03e0d8833135a5502397e279ad4f7c0330a464c53f",
+      "edition_sha256": "6a3f45863d9676554efce1f8eb3e1b340bfd45e66cebfb136a0d9948ad148582",
       "input": {
         "url": "https://buffaloburger.com",
         "objective": "تشجيع المستخدم على تصفّح المنيو واختيار برجر يناسبه",
@@ -132,7 +132,7 @@
         {
           "page_url": "https://buffaloburger.com",
           "reason": "BRAND_ENTRY",
-          "outcome": "SOURCE_DEADLINE"
+          "outcome": "QUOTE_OBSERVED"
         },
         {
           "page_url": "https://buffaloburger.com/menu",
@@ -153,10 +153,10 @@
       "pages": [
         {
           "page_url": "https://buffaloburger.com/menu",
-          "capture_kind": "public_http",
+          "capture_kind": "publisher_snapshot",
           "field": "title",
-          "captured_at": "2026-11-13T13:57:05.866725+00:00",
-          "body_sha256": "4ae0a0f6ae960281022247a99d92a7e5c4db6dd241cfb983f047440e797cc272",
+          "captured_at": "2026-11-13T13:51:03+00:00",
+          "body_sha256": "82439b02324bf88df9dcc0047fcbf0096ba6ccf45ed0bddf444ca463c99b6975",
           "text_sha256": "80ce24e3740b1a56c6b1770a46edce63633e31fa53da8149f1f2daaa0eee2369",
           "quote": "قائمة بافلو برجر",
           "context": "قائمة بافلو برجر",
@@ -166,10 +166,10 @@
         },
         {
           "page_url": "https://buffaloburger.com/menu/old-school",
-          "capture_kind": "public_http",
+          "capture_kind": "publisher_snapshot",
           "field": "og:description",
-          "captured_at": "2026-11-13T13:57:08.621758+00:00",
-          "body_sha256": "f6522bf83706a9ebda1d43a0fcf4d07a9524c25381eb924f5a27f01c5c0cacb7",
+          "captured_at": "2026-11-13T13:51:04+00:00",
+          "body_sha256": "0a70ee0c64cacc6703a6891aca25b8539fb660b4998486a500bf2c52a87f792c",
           "text_sha256": "d24be8ec430a48288407b66d952219fa7280da5db1a3e170cb1d2f613e81a9f6",
           "quote": "Pure beef burger patty, topped with our signature Buffalo sauce and cheddar cheese.",
           "context": "Pure beef burger patty, topped with our signature Buffalo sauce and cheddar cheese.",
@@ -179,10 +179,10 @@
         },
         {
           "page_url": "https://buffaloburger.com/menu/the-rastafari",
-          "capture_kind": "public_http",
+          "capture_kind": "publisher_snapshot",
           "field": "og:description",
-          "captured_at": "2026-11-13T13:57:09.771147+00:00",
-          "body_sha256": "6932acbba86837c241e4b122c20afecf0daf21aacbc6cbef7e5c051a095c4922",
+          "captured_at": "2026-11-13T13:51:09+00:00",
+          "body_sha256": "a55a9f865a9b386f7e3545c99fb3921248ead2e7c143556f852fb679763c68d7",
           "text_sha256": "b2f8df1638e3e0886caccc9c03e00f4d30d91450b473d6a1fc692e6de747b0b7",
           "quote": "بايتس الجبنة الشيدر المحشوه بالهالپنيو وصوص البافالو الكريمي و مع قطعة البرجر.",
           "context": "بايتس الجبنة الشيدر المحشوه بالهالپنيو وصوص البافالو الكريمي و مع قطعة البرجر.",
@@ -195,11 +195,11 @@
       "gap": null,
       "missing_question": null,
       "page_calls": 4,
-      "elapsed_ms": 11892.31,
+      "elapsed_ms": 7.73,
       "provider_calls": 0,
       "cost_usd": 0,
       "brief_reviewed": false,
-      "request_id": "7305cc2e-994d-4864-a119-1793076f46de",
+      "request_id": "a4e73e00-5956-46c5-aebe-ac4f0548392c",
       "options": [
         {
           "name": "اختيار على حسب المزاج",
@@ -212,25 +212,28 @@
             "subjects": [
               {
                 "name": "أولد سكول",
-                "detail": "شيدر وصوص بافالو",
-                "palette": "classic"
+                "detail": "جبنة شيدر",
+                "palette": "classic",
+                "illustration": "cheddar"
               },
               {
                 "name": "راستافاري",
                 "detail": "بايتس شيدر بالهالبينو",
-                "palette": "pepper"
+                "palette": "pepper",
+                "illustration": "filled-bites"
               }
             ],
             "evidence": [
               1,
               2
             ],
-            "origin": "ORIGINAL_SCHEMATIC_ILLUSTRATION"
+            "origin": "ORIGINAL_SCHEMATIC_ILLUSTRATION",
+            "layout": "ingredient-columns"
           },
           "variants": {
             "message": [
-              "أولد سكول أو راستافاري. اختار على مزاجك.",
-              "بين أولد سكول وراستافاري، اختار اللي على مزاجك."
+              "صوص بافالو في الاختيارين.",
+              "الاتنين فيهم صوص بافالو."
             ]
           },
           "metric": "نقرات على رابط المنيو لكل ظهور.",
@@ -249,7 +252,7 @@
                 1,
                 2
               ],
-              "basis": "PUBLISHER_ITEM_NAMES"
+              "basis": "BUFFALO_SAUCE_IN_BOTH_PUBLISHER_DESCRIPTIONS"
             },
             {
               "field": "caption",
@@ -341,11 +344,11 @@
         }
       ]
     },
-    "sha256": "146b46e3d43fd38f07ea52cb945a82b15be106917cc347575c6f3e5f5bcebbd4"
+    "sha256": "77005bc8208758982841334e918fbd6d549799ab7f3dc9ded64ec67fd816f948"
   },
   "reason": "BRIEF_REVIEW_REQUIRED",
-  "checked_at": "2026-11-13T13:57:09.879245+00:00",
-  "recheck_at": "2026-11-20T13:57:05.866725+00:00",
+  "checked_at": "2026-11-13T13:51:10+00:00",
+  "recheck_at": "2026-11-20T13:51:03+00:00",
   "decision": null,
   "approved": false,
   "approval_id": null

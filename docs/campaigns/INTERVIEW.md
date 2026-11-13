@@ -95,3 +95,24 @@
 - ازاي تثبتي إن «شوف راستافاري» تحمل دليل صفحة الصنف بعد تغيير الاتجاه؟ حددي مكان اختيار `evidence_index` وفحص `run_id`.
 - لو العميل صدّر بينما المراجع غيّر الاتجاه، فين يحصل الرفض؟ ولو كروم اترسم مرتين في عمليتين، مين يقرر البايتات المحفوظة؟
 - لو ظهر وصف جديد سليم خارج الصياغات المحررة، إيه خطوة المراجعة؟ ما المدخلات والحكم البشري المطلوبين قبل توسيع البوابة؟
+
+## إصدار المراجعة — نوفمبر 2026
+
+### تتبع Run حقيقية من Buffalo
+
+ابدئي من [إيصال المتصفح](buffalo/menu/browser-result.json). `plan_run_id` هو رد `frontend/assets/v2-campaign.js::startPlan` من `api/routes/v2_campaigns.py::plan_campaign`. المداخل هي الرابط والهدف واللغة، ومعهم `request_id` ونسخة متوقعة لتنسيق الكتابات. `db/campaign_v2.py::Campaigns.planning_snapshot` يحدد الملكية والنسخة الحالية. `write_plan` ينشئ البراند والبروفايل التعريفي والـRun في معاملة للحساب الجديد.
+
+`strategy/campaign_planner.py::build_plan` يختار فرع التحرير عبر `strategy/campaign_editions.py::find_edition`. `capture_edition_source` يطابق العنوان أو وصف Open Graph، ويثبت عنوان الصنف أيضًا لما يكون مطلوبًا. `build_edition` يربط النص والرسمة والوجهة بالاقتباسات. قارني `proposal.planner.trace` و`proposal.package.claims` في [إيصال ZIP](buffalo/menu/campaign.json). في الديمو، `workflows/campaign_snapshot.py::open_snapshot` يعطي نفس المدخلات من شذرات مؤرخة ويميزها بـ`publisher_snapshot`. الحي يستخدم `load_package_page` وحارس الشبكة.
+
+`save_brief → review_draft → edit_edition_copy` يتحقق من حقول النص. `Campaigns.write` يعيد قراءة الـRun والبروفايل تحت قفل قبل حفظ مراجعة جديدة، ثم `Campaigns.decide` يسجل موافقة على Run بعينها. `strategy/campaign_package.py::proposal` يحفظ تخطيط الرسم `source-campaign@4` ضمن بصمة الحزمة، و`poster/campaign_catalog.py::catalog_cards` يضع رسم المكوّن واسمه ووصفه في نفس البطاقة. `poster/campaign_package.py::stored_poster` يربط PNG وقياساته بالـRun والبصمة والمقاس، و`export_package` يجمع الملفين والإيصال. ابحثي عن `restored_run_id` و`restored_approval_id` وبصمة الـZIP في سجل المتصفح.
+
+### إعادة إنتاج حالتين
+
+1. **وصف لصنف قريب.** أعيدي هدف Bacon Burger مع [لقطة Five Guys](../demo/campaign-snapshots/five-guys/manifest.json). الإصدار السابق رجّح Little Bacon Burger رغم تساوي التقاطع العددي. `inspect` يسجل عناوين الأقسام الواردة كعبارة في الهدف و`best_fact` يحصر الاختيار عند وجود تطابق. يحافظ الفلتر على قرينة من نص الوصف ويمنع خلط فقرة قسم مستقل أو وصف يذكر البديل الأطول. في `test_named_item_does_not_inherit_a_variant_description` احذفي وصف الصنف المطلوب أو ضعي وصف البديل تحته. النتيجة `FEATURE_EVIDENCE` وحزمة فارغة. المقايضة بين دقة الإسناد وتغطية الصفحات ذات العناوين العامة والأسماء المترجمة. [قبل وبعد](buffalo/review/README.md) · [الاختبار](../../tests/test_campaign_planner.py)
+2. **عنوان يتجاوز النطاق.** اتبعي [رحلة Buffalo](../../README.md#replay-buffalo-from-a-clean-checkout)، واكتبي «كل برجر في المنيو فيه هالبينو». الإيصال `409/COPY_REQUIRES_EVIDENCE_REVIEW` يحمل `fields: ["headline"]` والـRun تظل مسودة. أعيدي العنوان واضغطي اقتراح «الاتنين فيهم صوص بافالو.» ثم احفظي. «الاختيارين فيهم صوص بافالو.» تحمل نفس المعنى التحريري ورفضتها البوابة في حقل الرسالة. المقايضة بين قبول قائمة محررة قابلة للمراجعة وقبول دلالة نص حر يحتاج اختبارًا منفصلًا لحالات التعميم والنفي والسياق. [رد العنوان](buffalo/menu/rejected.json) · [رد الرسالة](buffalo/menu/unregistered.json)
+
+### أسئلة
+
+- إيه الفرق بين وصول صفحة المنيو بـHTTP 200 وبين كفاية دليلها؟ قارني عنوان صفحة Buffalo العام بوصف الصنف، وفسري ليه حالة Nando’s الحية تتوقف في الناقل قبل تقييم الدليل. [نتائج المصادر الحية](buffalo/review/live/README.md)
+- إيه اللي يمنع تصدير الحملة لو الموافقة اتغيّرت أثناء الرسم؟ اشرحي المقارنتين في `render_package`: الحالية قبل وبعد الرسم، ثم تطابق `approval_id` حتى لو رُفضت نفس الـRun واعتمدت من جديد. اشرحي ليه الاختبار لازم يتحقق من رد مسار التصدير. [تغيير الموافقة أثناء الرسم](../../tests/test_public_campaign_package.py) · [تغيير الـRun أثناء الرسم](../../tests/test_campaign_planner.py)
+- ليه وصل رابط المنيو من بطاقة الحزمة بينما البوستر بيعرض دعوة ثابتة؟ فين تلاقي وجهة كل اتجاه وإسنادها في الـJSON؟

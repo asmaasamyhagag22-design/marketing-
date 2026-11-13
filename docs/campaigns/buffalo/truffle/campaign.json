@@ -1,5 +1,5 @@
 {
-  "approval_id": "d912d729-410b-43a5-a92e-784506d5ed0b",
+  "approval_id": "7a4a3472-540d-44b4-a29f-27a7090c7031",
   "poster_measurements": {
     "portrait": {
       "geometry": [
@@ -126,7 +126,7 @@
       "width": 1080
     }
   },
-  "profile_snapshot_id": "a61e6e58-a3fe-48c6-aaf0-24760388bddb",
+  "profile_snapshot_id": "78df220d-fc33-469f-a3ce-4e2ed350311b",
   "proposal": {
     "brand_name": "Buffalo Burger",
     "brief": {
@@ -204,9 +204,9 @@
     ],
     "evidence": [
       {
-        "body_sha256": "7b358424f01aade3059a43b2c71ee26cda65fef528a27744545f81c39ce4424c",
-        "capture_kind": "public_http",
-        "captured_at": "2026-11-13T13:54:05.375358+00:00",
+        "body_sha256": "9f1c104b78971ced4b59318aeafc83a5c3e6de48d76935f0557401f33b98916a",
+        "capture_kind": "publisher_snapshot",
+        "captured_at": "2026-11-13T13:51:10+00:00",
         "context": "قطع المشروم السوتيه و البصل الكرسبى والجبنة شيدر مع صوص الترافل وبرجر اللحم الصافي",
         "field": "og:description",
         "outcome": "QUOTE_OBSERVED",
@@ -217,9 +217,9 @@
         "text_sha256": "89e98391fa65a8a5b01d6096fc77bdd6975151f241086dd3683479dcc4f99df1"
       },
       {
-        "body_sha256": "599f14d6ece989a79677b18dab7ab9a9b88bb828d04418b5e101adbd150a5ead",
-        "capture_kind": "public_http",
-        "captured_at": "2026-11-13T13:54:06.508431+00:00",
+        "body_sha256": "82439b02324bf88df9dcc0047fcbf0096ba6ccf45ed0bddf444ca463c99b6975",
+        "capture_kind": "publisher_snapshot",
+        "captured_at": "2026-11-13T13:51:03+00:00",
         "context": "قائمة بافلو برجر",
         "field": "title",
         "outcome": "QUOTE_OBSERVED",
@@ -304,7 +304,7 @@
       "destination_evidence_index": 0,
       "edition": "buffalo-truffle-20261113",
       "edition_sha256": "38f1202b29d90e7949777cc3dc70623ce4ca81e62e69c3917af727d3c5851411",
-      "elapsed_ms": 3823.28,
+      "elapsed_ms": 6.02,
       "gap": null,
       "input": {
         "language": "ar",
@@ -442,9 +442,9 @@
       "page_calls": 2,
       "pages": [
         {
-          "body_sha256": "7b358424f01aade3059a43b2c71ee26cda65fef528a27744545f81c39ce4424c",
-          "capture_kind": "public_http",
-          "captured_at": "2026-11-13T13:54:05.375358+00:00",
+          "body_sha256": "9f1c104b78971ced4b59318aeafc83a5c3e6de48d76935f0557401f33b98916a",
+          "capture_kind": "publisher_snapshot",
+          "captured_at": "2026-11-13T13:51:10+00:00",
           "context": "قطع المشروم السوتيه و البصل الكرسبى والجبنة شيدر مع صوص الترافل وبرجر اللحم الصافي",
           "field": "og:description",
           "outcome": "QUOTE_OBSERVED",
@@ -455,9 +455,9 @@
           "text_sha256": "89e98391fa65a8a5b01d6096fc77bdd6975151f241086dd3683479dcc4f99df1"
         },
         {
-          "body_sha256": "599f14d6ece989a79677b18dab7ab9a9b88bb828d04418b5e101adbd150a5ead",
-          "capture_kind": "public_http",
-          "captured_at": "2026-11-13T13:54:06.508431+00:00",
+          "body_sha256": "82439b02324bf88df9dcc0047fcbf0096ba6ccf45ed0bddf444ca463c99b6975",
+          "capture_kind": "publisher_snapshot",
+          "captured_at": "2026-11-13T13:51:03+00:00",
           "context": "قائمة بافلو برجر",
           "field": "title",
           "outcome": "QUOTE_OBSERVED",
@@ -487,9 +487,9 @@
       ]
     },
     "schema_version": 2,
-    "sha256": "e3a6b8f41f826f0c7130924c9e6791273b6dab4981d1744561fd0876ece0b715",
+    "sha256": "59cc88826aa6f1754fd4b38025ec1fc8c7580e03e66718a5a669c283c8de33d2",
     "status": "READY"
   },
   "review_status": "LOCAL_REVIEW",
-  "run_id": "7b3e10e8-66a8-42af-876a-24dbbfc35eb1"
+  "run_id": "45d16023-6c30-4c30-abf6-0f507a5aed9a"
 }

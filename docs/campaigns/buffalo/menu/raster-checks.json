@@ -5,54 +5,54 @@
       {
         "field": "brand",
         "x": 76,
-        "y": 68,
+        "y": 64,
         "right": 1004,
-        "bottom": 130.890625,
-        "size": 34,
-        "color": "rgb(38, 24, 20)",
+        "bottom": 127.59375,
+        "size": 36,
+        "color": "rgb(43, 21, 18)",
         "background": "rgba(0, 0, 0, 0)",
         "overflow": false
       },
       {
         "field": "H1",
         "x": 76,
-        "y": 158.890625,
+        "y": 149.59375,
         "right": 1004,
-        "bottom": 395.109375,
-        "size": 93,
-        "color": "rgb(38, 24, 20)",
+        "bottom": 252.09375,
+        "size": 82,
+        "color": "rgb(43, 21, 18)",
         "background": "rgba(0, 0, 0, 0)",
         "overflow": false
       },
       {
         "field": "motif",
         "x": 76,
-        "y": 423.109375,
+        "y": 274.09375,
         "right": 1004,
-        "bottom": 1057.875,
+        "bottom": 1121.90625,
         "size": 16,
-        "color": "rgb(38, 24, 20)",
+        "color": "rgb(43, 21, 18)",
         "background": "rgba(0, 0, 0, 0)",
         "overflow": false
       },
       {
         "field": "message",
-        "x": 243,
-        "y": 1142.875,
+        "x": 609,
+        "y": 1222.984375,
         "right": 1004,
-        "bottom": 1199.8125,
+        "bottom": 1279.921875,
         "size": 39,
-        "color": "rgb(38, 24, 20)",
+        "color": "rgb(43, 21, 18)",
         "background": "rgba(0, 0, 0, 0)",
         "overflow": false
       },
       {
         "field": "cta",
-        "x": 754,
-        "y": 1211.8125,
-        "right": 1004,
-        "bottom": 1282,
-        "size": 36,
+        "x": 76,
+        "y": 1216.90625,
+        "right": 333,
+        "bottom": 1286,
+        "size": 38,
         "color": "rgb(255, 242, 217)",
         "background": "rgb(38, 24, 20)",
         "overflow": false
@@ -62,121 +62,121 @@
       {
         "field": "brand",
         "text": "Buffalo Burger",
-        "font": 34,
+        "font": 36,
         "color": [
-          38,
-          24,
-          20
+          43,
+          21,
+          18
         ],
         "dir": "ltr",
         "box": [
           76,
-          68,
+          64,
           1004,
-          131
+          128
         ],
-        "minimum_interior_contrast": 8.88,
-        "390px_font": 12.28
+        "minimum_interior_contrast": 14.31,
+        "390px_font": 13.0
       },
       {
         "field": "H1",
         "text": "شيدر كلاسيك ولا هالبينو؟",
-        "font": 93,
+        "font": 82,
         "color": [
-          38,
-          24,
-          20
+          43,
+          21,
+          18
         ],
         "dir": "rtl",
         "box": [
           76,
-          159,
+          150,
           1004,
-          395
+          252
         ],
-        "minimum_interior_contrast": 8.95,
-        "390px_font": 33.58
+        "minimum_interior_contrast": 13.3,
+        "390px_font": 29.61
       },
       {
         "field": "item-name",
         "text": "أولد سكول",
-        "font": 48,
+        "font": 46,
         "color": [
-          38,
-          24,
-          20
+          43,
+          21,
+          18
         ],
         "dir": "rtl",
         "box": [
-          568,
-          912,
-          987,
-          976
+          563,
+          751,
+          988,
+          813
         ],
-        "minimum_interior_contrast": 14.98,
-        "390px_font": 17.33
+        "minimum_interior_contrast": 9.98,
+        "390px_font": 16.61
       },
       {
         "field": "item-detail",
-        "text": "شيدر وصوص بافالو",
-        "font": 36,
+        "text": "جبنة شيدر",
+        "font": 42,
         "color": [
-          38,
-          24,
-          20
+          43,
+          21,
+          18
         ],
         "dir": "rtl",
         "box": [
-          568,
-          980,
-          987,
-          1031
+          563,
+          815,
+          988,
+          873
         ],
-        "minimum_interior_contrast": 14.49,
-        "390px_font": 13.0
+        "minimum_interior_contrast": 9.98,
+        "390px_font": 15.17
       },
       {
         "field": "item-name",
         "text": "راستافاري",
-        "font": 48,
+        "font": 46,
         "color": [
           255,
-          240,
-          214
+          245,
+          223
         ],
         "dir": "rtl",
         "box": [
-          93,
-          912,
-          512,
-          976
+          92,
+          751,
+          517,
+          813
         ],
-        "minimum_interior_contrast": 10.75,
-        "390px_font": 17.33
+        "minimum_interior_contrast": 8.82,
+        "390px_font": 16.61
       },
       {
         "field": "item-detail",
         "text": "بايتس شيدر بالهالبينو",
-        "font": 36,
+        "font": 42,
         "color": [
           255,
-          240,
-          214
+          245,
+          223
         ],
         "dir": "rtl",
         "box": [
-          93,
-          980,
-          512,
-          1031
+          92,
+          815,
+          517,
+          873
         ],
-        "minimum_interior_contrast": 10.71,
-        "390px_font": 13.0
+        "minimum_interior_contrast": 8.43,
+        "390px_font": 15.17
       },
       {
         "field": "illustration-note",
         "text": "رسم توضيحي",
-        "font": 24,
+        "font": 30,
         "color": [
           38,
           24,
@@ -185,36 +185,36 @@
         "dir": "rtl",
         "box": [
           76,
-          1078,
+          1144,
           1004,
-          1129
+          1207
         ],
-        "minimum_interior_contrast": 8.85,
-        "390px_font": 8.67
+        "minimum_interior_contrast": 13.59,
+        "390px_font": 10.83
       },
       {
         "field": "message",
-        "text": "بين أولد سكول وراستافاري، اختار اللي على مزاجك.",
+        "text": "الاتنين فيهم صوص بافالو.",
         "font": 39,
         "color": [
-          38,
-          24,
-          20
+          43,
+          21,
+          18
         ],
         "dir": "rtl",
         "box": [
-          243,
-          1143,
+          609,
+          1223,
           1004,
-          1200
+          1280
         ],
-        "minimum_interior_contrast": 9.01,
+        "minimum_interior_contrast": 13.86,
         "390px_font": 14.08
       },
       {
         "field": "cta",
         "text": "شوف المنيو",
-        "font": 36,
+        "font": 38,
         "color": [
           255,
           242,
@@ -222,13 +222,13 @@
         ],
         "dir": "rtl",
         "box": [
-          754,
-          1212,
-          1004,
-          1282
+          76,
+          1217,
+          333,
+          1286
         ],
-        "minimum_interior_contrast": 14.53,
-        "390px_font": 13.0
+        "minimum_interior_contrast": 14.99,
+        "390px_font": 13.72
       }
     ]
   },
@@ -238,54 +238,54 @@
       {
         "field": "brand",
         "x": 76,
-        "y": 68,
+        "y": 64,
         "right": 1004,
-        "bottom": 130.890625,
-        "size": 34,
-        "color": "rgb(38, 24, 20)",
+        "bottom": 127.59375,
+        "size": 36,
+        "color": "rgb(43, 21, 18)",
         "background": "rgba(0, 0, 0, 0)",
         "overflow": false
       },
       {
         "field": "H1",
         "x": 76,
-        "y": 158.890625,
+        "y": 149.59375,
         "right": 1004,
-        "bottom": 395.109375,
-        "size": 93,
-        "color": "rgb(38, 24, 20)",
+        "bottom": 252.09375,
+        "size": 82,
+        "color": "rgb(43, 21, 18)",
         "background": "rgba(0, 0, 0, 0)",
         "overflow": false
       },
       {
         "field": "motif",
         "x": 76,
-        "y": 423.109375,
+        "y": 274.09375,
         "right": 1004,
-        "bottom": 787.875,
+        "bottom": 851.90625,
         "size": 16,
-        "color": "rgb(38, 24, 20)",
+        "color": "rgb(43, 21, 18)",
         "background": "rgba(0, 0, 0, 0)",
         "overflow": false
       },
       {
         "field": "message",
-        "x": 243,
-        "y": 872.875,
+        "x": 609,
+        "y": 952.984375,
         "right": 1004,
-        "bottom": 929.8125,
+        "bottom": 1009.921875,
         "size": 39,
-        "color": "rgb(38, 24, 20)",
+        "color": "rgb(43, 21, 18)",
         "background": "rgba(0, 0, 0, 0)",
         "overflow": false
       },
       {
         "field": "cta",
-        "x": 754,
-        "y": 941.8125,
-        "right": 1004,
-        "bottom": 1012,
-        "size": 36,
+        "x": 76,
+        "y": 946.90625,
+        "right": 333,
+        "bottom": 1016,
+        "size": 38,
         "color": "rgb(255, 242, 217)",
         "background": "rgb(38, 24, 20)",
         "overflow": false
@@ -295,121 +295,121 @@
       {
         "field": "brand",
         "text": "Buffalo Burger",
-        "font": 34,
+        "font": 36,
         "color": [
-          38,
-          24,
-          20
+          43,
+          21,
+          18
         ],
         "dir": "ltr",
         "box": [
           76,
-          68,
+          64,
           1004,
-          131
+          128
         ],
-        "minimum_interior_contrast": 8.88,
-        "390px_font": 12.28
+        "minimum_interior_contrast": 14.31,
+        "390px_font": 13.0
       },
       {
         "field": "H1",
         "text": "شيدر كلاسيك ولا هالبينو؟",
-        "font": 93,
+        "font": 82,
         "color": [
-          38,
-          24,
-          20
+          43,
+          21,
+          18
         ],
         "dir": "rtl",
         "box": [
           76,
-          159,
+          150,
           1004,
-          395
+          252
         ],
-        "minimum_interior_contrast": 8.95,
-        "390px_font": 33.58
+        "minimum_interior_contrast": 13.3,
+        "390px_font": 29.61
       },
       {
         "field": "item-name",
         "text": "أولد سكول",
-        "font": 48,
+        "font": 46,
         "color": [
-          38,
-          24,
-          20
+          43,
+          21,
+          18
         ],
         "dir": "rtl",
         "box": [
-          568,
-          642,
-          987,
-          706
+          563,
+          616,
+          988,
+          678
         ],
-        "minimum_interior_contrast": 14.98,
-        "390px_font": 17.33
+        "minimum_interior_contrast": 9.98,
+        "390px_font": 16.61
       },
       {
         "field": "item-detail",
-        "text": "شيدر وصوص بافالو",
-        "font": 36,
+        "text": "جبنة شيدر",
+        "font": 42,
         "color": [
-          38,
-          24,
-          20
+          43,
+          21,
+          18
         ],
         "dir": "rtl",
         "box": [
-          568,
-          710,
-          987,
-          761
+          563,
+          680,
+          988,
+          738
         ],
-        "minimum_interior_contrast": 14.49,
-        "390px_font": 13.0
+        "minimum_interior_contrast": 9.98,
+        "390px_font": 15.17
       },
       {
         "field": "item-name",
         "text": "راستافاري",
-        "font": 48,
+        "font": 46,
         "color": [
           255,
-          240,
-          214
+          245,
+          223
         ],
         "dir": "rtl",
         "box": [
-          93,
-          642,
-          512,
-          706
+          92,
+          616,
+          517,
+          678
         ],
-        "minimum_interior_contrast": 10.75,
-        "390px_font": 17.33
+        "minimum_interior_contrast": 8.82,
+        "390px_font": 16.61
       },
       {
         "field": "item-detail",
         "text": "بايتس شيدر بالهالبينو",
-        "font": 36,
+        "font": 42,
         "color": [
           255,
-          240,
-          214
+          245,
+          223
         ],
         "dir": "rtl",
         "box": [
-          93,
-          710,
-          512,
-          761
+          92,
+          680,
+          517,
+          738
         ],
-        "minimum_interior_contrast": 10.71,
-        "390px_font": 13.0
+        "minimum_interior_contrast": 8.43,
+        "390px_font": 15.17
       },
       {
         "field": "illustration-note",
         "text": "رسم توضيحي",
-        "font": 24,
+        "font": 30,
         "color": [
           38,
           24,
@@ -418,36 +418,36 @@
         "dir": "rtl",
         "box": [
           76,
-          808,
+          874,
           1004,
-          859
+          937
         ],
-        "minimum_interior_contrast": 8.85,
-        "390px_font": 8.67
+        "minimum_interior_contrast": 13.59,
+        "390px_font": 10.83
       },
       {
         "field": "message",
-        "text": "بين أولد سكول وراستافاري، اختار اللي على مزاجك.",
+        "text": "الاتنين فيهم صوص بافالو.",
         "font": 39,
         "color": [
-          38,
-          24,
-          20
+          43,
+          21,
+          18
         ],
         "dir": "rtl",
         "box": [
-          243,
-          873,
+          609,
+          953,
           1004,
-          930
+          1010
         ],
-        "minimum_interior_contrast": 9.01,
+        "minimum_interior_contrast": 13.86,
         "390px_font": 14.08
       },
       {
         "field": "cta",
         "text": "شوف المنيو",
-        "font": 36,
+        "font": 38,
         "color": [
           255,
           242,
@@ -455,13 +455,13 @@
         ],
         "dir": "rtl",
         "box": [
-          754,
-          942,
-          1004,
-          1012
+          76,
+          947,
+          333,
+          1016
         ],
-        "minimum_interior_contrast": 14.53,
-        "390px_font": 13.0
+        "minimum_interior_contrast": 14.99,
+        "390px_font": 13.72
       }
     ]
   }

@@ -1,11 +1,51 @@
 {
   "cases": {
+    "menu": {
+      "status": "EXPORTED",
+      "seconds": 27.77,
+      "public_pages": 4,
+      "plan_run_id": "1d4db327-02cf-42ec-8ce3-aede205cb342",
+      "reviewed_run_id": "a7dd5a91-f42c-4d51-8be1-de1681698d36",
+      "direction_revision_run_id": "2535f477-70c2-457e-82e8-e7a084dd68b6",
+      "restored_run_id": "20191d41-4738-4367-bfc9-cf53420e0acf",
+      "restored_approval_id": "2d6885a8-ee08-458f-944a-2be226067c5d",
+      "restored_zip_sha256": "c7b082320f1e481c4e525f455798022676aa24b82f23b5514962c8940ba1837b",
+      "stale_export_http": 409,
+      "rejected_copy_http": 409,
+      "unregistered_copy_response": {
+        "detail": {
+          "code": "COPY_REQUIRES_EVIDENCE_REVIEW",
+          "fields": [
+            "message"
+          ]
+        }
+      },
+      "stale_copy_packet_rejected": false,
+      "accepted_copy_fields": [
+        "message"
+      ],
+      "reviewed_png_sha256": {
+        "portrait": "aa1f475c16884cdcfa685651d437189b759fd81dabd7e1863a5ca178381758a2",
+        "square": "6ebd511150744253876d48775e5454b29a839a3e65ee707406d66566918c1f51"
+      },
+      "restored_png_sha256": {
+        "portrait": "aa1f475c16884cdcfa685651d437189b759fd81dabd7e1863a5ca178381758a2",
+        "square": "6ebd511150744253876d48775e5454b29a839a3e65ee707406d66566918c1f51"
+      }
+    },
     "truffle": {
       "status": "EXPORTED",
-      "seconds": 28.81,
+      "seconds": 24.51,
       "public_pages": 2,
+      "plan_run_id": "dc09d40f-36ed-44bb-9e58-f46c8ae15344",
+      "reviewed_run_id": "f64c82ca-fde9-4549-9a88-d8af8a44f658",
+      "direction_revision_run_id": "a0418c33-247e-4a94-91b2-a87050e81b9e",
+      "restored_run_id": "45d16023-6c30-4c30-abf6-0f507a5aed9a",
+      "restored_approval_id": "7a4a3472-540d-44b4-a29f-27a7090c7031",
+      "restored_zip_sha256": "317866eabf33d769fc8ff89afcb2d800fab79695d23b819d4b6f11242ad211de",
       "stale_export_http": 409,
       "rejected_copy_http": null,
+      "unregistered_copy_response": null,
       "stale_copy_packet_rejected": false,
       "accepted_copy_fields": [],
       "reviewed_png_sha256": {
@@ -18,9 +58,9 @@
       }
     }
   },
-  "elapsed_seconds": 35.36,
-  "campaign_runs": 4,
-  "automated_review_actions": 3,
+  "elapsed_seconds": 59.14,
+  "campaign_runs": 8,
+  "automated_review_actions": 6,
   "provider_usage_rows": 0,
   "browser_errors": []
 }

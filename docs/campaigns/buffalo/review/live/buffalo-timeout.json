@@ -1,0 +1,61 @@
+{
+  "domain_key": "buffaloburger_com",
+  "run_id": "4685ec43-8662-4013-85ec-0609e2fe0587",
+  "profile_snapshot_id": "8af5556b-876f-4873-8a16-8bbbcd92d262",
+  "proposal": {
+    "schema_version": 2,
+    "kind": "SOURCE_CAMPAIGN",
+    "brand_name": "Buffalo Burger",
+    "brief": null,
+    "evidence": [],
+    "status": "BLOCKED",
+    "package": null,
+    "changes": [],
+    "planner": {
+      "policy": "editorial-campaign@1",
+      "edition": "buffalo-menu-20261113",
+      "edition_sha256": "b3b3b1f6485baa045ce4fe03e0d8833135a5502397e279ad4f7c0330a464c53f",
+      "input": {
+        "url": "https://buffaloburger.com",
+        "objective": "تشجيع المستخدم على تصفّح المنيو واختيار برجر يناسبه",
+        "language": "ar"
+      },
+      "intent": "BROWSE_CATALOG",
+      "question": "أنهي فرق بين صنفين يساعد الزائر يبدأ منيو البرجر؟",
+      "opportunity_hypothesis": "نفترض إن الزائر محتار يبدأ بإيه. نختبر هل سؤال الشيدر والهالبينو يساعده يفتح المنيو ويقارن.",
+      "trace": [
+        {
+          "page_url": "https://buffaloburger.com",
+          "reason": "BRAND_ENTRY",
+          "outcome": "SOURCE_TIMEOUT"
+        },
+        {
+          "page_url": "https://buffaloburger.com",
+          "reason": "RETRY_SOURCE_TIMEOUT",
+          "outcome": "SOURCE_DEADLINE"
+        },
+        {
+          "page_url": "https://buffaloburger.com/menu",
+          "reason": "EDITORIAL_SOURCE",
+          "outcome": "SOURCE_TIMEOUT"
+        }
+      ],
+      "pages": [],
+      "stop": "EDITORIAL_SOURCE_GAP",
+      "gap": "EDITORIAL_SOURCE_GAP",
+      "missing_question": "راجع صفحة المنيو ووصف الصنف المذكور في خطوات البحث. لازم الدليل يتطابق قبل تجهيز الحزمة.",
+      "page_calls": 3,
+      "elapsed_ms": 13028.37,
+      "provider_calls": 0,
+      "cost_usd": 0,
+      "brief_reviewed": false,
+      "request_id": "003217d5-c63e-446a-ac97-c11f8f7ed777"
+    },
+    "sha256": "f2e799c67e4411786237e0874edef6f867bb80b903f1a24de60f61d71c1bcd0a"
+  },
+  "reason": "EVIDENCE_GAP",
+  "checked_at": "2026-11-13T14:07:47.893209+00:00",
+  "decision": null,
+  "approved": false,
+  "approval_id": null
+}

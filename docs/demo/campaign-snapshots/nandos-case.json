@@ -1,0 +1,8 @@
+{
+  "nandos": {
+    "url": "https://www.nandos.co.uk/food/menu/",
+    "objective": "Help people discover what comes in the Grilled Chicken Wrap",
+    "language": "en",
+    "destination": "https://www.nandos.co.uk/food/menu/"
+  }
+}

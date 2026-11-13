@@ -1,0 +1,8 @@
+{
+  "five-guys": {
+    "url": "https://www.fiveguys.com/menu/burgers/",
+    "objective": "Help people discover what comes in the Bacon Burger",
+    "language": "en",
+    "destination": "https://www.fiveguys.com/menu/burgers/"
+  }
+}

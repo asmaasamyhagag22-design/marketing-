@@ -1,0 +1,255 @@
+{
+  "domain_key": "fiveguys_com",
+  "run_id": "7cb63fba-1997-40bc-9d4b-7d60b6878157",
+  "profile_snapshot_id": "520bf5de-aeee-4dcb-b46c-45ba39f0793c",
+  "proposal": {
+    "schema_version": 2,
+    "kind": "SOURCE_CAMPAIGN",
+    "brand_name": "www.fiveguys.com",
+    "brief": {
+      "summary": "Fresh, 100% beef patties hot off the grill, layered with strips of crispy Applewood smoked bacon and placed on a soft, toasted sesame seed bun.",
+      "audience": "People who want to understand the feature before acting.",
+      "market": "Confirm market scope before publishing.",
+      "competitor": null,
+      "peer_rationale": null,
+      "source": {
+        "url": "https://www.fiveguys.com/menu/burgers/",
+        "quote": "Fresh, 100% beef patties hot off the grill, layered with strips of crispy Applewood smoked bacon and placed on a soft, toasted sesame seed bun.",
+        "scope": "Bacon Burger"
+      },
+      "peer_source": null,
+      "objective": "Help people discover what comes in the Bacon Burger",
+      "metric": "Explanation clicks per impression.",
+      "assumption": "The audience is a working hypothesis. Test whether interest in the feature drives the intended click.",
+      "alternatives": [
+        {
+          "name": "Explain the feature",
+          "plan": "Lead with the feature name and link to the publisher’s explanation.",
+          "tradeoff": "Shortens the path to the explanation and leaves the decision to the reader."
+        },
+        {
+          "name": "Evaluate the fit",
+          "plan": "Ask a fit question. Use the publisher’s explanation as one input to a comparison.",
+          "tradeoff": "Supports evaluation and would need comparative evidence for any superiority claim."
+        },
+        {
+          "name": "Explore the topic",
+          "plan": "Use the topic name as an entry point for open-ended reading.",
+          "tradeoff": "Broader discovery with the same explanation page as the destination."
+        }
+      ],
+      "strategy_index": 0,
+      "strategy_reason": "The goal is a visit to a specific explanation. Reopen the choice if it disappears or the goal changes to an action.",
+      "tone": "Plain and concise",
+      "directions": [
+        {
+          "name": "Explain the feature",
+          "rationale": "Lead with the feature name and link to the publisher’s explanation.",
+          "headline": "Bacon Burger",
+          "message": "The publisher explains the feature.",
+          "cta": "Read the explanation",
+          "theme": "cobalt",
+          "caption": "Bacon Burger — The publisher explains the feature. Read the explanation.",
+          "hook": "Bacon Burger",
+          "shot": "Reveal the campaign prompt over a simple geometric motif.",
+          "middle_shot": "Reveal the topic label and hold the background still.",
+          "end_shot": "End on the brand name and exact call to action."
+        },
+        {
+          "name": "Evaluate the fit",
+          "rationale": "Ask a fit question. Use the publisher’s explanation as one input to a comparison.",
+          "headline": "Would it fit your needs?",
+          "message": "Bacon Burger",
+          "cta": "Review the details",
+          "theme": "forest",
+          "caption": "Would it fit your needs — Bacon Burger. Review the details.",
+          "hook": "Would it fit your needs?",
+          "shot": "Reveal the campaign prompt over a simple geometric motif.",
+          "middle_shot": "Reveal the topic label and hold the background still.",
+          "end_shot": "End on the brand name and exact call to action."
+        },
+        {
+          "name": "Explore the topic",
+          "rationale": "Use the topic name as an entry point for open-ended reading.",
+          "headline": "Where would you start?",
+          "message": "Bacon Burger",
+          "cta": "Explore the topic page",
+          "theme": "ember",
+          "caption": "Where would you start — Bacon Burger. Explore the topic page.",
+          "hook": "Where would you start?",
+          "shot": "Reveal the campaign prompt over a simple geometric motif.",
+          "middle_shot": "Reveal the topic label and hold the background still.",
+          "end_shot": "End on the brand name and exact call to action."
+        }
+      ],
+      "selected": 0,
+      "human_review": [
+        "Review the original feature label, language, source scope and rights.",
+        "Check the destination on mobile and confirm the conversion measurement."
+      ],
+      "language": "en",
+      "direction": "ltr"
+    },
+    "evidence": [
+      {
+        "page_url": "https://www.fiveguys.com/menu/burgers/",
+        "capture_kind": "publisher_snapshot",
+        "captured_at": "2026-11-13T14:12:47+00:00",
+        "body_sha256": "d2af53a07c62810586cb020daeeebf8dec361ef4de057da035bd6681ad521a68",
+        "text_sha256": "6d6188154e5ec221de918a2386e085596770af473f7907cfb1e561b663f3ecc8",
+        "title": "Burger Menu: Hamburgers, Cheeseburgers, and more | Five Guys",
+        "label": "Bacon Burger",
+        "quote": "Fresh, 100% beef patties hot off the grill, layered with strips of crispy Applewood smoked bacon and placed on a soft, toasted sesame seed bun.",
+        "context": "Fresh, 100% beef patties hot off the grill, layered with strips of crispy Applewood smoked bacon and placed on a soft, toasted sesame seed bun. Add as many toppings as you want.",
+        "score": 5,
+        "specificity": 0.5,
+        "scope": "Bacon Burger",
+        "outcome": "QUOTE_OBSERVED",
+        "constraints": {
+          "basis": "FULL_SOURCE_CONTEXT",
+          "page_path": "/menu/burgers/",
+          "price": null,
+          "branch": null,
+          "valid_until": null,
+          "market": "UNCONFIRMED"
+        }
+      }
+    ],
+    "status": "DRAFT",
+    "package": null,
+    "changes": [],
+    "planner": {
+      "policy": "source-campaign-planner@2",
+      "input": {
+        "url": "https://www.fiveguys.com/menu/burgers/",
+        "objective": "Help people discover what comes in the Bacon Burger",
+        "language": "en"
+      },
+      "intent": "DISCOVERY",
+      "question": "Which brand page describes the feature in the goal?",
+      "trace": [
+        {
+          "page_url": "https://www.fiveguys.com/menu/burgers/",
+          "reason": "BRAND_ENTRY",
+          "anchor": "",
+          "outcome": "SOURCE_READ",
+          "candidate_count": 4,
+          "gap_after": null
+        }
+      ],
+      "pages": [
+        {
+          "page_url": "https://www.fiveguys.com/menu/burgers/",
+          "capture_kind": "publisher_snapshot",
+          "captured_at": "2026-11-13T14:12:47+00:00",
+          "body_sha256": "d2af53a07c62810586cb020daeeebf8dec361ef4de057da035bd6681ad521a68",
+          "text_sha256": "6d6188154e5ec221de918a2386e085596770af473f7907cfb1e561b663f3ecc8",
+          "title": "Burger Menu: Hamburgers, Cheeseburgers, and more | Five Guys",
+          "entries": [
+            {
+              "label": "Bacon Burger",
+              "quote": "Fresh, 100% beef patties hot off the grill, layered with strips of crispy Applewood smoked bacon and placed on a soft, toasted sesame seed bun.",
+              "context": "Fresh, 100% beef patties hot off the grill, layered with strips of crispy Applewood smoked bacon and placed on a soft, toasted sesame seed bun. Add as many toppings as you want.",
+              "score": 5,
+              "specificity": 0.5
+            },
+            {
+              "label": "Bacon Burger",
+              "quote": "Add as many toppings as you want.",
+              "context": "Fresh, 100% beef patties hot off the grill, layered with strips of crispy Applewood smoked bacon and placed on a soft, toasted sesame seed bun. Add as many toppings as you want.",
+              "score": 4,
+              "specificity": 0
+            },
+            {
+              "label": "Little Bacon Burger",
+              "quote": "A fresh, 100% beef patty hot off the grill with strips of crispy Applewood smoked bacon on top.",
+              "context": "A fresh, 100% beef patty hot off the grill with strips of crispy Applewood smoked bacon on top. Add as many toppings as you want.",
+              "score": 5,
+              "specificity": 0.5
+            },
+            {
+              "label": "Little Bacon Burger",
+              "quote": "Add as many toppings as you want.",
+              "context": "A fresh, 100% beef patty hot off the grill with strips of crispy Applewood smoked bacon on top. Add as many toppings as you want.",
+              "score": 4,
+              "specificity": 0
+            }
+          ],
+          "named_sections": [
+            "Bacon Burger"
+          ]
+        }
+      ],
+      "conflicts": [],
+      "gap": null,
+      "missing_question": null,
+      "stop": "DECISION_EVIDENCE_FOUND",
+      "page_calls": 1,
+      "elapsed_ms": 13.71,
+      "provider_calls": 0,
+      "cost_usd": 0,
+      "brief_reviewed": false,
+      "opportunity_hypothesis": "Test whether connecting the feature to a specific action improves clicks from the proposed audience.",
+      "request_id": "8e20ac58-04a0-4080-bb10-163a391a9a1a",
+      "options": [
+        {
+          "action": "READ_FEATURE",
+          "destination": "https://www.fiveguys.com/menu/burgers/",
+          "evidence_index": 0,
+          "name": "Explain the feature",
+          "audience": "People who want to understand the feature before acting.",
+          "message": "Lead with the feature name and link to the publisher’s explanation.",
+          "headline": "Start with the feature",
+          "cta": "Read the explanation",
+          "metric": "Explanation clicks per impression.",
+          "tradeoff": "Shortens the path to the explanation and leaves the decision to the reader.",
+          "theme": "cobalt"
+        },
+        {
+          "action": "COMPARE_FIT",
+          "destination": "https://www.fiveguys.com/menu/burgers/",
+          "evidence_index": 0,
+          "name": "Evaluate the fit",
+          "audience": "People comparing alternatives who need to inspect the details.",
+          "message": "Ask a fit question. Use the publisher’s explanation as one input to a comparison.",
+          "headline": "Would it fit your needs?",
+          "cta": "Review the details",
+          "metric": "Visits to the explanation from the comparison creative.",
+          "tradeoff": "Supports evaluation and would need comparative evidence for any superiority claim.",
+          "theme": "forest"
+        },
+        {
+          "action": "EXPLORE_TOPIC",
+          "destination": "https://www.fiveguys.com/menu/burgers/",
+          "evidence_index": 0,
+          "name": "Explore the topic",
+          "audience": "People at the start of discovery.",
+          "message": "Use the topic name as an entry point for open-ended reading.",
+          "headline": "Where would you start?",
+          "cta": "Explore the topic page",
+          "metric": "Topic-page clicks from the discovery creative.",
+          "tradeoff": "Broader discovery with the same explanation page as the destination.",
+          "theme": "ember"
+        }
+      ],
+      "claims": [
+        {
+          "fields": [
+            "brief.summary",
+            "package.copy.message"
+          ],
+          "evidence_index": 0,
+          "basis": "PUBLISHER_QUOTE_AND_SECTION_LABEL",
+          "semantic_review": "HUMAN_REVIEW_REQUIRED"
+        }
+      ]
+    },
+    "sha256": "aa3732ca52e651c3605738376c801e3e7663c08d521b113e0aef99e09a8fce68"
+  },
+  "reason": "BRIEF_REVIEW_REQUIRED",
+  "checked_at": "2026-11-13T14:12:47+00:00",
+  "recheck_at": "2026-11-20T14:12:47+00:00",
+  "decision": null,
+  "approved": false,
+  "approval_id": null
+}

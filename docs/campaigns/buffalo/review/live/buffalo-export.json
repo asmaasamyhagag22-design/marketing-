@@ -1,0 +1,563 @@
+{
+  "approval_id": "d0b9a66a-007f-4c16-846e-5eb454778c80",
+  "poster_measurements": {
+    "portrait": {
+      "geometry": [
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 127.59375,
+          "color": "rgb(43, 21, 18)",
+          "field": "brand",
+          "overflow": false,
+          "right": 1004,
+          "size": 36,
+          "x": 76,
+          "y": 64
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 252.09375,
+          "color": "rgb(43, 21, 18)",
+          "field": "H1",
+          "overflow": false,
+          "right": 1004,
+          "size": 82,
+          "x": 76,
+          "y": 149.59375
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 1121.90625,
+          "color": "rgb(43, 21, 18)",
+          "field": "motif",
+          "overflow": false,
+          "right": 1004,
+          "size": 16,
+          "x": 76,
+          "y": 274.09375
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 1279.921875,
+          "color": "rgb(43, 21, 18)",
+          "field": "message",
+          "overflow": false,
+          "right": 1004,
+          "size": 39,
+          "x": 609,
+          "y": 1222.984375
+        },
+        {
+          "background": "rgb(38, 24, 20)",
+          "bottom": 1286,
+          "color": "rgb(255, 242, 217)",
+          "field": "cta",
+          "overflow": false,
+          "right": 333,
+          "size": 38,
+          "x": 76,
+          "y": 1216.90625
+        }
+      ],
+      "height": 1350,
+      "sha256": "aa1f475c16884cdcfa685651d437189b759fd81dabd7e1863a5ca178381758a2",
+      "width": 1080
+    },
+    "square": {
+      "geometry": [
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 127.59375,
+          "color": "rgb(43, 21, 18)",
+          "field": "brand",
+          "overflow": false,
+          "right": 1004,
+          "size": 36,
+          "x": 76,
+          "y": 64
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 252.09375,
+          "color": "rgb(43, 21, 18)",
+          "field": "H1",
+          "overflow": false,
+          "right": 1004,
+          "size": 82,
+          "x": 76,
+          "y": 149.59375
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 851.90625,
+          "color": "rgb(43, 21, 18)",
+          "field": "motif",
+          "overflow": false,
+          "right": 1004,
+          "size": 16,
+          "x": 76,
+          "y": 274.09375
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 1009.921875,
+          "color": "rgb(43, 21, 18)",
+          "field": "message",
+          "overflow": false,
+          "right": 1004,
+          "size": 39,
+          "x": 609,
+          "y": 952.984375
+        },
+        {
+          "background": "rgb(38, 24, 20)",
+          "bottom": 1016,
+          "color": "rgb(255, 242, 217)",
+          "field": "cta",
+          "overflow": false,
+          "right": 333,
+          "size": 38,
+          "x": 76,
+          "y": 946.90625
+        }
+      ],
+      "height": 1080,
+      "sha256": "6ebd511150744253876d48775e5454b29a839a3e65ee707406d66566918c1f51",
+      "width": 1080
+    }
+  },
+  "profile_snapshot_id": "9fe7c2af-5a9f-4ba2-96e6-e7fa1498b19c",
+  "proposal": {
+    "brand_name": "Buffalo Burger",
+    "brief": {
+      "alternatives": [
+        {
+          "name": "اختيار على حسب المزاج",
+          "plan": "نبدأ بقرار صغير بين شيدر وصوص بافالو أو بايتس شيدر بالهالبينو.",
+          "tradeoff": "يدعم التصفح بين صنفين داخل القائمة."
+        },
+        {
+          "name": "ابدأ من بايتس الهالبينو",
+          "plan": "نخلي مكوّن واحد مدخلًا لقراءة وصف راستافاري.",
+          "tradeoff": "يركز على مكوّن في صنف واحد ويربط بصفحته."
+        }
+      ],
+      "assumption": "نفترض إن الزائر محتار يبدأ بإيه. نختبر هل سؤال الشيدر والهالبينو يساعده يفتح المنيو ويقارن.",
+      "audience": "فرضية جمهور بعد مراجعة المسودة.",
+      "competitor": null,
+      "direction": "rtl",
+      "directions": [
+        {
+          "caption": "أولد سكول فيه شيدر، وراستافاري فيه بايتس شيدر محشية هالبينو. الاتنين فيهم صوص بافالو. افتح المنيو وقارن قبل ما تختار.",
+          "cta": "شوف المنيو",
+          "end_shot": "شوف المنيو",
+          "headline": "شيدر كلاسيك ولا هالبينو؟",
+          "hook": "شيدر كلاسيك ولا هالبينو؟",
+          "message": "الاتنين فيهم صوص بافالو.",
+          "middle_shot": "صوص بافالو في الاختيارين.",
+          "name": "اختيار على حسب المزاج",
+          "rationale": "نبدأ بقرار صغير بين شيدر وصوص بافالو أو بايتس شيدر بالهالبينو.",
+          "shot": "رسمان للمكونات مع اسم كل ساندوتش ووصف الشيدر الخاص به.",
+          "theme": "ember"
+        },
+        {
+          "caption": "لو الهالبينو بيفرق معاك، شوف راستافاري. البايتس فيه شيدر محشي هالبينو، ومعاه صوص بافالو. افتح صفحة الساندوتش واقرأ مكوّناته.",
+          "cta": "شوف راستافاري",
+          "end_shot": "شوف راستافاري",
+          "headline": "الهالبينو جوّه الشيدر؟",
+          "hook": "الهالبينو جوّه الشيدر؟",
+          "message": "راستافاري فيه بايتس شيدر محشية هالبينو.",
+          "middle_shot": "راستافاري فيه بايتس شيدر محشية هالبينو.",
+          "name": "ابدأ من بايتس الهالبينو",
+          "rationale": "نخلي مكوّن واحد مدخلًا لقراءة وصف راستافاري.",
+          "shot": "ساندوتش مرسوم على بطاقة واحدة، وتحتها اسم الصنف وإشارة للهالبينو.",
+          "theme": "forest"
+        }
+      ],
+      "human_review": [
+        "راجع وصف الصنف والرسم التوضيحي على المقاسين قبل أي استخدام خارجي.",
+        "المؤشر المقترح هو النقر على الوجهة. الحكم على فهم الجمهور يحتاج اختبارًا مستقلًا."
+      ],
+      "language": "ar",
+      "market": "العربية المصرية، والجمهور المقترح فرضية للتحرير.",
+      "metric": "نقرات على رابط المنيو لكل ظهور.",
+      "objective": "تشجيع المستخدم على تصفّح المنيو واختيار برجر يناسبه",
+      "peer_rationale": null,
+      "peer_source": null,
+      "selected": 0,
+      "source": {
+        "quote": "قائمة بافلو برجر",
+        "scope": "عنوان صفحة المنيو الرسمية",
+        "url": "https://buffaloburger.com/menu"
+      },
+      "strategy_index": 0,
+      "strategy_reason": "اختار المراجع هذا البديل ضمن نفس البحث.",
+      "summary": "قائمة بافلو برجر",
+      "tone": "مصري خفيف ومباشر"
+    },
+    "changes": [
+      {
+        "after": 0,
+        "before": 1,
+        "field": "selected"
+      }
+    ],
+    "evidence": [
+      {
+        "body_sha256": "d657047dc3abafe4b64d686263d5d4f43fb3aa56ed0fd7e7656f74c5fd888a54",
+        "capture_kind": "public_http",
+        "captured_at": "2026-11-13T20:41:00.077896+00:00",
+        "context": "قائمة بافلو برجر",
+        "field": "title",
+        "outcome": "QUOTE_OBSERVED",
+        "page_url": "https://buffaloburger.com/menu",
+        "quote": "قائمة بافلو برجر",
+        "scope": "عنوان صفحة المنيو الرسمية",
+        "source_title": "قائمة بافلو برجر",
+        "text_sha256": "80ce24e3740b1a56c6b1770a46edce63633e31fa53da8149f1f2daaa0eee2369"
+      },
+      {
+        "body_sha256": "566051c3496d7b76946d151a14e43e99f6f46e00236e0f1db6365784d51b5d63",
+        "capture_kind": "public_http",
+        "captured_at": "2026-11-13T20:41:01.660104+00:00",
+        "context": "Pure beef burger patty, topped with our signature Buffalo sauce and cheddar cheese.",
+        "field": "og:description",
+        "outcome": "QUOTE_OBSERVED",
+        "page_url": "https://buffaloburger.com/menu/old-school",
+        "quote": "Pure beef burger patty, topped with our signature Buffalo sauce and cheddar cheese.",
+        "scope": "وصف أولد سكول من بطاقة مشاركة صفحة الصنف",
+        "source_title": "أولد سكول - بافلو برجر",
+        "text_sha256": "d24be8ec430a48288407b66d952219fa7280da5db1a3e170cb1d2f613e81a9f6"
+      },
+      {
+        "body_sha256": "c4c167e9572150eb9aa8a23a170bc43db935ee7f527da91f2355a2158c8c4986",
+        "capture_kind": "public_http",
+        "captured_at": "2026-11-13T20:41:03.948520+00:00",
+        "context": "بايتس الجبنة الشيدر المحشوه بالهالپنيو وصوص البافالو الكريمي و مع قطعة البرجر.",
+        "field": "og:description",
+        "outcome": "QUOTE_OBSERVED",
+        "page_url": "https://buffaloburger.com/menu/the-rastafari",
+        "quote": "بايتس الجبنة الشيدر المحشوه بالهالپنيو وصوص البافالو الكريمي و مع قطعة البرجر.",
+        "scope": "وصف راستافاري من بطاقة مشاركة صفحة الصنف",
+        "source_title": "راستافاري - بافلو برجر",
+        "text_sha256": "b2f8df1638e3e0886caccc9c03e00f4d30d91450b473d6a1fc692e6de747b0b7"
+      }
+    ],
+    "kind": "SOURCE_CAMPAIGN",
+    "package": {
+      "art": {
+        "evidence": [
+          1,
+          2
+        ],
+        "layout": "ingredient-columns",
+        "mode": "compare",
+        "origin": "ORIGINAL_SCHEMATIC_ILLUSTRATION",
+        "subjects": [
+          {
+            "detail": "جبنة شيدر",
+            "illustration": "cheddar",
+            "name": "أولد سكول",
+            "palette": "classic"
+          },
+          {
+            "detail": "بايتس شيدر بالهالبينو",
+            "illustration": "filled-bites",
+            "name": "راستافاري",
+            "palette": "pepper"
+          }
+        ]
+      },
+      "brand_name": "Buffalo Burger",
+      "caption": "أولد سكول فيه شيدر، وراستافاري فيه بايتس شيدر محشية هالبينو. الاتنين فيهم صوص بافالو. افتح المنيو وقارن قبل ما تختار.",
+      "claims": [
+        {
+          "basis": "INGREDIENT_CONTRAST",
+          "evidence": [
+            1,
+            2
+          ],
+          "field": "headline"
+        },
+        {
+          "basis": "BUFFALO_SAUCE_IN_BOTH_PUBLISHER_DESCRIPTIONS",
+          "evidence": [
+            1,
+            2
+          ],
+          "field": "message"
+        },
+        {
+          "basis": "INGREDIENTS_AND_NAVIGATION",
+          "evidence": [
+            1,
+            2,
+            0
+          ],
+          "field": "caption"
+        },
+        {
+          "basis": "OBSERVED_DESTINATION",
+          "evidence": [
+            0
+          ],
+          "field": "cta"
+        },
+        {
+          "basis": "PUBLISHER_ITEM_NAMES_AND_INGREDIENTS",
+          "evidence": [
+            1,
+            2
+          ],
+          "field": "art"
+        }
+      ],
+      "copy": {
+        "cta": "شوف المنيو",
+        "headline": "شيدر كلاسيك ولا هالبينو؟",
+        "message": "الاتنين فيهم صوص بافالو."
+      },
+      "direction": "rtl",
+      "factual_review": "EXACT_SOURCE_ANCHORS_AND_EDITORIAL_REVIEW",
+      "language": "ar",
+      "poster_layout": "source-campaign@4",
+      "source_evidence_index": 0,
+      "source_url": "https://buffaloburger.com/menu",
+      "theme": "ember"
+    },
+    "planner": {
+      "brief_reviewed": true,
+      "cost_usd": 0,
+      "destination_evidence_index": 0,
+      "edition": "buffalo-menu-20261113",
+      "edition_sha256": "6a3f45863d9676554efce1f8eb3e1b340bfd45e66cebfb136a0d9948ad148582",
+      "elapsed_ms": 10316.73,
+      "gap": null,
+      "input": {
+        "language": "ar",
+        "objective": "تشجيع المستخدم على تصفّح المنيو واختيار برجر يناسبه",
+        "url": "https://buffaloburger.com"
+      },
+      "intent": "BROWSE_CATALOG",
+      "missing_question": null,
+      "opportunity_hypothesis": "نفترض إن الزائر محتار يبدأ بإيه. نختبر هل سؤال الشيدر والهالبينو يساعده يفتح المنيو ويقارن.",
+      "options": [
+        {
+          "action": "OPEN_CATALOG",
+          "art": {
+            "evidence": [
+              1,
+              2
+            ],
+            "layout": "ingredient-columns",
+            "mode": "compare",
+            "origin": "ORIGINAL_SCHEMATIC_ILLUSTRATION",
+            "subjects": [
+              {
+                "detail": "جبنة شيدر",
+                "illustration": "cheddar",
+                "name": "أولد سكول",
+                "palette": "classic"
+              },
+              {
+                "detail": "بايتس شيدر بالهالبينو",
+                "illustration": "filled-bites",
+                "name": "راستافاري",
+                "palette": "pepper"
+              }
+            ]
+          },
+          "audience": "فرضية: ناس بتفتح المنيو ومحتارة تبدأ من أنهي برجر.",
+          "claims": [
+            {
+              "basis": "INGREDIENT_CONTRAST",
+              "evidence": [
+                1,
+                2
+              ],
+              "field": "headline"
+            },
+            {
+              "basis": "BUFFALO_SAUCE_IN_BOTH_PUBLISHER_DESCRIPTIONS",
+              "evidence": [
+                1,
+                2
+              ],
+              "field": "message"
+            },
+            {
+              "basis": "INGREDIENTS_AND_NAVIGATION",
+              "evidence": [
+                1,
+                2,
+                0
+              ],
+              "field": "caption"
+            },
+            {
+              "basis": "OBSERVED_DESTINATION",
+              "evidence": [
+                0
+              ],
+              "field": "cta"
+            },
+            {
+              "basis": "PUBLISHER_ITEM_NAMES_AND_INGREDIENTS",
+              "evidence": [
+                1,
+                2
+              ],
+              "field": "art"
+            }
+          ],
+          "cta": "شوف المنيو",
+          "destination": "https://buffaloburger.com/menu",
+          "evidence_index": 0,
+          "metric": "نقرات على رابط المنيو لكل ظهور.",
+          "name": "اختيار على حسب المزاج",
+          "variants": {
+            "message": [
+              "صوص بافالو في الاختيارين.",
+              "الاتنين فيهم صوص بافالو."
+            ]
+          }
+        },
+        {
+          "action": "OPEN_ITEM",
+          "art": {
+            "evidence": [
+              2
+            ],
+            "mode": "spotlight",
+            "origin": "ORIGINAL_SCHEMATIC_ILLUSTRATION",
+            "subjects": [
+              {
+                "detail": "بايتس شيدر بالهالبينو",
+                "name": "راستافاري",
+                "palette": "pepper"
+              }
+            ]
+          },
+          "audience": "فرضية: ناس بتختار الساندوتش من مكوّن معيّن وعايزة تشوف تفاصيله.",
+          "claims": [
+            {
+              "basis": "INGREDIENT_QUESTION",
+              "evidence": [
+                2
+              ],
+              "field": "headline"
+            },
+            {
+              "basis": "BOUNDED_INGREDIENT_PARAPHRASE",
+              "evidence": [
+                2
+              ],
+              "field": "message"
+            },
+            {
+              "basis": "INGREDIENTS_AND_NAVIGATION",
+              "evidence": [
+                2
+              ],
+              "field": "caption"
+            },
+            {
+              "basis": "OBSERVED_DESTINATION",
+              "evidence": [
+                2
+              ],
+              "field": "cta"
+            },
+            {
+              "basis": "PUBLISHER_ITEM_NAMES_AND_INGREDIENTS",
+              "evidence": [
+                2
+              ],
+              "field": "art"
+            }
+          ],
+          "cta": "شوف راستافاري",
+          "destination": "https://buffaloburger.com/menu/the-rastafari",
+          "evidence_index": 2,
+          "metric": "نقرات على صفحة الصنف لكل ظهور.",
+          "name": "ابدأ من بايتس الهالبينو",
+          "variants": {}
+        }
+      ],
+      "page_calls": 4,
+      "pages": [
+        {
+          "body_sha256": "d657047dc3abafe4b64d686263d5d4f43fb3aa56ed0fd7e7656f74c5fd888a54",
+          "capture_kind": "public_http",
+          "captured_at": "2026-11-13T20:41:00.077896+00:00",
+          "context": "قائمة بافلو برجر",
+          "field": "title",
+          "outcome": "QUOTE_OBSERVED",
+          "page_url": "https://buffaloburger.com/menu",
+          "quote": "قائمة بافلو برجر",
+          "scope": "عنوان صفحة المنيو الرسمية",
+          "source_title": "قائمة بافلو برجر",
+          "text_sha256": "80ce24e3740b1a56c6b1770a46edce63633e31fa53da8149f1f2daaa0eee2369"
+        },
+        {
+          "body_sha256": "566051c3496d7b76946d151a14e43e99f6f46e00236e0f1db6365784d51b5d63",
+          "capture_kind": "public_http",
+          "captured_at": "2026-11-13T20:41:01.660104+00:00",
+          "context": "Pure beef burger patty, topped with our signature Buffalo sauce and cheddar cheese.",
+          "field": "og:description",
+          "outcome": "QUOTE_OBSERVED",
+          "page_url": "https://buffaloburger.com/menu/old-school",
+          "quote": "Pure beef burger patty, topped with our signature Buffalo sauce and cheddar cheese.",
+          "scope": "وصف أولد سكول من بطاقة مشاركة صفحة الصنف",
+          "source_title": "أولد سكول - بافلو برجر",
+          "text_sha256": "d24be8ec430a48288407b66d952219fa7280da5db1a3e170cb1d2f613e81a9f6"
+        },
+        {
+          "body_sha256": "c4c167e9572150eb9aa8a23a170bc43db935ee7f527da91f2355a2158c8c4986",
+          "capture_kind": "public_http",
+          "captured_at": "2026-11-13T20:41:03.948520+00:00",
+          "context": "بايتس الجبنة الشيدر المحشوه بالهالپنيو وصوص البافالو الكريمي و مع قطعة البرجر.",
+          "field": "og:description",
+          "outcome": "QUOTE_OBSERVED",
+          "page_url": "https://buffaloburger.com/menu/the-rastafari",
+          "quote": "بايتس الجبنة الشيدر المحشوه بالهالپنيو وصوص البافالو الكريمي و مع قطعة البرجر.",
+          "scope": "وصف راستافاري من بطاقة مشاركة صفحة الصنف",
+          "source_title": "راستافاري - بافلو برجر",
+          "text_sha256": "b2f8df1638e3e0886caccc9c03e00f4d30d91450b473d6a1fc692e6de747b0b7"
+        }
+      ],
+      "policy": "editorial-campaign@1",
+      "provider_calls": 0,
+      "question": "أنهي فرق بين صنفين يساعد الزائر يبدأ منيو البرجر؟",
+      "request_id": null,
+      "stop": "DECISION_EVIDENCE_FOUND",
+      "trace": [
+        {
+          "outcome": "QUOTE_OBSERVED",
+          "page_url": "https://buffaloburger.com",
+          "reason": "BRAND_ENTRY"
+        },
+        {
+          "outcome": "QUOTE_OBSERVED",
+          "page_url": "https://buffaloburger.com/menu",
+          "reason": "EDITORIAL_SOURCE"
+        },
+        {
+          "outcome": "QUOTE_OBSERVED",
+          "page_url": "https://buffaloburger.com/menu/old-school",
+          "reason": "EDITORIAL_SOURCE"
+        },
+        {
+          "outcome": "QUOTE_OBSERVED",
+          "page_url": "https://buffaloburger.com/menu/the-rastafari",
+          "reason": "EDITORIAL_SOURCE"
+        }
+      ]
+    },
+    "schema_version": 2,
+    "sha256": "2374e76af4600652208dd8c6f37f17c42050a4b5452582c3d78f404a18cfb2c8",
+    "status": "READY"
+  },
+  "review_status": "LOCAL_REVIEW",
+  "run_id": "cf5d939b-5257-46f9-acfb-04337f71d65a"
+}

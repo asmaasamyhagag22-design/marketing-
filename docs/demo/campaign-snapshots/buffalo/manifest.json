@@ -1,0 +1,32 @@
+{
+  "https://buffaloburger.com": {
+    "file": "75697e0dce11.html",
+    "captured_at": "2026-11-13T13:51:00Z",
+    "sha256": "90ca6a729d3ff68728993b4b17b6f26f4cf62c7c3586e2f211ba14c44e0208c9",
+    "publisher_body_sha256": "c9ef4f288e932a213799a5d71918c4643518e0ce84f8a0288f3ec7a1e5f4dffd"
+  },
+  "https://buffaloburger.com/menu": {
+    "file": "c6f56e7dba65.html",
+    "captured_at": "2026-11-13T13:51:03Z",
+    "sha256": "82439b02324bf88df9dcc0047fcbf0096ba6ccf45ed0bddf444ca463c99b6975",
+    "publisher_body_sha256": "608803d5856eb4e35ead6a560be0a7609f2c34fcfe6eb0ea40179ba0a734ece6"
+  },
+  "https://buffaloburger.com/menu/old-school": {
+    "file": "39a42cc6a2ac.html",
+    "captured_at": "2026-11-13T13:51:04Z",
+    "sha256": "0a70ee0c64cacc6703a6891aca25b8539fb660b4998486a500bf2c52a87f792c",
+    "publisher_body_sha256": "7bae315110122387085cc919c567948cc92972e2b1d9cada449930c0d59ea31c"
+  },
+  "https://buffaloburger.com/menu/the-rastafari": {
+    "file": "cbc853515515.html",
+    "captured_at": "2026-11-13T13:51:09Z",
+    "sha256": "a55a9f865a9b386f7e3545c99fb3921248ead2e7c143556f852fb679763c68d7",
+    "publisher_body_sha256": "b141d8f7fc04438689da0a2f8efcba7cb0206366afa4fe7153bf49505d59df6a"
+  },
+  "https://buffaloburger.com/menu/truffle-beef-burger": {
+    "file": "d5b00871cd90.html",
+    "captured_at": "2026-11-13T13:51:10Z",
+    "sha256": "9f1c104b78971ced4b59318aeafc83a5c3e6de48d76935f0557401f33b98916a",
+    "publisher_body_sha256": "83d1633020ae7e27873fa593e641d823d843d7001e439a86f8e8eb9662e5ab77"
+  }
+}

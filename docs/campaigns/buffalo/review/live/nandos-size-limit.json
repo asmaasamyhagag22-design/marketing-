@@ -1,0 +1,52 @@
+{
+  "domain_key": "nandos_co_uk",
+  "run_id": "c1e1e665-0aef-45ea-b404-5ef14476fc83",
+  "profile_snapshot_id": "8a2a18a6-c1b5-413c-a1f6-c59c2363599b",
+  "proposal": {
+    "schema_version": 2,
+    "kind": "SOURCE_CAMPAIGN",
+    "brand_name": "www.nandos.co.uk",
+    "brief": null,
+    "evidence": [],
+    "status": "BLOCKED",
+    "package": null,
+    "changes": [],
+    "planner": {
+      "policy": "source-campaign-planner@2",
+      "input": {
+        "url": "https://www.nandos.co.uk/food/menu/",
+        "objective": "Help people discover what comes in the Grilled Chicken Wrap",
+        "language": "en"
+      },
+      "intent": "DISCOVERY",
+      "question": "Which brand page describes the feature in the goal?",
+      "trace": [
+        {
+          "page_url": "https://www.nandos.co.uk/food/menu/",
+          "reason": "BRAND_ENTRY",
+          "anchor": "",
+          "outcome": "PAGE_TOO_LARGE",
+          "gap_after": "FEATURE_EVIDENCE"
+        }
+      ],
+      "pages": [],
+      "conflicts": [],
+      "gap": "FEATURE_EVIDENCE",
+      "missing_question": "Provide the official page explaining the feature in the goal.",
+      "stop": "NO_MORE_RELEVANT_SOURCES",
+      "page_calls": 1,
+      "elapsed_ms": 4328.24,
+      "provider_calls": 0,
+      "cost_usd": 0,
+      "brief_reviewed": false,
+      "opportunity_hypothesis": "Test whether connecting the feature to a specific action improves clicks from the proposed audience.",
+      "request_id": "7f50dba5-56f5-4088-ac28-576f39664822"
+    },
+    "sha256": "e87e371bbab25293ed77264db95370ba5f9683aeaf0128e485cdc6daac2b6a60"
+  },
+  "reason": "EVIDENCE_GAP",
+  "checked_at": "2026-11-13T14:21:40.386513+00:00",
+  "decision": null,
+  "approved": false,
+  "approval_id": null
+}

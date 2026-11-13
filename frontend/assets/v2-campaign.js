@@ -20,7 +20,7 @@
     OFFER_EXPIRED: 'انتهت صلاحية العرض',
     EVIDENCE_GAP: 'الأدلة غير كافية لاعتماد الإعلان.',
     PROFILE_CHANGED: 'تغيّر بروفايل البراند. ابدأ بحثًا على النسخة الجديدة.',
-    QUOTE_OBSERVED: 'وُجد الاقتباس في متن الصفحة',
+    QUOTE_OBSERVED: 'وُجد الاقتباس في المصدر',
     QUOTE_NOT_FOUND: 'الاقتباس غير موجود في متن الصفحة',
     QUOTE_CONTEXT_AMBIGUOUS: 'ظهر الاقتباس في سياقات مختلفة',
     BRAND_SOURCE_ORIGIN_MISMATCH: 'اختَر رابطًا من نفس أصل موقع البراند.',
@@ -101,13 +101,14 @@
       <p>${link(item.page_url, item.page_url)}</p>
       ${item.quote ? `${planner?.edition ? "" : `<p>${esc(item.scope)}</p>`}<blockquote dir="auto">${esc(item.quote)}</blockquote>` : ''}
       <details><summary>تفاصيل الالتقاط</summary>
+        ${item.capture_kind === 'publisher_snapshot' ? '<p>لقطة محفوظة من الناشر</p>' : ''}
         <p dir="auto">${esc(item.field || item.context)}</p><p dir="ltr">${esc(item.captured_at)}</p>
         ${item.body_sha256 ? `<code dir="ltr">${esc(item.body_sha256)}</code>` : ''}
       </details>
     </li>`).join('');
     const research = planner ? `<section class="v2-panel">
       <h2>قرار البحث</h2><p dir="auto">${esc(planner.question)}</p>
-      ${planner.edition ? '<p>الاتجاهات محررة لهذا الموقع والهدف المقترح. البحث يعيد قراءة صفحات الناشر عند التشغيل.</p>' : ''}
+      ${planner.edition ? '<p>الاتجاهات محررة لهذا الموقع والهدف. التطبيق يطابق حقول المصدر قبل تجهيز الحزمة.</p>' : ''}
       <p dir="auto">${esc(planner.opportunity_hypothesis)}</p>
       <p id="v2-stop">${esc(label(planner.stop))} · ${esc(planner.page_calls)} زيارة</p>
       ${planner.missing_question ? `<p id="v2-plan-gap" dir="auto">${esc(planner.missing_question)}</p>` : ''}

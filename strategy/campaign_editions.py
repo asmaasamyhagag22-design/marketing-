@@ -65,7 +65,7 @@ def capture_edition_source(url, entry, spec, load, clock, trace, deadline, reaso
             step["outcome"] = "QUOTE_OBSERVED"
             return {
                 "page_url": page.url, "capture_kind": page.source_kind, "field": spec["field"],
-                "captured_at": clock().isoformat(), "body_sha256": sha256(page.body).hexdigest(),
+                "captured_at": page.captured_at or clock().isoformat(), "body_sha256": sha256(page.body).hexdigest(),
                 "text_sha256": digest([spec["field"], spec["quote"], spec.get("title")]), "quote": spec["quote"],
                 "context": spec["quote"], "source_title": title,
                 "scope": spec["scope"], "outcome": "QUOTE_OBSERVED",

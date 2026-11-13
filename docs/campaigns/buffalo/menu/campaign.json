@@ -1,132 +1,132 @@
 {
-  "approval_id": "be6d7f2e-3f71-4db2-9f2f-d8426e6f7db3",
+  "approval_id": "68b8aaf6-c947-4628-933b-8c5f8aedf957",
   "poster_measurements": {
     "portrait": {
       "geometry": [
         {
           "background": "rgba(0, 0, 0, 0)",
-          "bottom": 130.890625,
-          "color": "rgb(38, 24, 20)",
+          "bottom": 127.59375,
+          "color": "rgb(43, 21, 18)",
           "field": "brand",
           "overflow": false,
           "right": 1004,
-          "size": 34,
+          "size": 36,
           "x": 76,
-          "y": 68
+          "y": 64
         },
         {
           "background": "rgba(0, 0, 0, 0)",
-          "bottom": 395.109375,
-          "color": "rgb(38, 24, 20)",
+          "bottom": 252.09375,
+          "color": "rgb(43, 21, 18)",
           "field": "H1",
           "overflow": false,
           "right": 1004,
-          "size": 93,
+          "size": 82,
           "x": 76,
-          "y": 158.890625
+          "y": 149.59375
         },
         {
           "background": "rgba(0, 0, 0, 0)",
-          "bottom": 1057.875,
-          "color": "rgb(38, 24, 20)",
+          "bottom": 1121.90625,
+          "color": "rgb(43, 21, 18)",
           "field": "motif",
           "overflow": false,
           "right": 1004,
           "size": 16,
           "x": 76,
-          "y": 423.109375
+          "y": 274.09375
         },
         {
           "background": "rgba(0, 0, 0, 0)",
-          "bottom": 1199.8125,
-          "color": "rgb(38, 24, 20)",
+          "bottom": 1279.921875,
+          "color": "rgb(43, 21, 18)",
           "field": "message",
           "overflow": false,
           "right": 1004,
           "size": 39,
-          "x": 243,
-          "y": 1142.875
+          "x": 609,
+          "y": 1222.984375
         },
         {
           "background": "rgb(38, 24, 20)",
-          "bottom": 1282,
+          "bottom": 1286,
           "color": "rgb(255, 242, 217)",
           "field": "cta",
           "overflow": false,
-          "right": 1004,
-          "size": 36,
-          "x": 754,
-          "y": 1211.8125
+          "right": 333,
+          "size": 38,
+          "x": 76,
+          "y": 1216.90625
         }
       ],
       "height": 1350,
-      "sha256": "a291e6a0f97b72e9f64658e0315321119151c129e014f63c0ba97e0dda056365",
+      "sha256": "aa1f475c16884cdcfa685651d437189b759fd81dabd7e1863a5ca178381758a2",
       "width": 1080
     },
     "square": {
       "geometry": [
         {
           "background": "rgba(0, 0, 0, 0)",
-          "bottom": 130.890625,
-          "color": "rgb(38, 24, 20)",
+          "bottom": 127.59375,
+          "color": "rgb(43, 21, 18)",
           "field": "brand",
           "overflow": false,
           "right": 1004,
-          "size": 34,
+          "size": 36,
           "x": 76,
-          "y": 68
+          "y": 64
         },
         {
           "background": "rgba(0, 0, 0, 0)",
-          "bottom": 395.109375,
-          "color": "rgb(38, 24, 20)",
+          "bottom": 252.09375,
+          "color": "rgb(43, 21, 18)",
           "field": "H1",
           "overflow": false,
           "right": 1004,
-          "size": 93,
+          "size": 82,
           "x": 76,
-          "y": 158.890625
+          "y": 149.59375
         },
         {
           "background": "rgba(0, 0, 0, 0)",
-          "bottom": 787.875,
-          "color": "rgb(38, 24, 20)",
+          "bottom": 851.90625,
+          "color": "rgb(43, 21, 18)",
           "field": "motif",
           "overflow": false,
           "right": 1004,
           "size": 16,
           "x": 76,
-          "y": 423.109375
+          "y": 274.09375
         },
         {
           "background": "rgba(0, 0, 0, 0)",
-          "bottom": 929.8125,
-          "color": "rgb(38, 24, 20)",
+          "bottom": 1009.921875,
+          "color": "rgb(43, 21, 18)",
           "field": "message",
           "overflow": false,
           "right": 1004,
           "size": 39,
-          "x": 243,
-          "y": 872.875
+          "x": 609,
+          "y": 952.984375
         },
         {
           "background": "rgb(38, 24, 20)",
-          "bottom": 1012,
+          "bottom": 1016,
           "color": "rgb(255, 242, 217)",
           "field": "cta",
           "overflow": false,
-          "right": 1004,
-          "size": 36,
-          "x": 754,
-          "y": 941.8125
+          "right": 333,
+          "size": 38,
+          "x": 76,
+          "y": 946.90625
         }
       ],
       "height": 1080,
-      "sha256": "c73c2cdac4201091c823cfea2b77d8fd2ff6140e2a52a91aafcdfce5c55f7166",
+      "sha256": "6ebd511150744253876d48775e5454b29a839a3e65ee707406d66566918c1f51",
       "width": 1080
     }
   },
-  "profile_snapshot_id": "b0ac2139-3857-46a4-853f-e3261466d804",
+  "profile_snapshot_id": "77182593-bb8b-4bfc-bcc0-75cad4c8ff15",
   "proposal": {
     "brand_name": "Buffalo Burger",
     "brief": {
@@ -148,16 +148,16 @@
       "direction": "rtl",
       "directions": [
         {
-          "caption": "مزاجك شيدر وصوص بافالو؟ ابدأ بأولد سكول. عايز بايتس شيدر بالهالبينو؟ بصّ على راستافاري. افتح المنيو وقارن قبل ما تختار.",
+          "caption": "أولد سكول فيه شيدر، وراستافاري فيه بايتس شيدر محشية هالبينو. الاتنين فيهم صوص بافالو. افتح المنيو وقارن قبل ما تختار.",
           "cta": "شوف المنيو",
           "end_shot": "شوف المنيو",
           "headline": "شيدر كلاسيك ولا هالبينو؟",
           "hook": "شيدر كلاسيك ولا هالبينو؟",
-          "message": "بين أولد سكول وراستافاري، اختار اللي على مزاجك.",
-          "middle_shot": "أولد سكول أو راستافاري. اختار على مزاجك.",
+          "message": "الاتنين فيهم صوص بافالو.",
+          "middle_shot": "صوص بافالو في الاختيارين.",
           "name": "اختيار على حسب المزاج",
           "rationale": "نبدأ بقرار صغير بين شيدر وصوص بافالو أو بايتس شيدر بالهالبينو.",
-          "shot": "بطاقتان جنب بعض. رسم ساندوتش لكل بطاقة، مع اسم الصنف والمكوّن اللي يفرّقه.",
+          "shot": "رسمان للمكونات مع اسم كل ساندوتش ووصف الشيدر الخاص به.",
           "theme": "ember"
         },
         {
@@ -204,9 +204,9 @@
     ],
     "evidence": [
       {
-        "body_sha256": "4ae0a0f6ae960281022247a99d92a7e5c4db6dd241cfb983f047440e797cc272",
-        "capture_kind": "public_http",
-        "captured_at": "2026-11-13T13:57:05.866725+00:00",
+        "body_sha256": "82439b02324bf88df9dcc0047fcbf0096ba6ccf45ed0bddf444ca463c99b6975",
+        "capture_kind": "publisher_snapshot",
+        "captured_at": "2026-11-13T13:51:03+00:00",
         "context": "قائمة بافلو برجر",
         "field": "title",
         "outcome": "QUOTE_OBSERVED",
@@ -217,9 +217,9 @@
         "text_sha256": "80ce24e3740b1a56c6b1770a46edce63633e31fa53da8149f1f2daaa0eee2369"
       },
       {
-        "body_sha256": "f6522bf83706a9ebda1d43a0fcf4d07a9524c25381eb924f5a27f01c5c0cacb7",
-        "capture_kind": "public_http",
-        "captured_at": "2026-11-13T13:57:08.621758+00:00",
+        "body_sha256": "0a70ee0c64cacc6703a6891aca25b8539fb660b4998486a500bf2c52a87f792c",
+        "capture_kind": "publisher_snapshot",
+        "captured_at": "2026-11-13T13:51:04+00:00",
         "context": "Pure beef burger patty, topped with our signature Buffalo sauce and cheddar cheese.",
         "field": "og:description",
         "outcome": "QUOTE_OBSERVED",
@@ -230,9 +230,9 @@
         "text_sha256": "d24be8ec430a48288407b66d952219fa7280da5db1a3e170cb1d2f613e81a9f6"
       },
       {
-        "body_sha256": "6932acbba86837c241e4b122c20afecf0daf21aacbc6cbef7e5c051a095c4922",
-        "capture_kind": "public_http",
-        "captured_at": "2026-11-13T13:57:09.771147+00:00",
+        "body_sha256": "a55a9f865a9b386f7e3545c99fb3921248ead2e7c143556f852fb679763c68d7",
+        "capture_kind": "publisher_snapshot",
+        "captured_at": "2026-11-13T13:51:09+00:00",
         "context": "بايتس الجبنة الشيدر المحشوه بالهالپنيو وصوص البافالو الكريمي و مع قطعة البرجر.",
         "field": "og:description",
         "outcome": "QUOTE_OBSERVED",
@@ -250,23 +250,26 @@
           1,
           2
         ],
+        "layout": "ingredient-columns",
         "mode": "compare",
         "origin": "ORIGINAL_SCHEMATIC_ILLUSTRATION",
         "subjects": [
           {
-            "detail": "شيدر وصوص بافالو",
+            "detail": "جبنة شيدر",
+            "illustration": "cheddar",
             "name": "أولد سكول",
             "palette": "classic"
           },
           {
             "detail": "بايتس شيدر بالهالبينو",
+            "illustration": "filled-bites",
             "name": "راستافاري",
             "palette": "pepper"
           }
         ]
       },
       "brand_name": "Buffalo Burger",
-      "caption": "مزاجك شيدر وصوص بافالو؟ ابدأ بأولد سكول. عايز بايتس شيدر بالهالبينو؟ بصّ على راستافاري. افتح المنيو وقارن قبل ما تختار.",
+      "caption": "أولد سكول فيه شيدر، وراستافاري فيه بايتس شيدر محشية هالبينو. الاتنين فيهم صوص بافالو. افتح المنيو وقارن قبل ما تختار.",
       "claims": [
         {
           "basis": "INGREDIENT_CONTRAST",
@@ -277,7 +280,7 @@
           "field": "headline"
         },
         {
-          "basis": "PUBLISHER_ITEM_NAMES",
+          "basis": "BUFFALO_SAUCE_IN_BOTH_PUBLISHER_DESCRIPTIONS",
           "evidence": [
             1,
             2
@@ -312,12 +315,12 @@
       "copy": {
         "cta": "شوف المنيو",
         "headline": "شيدر كلاسيك ولا هالبينو؟",
-        "message": "بين أولد سكول وراستافاري، اختار اللي على مزاجك."
+        "message": "الاتنين فيهم صوص بافالو."
       },
       "direction": "rtl",
       "factual_review": "EXACT_SOURCE_ANCHORS_AND_EDITORIAL_REVIEW",
       "language": "ar",
-      "poster_layout": "source-campaign@3",
+      "poster_layout": "source-campaign@4",
       "source_evidence_index": 0,
       "source_url": "https://buffaloburger.com/menu",
       "theme": "ember"
@@ -327,8 +330,8 @@
       "cost_usd": 0,
       "destination_evidence_index": 0,
       "edition": "buffalo-menu-20261113",
-      "edition_sha256": "b3b3b1f6485baa045ce4fe03e0d8833135a5502397e279ad4f7c0330a464c53f",
-      "elapsed_ms": 11892.31,
+      "edition_sha256": "6a3f45863d9676554efce1f8eb3e1b340bfd45e66cebfb136a0d9948ad148582",
+      "elapsed_ms": 7.73,
       "gap": null,
       "input": {
         "language": "ar",
@@ -346,16 +349,19 @@
               1,
               2
             ],
+            "layout": "ingredient-columns",
             "mode": "compare",
             "origin": "ORIGINAL_SCHEMATIC_ILLUSTRATION",
             "subjects": [
               {
-                "detail": "شيدر وصوص بافالو",
+                "detail": "جبنة شيدر",
+                "illustration": "cheddar",
                 "name": "أولد سكول",
                 "palette": "classic"
               },
               {
                 "detail": "بايتس شيدر بالهالبينو",
+                "illustration": "filled-bites",
                 "name": "راستافاري",
                 "palette": "pepper"
               }
@@ -372,7 +378,7 @@
               "field": "headline"
             },
             {
-              "basis": "PUBLISHER_ITEM_NAMES",
+              "basis": "BUFFALO_SAUCE_IN_BOTH_PUBLISHER_DESCRIPTIONS",
               "evidence": [
                 1,
                 2
@@ -411,8 +417,8 @@
           "name": "اختيار على حسب المزاج",
           "variants": {
             "message": [
-              "أولد سكول أو راستافاري. اختار على مزاجك.",
-              "بين أولد سكول وراستافاري، اختار اللي على مزاجك."
+              "صوص بافالو في الاختيارين.",
+              "الاتنين فيهم صوص بافالو."
             ]
           }
         },
@@ -481,9 +487,9 @@
       "page_calls": 4,
       "pages": [
         {
-          "body_sha256": "4ae0a0f6ae960281022247a99d92a7e5c4db6dd241cfb983f047440e797cc272",
-          "capture_kind": "public_http",
-          "captured_at": "2026-11-13T13:57:05.866725+00:00",
+          "body_sha256": "82439b02324bf88df9dcc0047fcbf0096ba6ccf45ed0bddf444ca463c99b6975",
+          "capture_kind": "publisher_snapshot",
+          "captured_at": "2026-11-13T13:51:03+00:00",
           "context": "قائمة بافلو برجر",
           "field": "title",
           "outcome": "QUOTE_OBSERVED",
@@ -494,9 +500,9 @@
           "text_sha256": "80ce24e3740b1a56c6b1770a46edce63633e31fa53da8149f1f2daaa0eee2369"
         },
         {
-          "body_sha256": "f6522bf83706a9ebda1d43a0fcf4d07a9524c25381eb924f5a27f01c5c0cacb7",
-          "capture_kind": "public_http",
-          "captured_at": "2026-11-13T13:57:08.621758+00:00",
+          "body_sha256": "0a70ee0c64cacc6703a6891aca25b8539fb660b4998486a500bf2c52a87f792c",
+          "capture_kind": "publisher_snapshot",
+          "captured_at": "2026-11-13T13:51:04+00:00",
           "context": "Pure beef burger patty, topped with our signature Buffalo sauce and cheddar cheese.",
           "field": "og:description",
           "outcome": "QUOTE_OBSERVED",
@@ -507,9 +513,9 @@
           "text_sha256": "d24be8ec430a48288407b66d952219fa7280da5db1a3e170cb1d2f613e81a9f6"
         },
         {
-          "body_sha256": "6932acbba86837c241e4b122c20afecf0daf21aacbc6cbef7e5c051a095c4922",
-          "capture_kind": "public_http",
-          "captured_at": "2026-11-13T13:57:09.771147+00:00",
+          "body_sha256": "a55a9f865a9b386f7e3545c99fb3921248ead2e7c143556f852fb679763c68d7",
+          "capture_kind": "publisher_snapshot",
+          "captured_at": "2026-11-13T13:51:09+00:00",
           "context": "بايتس الجبنة الشيدر المحشوه بالهالپنيو وصوص البافالو الكريمي و مع قطعة البرجر.",
           "field": "og:description",
           "outcome": "QUOTE_OBSERVED",
@@ -527,7 +533,7 @@
       "stop": "DECISION_EVIDENCE_FOUND",
       "trace": [
         {
-          "outcome": "SOURCE_DEADLINE",
+          "outcome": "QUOTE_OBSERVED",
           "page_url": "https://buffaloburger.com",
           "reason": "BRAND_ENTRY"
         },
@@ -549,9 +555,9 @@
       ]
     },
     "schema_version": 2,
-    "sha256": "01ba9c98ae6ba5e3a6cfd092d32dfa285d7e4acbfe139e93671e64c75108a9d3",
+    "sha256": "0b0990cc75e73e00443f0166d4ba5261d4f19aa23d0070e01b89c23d27bd6d21",
     "status": "READY"
   },
   "review_status": "LOCAL_REVIEW",
-  "run_id": "54dc606d-e416-44db-a5ca-1719baa7f1d2"
+  "run_id": "a553330a-bda4-4615-824f-f5623aab13f2"
 }
