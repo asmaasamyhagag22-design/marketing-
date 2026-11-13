@@ -1,0 +1,740 @@
+{
+  "approval_id": "584b7466-488f-474a-91d8-10ec6b2225bd",
+  "poster_measurements": {
+    "portrait": {
+      "geometry": [
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 83.4375,
+          "color": "rgb(154, 46, 34)",
+          "field": "brand",
+          "overflow": false,
+          "right": 1016,
+          "size": 27,
+          "x": 64,
+          "y": 47
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 218.625,
+          "color": "rgb(53, 19, 16)",
+          "field": "H1",
+          "overflow": false,
+          "right": 1016,
+          "size": 90,
+          "x": 64,
+          "y": 103.4375
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 1035.734375,
+          "color": "rgb(53, 19, 16)",
+          "field": "photo",
+          "overflow": false,
+          "right": 1080,
+          "size": 16,
+          "x": 0,
+          "y": 252.625
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 1117.765625,
+          "color": "rgb(53, 19, 16)",
+          "field": "BDI",
+          "overflow": false,
+          "right": 1016,
+          "size": 47,
+          "x": 540,
+          "y": 1055.734375
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 1166.765625,
+          "color": "rgb(53, 19, 16)",
+          "field": "P",
+          "overflow": false,
+          "right": 1016,
+          "size": 35,
+          "x": 540,
+          "y": 1117.765625
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 1117.765625,
+          "color": "rgb(53, 19, 16)",
+          "field": "BDI",
+          "overflow": false,
+          "right": 539,
+          "size": 47,
+          "x": 64,
+          "y": 1055.734375
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 1166.765625,
+          "color": "rgb(53, 19, 16)",
+          "field": "P",
+          "overflow": false,
+          "right": 539,
+          "size": 35,
+          "x": 64,
+          "y": 1117.765625
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 1269.40625,
+          "color": "rgb(53, 19, 16)",
+          "field": "message",
+          "overflow": false,
+          "right": 1016,
+          "size": 37,
+          "x": 377,
+          "y": 1215.765625
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 1314,
+          "color": "rgb(53, 19, 16)",
+          "field": "disclosure",
+          "overflow": false,
+          "right": 1016,
+          "size": 29,
+          "x": 377,
+          "y": 1273.40625
+        },
+        {
+          "background": "rgb(154, 46, 34)",
+          "bottom": 1305.140625,
+          "color": "rgb(255, 244, 220)",
+          "field": "cta",
+          "overflow": false,
+          "right": 353,
+          "size": 37,
+          "x": 64,
+          "y": 1224.609375
+        }
+      ],
+      "height": 1350,
+      "sha256": "970a4e34db35c17007c2b509224ea00c34dcbce7593b776934e460149e98edc4",
+      "width": 1080
+    },
+    "square": {
+      "geometry": [
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 61.4375,
+          "color": "rgb(154, 46, 34)",
+          "field": "brand",
+          "overflow": false,
+          "right": 1016,
+          "size": 27,
+          "x": 64,
+          "y": 25
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 178.828125,
+          "color": "rgb(53, 19, 16)",
+          "field": "H1",
+          "overflow": false,
+          "right": 1016,
+          "size": 80,
+          "x": 64,
+          "y": 76.4375
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 804.734375,
+          "color": "rgb(53, 19, 16)",
+          "field": "photo",
+          "overflow": false,
+          "right": 1080,
+          "size": 16,
+          "x": 0,
+          "y": 200.828125
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 879.765625,
+          "color": "rgb(53, 19, 16)",
+          "field": "BDI",
+          "overflow": false,
+          "right": 1016,
+          "size": 47,
+          "x": 540,
+          "y": 817.734375
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 928.765625,
+          "color": "rgb(53, 19, 16)",
+          "field": "P",
+          "overflow": false,
+          "right": 1016,
+          "size": 35,
+          "x": 540,
+          "y": 879.765625
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 879.765625,
+          "color": "rgb(53, 19, 16)",
+          "field": "BDI",
+          "overflow": false,
+          "right": 539,
+          "size": 47,
+          "x": 64,
+          "y": 817.734375
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 928.765625,
+          "color": "rgb(53, 19, 16)",
+          "field": "P",
+          "overflow": false,
+          "right": 539,
+          "size": 35,
+          "x": 64,
+          "y": 879.765625
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 1013.40625,
+          "color": "rgb(53, 19, 16)",
+          "field": "message",
+          "overflow": false,
+          "right": 1016,
+          "size": 37,
+          "x": 377,
+          "y": 959.765625
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 1058,
+          "color": "rgb(53, 19, 16)",
+          "field": "disclosure",
+          "overflow": false,
+          "right": 1016,
+          "size": 29,
+          "x": 377,
+          "y": 1017.40625
+        },
+        {
+          "background": "rgb(154, 46, 34)",
+          "bottom": 1049.140625,
+          "color": "rgb(255, 244, 220)",
+          "field": "cta",
+          "overflow": false,
+          "right": 353,
+          "size": 37,
+          "x": 64,
+          "y": 968.609375
+        }
+      ],
+      "height": 1080,
+      "sha256": "ef7c37a6f31d4a8535f872d50c39e03626caf3785a6bdf40389fd8e6fa3feb90",
+      "width": 1080
+    }
+  },
+  "profile_snapshot_id": "f77fdbc8-3573-4a4a-89d5-d0a31f337049",
+  "proposal": {
+    "brand_name": "Buffalo Burger",
+    "brief": {
+      "alternatives": [
+        {
+          "name": "ضوء النهار",
+          "plan": "إضاءة نهارية ولقطة كاملة تُبرز فرق الشيدر والبايتس.",
+          "tradeoff": "الخلفية الفاتحة تبرز حدود الساندوتشين."
+        },
+        {
+          "name": "ستوديو داكن",
+          "plan": "ضوء جانبي دافئ وخلفية داكنة تُبرز قوام البرجر.",
+          "tradeoff": "اللقطة القريبة تبرز قوام المكونات."
+        }
+      ],
+      "assumption": "نفترض إن الزائر محتار يبدأ بإيه. نختبر هل سؤال الشيدر والهالبينو يساعده يفتح المنيو ويقارن.",
+      "audience": "فرضية جمهور بعد مراجعة المسودة.",
+      "competitor": null,
+      "direction": "rtl",
+      "directions": [
+        {
+          "caption": "أولد سكول فيه شيدر، وراستافاري فيه بايتس شيدر محشية هالبينو. الاتنين فيهم صوص بافالو. افتح المنيو وقارن قبل ما تختار.",
+          "cta": "شوف المنيو",
+          "end_shot": "شوف المنيو",
+          "headline": "كلاسيك ولا هالبينو؟",
+          "hook": "كلاسيك ولا هالبينو؟",
+          "message": "الاتنين فيهم صوص بافالو.",
+          "middle_shot": "صوص بافالو في الاختيارين.",
+          "name": "ضوء النهار",
+          "rationale": "إضاءة نهارية ولقطة كاملة تُبرز فرق الشيدر والبايتس.",
+          "shot": "إضاءة نهارية ولقطة كاملة تُبرز فرق الشيدر والبايتس.",
+          "theme": "ember"
+        },
+        {
+          "caption": "أولد سكول فيه شيدر، وراستافاري فيه بايتس شيدر محشية هالبينو. الاتنين فيهم صوص بافالو. افتح المنيو وقارن قبل ما تختار.",
+          "cta": "شوف المنيو",
+          "end_shot": "شوف المنيو",
+          "headline": "كلاسيك ولا هالبينو؟",
+          "hook": "كلاسيك ولا هالبينو؟",
+          "message": "صوص بافالو في الاختيارين.",
+          "middle_shot": "صوص بافالو في الاختيارين.",
+          "name": "ستوديو داكن",
+          "rationale": "ضوء جانبي دافئ وخلفية داكنة تُبرز قوام البرجر.",
+          "shot": "ضوء جانبي دافئ وخلفية داكنة تُبرز قوام البرجر.",
+          "theme": "ember"
+        }
+      ],
+      "human_review": [
+        "اتأكد إن بايتس الشيدر بالهالبينو تظهر مع راستافاري فقط وإن الشيدر السايح ظاهر مع أولد سكول.",
+        "التصوير توضيحي مولّد بالذكاء الاصطناعي. هذه دراسة Portfolio مستقلة."
+      ],
+      "language": "ar",
+      "market": "العربية المصرية، والجمهور المقترح فرضية للتحرير.",
+      "metric": "نقرات على رابط المنيو لكل ظهور.",
+      "objective": "تشجيع المستخدم على تصفّح المنيو واختيار برجر يناسبه",
+      "peer_rationale": null,
+      "peer_source": null,
+      "selected": 0,
+      "source": {
+        "quote": "قائمة بافلو برجر",
+        "scope": "عنوان صفحة المنيو الرسمية",
+        "url": "https://buffaloburger.com/menu"
+      },
+      "strategy_index": 0,
+      "strategy_reason": "اختار المراجع هذا البديل ضمن نفس البحث.",
+      "summary": "قائمة بافلو برجر",
+      "tone": "مصري خفيف ومباشر"
+    },
+    "changes": [
+      {
+        "after": 0,
+        "before": 1,
+        "field": "selected"
+      }
+    ],
+    "evidence": [
+      {
+        "body_sha256": "9881dd939ee72bb907f86ac595eff8fb55f1a39512770562b3b3de6fe2aadb85",
+        "capture_kind": "public_http",
+        "captured_at": "2026-11-13T22:42:49.228259+00:00",
+        "context": "قائمة بافلو برجر",
+        "field": "title",
+        "outcome": "QUOTE_OBSERVED",
+        "page_url": "https://buffaloburger.com/menu",
+        "quote": "قائمة بافلو برجر",
+        "scope": "عنوان صفحة المنيو الرسمية",
+        "source_title": "قائمة بافلو برجر",
+        "text_sha256": "80ce24e3740b1a56c6b1770a46edce63633e31fa53da8149f1f2daaa0eee2369"
+      },
+      {
+        "body_sha256": "9e3015fb9283d31351bd651e1f063339db4bf6613b083691bbbb8d38dd4d5dd9",
+        "capture_kind": "public_http",
+        "captured_at": "2026-11-13T22:42:50.010746+00:00",
+        "context": "Pure beef burger patty, topped with our signature Buffalo sauce and cheddar cheese.",
+        "field": "og:description",
+        "outcome": "QUOTE_OBSERVED",
+        "page_url": "https://buffaloburger.com/menu/old-school",
+        "quote": "Pure beef burger patty, topped with our signature Buffalo sauce and cheddar cheese.",
+        "scope": "وصف أولد سكول من بطاقة مشاركة صفحة الصنف",
+        "source_title": "أولد سكول - بافلو برجر",
+        "text_sha256": "d24be8ec430a48288407b66d952219fa7280da5db1a3e170cb1d2f613e81a9f6"
+      },
+      {
+        "body_sha256": "2876ce9fa0eee1c04407d4b1b671d0e435a0fc9a754e3b6c419e432d54bbc09f",
+        "capture_kind": "public_http",
+        "captured_at": "2026-11-13T22:42:50.866269+00:00",
+        "context": "بايتس الجبنة الشيدر المحشوه بالهالپنيو وصوص البافالو الكريمي و مع قطعة البرجر.",
+        "field": "og:description",
+        "outcome": "QUOTE_OBSERVED",
+        "page_url": "https://buffaloburger.com/menu/the-rastafari",
+        "quote": "بايتس الجبنة الشيدر المحشوه بالهالپنيو وصوص البافالو الكريمي و مع قطعة البرجر.",
+        "scope": "وصف راستافاري من بطاقة مشاركة صفحة الصنف",
+        "source_title": "راستافاري - بافلو برجر",
+        "text_sha256": "b2f8df1638e3e0886caccc9c03e00f4d30d91450b473d6a1fc692e6de747b0b7"
+      }
+    ],
+    "kind": "SOURCE_CAMPAIGN",
+    "package": {
+      "art": {
+        "disclosure": "تصوير توضيحي مولّد بالذكاء الاصطناعي",
+        "evidence": [
+          1,
+          2
+        ],
+        "layout": "scene-comparison",
+        "mode": "compare",
+        "origin": "GENERATED_ILLUSTRATIVE_SCENE",
+        "palette": "paper",
+        "scene": {
+          "location": "global",
+          "model": "gemini-3-pro-image",
+          "original_sha256": "743a7f556553f91ec3a16466fae451ea261c73fc9909d3f5a5aa14bf5ec43ffd",
+          "sha256": "062d541a3736171361510154888f6c720352facb4f2d8eca90756a73d616ff89"
+        },
+        "subjects": [
+          {
+            "detail": "جبنة شيدر",
+            "evidence_index": 1,
+            "name": "أولد سكول"
+          },
+          {
+            "detail": "بايتس شيدر بالهالبينو",
+            "evidence_index": 2,
+            "name": "راستافاري"
+          }
+        ]
+      },
+      "brand_name": "Buffalo Burger",
+      "caption": "أولد سكول فيه شيدر، وراستافاري فيه بايتس شيدر محشية هالبينو. الاتنين فيهم صوص بافالو. افتح المنيو وقارن قبل ما تختار.",
+      "claims": [
+        {
+          "basis": "INGREDIENT_CONTRAST",
+          "evidence": [
+            1,
+            2
+          ],
+          "field": "headline"
+        },
+        {
+          "basis": "BUFFALO_SAUCE_IN_BOTH_PUBLISHER_DESCRIPTIONS",
+          "evidence": [
+            1,
+            2
+          ],
+          "field": "message"
+        },
+        {
+          "basis": "INGREDIENTS_AND_NAVIGATION",
+          "evidence": [
+            1,
+            2,
+            0
+          ],
+          "field": "caption"
+        },
+        {
+          "basis": "OBSERVED_DESTINATION",
+          "evidence": [
+            0
+          ],
+          "field": "cta"
+        },
+        {
+          "basis": "PUBLISHER_ITEM_NAMES_AND_INGREDIENTS",
+          "evidence": [
+            1,
+            2
+          ],
+          "field": "art"
+        }
+      ],
+      "copy": {
+        "cta": "شوف المنيو",
+        "headline": "كلاسيك ولا هالبينو؟",
+        "message": "الاتنين فيهم صوص بافالو."
+      },
+      "direction": "rtl",
+      "factual_review": "EXACT_SOURCE_ANCHORS_AND_EDITORIAL_REVIEW",
+      "language": "ar",
+      "poster_layout": "source-campaign@5",
+      "source_evidence_index": 0,
+      "source_url": "https://buffaloburger.com/menu",
+      "theme": "ember"
+    },
+    "planner": {
+      "brief_reviewed": true,
+      "cost_usd": 0,
+      "destination_evidence_index": 0,
+      "edition": "buffalo-menu-portfolio-20261114",
+      "edition_sha256": "0a4819593d40a4f2a0247fc36355eeaa1bdc084d1a0e78b8cc4f1f8868e31f78",
+      "elapsed_ms": 3769.68,
+      "gap": null,
+      "input": {
+        "language": "ar",
+        "objective": "تشجيع المستخدم على تصفّح المنيو واختيار برجر يناسبه",
+        "url": "https://buffaloburger.com"
+      },
+      "intent": "BROWSE_CATALOG",
+      "missing_question": null,
+      "opportunity_hypothesis": "نفترض إن الزائر محتار يبدأ بإيه. نختبر هل سؤال الشيدر والهالبينو يساعده يفتح المنيو ويقارن.",
+      "options": [
+        {
+          "action": "OPEN_CATALOG",
+          "art": {
+            "disclosure": "تصوير توضيحي مولّد بالذكاء الاصطناعي",
+            "evidence": [
+              1,
+              2
+            ],
+            "layout": "scene-comparison",
+            "mode": "compare",
+            "origin": "GENERATED_ILLUSTRATIVE_SCENE",
+            "palette": "paper",
+            "scene": {
+              "location": "global",
+              "model": "gemini-3-pro-image",
+              "original_sha256": "743a7f556553f91ec3a16466fae451ea261c73fc9909d3f5a5aa14bf5ec43ffd",
+              "sha256": "062d541a3736171361510154888f6c720352facb4f2d8eca90756a73d616ff89"
+            },
+            "subjects": [
+              {
+                "detail": "جبنة شيدر",
+                "evidence_index": 1,
+                "name": "أولد سكول"
+              },
+              {
+                "detail": "بايتس شيدر بالهالبينو",
+                "evidence_index": 2,
+                "name": "راستافاري"
+              }
+            ]
+          },
+          "audience": "فرضية: ناس بتفتح المنيو ومحتارة تبدأ من أنهي برجر.",
+          "claims": [
+            {
+              "basis": "INGREDIENT_CONTRAST",
+              "evidence": [
+                1,
+                2
+              ],
+              "field": "headline"
+            },
+            {
+              "basis": "BUFFALO_SAUCE_IN_BOTH_PUBLISHER_DESCRIPTIONS",
+              "evidence": [
+                1,
+                2
+              ],
+              "field": "message"
+            },
+            {
+              "basis": "INGREDIENTS_AND_NAVIGATION",
+              "evidence": [
+                1,
+                2,
+                0
+              ],
+              "field": "caption"
+            },
+            {
+              "basis": "OBSERVED_DESTINATION",
+              "evidence": [
+                0
+              ],
+              "field": "cta"
+            },
+            {
+              "basis": "PUBLISHER_ITEM_NAMES_AND_INGREDIENTS",
+              "evidence": [
+                1,
+                2
+              ],
+              "field": "art"
+            }
+          ],
+          "cta": "شوف المنيو",
+          "destination": "https://buffaloburger.com/menu",
+          "evidence_index": 0,
+          "metric": "نقرات على رابط المنيو لكل ظهور.",
+          "name": "ضوء النهار",
+          "variants": {
+            "message": [
+              "صوص بافالو في الاختيارين.",
+              "الاتنين فيهم صوص بافالو."
+            ]
+          }
+        },
+        {
+          "action": "OPEN_CATALOG",
+          "art": {
+            "disclosure": "تصوير توضيحي مولّد بالذكاء الاصطناعي",
+            "evidence": [
+              1,
+              2
+            ],
+            "layout": "scene-comparison",
+            "mode": "compare",
+            "origin": "GENERATED_ILLUSTRATIVE_SCENE",
+            "palette": "slate",
+            "scene": {
+              "location": "global",
+              "model": "gemini-3-pro-image",
+              "original_sha256": "5366c731b43ab9ccc6e6288c6367cbf32ed63d391b597bc3b83f96c947383caf",
+              "sha256": "78df3da6597e1dc8febf553f69ec11b75cfa556823cb550a0b18c52e44ed8249"
+            },
+            "subjects": [
+              {
+                "detail": "جبنة شيدر",
+                "evidence_index": 1,
+                "name": "أولد سكول"
+              },
+              {
+                "detail": "بايتس شيدر بالهالبينو",
+                "evidence_index": 2,
+                "name": "راستافاري"
+              }
+            ]
+          },
+          "audience": "فرضية: ناس بتفتح المنيو ومحتارة تبدأ من أنهي برجر.",
+          "claims": [
+            {
+              "basis": "INGREDIENT_CONTRAST",
+              "evidence": [
+                1,
+                2
+              ],
+              "field": "headline"
+            },
+            {
+              "basis": "BUFFALO_SAUCE_IN_BOTH_PUBLISHER_DESCRIPTIONS",
+              "evidence": [
+                1,
+                2
+              ],
+              "field": "message"
+            },
+            {
+              "basis": "INGREDIENTS_AND_NAVIGATION",
+              "evidence": [
+                1,
+                2,
+                0
+              ],
+              "field": "caption"
+            },
+            {
+              "basis": "OBSERVED_DESTINATION",
+              "evidence": [
+                0
+              ],
+              "field": "cta"
+            },
+            {
+              "basis": "PUBLISHER_ITEM_NAMES_AND_INGREDIENTS",
+              "evidence": [
+                1,
+                2
+              ],
+              "field": "art"
+            }
+          ],
+          "cta": "شوف المنيو",
+          "destination": "https://buffaloburger.com/menu",
+          "evidence_index": 0,
+          "metric": "نقرات على رابط المنيو لكل ظهور.",
+          "name": "ستوديو داكن",
+          "variants": {
+            "message": [
+              "صوص بافالو في الاختيارين.",
+              "الاتنين فيهم صوص بافالو."
+            ]
+          }
+        }
+      ],
+      "page_calls": 4,
+      "pages": [
+        {
+          "body_sha256": "9881dd939ee72bb907f86ac595eff8fb55f1a39512770562b3b3de6fe2aadb85",
+          "capture_kind": "public_http",
+          "captured_at": "2026-11-13T22:42:49.228259+00:00",
+          "context": "قائمة بافلو برجر",
+          "field": "title",
+          "outcome": "QUOTE_OBSERVED",
+          "page_url": "https://buffaloburger.com/menu",
+          "quote": "قائمة بافلو برجر",
+          "scope": "عنوان صفحة المنيو الرسمية",
+          "source_title": "قائمة بافلو برجر",
+          "text_sha256": "80ce24e3740b1a56c6b1770a46edce63633e31fa53da8149f1f2daaa0eee2369"
+        },
+        {
+          "body_sha256": "9e3015fb9283d31351bd651e1f063339db4bf6613b083691bbbb8d38dd4d5dd9",
+          "capture_kind": "public_http",
+          "captured_at": "2026-11-13T22:42:50.010746+00:00",
+          "context": "Pure beef burger patty, topped with our signature Buffalo sauce and cheddar cheese.",
+          "field": "og:description",
+          "outcome": "QUOTE_OBSERVED",
+          "page_url": "https://buffaloburger.com/menu/old-school",
+          "quote": "Pure beef burger patty, topped with our signature Buffalo sauce and cheddar cheese.",
+          "scope": "وصف أولد سكول من بطاقة مشاركة صفحة الصنف",
+          "source_title": "أولد سكول - بافلو برجر",
+          "text_sha256": "d24be8ec430a48288407b66d952219fa7280da5db1a3e170cb1d2f613e81a9f6"
+        },
+        {
+          "body_sha256": "2876ce9fa0eee1c04407d4b1b671d0e435a0fc9a754e3b6c419e432d54bbc09f",
+          "capture_kind": "public_http",
+          "captured_at": "2026-11-13T22:42:50.866269+00:00",
+          "context": "بايتس الجبنة الشيدر المحشوه بالهالپنيو وصوص البافالو الكريمي و مع قطعة البرجر.",
+          "field": "og:description",
+          "outcome": "QUOTE_OBSERVED",
+          "page_url": "https://buffaloburger.com/menu/the-rastafari",
+          "quote": "بايتس الجبنة الشيدر المحشوه بالهالپنيو وصوص البافالو الكريمي و مع قطعة البرجر.",
+          "scope": "وصف راستافاري من بطاقة مشاركة صفحة الصنف",
+          "source_title": "راستافاري - بافلو برجر",
+          "text_sha256": "b2f8df1638e3e0886caccc9c03e00f4d30d91450b473d6a1fc692e6de747b0b7"
+        }
+      ],
+      "policy": "editorial-campaign@1",
+      "provider_calls": 0,
+      "question": "أنهي فرق بين صنفين يساعد الزائر يبدأ منيو البرجر؟",
+      "request_id": null,
+      "snapshot_id": null,
+      "source_mode": "public_http",
+      "stop": "DECISION_EVIDENCE_FOUND",
+      "trace": [
+        {
+          "outcome": "QUOTE_OBSERVED",
+          "page_url": "https://buffaloburger.com",
+          "reason": "BRAND_ENTRY"
+        },
+        {
+          "outcome": "QUOTE_OBSERVED",
+          "page_url": "https://buffaloburger.com/menu",
+          "reason": "EDITORIAL_SOURCE"
+        },
+        {
+          "outcome": "QUOTE_OBSERVED",
+          "page_url": "https://buffaloburger.com/menu/old-school",
+          "reason": "EDITORIAL_SOURCE"
+        },
+        {
+          "outcome": "QUOTE_OBSERVED",
+          "page_url": "https://buffaloburger.com/menu/the-rastafari",
+          "reason": "EDITORIAL_SOURCE"
+        }
+      ],
+      "trace_id": "d685c7396f3d84d039258fa057e9743a",
+      "version": {
+        "commit": "50398c8d774871374a4820061294f247f0a94960",
+        "guardrails": {
+          "policy": "campaign-copy@1",
+          "sha256": "38a68dddea99dac754339ae46d5e52c008796ff81cab0a1d5b15775335c4098b"
+        },
+        "model": {
+          "mode": "deterministic",
+          "model_id": null,
+          "provider": null
+        },
+        "planner": {
+          "edition_implementation_sha256": "677129b2b4f7cdb0db841227a09f9b6b24b275d490189044c8d3866d72f869c6",
+          "edition_sha256": "0a4819593d40a4f2a0247fc36355eeaa1bdc084d1a0e78b8cc4f1f8868e31f78",
+          "package_sha256": "72908702b06a0fe666d6fce695d04359acd16c96299e9aba7acb50ea2ea33414",
+          "policy": "editorial-campaign@1",
+          "sha256": "ea2355ec04ffadf8e8f7176d8413c9a328fdb32e833c0d214b7639c57f0c7ea4",
+          "transport_sha256": "5d022857bb9820f1a5206aaa0487c75a5bd3decfc28af36dd4dcd831bbc3796f"
+        },
+        "prompt": {
+          "id": null,
+          "mode": "no_model_prompt"
+        },
+        "reference_commit": "4648fbc043219661023fa97d92446bec9323fba4",
+        "release": "stable",
+        "schema": "adzy.campaign-release@1"
+      }
+    },
+    "schema_version": 2,
+    "sha256": "09f8c68e917307232aa215689db74c9fd0e5bb367aea66e4c933aecdcf5f70f6",
+    "status": "READY"
+  },
+  "review_status": "LOCAL_REVIEW",
+  "run_id": "d59abce6-497f-4ba5-b2af-c5187d518141"
+}

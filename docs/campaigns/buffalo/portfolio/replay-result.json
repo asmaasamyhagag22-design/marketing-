@@ -1,0 +1,42 @@
+{
+  "cases": {
+    "buffalo": {
+      "status": "EXPORTED",
+      "seconds": 45.52,
+      "public_pages": 4,
+      "plan_run_id": "5069d4e0-ded9-4fbd-bc07-4862afc3aaa2",
+      "reviewed_run_id": "d5aeec94-3011-4736-9b02-27e4f704bd0e",
+      "direction_revision_run_id": "e2b44c79-e639-4d1b-9825-8a3cb1a203b7",
+      "restored_run_id": "271538aa-4694-4f4b-9344-4a6ec0e5be11",
+      "restored_approval_id": "e9522532-3899-466b-bb05-ffcd589a4d35",
+      "restored_zip_sha256": "0dea52c7330dd5436e1a6683faf1c43caa22aace8f2c9a7cd63213016b1a0772",
+      "visited_destination": null,
+      "stale_export_http": 409,
+      "rejected_copy_http": 409,
+      "unregistered_copy_response": {
+        "detail": {
+          "code": "COPY_REQUIRES_EVIDENCE_REVIEW",
+          "fields": [
+            "message"
+          ]
+        }
+      },
+      "accepted_copy_fields": [
+        "message"
+      ],
+      "reviewed_png_sha256": {
+        "portrait": "970a4e34db35c17007c2b509224ea00c34dcbce7593b776934e460149e98edc4",
+        "square": "ef7c37a6f31d4a8535f872d50c39e03626caf3785a6bdf40389fd8e6fa3feb90"
+      },
+      "restored_png_sha256": {
+        "portrait": "970a4e34db35c17007c2b509224ea00c34dcbce7593b776934e460149e98edc4",
+        "square": "ef7c37a6f31d4a8535f872d50c39e03626caf3785a6bdf40389fd8e6fa3feb90"
+      }
+    }
+  },
+  "elapsed_seconds": 54.1,
+  "campaign_runs": 4,
+  "automated_review_actions": 3,
+  "provider_usage_rows": 0,
+  "browser_errors": []
+}

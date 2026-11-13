@@ -81,6 +81,20 @@ def prepare(destination):
     paths.update(p for p in (root/'tools').glob('*.py'))
     paths.update(root/n for n in ('.env.example','docs/getting-started.md','docs/results/README.md','docs/results/provenance.json','docs/results/studio-fixture-poster.png','docs/results/studio-fixture-result.json','docs/results/copy-editor-draft.png','docs/results/copy-editor-draft.json','docs/licenses/Noto-OFL.txt','examples/volume-cafe/README.md','examples/volume-cafe/profile-excerpt.json'))
     paths.update(root/p for p in DOCS if (root/p).is_file())
+    # The portfolio demo packages selected reviewed media and replay inputs.
+    portfolio = root/'docs/campaigns/buffalo/portfolio'
+    for name in ('case.json', 'edition.json', 'poster-portrait.png', 'poster-square.png',
+                 'poster-portrait-390.png', 'poster-square-390.png', 'campaign.zip',
+                 'campaign.json', 'comparison.jpg', 'REVIEW.md', 'pricing.json', 'browser-result.json',
+                 'gemini-critique.md', 'gemini-final-critique.md'):
+        paths.add(portfolio/name)
+    paths.update(path for path in (portfolio/'prompts').glob('*.prompt') if source_candidate(path, root))
+    for path in (root/'poster/campaign_scenes').glob('*.jpg'):
+        if re.fullmatch(r'[0-9a-f]{64}', path.stem) and source_candidate(path, root):
+            paths.add(path)
+    paths.update(path for path in (root/'docs/demo/campaign-snapshots/buffalo').glob('*')
+                 if source_candidate(path, root) and path.suffix in {'.html', '.json'})
+    paths.add(root/'docs/campaigns/INTERVIEW.md')
     paths.update(root/'docs/experiments/profile-refresh'/name for name in (
         'RESULT.md', 'browser-result.json', 'desktop-recovery.png', 'mobile-recovery.png'))
     paths.update(root/'docs/experiments/review-shadow'/name for name in (

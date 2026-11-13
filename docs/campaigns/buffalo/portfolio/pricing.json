@@ -1,0 +1,392 @@
+{
+  "schema": "adzy.portfolio-vertex-usage@1",
+  "date_africa_cairo": "2026-11-14",
+  "task_limit_usd": 10,
+  "endpoint_location": "global",
+  "provider": "Google Cloud Vertex AI",
+  "rates": "USD per million tokens, on-demand, before promotional credits",
+  "source": "https://cloud.google.com/model-garden/pricing",
+  "rates_used": {
+    "gemini-4-argon": {
+      "input": 4,
+      "text_output_including_thinking": 20
+    },
+    "gemini-3-pro-image": {
+      "input": 2,
+      "text_output_including_thinking": 12,
+      "image_output": 120
+    }
+  },
+  "argon's_introductory_net_estimate_note": "The estimate uses full undiscounted prices.",
+  "estimate_usd": 0.646144,
+  "largest_admitted_commitment_usd": 5.322348,
+  "invoice_usd": null,
+  "assumptions": [
+    "Used prompt tokens and the provider's reported modality and thinking counts.",
+    "An absent thinking count contributes no extra separately metered tokens in this estimate.",
+    "Image output cost is calculated from the IMAGE modality token count. Cache rebates and promotional credits are excluded."
+  ],
+  "attempts": {
+    "direction": {
+      "model": "gemini-4-argon",
+      "location": "global",
+      "reserved_usd": 0.75,
+      "prompt_sha256": "f1e32ec1539e9abe4e69988e6db98b7da65858b2612a31a58030dfb6df3e0245",
+      "input_images_sha256": [],
+      "generation_config": {
+        "candidateCount": 1,
+        "maxOutputTokens": 4096,
+        "thinkingConfig": {
+          "thinkingLevel": "LOW"
+        }
+      },
+      "status": "received",
+      "utc": "2026-11-13T22:26:18.049704+00:00",
+      "http": 200,
+      "usage": {
+        "promptTokenCount": 336,
+        "candidatesTokenCount": 1151,
+        "totalTokenCount": 1487,
+        "trafficType": "ON_DEMAND",
+        "promptTokensDetails": [
+          {
+            "modality": "TEXT",
+            "tokenCount": 336
+          }
+        ],
+        "candidatesTokensDetails": [
+          {
+            "modality": "TEXT",
+            "tokenCount": 1151
+          }
+        ]
+      },
+      "estimate_usd": 0.024364,
+      "images": [],
+      "model_version": "gemini-4-argon",
+      "finish": [
+        "STOP"
+      ]
+    },
+    "slate": {
+      "model": "gemini-3-pro-image",
+      "location": "global",
+      "reserved_usd": 4,
+      "prompt_sha256": "3a47d8dea0e7de1e8cea5ed82f4e53bb8ce11f53393b4faf2a06151a0d90869c",
+      "input_images_sha256": [],
+      "generation_config": {
+        "candidateCount": 1,
+        "maxOutputTokens": 24576,
+        "responseModalities": [
+          "TEXT",
+          "IMAGE"
+        ],
+        "imageConfig": {
+          "aspectRatio": "3:2",
+          "imageSize": "2K"
+        }
+      },
+      "status": "received",
+      "utc": "2026-11-13T22:27:24.176752+00:00",
+      "http": 200,
+      "usage": {
+        "promptTokenCount": 350,
+        "candidatesTokenCount": 1120,
+        "totalTokenCount": 1923,
+        "trafficType": "ON_DEMAND",
+        "promptTokensDetails": [
+          {
+            "modality": "TEXT",
+            "tokenCount": 350
+          }
+        ],
+        "candidatesTokensDetails": [
+          {
+            "modality": "IMAGE",
+            "tokenCount": 1120
+          }
+        ],
+        "thoughtsTokenCount": 453
+      },
+      "estimate_usd": 0.140536,
+      "images": [
+        {
+          "file": "slate-1.png",
+          "sha256": "5366c731b43ab9ccc6e6288c6367cbf32ed63d391b597bc3b83f96c947383caf"
+        }
+      ],
+      "model_version": "gemini-3-pro-image",
+      "finish": [
+        "STOP"
+      ]
+    },
+    "daylight": {
+      "model": "gemini-3-pro-image",
+      "location": "global",
+      "reserved_usd": 4,
+      "prompt_sha256": "727839a9ac01c87b545337be0685f6b086ed7d7830a08e35ce58cd7e76eb1c25",
+      "input_images_sha256": [],
+      "generation_config": {
+        "candidateCount": 1,
+        "maxOutputTokens": 24576,
+        "responseModalities": [
+          "TEXT",
+          "IMAGE"
+        ],
+        "imageConfig": {
+          "aspectRatio": "3:2",
+          "imageSize": "2K"
+        }
+      },
+      "status": "received",
+      "utc": "2026-11-13T22:28:01.237041+00:00",
+      "http": 200,
+      "usage": {
+        "promptTokenCount": 301,
+        "candidatesTokenCount": 1120,
+        "totalTokenCount": 1782,
+        "trafficType": "ON_DEMAND",
+        "promptTokensDetails": [
+          {
+            "modality": "TEXT",
+            "tokenCount": 301
+          }
+        ],
+        "candidatesTokensDetails": [
+          {
+            "modality": "IMAGE",
+            "tokenCount": 1120
+          }
+        ],
+        "thoughtsTokenCount": 361
+      },
+      "estimate_usd": 0.139334,
+      "images": [
+        {
+          "file": "daylight-1.png",
+          "sha256": "43e5bac1e08d9cddcba5f7ca07f3080d6f2d9104bf47bd08b7c2c21d72205fd8"
+        }
+      ],
+      "model_version": "gemini-3-pro-image",
+      "finish": [
+        "STOP"
+      ]
+    },
+    "daylight-edit": {
+      "model": "gemini-3-pro-image",
+      "location": "global",
+      "reserved_usd": 4,
+      "prompt_sha256": "617313eb6c85a72f6b3c7ac42f465d798497601e58355127ef421d9c9b11b69f",
+      "input_images_sha256": [
+        "43e5bac1e08d9cddcba5f7ca07f3080d6f2d9104bf47bd08b7c2c21d72205fd8"
+      ],
+      "generation_config": {
+        "candidateCount": 1,
+        "maxOutputTokens": 24576,
+        "responseModalities": [
+          "TEXT",
+          "IMAGE"
+        ],
+        "imageConfig": {
+          "aspectRatio": "3:2",
+          "imageSize": "2K"
+        }
+      },
+      "status": "received",
+      "utc": "2026-11-13T22:33:06.362837+00:00",
+      "http": 200,
+      "usage": {
+        "promptTokenCount": 791,
+        "candidatesTokenCount": 1120,
+        "totalTokenCount": 2196,
+        "trafficType": "ON_DEMAND",
+        "promptTokensDetails": [
+          {
+            "modality": "TEXT",
+            "tokenCount": 231
+          },
+          {
+            "modality": "IMAGE",
+            "tokenCount": 560
+          }
+        ],
+        "candidatesTokensDetails": [
+          {
+            "modality": "IMAGE",
+            "tokenCount": 1120
+          }
+        ],
+        "thoughtsTokenCount": 285
+      },
+      "estimate_usd": 0.139402,
+      "images": [
+        {
+          "file": "daylight-edit-1.png",
+          "sha256": "bd7dc74737c4bd9a27b758cee5127b4c3bcef7fdb733c22ea85b5210e54bc992"
+        }
+      ],
+      "model_version": "gemini-3-pro-image",
+      "finish": [
+        "STOP"
+      ]
+    },
+    "visual-critique": {
+      "model": "gemini-4-argon",
+      "location": "global",
+      "reserved_usd": 0.75,
+      "prompt_sha256": "4d700e8537ccaca650864f68a176d800f8d820f8d8c7ae511ada20fd918155d7",
+      "input_images_sha256": [
+        "ffdbb6fb4728353e3c340d95eda0e763742e8e757bcd74fafa0379b42699398d",
+        "2c6d05a11ee3a7be07eaf529480cd7074d915a808e1aad72643aa85b1cbc0da2",
+        "7a384041d9454df52db8b3aa40ccb8e0a35f3dfeff131abffdc194dc3373a6ee",
+        "328a35c791b641024d8e1b3ac17ddca0020adc4a197aefd214384e4ed8a118c0"
+      ],
+      "generation_config": {
+        "candidateCount": 1,
+        "maxOutputTokens": 4096,
+        "thinkingConfig": {
+          "thinkingLevel": "LOW"
+        }
+      },
+      "status": "received",
+      "utc": "2026-11-13T22:36:28.055330+00:00",
+      "http": 200,
+      "usage": {
+        "promptTokenCount": 4569,
+        "candidatesTokenCount": 740,
+        "totalTokenCount": 5309,
+        "trafficType": "ON_DEMAND",
+        "promptTokensDetails": [
+          {
+            "modality": "IMAGE",
+            "tokenCount": 4308
+          },
+          {
+            "modality": "TEXT",
+            "tokenCount": 261
+          }
+        ],
+        "candidatesTokensDetails": [
+          {
+            "modality": "TEXT",
+            "tokenCount": 740
+          }
+        ]
+      },
+      "estimate_usd": 0.033076,
+      "images": [],
+      "model_version": "gemini-4-argon",
+      "finish": [
+        "STOP"
+      ]
+    },
+    "product-fidelity": {
+      "model": "gemini-3-pro-image",
+      "location": "global",
+      "reserved_usd": 4,
+      "prompt_sha256": "ee3164d72bb4ff22ce9eefbd8df98a63290e96cbbd1c2f5c69e1d93d11609a75",
+      "input_images_sha256": [
+        "bd7dc74737c4bd9a27b758cee5127b4c3bcef7fdb733c22ea85b5210e54bc992"
+      ],
+      "generation_config": {
+        "candidateCount": 1,
+        "maxOutputTokens": 24576,
+        "responseModalities": [
+          "TEXT",
+          "IMAGE"
+        ],
+        "imageConfig": {
+          "aspectRatio": "3:2",
+          "imageSize": "2K"
+        }
+      },
+      "status": "received",
+      "utc": "2026-11-13T22:39:12.885761+00:00",
+      "http": 200,
+      "usage": {
+        "promptTokenCount": 832,
+        "candidatesTokenCount": 1120,
+        "totalTokenCount": 2155,
+        "trafficType": "ON_DEMAND",
+        "promptTokensDetails": [
+          {
+            "modality": "TEXT",
+            "tokenCount": 272
+          },
+          {
+            "modality": "IMAGE",
+            "tokenCount": 560
+          }
+        ],
+        "candidatesTokensDetails": [
+          {
+            "modality": "IMAGE",
+            "tokenCount": 1120
+          }
+        ],
+        "thoughtsTokenCount": 203
+      },
+      "estimate_usd": 0.1385,
+      "images": [
+        {
+          "file": "product-fidelity-1.png",
+          "sha256": "743a7f556553f91ec3a16466fae451ea261c73fc9909d3f5a5aa14bf5ec43ffd"
+        }
+      ],
+      "model_version": "gemini-3-pro-image",
+      "finish": [
+        "STOP"
+      ]
+    },
+    "final-critique": {
+      "model": "gemini-4-argon",
+      "location": "global",
+      "reserved_usd": 0.75,
+      "prompt_sha256": "b48cde22ce8a28648961616dd069edf6207ebd26338f1c91bde3fe0a528b9a40",
+      "input_images_sha256": [
+        "7a384041d9454df52db8b3aa40ccb8e0a35f3dfeff131abffdc194dc3373a6ee",
+        "341ddd60b51d84782fbb68c95d0b0ccdb8a508c2500138e682e6f045dea97d36",
+        "7a4b3ee0d6b4b7fd084ab32dee40d0a128692c431797ab2c556b7a8153fde388",
+        "ef7c37a6f31d4a8535f872d50c39e03626caf3785a6bdf40389fd8e6fa3feb90"
+      ],
+      "generation_config": {
+        "candidateCount": 1,
+        "maxOutputTokens": 4096,
+        "thinkingConfig": {
+          "thinkingLevel": "LOW"
+        }
+      },
+      "status": "received",
+      "utc": "2026-11-13T22:41:02.992996+00:00",
+      "http": 200,
+      "usage": {
+        "promptTokenCount": 4528,
+        "candidatesTokenCount": 641,
+        "totalTokenCount": 5169,
+        "trafficType": "ON_DEMAND",
+        "promptTokensDetails": [
+          {
+            "modality": "IMAGE",
+            "tokenCount": 4324
+          },
+          {
+            "modality": "TEXT",
+            "tokenCount": 204
+          }
+        ],
+        "candidatesTokensDetails": [
+          {
+            "modality": "TEXT",
+            "tokenCount": 641
+          }
+        ]
+      },
+      "estimate_usd": 0.030932,
+      "images": [],
+      "model_version": "gemini-4-argon",
+      "finish": [
+        "STOP"
+      ]
+    }
+  }
+}

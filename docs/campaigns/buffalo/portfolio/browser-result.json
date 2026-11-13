@@ -1,0 +1,48 @@
+{
+  "cases": {
+    "buffalo": {
+      "status": "EXPORTED",
+      "seconds": 43.08,
+      "public_pages": 4,
+      "plan_run_id": "92fbb6ca-bbce-4f15-bc7c-eb0a9506ac39",
+      "reviewed_run_id": "3dba6b8e-e772-472c-b9bd-49b8306529f0",
+      "direction_revision_run_id": "b7f8e604-7a4a-4ead-b446-d17294d4a9c1",
+      "restored_run_id": "d59abce6-497f-4ba5-b2af-c5187d518141",
+      "restored_approval_id": "584b7466-488f-474a-91d8-10ec6b2225bd",
+      "restored_zip_sha256": "87b56cb3c7ca2f1eacd05e0b72b2592ebce2a4cf6add17b61da4b4b371c8d305",
+      "visited_destination": {
+        "url": "https://buffaloburger.com/menu",
+        "visible_text": [
+          "أولد سكول",
+          "راستافاري"
+        ]
+      },
+      "stale_export_http": 409,
+      "rejected_copy_http": 409,
+      "unregistered_copy_response": {
+        "detail": {
+          "code": "COPY_REQUIRES_EVIDENCE_REVIEW",
+          "fields": [
+            "message"
+          ]
+        }
+      },
+      "accepted_copy_fields": [
+        "message"
+      ],
+      "reviewed_png_sha256": {
+        "portrait": "970a4e34db35c17007c2b509224ea00c34dcbce7593b776934e460149e98edc4",
+        "square": "ef7c37a6f31d4a8535f872d50c39e03626caf3785a6bdf40389fd8e6fa3feb90"
+      },
+      "restored_png_sha256": {
+        "portrait": "970a4e34db35c17007c2b509224ea00c34dcbce7593b776934e460149e98edc4",
+        "square": "ef7c37a6f31d4a8535f872d50c39e03626caf3785a6bdf40389fd8e6fa3feb90"
+      }
+    }
+  },
+  "elapsed_seconds": 49.37,
+  "campaign_runs": 4,
+  "automated_review_actions": 3,
+  "provider_usage_rows": 0,
+  "browser_errors": []
+}
