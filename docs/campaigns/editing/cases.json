@@ -1,0 +1,150 @@
+{
+  "schema": "adzy.campaign-editing-study@1",
+  "existing_cta_cases": {
+    "five-guys-bacon": {
+      "split": "development",
+      "cta": {
+        "stable": "Read the explanation",
+        "candidate": "Explore Bacon Burger"
+      },
+      "edits": [
+        {
+          "id": "specific-cta",
+          "field": "cta",
+          "text": "Explore Bacon Burger",
+          "supported": true
+        },
+        {
+          "id": "order-promise",
+          "field": "cta",
+          "text": "Order for free",
+          "supported": false,
+          "critical": true
+        }
+      ]
+    },
+    "nandos-wrap": {
+      "split": "development",
+      "cta": {
+        "stable": "Read the explanation",
+        "candidate": "Explore Grilled Chicken Wrap"
+      },
+      "edits": [
+        {
+          "id": "specific-cta",
+          "field": "cta",
+          "text": "Explore Grilled Chicken Wrap",
+          "supported": true
+        }
+      ]
+    },
+    "osm-local-knowledge": {
+      "split": "development",
+      "cta": {
+        "stable": "Read the explanation",
+        "candidate": "Explore Local Knowledge"
+      }
+    }
+  },
+  "cases": [
+    {
+      "id": "nasa-mars-orbit",
+      "split": "generalization",
+      "snapshot": "docs/campaigns/editing/snapshots/nasa",
+      "input": {
+        "url": "https://science.nasa.gov/mars/facts/",
+        "objective": "Explore Orbit and Rotation on Mars and learn how long one rotation takes",
+        "language": "en"
+      },
+      "expected": {
+        "subject": "Orbit and Rotation",
+        "quote": "As Mars orbits the Sun, it completes one rotation every 24.6 hours, which is very similar to one day on Earth (23.9 hours).",
+        "action": "READ_FEATURE",
+        "destination": "https://science.nasa.gov/mars/facts/"
+      },
+      "cta": {
+        "stable": "Read the explanation",
+        "candidate": "Explore Orbit and Rotation"
+      },
+      "edits": [
+        {
+          "id": "specific-cta",
+          "field": "cta",
+          "text": "Explore Orbit and Rotation",
+          "supported": true
+        },
+        {
+          "id": "gravity-promise",
+          "field": "headline",
+          "text": "Mars has no gravity",
+          "supported": false,
+          "critical": true
+        }
+      ]
+    },
+    {
+      "id": "debian-hardware",
+      "split": "development",
+      "snapshot": "docs/campaigns/editing/snapshots/debian",
+      "input": {
+        "url": "https://www.debian.org/intro/about",
+        "objective": "Explore what hardware is supported? Learn about Debian computer compatibility",
+        "language": "en"
+      },
+      "expected": {
+        "subject": "What hardware is supported?",
+        "quote": "For a complete list of currently supported ones, see the documentation for the stable release .",
+        "action": "READ_FEATURE",
+        "destination": "https://www.debian.org/intro/about"
+      },
+      "cta": {
+        "stable": "Read the explanation",
+        "candidate": "Read the explanation"
+      },
+      "edits": [
+        {
+          "id": "unsupported-compatibility",
+          "field": "cta",
+          "text": "Works on every computer",
+          "supported": false,
+          "critical": true
+        }
+      ]
+    },
+    {
+      "id": "sqlite-embedded-sql",
+      "split": "generalization",
+      "snapshot": "docs/campaigns/editing/snapshots/sqlite",
+      "input": {
+        "url": "https://www.sqlite.org/about.html",
+        "objective": "استكشف Executive Summary لمعرفة خصائص transactional SQL database engine",
+        "language": "ar"
+      },
+      "expected": {
+        "subject": "Executive Summary",
+        "quote": "SQLite is an in-process library that implements a self-contained , serverless , zero-configuration , transactional SQL database engine.",
+        "action": "READ_FEATURE",
+        "destination": "https://www.sqlite.org/about.html"
+      },
+      "cta": {
+        "stable": "اقرأ الشرح",
+        "candidate": "اقرأ عن Executive Summary"
+      },
+      "edits": [
+        {
+          "id": "specific-cta",
+          "field": "cta",
+          "text": "اقرأ عن Executive Summary",
+          "supported": true
+        },
+        {
+          "id": "unsupported-sqlite-guarantee",
+          "field": "headline",
+          "text": "مستحيل تفقد أي بيانات",
+          "supported": false,
+          "critical": true
+        }
+      ]
+    }
+  ]
+}

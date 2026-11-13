@@ -1,0 +1,1790 @@
+{
+  "schema": "adzy.campaign-eval-result@1",
+  "eval_set_id": "47c566d550b3c14d8552a12d4eafe229f148028c32e2900abc7167adefd5de6b",
+  "started_at": "2026-11-13T21:50:56.414186+00:00",
+  "mode": "offline_replay",
+  "results": {
+    "stable": [
+      {
+        "case_id": "buffalo-menu",
+        "split": "development",
+        "eval_set_id": "47c566d550b3c14d8552a12d4eafe229f148028c32e2900abc7167adefd5de6b",
+        "fixtures": {
+          "snapshot_id": "15d58cf5bd70ccd824cd582327e5022e1c3ec0db8c4f411e61a167e4cd792f81",
+          "edition_file_id": "53b896dddbc9f6d09b5004c5f70614ad60d4ebd0a344926babf5002a3ed7ae07"
+        },
+        "source_mode": "publisher_replay",
+        "simulated_transport": null,
+        "version": {
+          "schema": "adzy.campaign-release@1",
+          "release": "stable",
+          "commit": "8225d78f90b47d4d0c1e66f034b12202c32e2480",
+          "reference_commit": "4648fbc043219661023fa97d92446bec9323fba4",
+          "model": {
+            "provider": null,
+            "model_id": null,
+            "mode": "deterministic"
+          },
+          "prompt": {
+            "id": null,
+            "mode": "no_model_prompt"
+          },
+          "planner": {
+            "policy": "editorial-campaign@1",
+            "sha256": "e6eccf053d49377e05f1a8636b5c761c37130173a8beac79c896980b316ae3a7",
+            "edition_sha256": "6a3f45863d9676554efce1f8eb3e1b340bfd45e66cebfb136a0d9948ad148582",
+            "edition_implementation_sha256": "3eb341719cf44d10b9f121379328b65ce9640c328980ecf518f85916947ae9d1",
+            "transport_sha256": "5d022857bb9820f1a5206aaa0487c75a5bd3decfc28af36dd4dcd831bbc3796f",
+            "package_sha256": "2530cee4ce36188775e6beef49db6d350c657fd975d30c28d3652d359185f803"
+          },
+          "guardrails": {
+            "policy": "campaign-copy@1",
+            "sha256": "482d85f78e50becbb70c85e24d7a81be40c9f9f39044e3fb19bb4e279dccb370"
+          }
+        },
+        "trace_id": "2432d16ded47d236354f840bc0fb0aa9",
+        "elapsed_ms": 86.477,
+        "fetch": [
+          "QUOTE_OBSERVED",
+          "QUOTE_OBSERVED",
+          "QUOTE_OBSERVED",
+          "QUOTE_OBSERVED"
+        ],
+        "source_failed": false,
+        "stop": "DECISION_EVIDENCE_FOUND",
+        "gap": null,
+        "evidence_match": true,
+        "evidence": [
+          {
+            "scope": "عنوان صفحة المنيو الرسمية",
+            "quote": "قائمة بافلو برجر",
+            "page_url": "https://buffaloburger.com/menu",
+            "capture_kind": "publisher_snapshot",
+            "body_sha256": "82439b02324bf88df9dcc0047fcbf0096ba6ccf45ed0bddf444ca463c99b6975"
+          },
+          {
+            "scope": "وصف أولد سكول من بطاقة مشاركة صفحة الصنف",
+            "quote": "Pure beef burger patty, topped with our signature Buffalo sauce and cheddar cheese.",
+            "page_url": "https://buffaloburger.com/menu/old-school",
+            "capture_kind": "publisher_snapshot",
+            "body_sha256": "0a70ee0c64cacc6703a6891aca25b8539fb660b4998486a500bf2c52a87f792c"
+          },
+          {
+            "scope": "وصف راستافاري من بطاقة مشاركة صفحة الصنف",
+            "quote": "بايتس الجبنة الشيدر المحشوه بالهالپنيو وصوص البافالو الكريمي و مع قطعة البرجر.",
+            "page_url": "https://buffaloburger.com/menu/the-rastafari",
+            "capture_kind": "publisher_snapshot",
+            "body_sha256": "a55a9f865a9b386f7e3545c99fb3921248ead2e7c143556f852fb679763c68d7"
+          }
+        ],
+        "cta_match": true,
+        "cta_copy_match": null,
+        "writing_context_sha256": "a60a4c7bab3310d5291c1052be7dca98c6676c6e13a0cf62a747174149235c6e",
+        "journey": "READY",
+        "cta": {
+          "url": "https://buffaloburger.com/menu",
+          "evidence_index": 0,
+          "text": "شوف المنيو",
+          "action": "OPEN_CATALOG"
+        },
+        "edits": [
+          {
+            "id": "shared-sauce-registered",
+            "field": "message",
+            "supported": true,
+            "critical": false,
+            "accepted": true,
+            "observed": "الاتنين فيهم صوص بافالو.",
+            "reason": null,
+            "classification": "EXPECTED"
+          },
+          {
+            "id": "shared-sauce-unregistered",
+            "field": "message",
+            "supported": true,
+            "critical": false,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "SUPPORTED_COPY_REJECTED"
+          },
+          {
+            "id": "whole-menu-jalapeno",
+            "field": "headline",
+            "supported": false,
+            "critical": true,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "EXPECTED"
+          }
+        ],
+        "failures": [],
+        "page_calls": 4,
+        "provider_calls": 0,
+        "cost_usd": 0
+      },
+      {
+        "case_id": "five-guys-bacon",
+        "split": "development",
+        "eval_set_id": "47c566d550b3c14d8552a12d4eafe229f148028c32e2900abc7167adefd5de6b",
+        "fixtures": {
+          "snapshot_id": "6270a602411f1d60b85f673a0a128d5d1d906785eaf1003cdb316ad7fbb11d67"
+        },
+        "source_mode": "publisher_replay",
+        "simulated_transport": null,
+        "version": {
+          "schema": "adzy.campaign-release@1",
+          "release": "stable",
+          "commit": "8225d78f90b47d4d0c1e66f034b12202c32e2480",
+          "reference_commit": "4648fbc043219661023fa97d92446bec9323fba4",
+          "model": {
+            "provider": null,
+            "model_id": null,
+            "mode": "deterministic"
+          },
+          "prompt": {
+            "id": null,
+            "mode": "no_model_prompt"
+          },
+          "planner": {
+            "policy": "source-campaign-planner@2",
+            "sha256": "e6eccf053d49377e05f1a8636b5c761c37130173a8beac79c896980b316ae3a7",
+            "edition_sha256": null,
+            "edition_implementation_sha256": "3eb341719cf44d10b9f121379328b65ce9640c328980ecf518f85916947ae9d1",
+            "transport_sha256": "5d022857bb9820f1a5206aaa0487c75a5bd3decfc28af36dd4dcd831bbc3796f",
+            "package_sha256": "2530cee4ce36188775e6beef49db6d350c657fd975d30c28d3652d359185f803"
+          },
+          "guardrails": {
+            "policy": "campaign-copy@1",
+            "sha256": "482d85f78e50becbb70c85e24d7a81be40c9f9f39044e3fb19bb4e279dccb370"
+          }
+        },
+        "trace_id": "5daca5a66d1ba6c359dd11821fc0f537",
+        "elapsed_ms": 81.356,
+        "fetch": [
+          "SOURCE_READ"
+        ],
+        "source_failed": false,
+        "stop": "DECISION_EVIDENCE_FOUND",
+        "gap": null,
+        "evidence_match": true,
+        "evidence": [
+          {
+            "scope": "Bacon Burger",
+            "quote": "Fresh, 100% beef patties hot off the grill, layered with strips of crispy Applewood smoked bacon and placed on a soft, toasted sesame seed bun.",
+            "page_url": "https://www.fiveguys.com/menu/burgers/",
+            "capture_kind": "publisher_snapshot",
+            "body_sha256": "d2af53a07c62810586cb020daeeebf8dec361ef4de057da035bd6681ad521a68"
+          }
+        ],
+        "cta_match": true,
+        "cta_copy_match": true,
+        "writing_context_sha256": "e4588972ec012ca44c0f75911a3eb2a4f588384270cb71e253c224029bc87c2d",
+        "journey": "READY",
+        "cta": {
+          "url": "https://www.fiveguys.com/menu/burgers/",
+          "evidence_index": 0,
+          "text": "Read the explanation",
+          "action": "READ_FEATURE"
+        },
+        "edits": [
+          {
+            "id": "wrong-variant",
+            "field": "headline",
+            "supported": false,
+            "critical": true,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "EXPECTED"
+          },
+          {
+            "id": "specific-cta",
+            "field": "cta",
+            "supported": true,
+            "critical": false,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "SUPPORTED_COPY_REJECTED"
+          },
+          {
+            "id": "order-promise",
+            "field": "cta",
+            "supported": false,
+            "critical": true,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "EXPECTED"
+          }
+        ],
+        "failures": [],
+        "page_calls": 1,
+        "provider_calls": 0,
+        "cost_usd": 0
+      },
+      {
+        "case_id": "nandos-wrap",
+        "split": "development",
+        "eval_set_id": "47c566d550b3c14d8552a12d4eafe229f148028c32e2900abc7167adefd5de6b",
+        "fixtures": {
+          "snapshot_id": "92aaf397f72f8684824b4b712bb2d46ed805b3ccac66e6420d954e2d79052e51"
+        },
+        "source_mode": "publisher_replay",
+        "simulated_transport": null,
+        "version": {
+          "schema": "adzy.campaign-release@1",
+          "release": "stable",
+          "commit": "8225d78f90b47d4d0c1e66f034b12202c32e2480",
+          "reference_commit": "4648fbc043219661023fa97d92446bec9323fba4",
+          "model": {
+            "provider": null,
+            "model_id": null,
+            "mode": "deterministic"
+          },
+          "prompt": {
+            "id": null,
+            "mode": "no_model_prompt"
+          },
+          "planner": {
+            "policy": "source-campaign-planner@2",
+            "sha256": "e6eccf053d49377e05f1a8636b5c761c37130173a8beac79c896980b316ae3a7",
+            "edition_sha256": null,
+            "edition_implementation_sha256": "3eb341719cf44d10b9f121379328b65ce9640c328980ecf518f85916947ae9d1",
+            "transport_sha256": "5d022857bb9820f1a5206aaa0487c75a5bd3decfc28af36dd4dcd831bbc3796f",
+            "package_sha256": "2530cee4ce36188775e6beef49db6d350c657fd975d30c28d3652d359185f803"
+          },
+          "guardrails": {
+            "policy": "campaign-copy@1",
+            "sha256": "482d85f78e50becbb70c85e24d7a81be40c9f9f39044e3fb19bb4e279dccb370"
+          }
+        },
+        "trace_id": "8d0c79fc4289b14a711709a0778b3a04",
+        "elapsed_ms": 65.756,
+        "fetch": [
+          "SOURCE_READ"
+        ],
+        "source_failed": false,
+        "stop": "DECISION_EVIDENCE_FOUND",
+        "gap": null,
+        "evidence_match": true,
+        "evidence": [
+          {
+            "scope": "Grilled Chicken Wrap",
+            "quote": "Chicken breast grilled in your favourite spice.",
+            "page_url": "https://www.nandos.co.uk/food/menu/",
+            "capture_kind": "publisher_snapshot",
+            "body_sha256": "7a309409247ecf1da42448fa46d1832f220748edcdf30d367c27eb514a877b24"
+          }
+        ],
+        "cta_match": true,
+        "cta_copy_match": true,
+        "writing_context_sha256": "84a788c77125217d3a871c1d893f41a0c4bd2d58cda196505229c366b7067217",
+        "journey": "READY",
+        "cta": {
+          "url": "https://www.nandos.co.uk/food/menu/",
+          "evidence_index": 0,
+          "text": "Read the explanation",
+          "action": "READ_FEATURE"
+        },
+        "edits": [
+          {
+            "id": "verbatim-heading",
+            "field": "headline",
+            "supported": true,
+            "critical": false,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "SUPPORTED_COPY_REJECTED"
+          },
+          {
+            "id": "unsupported-price",
+            "field": "headline",
+            "supported": false,
+            "critical": true,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "EXPECTED"
+          },
+          {
+            "id": "specific-cta",
+            "field": "cta",
+            "supported": true,
+            "critical": false,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "SUPPORTED_COPY_REJECTED"
+          }
+        ],
+        "failures": [],
+        "page_calls": 1,
+        "provider_calls": 0,
+        "cost_usd": 0
+      },
+      {
+        "case_id": "nandos-page-cap",
+        "split": "development",
+        "eval_set_id": "47c566d550b3c14d8552a12d4eafe229f148028c32e2900abc7167adefd5de6b",
+        "fixtures": {
+          "snapshot_id": "92aaf397f72f8684824b4b712bb2d46ed805b3ccac66e6420d954e2d79052e51"
+        },
+        "source_mode": "simulated_transport",
+        "simulated_transport": "oversize_html",
+        "version": {
+          "schema": "adzy.campaign-release@1",
+          "release": "stable",
+          "commit": "8225d78f90b47d4d0c1e66f034b12202c32e2480",
+          "reference_commit": "4648fbc043219661023fa97d92446bec9323fba4",
+          "model": {
+            "provider": null,
+            "model_id": null,
+            "mode": "deterministic"
+          },
+          "prompt": {
+            "id": null,
+            "mode": "no_model_prompt"
+          },
+          "planner": {
+            "policy": "source-campaign-planner@2",
+            "sha256": "e6eccf053d49377e05f1a8636b5c761c37130173a8beac79c896980b316ae3a7",
+            "edition_sha256": null,
+            "edition_implementation_sha256": "3eb341719cf44d10b9f121379328b65ce9640c328980ecf518f85916947ae9d1",
+            "transport_sha256": "5d022857bb9820f1a5206aaa0487c75a5bd3decfc28af36dd4dcd831bbc3796f",
+            "package_sha256": "2530cee4ce36188775e6beef49db6d350c657fd975d30c28d3652d359185f803"
+          },
+          "guardrails": {
+            "policy": "campaign-copy@1",
+            "sha256": "482d85f78e50becbb70c85e24d7a81be40c9f9f39044e3fb19bb4e279dccb370"
+          }
+        },
+        "trace_id": "922e7f3272adc91e71c19c87433cda2e",
+        "elapsed_ms": 48.544,
+        "fetch": [
+          "PAGE_TOO_LARGE"
+        ],
+        "source_failed": true,
+        "stop": "NO_MORE_RELEVANT_SOURCES",
+        "gap": "FEATURE_EVIDENCE",
+        "evidence_match": null,
+        "evidence": [],
+        "cta_match": null,
+        "cta_copy_match": null,
+        "writing_context_sha256": null,
+        "journey": "BLOCKED",
+        "cta": null,
+        "edits": [],
+        "failures": [],
+        "page_calls": 1,
+        "provider_calls": 0,
+        "cost_usd": 0
+      },
+      {
+        "case_id": "nandos-timeout",
+        "split": "development",
+        "eval_set_id": "47c566d550b3c14d8552a12d4eafe229f148028c32e2900abc7167adefd5de6b",
+        "fixtures": {
+          "snapshot_id": "92aaf397f72f8684824b4b712bb2d46ed805b3ccac66e6420d954e2d79052e51"
+        },
+        "source_mode": "simulated_transport",
+        "simulated_transport": "socket_timeout",
+        "version": {
+          "schema": "adzy.campaign-release@1",
+          "release": "stable",
+          "commit": "8225d78f90b47d4d0c1e66f034b12202c32e2480",
+          "reference_commit": "4648fbc043219661023fa97d92446bec9323fba4",
+          "model": {
+            "provider": null,
+            "model_id": null,
+            "mode": "deterministic"
+          },
+          "prompt": {
+            "id": null,
+            "mode": "no_model_prompt"
+          },
+          "planner": {
+            "policy": "source-campaign-planner@2",
+            "sha256": "e6eccf053d49377e05f1a8636b5c761c37130173a8beac79c896980b316ae3a7",
+            "edition_sha256": null,
+            "edition_implementation_sha256": "3eb341719cf44d10b9f121379328b65ce9640c328980ecf518f85916947ae9d1",
+            "transport_sha256": "5d022857bb9820f1a5206aaa0487c75a5bd3decfc28af36dd4dcd831bbc3796f",
+            "package_sha256": "2530cee4ce36188775e6beef49db6d350c657fd975d30c28d3652d359185f803"
+          },
+          "guardrails": {
+            "policy": "campaign-copy@1",
+            "sha256": "482d85f78e50becbb70c85e24d7a81be40c9f9f39044e3fb19bb4e279dccb370"
+          }
+        },
+        "trace_id": "13392f77bf8acaa28c92c5e3712c9994",
+        "elapsed_ms": 20.888,
+        "fetch": [
+          "SOURCE_TIMEOUT"
+        ],
+        "source_failed": true,
+        "stop": "NO_MORE_RELEVANT_SOURCES",
+        "gap": "FEATURE_EVIDENCE",
+        "evidence_match": null,
+        "evidence": [],
+        "cta_match": null,
+        "cta_copy_match": null,
+        "writing_context_sha256": null,
+        "journey": "BLOCKED",
+        "cta": null,
+        "edits": [],
+        "failures": [],
+        "page_calls": 1,
+        "provider_calls": 0,
+        "cost_usd": 0
+      },
+      {
+        "case_id": "python-applications",
+        "split": "generalization",
+        "eval_set_id": "47c566d550b3c14d8552a12d4eafe229f148028c32e2900abc7167adefd5de6b",
+        "fixtures": {
+          "snapshot_id": "76df220804082404ecf0c9d0a0e2c4c20ec07491f5ad59cdde21c95a6ca8c597"
+        },
+        "source_mode": "publisher_replay",
+        "simulated_transport": null,
+        "version": {
+          "schema": "adzy.campaign-release@1",
+          "release": "stable",
+          "commit": "8225d78f90b47d4d0c1e66f034b12202c32e2480",
+          "reference_commit": "4648fbc043219661023fa97d92446bec9323fba4",
+          "model": {
+            "provider": null,
+            "model_id": null,
+            "mode": "deterministic"
+          },
+          "prompt": {
+            "id": null,
+            "mode": "no_model_prompt"
+          },
+          "planner": {
+            "policy": "source-campaign-planner@2",
+            "sha256": "e6eccf053d49377e05f1a8636b5c761c37130173a8beac79c896980b316ae3a7",
+            "edition_sha256": null,
+            "edition_implementation_sha256": "3eb341719cf44d10b9f121379328b65ce9640c328980ecf518f85916947ae9d1",
+            "transport_sha256": "5d022857bb9820f1a5206aaa0487c75a5bd3decfc28af36dd4dcd831bbc3796f",
+            "package_sha256": "2530cee4ce36188775e6beef49db6d350c657fd975d30c28d3652d359185f803"
+          },
+          "guardrails": {
+            "policy": "campaign-copy@1",
+            "sha256": "482d85f78e50becbb70c85e24d7a81be40c9f9f39044e3fb19bb4e279dccb370"
+          }
+        },
+        "trace_id": "cc825e379a3184b274a6aee683afe793",
+        "elapsed_ms": 38.68,
+        "fetch": [
+          "SOURCE_READ"
+        ],
+        "source_failed": false,
+        "stop": "DECISION_EVIDENCE_FOUND",
+        "gap": null,
+        "evidence_match": true,
+        "evidence": [
+          {
+            "scope": "Applications",
+            "quote": "The Python Package Index (PyPI) hosts thousands of third-party modules for Python.",
+            "page_url": "https://www.python.org/about/",
+            "capture_kind": "publisher_snapshot",
+            "body_sha256": "4739cc39d7deaad1540d9387f9ee8944063921d24b4e133e7f18c5f7e044f20f"
+          }
+        ],
+        "cta_match": true,
+        "cta_copy_match": null,
+        "writing_context_sha256": "c58a7c94a5b39df96509b5bf23ba0332c0de0b9f1b739d58b614c08438b6d9ce",
+        "journey": "READY",
+        "cta": {
+          "url": "https://www.python.org/about/",
+          "evidence_index": 0,
+          "text": "Read the explanation",
+          "action": "READ_FEATURE"
+        },
+        "edits": [
+          {
+            "id": "all-modules-verified",
+            "field": "headline",
+            "supported": false,
+            "critical": true,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "EXPECTED"
+          }
+        ],
+        "failures": [],
+        "page_calls": 1,
+        "provider_calls": 0,
+        "cost_usd": 0
+      },
+      {
+        "case_id": "osm-local-knowledge",
+        "split": "development",
+        "eval_set_id": "47c566d550b3c14d8552a12d4eafe229f148028c32e2900abc7167adefd5de6b",
+        "fixtures": {
+          "snapshot_id": "45a8bb8a7dd02f76f520d62db20bd83d1cb10e13e931399e291b00d7aaaf8720"
+        },
+        "source_mode": "publisher_replay",
+        "simulated_transport": null,
+        "version": {
+          "schema": "adzy.campaign-release@1",
+          "release": "stable",
+          "commit": "8225d78f90b47d4d0c1e66f034b12202c32e2480",
+          "reference_commit": "4648fbc043219661023fa97d92446bec9323fba4",
+          "model": {
+            "provider": null,
+            "model_id": null,
+            "mode": "deterministic"
+          },
+          "prompt": {
+            "id": null,
+            "mode": "no_model_prompt"
+          },
+          "planner": {
+            "policy": "source-campaign-planner@2",
+            "sha256": "e6eccf053d49377e05f1a8636b5c761c37130173a8beac79c896980b316ae3a7",
+            "edition_sha256": null,
+            "edition_implementation_sha256": "3eb341719cf44d10b9f121379328b65ce9640c328980ecf518f85916947ae9d1",
+            "transport_sha256": "5d022857bb9820f1a5206aaa0487c75a5bd3decfc28af36dd4dcd831bbc3796f",
+            "package_sha256": "2530cee4ce36188775e6beef49db6d350c657fd975d30c28d3652d359185f803"
+          },
+          "guardrails": {
+            "policy": "campaign-copy@1",
+            "sha256": "482d85f78e50becbb70c85e24d7a81be40c9f9f39044e3fb19bb4e279dccb370"
+          }
+        },
+        "trace_id": "90790fd71b0af600f3eb8866e008380b",
+        "elapsed_ms": 41.556,
+        "fetch": [
+          "SOURCE_READ"
+        ],
+        "source_failed": false,
+        "stop": "DECISION_EVIDENCE_FOUND",
+        "gap": null,
+        "evidence_match": true,
+        "evidence": [
+          {
+            "scope": "Local Knowledge",
+            "quote": "Contributors use aerial imagery, GPS devices, and low-tech field maps to verify that OSM is accurate and up to date.",
+            "page_url": "https://www.openstreetmap.org/about",
+            "capture_kind": "publisher_snapshot",
+            "body_sha256": "65f78568d179867afe510e56ad35fd25b989b890a4b48c55a68270fba50da5fe"
+          }
+        ],
+        "cta_match": true,
+        "cta_copy_match": true,
+        "writing_context_sha256": "3dd02aec9839ba014894077d9d11577bfeabb7e0f50724c4571d19b6bc50406e",
+        "journey": "READY",
+        "cta": {
+          "url": "https://www.openstreetmap.org/about",
+          "evidence_index": 0,
+          "text": "Read the explanation",
+          "action": "READ_FEATURE"
+        },
+        "edits": [
+          {
+            "id": "verbatim-heading",
+            "field": "headline",
+            "supported": true,
+            "critical": false,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "SUPPORTED_COPY_REJECTED"
+          },
+          {
+            "id": "every-road-verified",
+            "field": "headline",
+            "supported": false,
+            "critical": true,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "EXPECTED"
+          }
+        ],
+        "failures": [],
+        "page_calls": 1,
+        "provider_calls": 0,
+        "cost_usd": 0
+      },
+      {
+        "case_id": "nasa-mars-orbit",
+        "split": "generalization",
+        "eval_set_id": "47c566d550b3c14d8552a12d4eafe229f148028c32e2900abc7167adefd5de6b",
+        "fixtures": {
+          "snapshot_id": "292c7061e201562f9f4210d548245892c5f9758ac7ff5ca3a75ad8f468dd27a5"
+        },
+        "source_mode": "publisher_replay",
+        "simulated_transport": null,
+        "version": {
+          "schema": "adzy.campaign-release@1",
+          "release": "stable",
+          "commit": "8225d78f90b47d4d0c1e66f034b12202c32e2480",
+          "reference_commit": "4648fbc043219661023fa97d92446bec9323fba4",
+          "model": {
+            "provider": null,
+            "model_id": null,
+            "mode": "deterministic"
+          },
+          "prompt": {
+            "id": null,
+            "mode": "no_model_prompt"
+          },
+          "planner": {
+            "policy": "source-campaign-planner@2",
+            "sha256": "e6eccf053d49377e05f1a8636b5c761c37130173a8beac79c896980b316ae3a7",
+            "edition_sha256": null,
+            "edition_implementation_sha256": "3eb341719cf44d10b9f121379328b65ce9640c328980ecf518f85916947ae9d1",
+            "transport_sha256": "5d022857bb9820f1a5206aaa0487c75a5bd3decfc28af36dd4dcd831bbc3796f",
+            "package_sha256": "2530cee4ce36188775e6beef49db6d350c657fd975d30c28d3652d359185f803"
+          },
+          "guardrails": {
+            "policy": "campaign-copy@1",
+            "sha256": "482d85f78e50becbb70c85e24d7a81be40c9f9f39044e3fb19bb4e279dccb370"
+          }
+        },
+        "trace_id": "19ef2e1560c43888e03a5c1f27f89944",
+        "elapsed_ms": 56.037,
+        "fetch": [
+          "SOURCE_READ"
+        ],
+        "source_failed": false,
+        "stop": "DECISION_EVIDENCE_FOUND",
+        "gap": null,
+        "evidence_match": true,
+        "evidence": [
+          {
+            "scope": "Orbit and Rotation",
+            "quote": "As Mars orbits the Sun, it completes one rotation every 24.6 hours, which is very similar to one day on Earth (23.9 hours).",
+            "page_url": "https://science.nasa.gov/mars/facts/",
+            "capture_kind": "publisher_snapshot",
+            "body_sha256": "4d75f5e6eeebbbe1045d241302ebe8b7f98fb7bcb04f7cc4dbf732ce9304144f"
+          }
+        ],
+        "cta_match": true,
+        "cta_copy_match": true,
+        "writing_context_sha256": "240b49b41dfeb2b474f11ca97bc62b7a5172f525c78a7ae5c5db5f321f821e9f",
+        "journey": "READY",
+        "cta": {
+          "url": "https://science.nasa.gov/mars/facts/",
+          "evidence_index": 0,
+          "text": "Read the explanation",
+          "action": "READ_FEATURE"
+        },
+        "edits": [
+          {
+            "id": "specific-cta",
+            "field": "cta",
+            "supported": true,
+            "critical": false,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "SUPPORTED_COPY_REJECTED"
+          },
+          {
+            "id": "gravity-promise",
+            "field": "headline",
+            "supported": false,
+            "critical": true,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "EXPECTED"
+          }
+        ],
+        "failures": [],
+        "page_calls": 1,
+        "provider_calls": 0,
+        "cost_usd": 0
+      },
+      {
+        "case_id": "debian-hardware",
+        "split": "development",
+        "eval_set_id": "47c566d550b3c14d8552a12d4eafe229f148028c32e2900abc7167adefd5de6b",
+        "fixtures": {
+          "snapshot_id": "0fbd60a22b853cef920396e2a4c6f101f95b85f4a05cc1c6f00859b8117d8685"
+        },
+        "source_mode": "publisher_replay",
+        "simulated_transport": null,
+        "version": {
+          "schema": "adzy.campaign-release@1",
+          "release": "stable",
+          "commit": "8225d78f90b47d4d0c1e66f034b12202c32e2480",
+          "reference_commit": "4648fbc043219661023fa97d92446bec9323fba4",
+          "model": {
+            "provider": null,
+            "model_id": null,
+            "mode": "deterministic"
+          },
+          "prompt": {
+            "id": null,
+            "mode": "no_model_prompt"
+          },
+          "planner": {
+            "policy": "source-campaign-planner@2",
+            "sha256": "e6eccf053d49377e05f1a8636b5c761c37130173a8beac79c896980b316ae3a7",
+            "edition_sha256": null,
+            "edition_implementation_sha256": "3eb341719cf44d10b9f121379328b65ce9640c328980ecf518f85916947ae9d1",
+            "transport_sha256": "5d022857bb9820f1a5206aaa0487c75a5bd3decfc28af36dd4dcd831bbc3796f",
+            "package_sha256": "2530cee4ce36188775e6beef49db6d350c657fd975d30c28d3652d359185f803"
+          },
+          "guardrails": {
+            "policy": "campaign-copy@1",
+            "sha256": "482d85f78e50becbb70c85e24d7a81be40c9f9f39044e3fb19bb4e279dccb370"
+          }
+        },
+        "trace_id": "a97078b13095b09ab417571539df8248",
+        "elapsed_ms": 26.253,
+        "fetch": [
+          "SOURCE_READ"
+        ],
+        "source_failed": false,
+        "stop": "DECISION_EVIDENCE_FOUND",
+        "gap": null,
+        "evidence_match": true,
+        "evidence": [
+          {
+            "scope": "What hardware is supported?",
+            "quote": "For a complete list of currently supported ones, see the documentation for the stable release .",
+            "page_url": "https://www.debian.org/intro/about",
+            "capture_kind": "publisher_snapshot",
+            "body_sha256": "f54c31f0afc95c0d72277b7f0960d94e8e8dc303b1a0f2d44ca5e5f3ad9244a2"
+          }
+        ],
+        "cta_match": true,
+        "cta_copy_match": true,
+        "writing_context_sha256": "50fbc1b85bb7286ee55e57d24f39f0f2cf6eebf79ab75d5fbc0606a438d4bcc2",
+        "journey": "READY",
+        "cta": {
+          "url": "https://www.debian.org/intro/about",
+          "evidence_index": 0,
+          "text": "Read the explanation",
+          "action": "READ_FEATURE"
+        },
+        "edits": [
+          {
+            "id": "unsupported-compatibility",
+            "field": "cta",
+            "supported": false,
+            "critical": true,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "EXPECTED"
+          }
+        ],
+        "failures": [],
+        "page_calls": 1,
+        "provider_calls": 0,
+        "cost_usd": 0
+      },
+      {
+        "case_id": "sqlite-embedded-sql",
+        "split": "generalization",
+        "eval_set_id": "47c566d550b3c14d8552a12d4eafe229f148028c32e2900abc7167adefd5de6b",
+        "fixtures": {
+          "snapshot_id": "975ffff44d17675fc01e93881268998d35a6e83ccbc714c76b6671b83be795e2"
+        },
+        "source_mode": "publisher_replay",
+        "simulated_transport": null,
+        "version": {
+          "schema": "adzy.campaign-release@1",
+          "release": "stable",
+          "commit": "8225d78f90b47d4d0c1e66f034b12202c32e2480",
+          "reference_commit": "4648fbc043219661023fa97d92446bec9323fba4",
+          "model": {
+            "provider": null,
+            "model_id": null,
+            "mode": "deterministic"
+          },
+          "prompt": {
+            "id": null,
+            "mode": "no_model_prompt"
+          },
+          "planner": {
+            "policy": "source-campaign-planner@2",
+            "sha256": "e6eccf053d49377e05f1a8636b5c761c37130173a8beac79c896980b316ae3a7",
+            "edition_sha256": null,
+            "edition_implementation_sha256": "3eb341719cf44d10b9f121379328b65ce9640c328980ecf518f85916947ae9d1",
+            "transport_sha256": "5d022857bb9820f1a5206aaa0487c75a5bd3decfc28af36dd4dcd831bbc3796f",
+            "package_sha256": "2530cee4ce36188775e6beef49db6d350c657fd975d30c28d3652d359185f803"
+          },
+          "guardrails": {
+            "policy": "campaign-copy@1",
+            "sha256": "482d85f78e50becbb70c85e24d7a81be40c9f9f39044e3fb19bb4e279dccb370"
+          }
+        },
+        "trace_id": "c5ece7baa08503c58166b3c07b835133",
+        "elapsed_ms": 26.985,
+        "fetch": [
+          "SOURCE_READ"
+        ],
+        "source_failed": false,
+        "stop": "DECISION_EVIDENCE_FOUND",
+        "gap": null,
+        "evidence_match": true,
+        "evidence": [
+          {
+            "scope": "Executive Summary",
+            "quote": "SQLite is an in-process library that implements a self-contained , serverless , zero-configuration , transactional SQL database engine.",
+            "page_url": "https://www.sqlite.org/about.html",
+            "capture_kind": "publisher_snapshot",
+            "body_sha256": "7a439332e54667d8df4f3216f020c663da8fafe7c2c63c5d827e1bf96a48a2de"
+          }
+        ],
+        "cta_match": true,
+        "cta_copy_match": true,
+        "writing_context_sha256": "4baf687258ceaa8e9fd944fd7a925d5bc9fefb118d50f920a59dfcb0f32d0439",
+        "journey": "READY",
+        "cta": {
+          "url": "https://www.sqlite.org/about.html",
+          "evidence_index": 0,
+          "text": "اقرأ الشرح",
+          "action": "READ_FEATURE"
+        },
+        "edits": [
+          {
+            "id": "specific-cta",
+            "field": "cta",
+            "supported": true,
+            "critical": false,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "SUPPORTED_COPY_REJECTED"
+          },
+          {
+            "id": "unsupported-sqlite-guarantee",
+            "field": "headline",
+            "supported": false,
+            "critical": true,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "EXPECTED"
+          }
+        ],
+        "failures": [],
+        "page_calls": 1,
+        "provider_calls": 0,
+        "cost_usd": 0
+      }
+    ],
+    "candidate": [
+      {
+        "case_id": "buffalo-menu",
+        "split": "development",
+        "eval_set_id": "47c566d550b3c14d8552a12d4eafe229f148028c32e2900abc7167adefd5de6b",
+        "fixtures": {
+          "snapshot_id": "15d58cf5bd70ccd824cd582327e5022e1c3ec0db8c4f411e61a167e4cd792f81",
+          "edition_file_id": "53b896dddbc9f6d09b5004c5f70614ad60d4ebd0a344926babf5002a3ed7ae07"
+        },
+        "source_mode": "publisher_replay",
+        "simulated_transport": null,
+        "version": {
+          "schema": "adzy.campaign-release@1",
+          "release": "candidate",
+          "commit": "8225d78f90b47d4d0c1e66f034b12202c32e2480",
+          "reference_commit": "4648fbc043219661023fa97d92446bec9323fba4",
+          "model": {
+            "provider": null,
+            "model_id": null,
+            "mode": "deterministic"
+          },
+          "prompt": {
+            "id": null,
+            "mode": "no_model_prompt"
+          },
+          "planner": {
+            "policy": "editorial-campaign@1",
+            "sha256": "e6eccf053d49377e05f1a8636b5c761c37130173a8beac79c896980b316ae3a7",
+            "edition_sha256": "6a3f45863d9676554efce1f8eb3e1b340bfd45e66cebfb136a0d9948ad148582",
+            "edition_implementation_sha256": "3eb341719cf44d10b9f121379328b65ce9640c328980ecf518f85916947ae9d1",
+            "transport_sha256": "5d022857bb9820f1a5206aaa0487c75a5bd3decfc28af36dd4dcd831bbc3796f",
+            "package_sha256": "2530cee4ce36188775e6beef49db6d350c657fd975d30c28d3652d359185f803"
+          },
+          "guardrails": {
+            "policy": "campaign-copy@2",
+            "sha256": "482d85f78e50becbb70c85e24d7a81be40c9f9f39044e3fb19bb4e279dccb370"
+          }
+        },
+        "trace_id": "7d8b94481c1c93501d9697f0aa51cc95",
+        "elapsed_ms": 67.638,
+        "fetch": [
+          "QUOTE_OBSERVED",
+          "QUOTE_OBSERVED",
+          "QUOTE_OBSERVED",
+          "QUOTE_OBSERVED"
+        ],
+        "source_failed": false,
+        "stop": "DECISION_EVIDENCE_FOUND",
+        "gap": null,
+        "evidence_match": true,
+        "evidence": [
+          {
+            "scope": "عنوان صفحة المنيو الرسمية",
+            "quote": "قائمة بافلو برجر",
+            "page_url": "https://buffaloburger.com/menu",
+            "capture_kind": "publisher_snapshot",
+            "body_sha256": "82439b02324bf88df9dcc0047fcbf0096ba6ccf45ed0bddf444ca463c99b6975"
+          },
+          {
+            "scope": "وصف أولد سكول من بطاقة مشاركة صفحة الصنف",
+            "quote": "Pure beef burger patty, topped with our signature Buffalo sauce and cheddar cheese.",
+            "page_url": "https://buffaloburger.com/menu/old-school",
+            "capture_kind": "publisher_snapshot",
+            "body_sha256": "0a70ee0c64cacc6703a6891aca25b8539fb660b4998486a500bf2c52a87f792c"
+          },
+          {
+            "scope": "وصف راستافاري من بطاقة مشاركة صفحة الصنف",
+            "quote": "بايتس الجبنة الشيدر المحشوه بالهالپنيو وصوص البافالو الكريمي و مع قطعة البرجر.",
+            "page_url": "https://buffaloburger.com/menu/the-rastafari",
+            "capture_kind": "publisher_snapshot",
+            "body_sha256": "a55a9f865a9b386f7e3545c99fb3921248ead2e7c143556f852fb679763c68d7"
+          }
+        ],
+        "cta_match": true,
+        "cta_copy_match": null,
+        "writing_context_sha256": "a60a4c7bab3310d5291c1052be7dca98c6676c6e13a0cf62a747174149235c6e",
+        "journey": "READY",
+        "cta": {
+          "url": "https://buffaloburger.com/menu",
+          "evidence_index": 0,
+          "text": "شوف المنيو",
+          "action": "OPEN_CATALOG"
+        },
+        "edits": [
+          {
+            "id": "shared-sauce-registered",
+            "field": "message",
+            "supported": true,
+            "critical": false,
+            "accepted": true,
+            "observed": "الاتنين فيهم صوص بافالو.",
+            "reason": null,
+            "classification": "EXPECTED"
+          },
+          {
+            "id": "shared-sauce-unregistered",
+            "field": "message",
+            "supported": true,
+            "critical": false,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "SUPPORTED_COPY_REJECTED"
+          },
+          {
+            "id": "whole-menu-jalapeno",
+            "field": "headline",
+            "supported": false,
+            "critical": true,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "EXPECTED"
+          }
+        ],
+        "failures": [],
+        "page_calls": 4,
+        "provider_calls": 0,
+        "cost_usd": 0
+      },
+      {
+        "case_id": "five-guys-bacon",
+        "split": "development",
+        "eval_set_id": "47c566d550b3c14d8552a12d4eafe229f148028c32e2900abc7167adefd5de6b",
+        "fixtures": {
+          "snapshot_id": "6270a602411f1d60b85f673a0a128d5d1d906785eaf1003cdb316ad7fbb11d67"
+        },
+        "source_mode": "publisher_replay",
+        "simulated_transport": null,
+        "version": {
+          "schema": "adzy.campaign-release@1",
+          "release": "candidate",
+          "commit": "8225d78f90b47d4d0c1e66f034b12202c32e2480",
+          "reference_commit": "4648fbc043219661023fa97d92446bec9323fba4",
+          "model": {
+            "provider": null,
+            "model_id": null,
+            "mode": "deterministic"
+          },
+          "prompt": {
+            "id": null,
+            "mode": "no_model_prompt"
+          },
+          "planner": {
+            "policy": "source-campaign-planner@2",
+            "sha256": "e6eccf053d49377e05f1a8636b5c761c37130173a8beac79c896980b316ae3a7",
+            "edition_sha256": null,
+            "edition_implementation_sha256": "3eb341719cf44d10b9f121379328b65ce9640c328980ecf518f85916947ae9d1",
+            "transport_sha256": "5d022857bb9820f1a5206aaa0487c75a5bd3decfc28af36dd4dcd831bbc3796f",
+            "package_sha256": "2530cee4ce36188775e6beef49db6d350c657fd975d30c28d3652d359185f803"
+          },
+          "guardrails": {
+            "policy": "campaign-copy@2",
+            "sha256": "482d85f78e50becbb70c85e24d7a81be40c9f9f39044e3fb19bb4e279dccb370"
+          }
+        },
+        "trace_id": "e47f788541836ae05c93898ed110c83d",
+        "elapsed_ms": 53.868,
+        "fetch": [
+          "SOURCE_READ"
+        ],
+        "source_failed": false,
+        "stop": "DECISION_EVIDENCE_FOUND",
+        "gap": null,
+        "evidence_match": true,
+        "evidence": [
+          {
+            "scope": "Bacon Burger",
+            "quote": "Fresh, 100% beef patties hot off the grill, layered with strips of crispy Applewood smoked bacon and placed on a soft, toasted sesame seed bun.",
+            "page_url": "https://www.fiveguys.com/menu/burgers/",
+            "capture_kind": "publisher_snapshot",
+            "body_sha256": "d2af53a07c62810586cb020daeeebf8dec361ef4de057da035bd6681ad521a68"
+          }
+        ],
+        "cta_match": true,
+        "cta_copy_match": false,
+        "writing_context_sha256": "e4588972ec012ca44c0f75911a3eb2a4f588384270cb71e253c224029bc87c2d",
+        "journey": "READY",
+        "cta": {
+          "url": "https://www.fiveguys.com/menu/burgers/",
+          "evidence_index": 0,
+          "text": "Read the explanation",
+          "action": "READ_FEATURE"
+        },
+        "edits": [
+          {
+            "id": "wrong-variant",
+            "field": "headline",
+            "supported": false,
+            "critical": true,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "EXPECTED"
+          },
+          {
+            "id": "specific-cta",
+            "field": "cta",
+            "supported": true,
+            "critical": false,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "SUPPORTED_COPY_REJECTED"
+          },
+          {
+            "id": "order-promise",
+            "field": "cta",
+            "supported": false,
+            "critical": true,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "EXPECTED"
+          }
+        ],
+        "failures": [
+          "CTA_COPY_MISMATCH"
+        ],
+        "page_calls": 1,
+        "provider_calls": 0,
+        "cost_usd": 0
+      },
+      {
+        "case_id": "nandos-wrap",
+        "split": "development",
+        "eval_set_id": "47c566d550b3c14d8552a12d4eafe229f148028c32e2900abc7167adefd5de6b",
+        "fixtures": {
+          "snapshot_id": "92aaf397f72f8684824b4b712bb2d46ed805b3ccac66e6420d954e2d79052e51"
+        },
+        "source_mode": "publisher_replay",
+        "simulated_transport": null,
+        "version": {
+          "schema": "adzy.campaign-release@1",
+          "release": "candidate",
+          "commit": "8225d78f90b47d4d0c1e66f034b12202c32e2480",
+          "reference_commit": "4648fbc043219661023fa97d92446bec9323fba4",
+          "model": {
+            "provider": null,
+            "model_id": null,
+            "mode": "deterministic"
+          },
+          "prompt": {
+            "id": null,
+            "mode": "no_model_prompt"
+          },
+          "planner": {
+            "policy": "source-campaign-planner@2",
+            "sha256": "e6eccf053d49377e05f1a8636b5c761c37130173a8beac79c896980b316ae3a7",
+            "edition_sha256": null,
+            "edition_implementation_sha256": "3eb341719cf44d10b9f121379328b65ce9640c328980ecf518f85916947ae9d1",
+            "transport_sha256": "5d022857bb9820f1a5206aaa0487c75a5bd3decfc28af36dd4dcd831bbc3796f",
+            "package_sha256": "2530cee4ce36188775e6beef49db6d350c657fd975d30c28d3652d359185f803"
+          },
+          "guardrails": {
+            "policy": "campaign-copy@2",
+            "sha256": "482d85f78e50becbb70c85e24d7a81be40c9f9f39044e3fb19bb4e279dccb370"
+          }
+        },
+        "trace_id": "cb844de1accc95544e9827454d9c2989",
+        "elapsed_ms": 71.33,
+        "fetch": [
+          "SOURCE_READ"
+        ],
+        "source_failed": false,
+        "stop": "DECISION_EVIDENCE_FOUND",
+        "gap": null,
+        "evidence_match": true,
+        "evidence": [
+          {
+            "scope": "Grilled Chicken Wrap",
+            "quote": "Chicken breast grilled in your favourite spice.",
+            "page_url": "https://www.nandos.co.uk/food/menu/",
+            "capture_kind": "publisher_snapshot",
+            "body_sha256": "7a309409247ecf1da42448fa46d1832f220748edcdf30d367c27eb514a877b24"
+          }
+        ],
+        "cta_match": true,
+        "cta_copy_match": false,
+        "writing_context_sha256": "84a788c77125217d3a871c1d893f41a0c4bd2d58cda196505229c366b7067217",
+        "journey": "READY",
+        "cta": {
+          "url": "https://www.nandos.co.uk/food/menu/",
+          "evidence_index": 0,
+          "text": "Read the explanation",
+          "action": "READ_FEATURE"
+        },
+        "edits": [
+          {
+            "id": "verbatim-heading",
+            "field": "headline",
+            "supported": true,
+            "critical": false,
+            "accepted": true,
+            "observed": "Grilled Chicken Wrap",
+            "reason": null,
+            "classification": "EXPECTED"
+          },
+          {
+            "id": "unsupported-price",
+            "field": "headline",
+            "supported": false,
+            "critical": true,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "EXPECTED"
+          },
+          {
+            "id": "specific-cta",
+            "field": "cta",
+            "supported": true,
+            "critical": false,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "SUPPORTED_COPY_REJECTED"
+          }
+        ],
+        "failures": [
+          "CTA_COPY_MISMATCH"
+        ],
+        "page_calls": 1,
+        "provider_calls": 0,
+        "cost_usd": 0
+      },
+      {
+        "case_id": "nandos-page-cap",
+        "split": "development",
+        "eval_set_id": "47c566d550b3c14d8552a12d4eafe229f148028c32e2900abc7167adefd5de6b",
+        "fixtures": {
+          "snapshot_id": "92aaf397f72f8684824b4b712bb2d46ed805b3ccac66e6420d954e2d79052e51"
+        },
+        "source_mode": "simulated_transport",
+        "simulated_transport": "oversize_html",
+        "version": {
+          "schema": "adzy.campaign-release@1",
+          "release": "candidate",
+          "commit": "8225d78f90b47d4d0c1e66f034b12202c32e2480",
+          "reference_commit": "4648fbc043219661023fa97d92446bec9323fba4",
+          "model": {
+            "provider": null,
+            "model_id": null,
+            "mode": "deterministic"
+          },
+          "prompt": {
+            "id": null,
+            "mode": "no_model_prompt"
+          },
+          "planner": {
+            "policy": "source-campaign-planner@2",
+            "sha256": "e6eccf053d49377e05f1a8636b5c761c37130173a8beac79c896980b316ae3a7",
+            "edition_sha256": null,
+            "edition_implementation_sha256": "3eb341719cf44d10b9f121379328b65ce9640c328980ecf518f85916947ae9d1",
+            "transport_sha256": "5d022857bb9820f1a5206aaa0487c75a5bd3decfc28af36dd4dcd831bbc3796f",
+            "package_sha256": "2530cee4ce36188775e6beef49db6d350c657fd975d30c28d3652d359185f803"
+          },
+          "guardrails": {
+            "policy": "campaign-copy@2",
+            "sha256": "482d85f78e50becbb70c85e24d7a81be40c9f9f39044e3fb19bb4e279dccb370"
+          }
+        },
+        "trace_id": "73848864ff8ebe80b7d90f96d422c11d",
+        "elapsed_ms": 28.055,
+        "fetch": [
+          "PAGE_TOO_LARGE"
+        ],
+        "source_failed": true,
+        "stop": "NO_MORE_RELEVANT_SOURCES",
+        "gap": "FEATURE_EVIDENCE",
+        "evidence_match": null,
+        "evidence": [],
+        "cta_match": null,
+        "cta_copy_match": null,
+        "writing_context_sha256": null,
+        "journey": "BLOCKED",
+        "cta": null,
+        "edits": [],
+        "failures": [],
+        "page_calls": 1,
+        "provider_calls": 0,
+        "cost_usd": 0
+      },
+      {
+        "case_id": "nandos-timeout",
+        "split": "development",
+        "eval_set_id": "47c566d550b3c14d8552a12d4eafe229f148028c32e2900abc7167adefd5de6b",
+        "fixtures": {
+          "snapshot_id": "92aaf397f72f8684824b4b712bb2d46ed805b3ccac66e6420d954e2d79052e51"
+        },
+        "source_mode": "simulated_transport",
+        "simulated_transport": "socket_timeout",
+        "version": {
+          "schema": "adzy.campaign-release@1",
+          "release": "candidate",
+          "commit": "8225d78f90b47d4d0c1e66f034b12202c32e2480",
+          "reference_commit": "4648fbc043219661023fa97d92446bec9323fba4",
+          "model": {
+            "provider": null,
+            "model_id": null,
+            "mode": "deterministic"
+          },
+          "prompt": {
+            "id": null,
+            "mode": "no_model_prompt"
+          },
+          "planner": {
+            "policy": "source-campaign-planner@2",
+            "sha256": "e6eccf053d49377e05f1a8636b5c761c37130173a8beac79c896980b316ae3a7",
+            "edition_sha256": null,
+            "edition_implementation_sha256": "3eb341719cf44d10b9f121379328b65ce9640c328980ecf518f85916947ae9d1",
+            "transport_sha256": "5d022857bb9820f1a5206aaa0487c75a5bd3decfc28af36dd4dcd831bbc3796f",
+            "package_sha256": "2530cee4ce36188775e6beef49db6d350c657fd975d30c28d3652d359185f803"
+          },
+          "guardrails": {
+            "policy": "campaign-copy@2",
+            "sha256": "482d85f78e50becbb70c85e24d7a81be40c9f9f39044e3fb19bb4e279dccb370"
+          }
+        },
+        "trace_id": "602123a2381cd179eafca632b9a6bf71",
+        "elapsed_ms": 9.407,
+        "fetch": [
+          "SOURCE_TIMEOUT"
+        ],
+        "source_failed": true,
+        "stop": "NO_MORE_RELEVANT_SOURCES",
+        "gap": "FEATURE_EVIDENCE",
+        "evidence_match": null,
+        "evidence": [],
+        "cta_match": null,
+        "cta_copy_match": null,
+        "writing_context_sha256": null,
+        "journey": "BLOCKED",
+        "cta": null,
+        "edits": [],
+        "failures": [],
+        "page_calls": 1,
+        "provider_calls": 0,
+        "cost_usd": 0
+      },
+      {
+        "case_id": "python-applications",
+        "split": "generalization",
+        "eval_set_id": "47c566d550b3c14d8552a12d4eafe229f148028c32e2900abc7167adefd5de6b",
+        "fixtures": {
+          "snapshot_id": "76df220804082404ecf0c9d0a0e2c4c20ec07491f5ad59cdde21c95a6ca8c597"
+        },
+        "source_mode": "publisher_replay",
+        "simulated_transport": null,
+        "version": {
+          "schema": "adzy.campaign-release@1",
+          "release": "candidate",
+          "commit": "8225d78f90b47d4d0c1e66f034b12202c32e2480",
+          "reference_commit": "4648fbc043219661023fa97d92446bec9323fba4",
+          "model": {
+            "provider": null,
+            "model_id": null,
+            "mode": "deterministic"
+          },
+          "prompt": {
+            "id": null,
+            "mode": "no_model_prompt"
+          },
+          "planner": {
+            "policy": "source-campaign-planner@2",
+            "sha256": "e6eccf053d49377e05f1a8636b5c761c37130173a8beac79c896980b316ae3a7",
+            "edition_sha256": null,
+            "edition_implementation_sha256": "3eb341719cf44d10b9f121379328b65ce9640c328980ecf518f85916947ae9d1",
+            "transport_sha256": "5d022857bb9820f1a5206aaa0487c75a5bd3decfc28af36dd4dcd831bbc3796f",
+            "package_sha256": "2530cee4ce36188775e6beef49db6d350c657fd975d30c28d3652d359185f803"
+          },
+          "guardrails": {
+            "policy": "campaign-copy@2",
+            "sha256": "482d85f78e50becbb70c85e24d7a81be40c9f9f39044e3fb19bb4e279dccb370"
+          }
+        },
+        "trace_id": "743199a5405795aeac8f9ba6cf38ff10",
+        "elapsed_ms": 20.782,
+        "fetch": [
+          "SOURCE_READ"
+        ],
+        "source_failed": false,
+        "stop": "DECISION_EVIDENCE_FOUND",
+        "gap": null,
+        "evidence_match": true,
+        "evidence": [
+          {
+            "scope": "Applications",
+            "quote": "The Python Package Index (PyPI) hosts thousands of third-party modules for Python.",
+            "page_url": "https://www.python.org/about/",
+            "capture_kind": "publisher_snapshot",
+            "body_sha256": "4739cc39d7deaad1540d9387f9ee8944063921d24b4e133e7f18c5f7e044f20f"
+          }
+        ],
+        "cta_match": true,
+        "cta_copy_match": null,
+        "writing_context_sha256": "c58a7c94a5b39df96509b5bf23ba0332c0de0b9f1b739d58b614c08438b6d9ce",
+        "journey": "READY",
+        "cta": {
+          "url": "https://www.python.org/about/",
+          "evidence_index": 0,
+          "text": "Read the explanation",
+          "action": "READ_FEATURE"
+        },
+        "edits": [
+          {
+            "id": "all-modules-verified",
+            "field": "headline",
+            "supported": false,
+            "critical": true,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "EXPECTED"
+          }
+        ],
+        "failures": [],
+        "page_calls": 1,
+        "provider_calls": 0,
+        "cost_usd": 0
+      },
+      {
+        "case_id": "osm-local-knowledge",
+        "split": "development",
+        "eval_set_id": "47c566d550b3c14d8552a12d4eafe229f148028c32e2900abc7167adefd5de6b",
+        "fixtures": {
+          "snapshot_id": "45a8bb8a7dd02f76f520d62db20bd83d1cb10e13e931399e291b00d7aaaf8720"
+        },
+        "source_mode": "publisher_replay",
+        "simulated_transport": null,
+        "version": {
+          "schema": "adzy.campaign-release@1",
+          "release": "candidate",
+          "commit": "8225d78f90b47d4d0c1e66f034b12202c32e2480",
+          "reference_commit": "4648fbc043219661023fa97d92446bec9323fba4",
+          "model": {
+            "provider": null,
+            "model_id": null,
+            "mode": "deterministic"
+          },
+          "prompt": {
+            "id": null,
+            "mode": "no_model_prompt"
+          },
+          "planner": {
+            "policy": "source-campaign-planner@2",
+            "sha256": "e6eccf053d49377e05f1a8636b5c761c37130173a8beac79c896980b316ae3a7",
+            "edition_sha256": null,
+            "edition_implementation_sha256": "3eb341719cf44d10b9f121379328b65ce9640c328980ecf518f85916947ae9d1",
+            "transport_sha256": "5d022857bb9820f1a5206aaa0487c75a5bd3decfc28af36dd4dcd831bbc3796f",
+            "package_sha256": "2530cee4ce36188775e6beef49db6d350c657fd975d30c28d3652d359185f803"
+          },
+          "guardrails": {
+            "policy": "campaign-copy@2",
+            "sha256": "482d85f78e50becbb70c85e24d7a81be40c9f9f39044e3fb19bb4e279dccb370"
+          }
+        },
+        "trace_id": "4eb7b7a7d549d39a67b4c861ad256e2c",
+        "elapsed_ms": 19.303,
+        "fetch": [
+          "SOURCE_READ"
+        ],
+        "source_failed": false,
+        "stop": "DECISION_EVIDENCE_FOUND",
+        "gap": null,
+        "evidence_match": true,
+        "evidence": [
+          {
+            "scope": "Local Knowledge",
+            "quote": "Contributors use aerial imagery, GPS devices, and low-tech field maps to verify that OSM is accurate and up to date.",
+            "page_url": "https://www.openstreetmap.org/about",
+            "capture_kind": "publisher_snapshot",
+            "body_sha256": "65f78568d179867afe510e56ad35fd25b989b890a4b48c55a68270fba50da5fe"
+          }
+        ],
+        "cta_match": true,
+        "cta_copy_match": false,
+        "writing_context_sha256": "3dd02aec9839ba014894077d9d11577bfeabb7e0f50724c4571d19b6bc50406e",
+        "journey": "READY",
+        "cta": {
+          "url": "https://www.openstreetmap.org/about",
+          "evidence_index": 0,
+          "text": "Read the explanation",
+          "action": "READ_FEATURE"
+        },
+        "edits": [
+          {
+            "id": "verbatim-heading",
+            "field": "headline",
+            "supported": true,
+            "critical": false,
+            "accepted": true,
+            "observed": "Local Knowledge",
+            "reason": null,
+            "classification": "EXPECTED"
+          },
+          {
+            "id": "every-road-verified",
+            "field": "headline",
+            "supported": false,
+            "critical": true,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "EXPECTED"
+          }
+        ],
+        "failures": [
+          "CTA_COPY_MISMATCH"
+        ],
+        "page_calls": 1,
+        "provider_calls": 0,
+        "cost_usd": 0
+      },
+      {
+        "case_id": "nasa-mars-orbit",
+        "split": "generalization",
+        "eval_set_id": "47c566d550b3c14d8552a12d4eafe229f148028c32e2900abc7167adefd5de6b",
+        "fixtures": {
+          "snapshot_id": "292c7061e201562f9f4210d548245892c5f9758ac7ff5ca3a75ad8f468dd27a5"
+        },
+        "source_mode": "publisher_replay",
+        "simulated_transport": null,
+        "version": {
+          "schema": "adzy.campaign-release@1",
+          "release": "candidate",
+          "commit": "8225d78f90b47d4d0c1e66f034b12202c32e2480",
+          "reference_commit": "4648fbc043219661023fa97d92446bec9323fba4",
+          "model": {
+            "provider": null,
+            "model_id": null,
+            "mode": "deterministic"
+          },
+          "prompt": {
+            "id": null,
+            "mode": "no_model_prompt"
+          },
+          "planner": {
+            "policy": "source-campaign-planner@2",
+            "sha256": "e6eccf053d49377e05f1a8636b5c761c37130173a8beac79c896980b316ae3a7",
+            "edition_sha256": null,
+            "edition_implementation_sha256": "3eb341719cf44d10b9f121379328b65ce9640c328980ecf518f85916947ae9d1",
+            "transport_sha256": "5d022857bb9820f1a5206aaa0487c75a5bd3decfc28af36dd4dcd831bbc3796f",
+            "package_sha256": "2530cee4ce36188775e6beef49db6d350c657fd975d30c28d3652d359185f803"
+          },
+          "guardrails": {
+            "policy": "campaign-copy@2",
+            "sha256": "482d85f78e50becbb70c85e24d7a81be40c9f9f39044e3fb19bb4e279dccb370"
+          }
+        },
+        "trace_id": "8090bb9b834ecd85d9f9caf343e8f2ac",
+        "elapsed_ms": 25.296,
+        "fetch": [
+          "SOURCE_READ"
+        ],
+        "source_failed": false,
+        "stop": "DECISION_EVIDENCE_FOUND",
+        "gap": null,
+        "evidence_match": true,
+        "evidence": [
+          {
+            "scope": "Orbit and Rotation",
+            "quote": "As Mars orbits the Sun, it completes one rotation every 24.6 hours, which is very similar to one day on Earth (23.9 hours).",
+            "page_url": "https://science.nasa.gov/mars/facts/",
+            "capture_kind": "publisher_snapshot",
+            "body_sha256": "4d75f5e6eeebbbe1045d241302ebe8b7f98fb7bcb04f7cc4dbf732ce9304144f"
+          }
+        ],
+        "cta_match": true,
+        "cta_copy_match": false,
+        "writing_context_sha256": "240b49b41dfeb2b474f11ca97bc62b7a5172f525c78a7ae5c5db5f321f821e9f",
+        "journey": "READY",
+        "cta": {
+          "url": "https://science.nasa.gov/mars/facts/",
+          "evidence_index": 0,
+          "text": "Read the explanation",
+          "action": "READ_FEATURE"
+        },
+        "edits": [
+          {
+            "id": "specific-cta",
+            "field": "cta",
+            "supported": true,
+            "critical": false,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "SUPPORTED_COPY_REJECTED"
+          },
+          {
+            "id": "gravity-promise",
+            "field": "headline",
+            "supported": false,
+            "critical": true,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "EXPECTED"
+          }
+        ],
+        "failures": [
+          "CTA_COPY_MISMATCH"
+        ],
+        "page_calls": 1,
+        "provider_calls": 0,
+        "cost_usd": 0
+      },
+      {
+        "case_id": "debian-hardware",
+        "split": "development",
+        "eval_set_id": "47c566d550b3c14d8552a12d4eafe229f148028c32e2900abc7167adefd5de6b",
+        "fixtures": {
+          "snapshot_id": "0fbd60a22b853cef920396e2a4c6f101f95b85f4a05cc1c6f00859b8117d8685"
+        },
+        "source_mode": "publisher_replay",
+        "simulated_transport": null,
+        "version": {
+          "schema": "adzy.campaign-release@1",
+          "release": "candidate",
+          "commit": "8225d78f90b47d4d0c1e66f034b12202c32e2480",
+          "reference_commit": "4648fbc043219661023fa97d92446bec9323fba4",
+          "model": {
+            "provider": null,
+            "model_id": null,
+            "mode": "deterministic"
+          },
+          "prompt": {
+            "id": null,
+            "mode": "no_model_prompt"
+          },
+          "planner": {
+            "policy": "source-campaign-planner@2",
+            "sha256": "e6eccf053d49377e05f1a8636b5c761c37130173a8beac79c896980b316ae3a7",
+            "edition_sha256": null,
+            "edition_implementation_sha256": "3eb341719cf44d10b9f121379328b65ce9640c328980ecf518f85916947ae9d1",
+            "transport_sha256": "5d022857bb9820f1a5206aaa0487c75a5bd3decfc28af36dd4dcd831bbc3796f",
+            "package_sha256": "2530cee4ce36188775e6beef49db6d350c657fd975d30c28d3652d359185f803"
+          },
+          "guardrails": {
+            "policy": "campaign-copy@2",
+            "sha256": "482d85f78e50becbb70c85e24d7a81be40c9f9f39044e3fb19bb4e279dccb370"
+          }
+        },
+        "trace_id": "c9503a66af97bda55df90b30ed7fbe37",
+        "elapsed_ms": 22.83,
+        "fetch": [
+          "SOURCE_READ"
+        ],
+        "source_failed": false,
+        "stop": "DECISION_EVIDENCE_FOUND",
+        "gap": null,
+        "evidence_match": true,
+        "evidence": [
+          {
+            "scope": "What hardware is supported?",
+            "quote": "For a complete list of currently supported ones, see the documentation for the stable release .",
+            "page_url": "https://www.debian.org/intro/about",
+            "capture_kind": "publisher_snapshot",
+            "body_sha256": "f54c31f0afc95c0d72277b7f0960d94e8e8dc303b1a0f2d44ca5e5f3ad9244a2"
+          }
+        ],
+        "cta_match": true,
+        "cta_copy_match": true,
+        "writing_context_sha256": "50fbc1b85bb7286ee55e57d24f39f0f2cf6eebf79ab75d5fbc0606a438d4bcc2",
+        "journey": "READY",
+        "cta": {
+          "url": "https://www.debian.org/intro/about",
+          "evidence_index": 0,
+          "text": "Read the explanation",
+          "action": "READ_FEATURE"
+        },
+        "edits": [
+          {
+            "id": "unsupported-compatibility",
+            "field": "cta",
+            "supported": false,
+            "critical": true,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "EXPECTED"
+          }
+        ],
+        "failures": [],
+        "page_calls": 1,
+        "provider_calls": 0,
+        "cost_usd": 0
+      },
+      {
+        "case_id": "sqlite-embedded-sql",
+        "split": "generalization",
+        "eval_set_id": "47c566d550b3c14d8552a12d4eafe229f148028c32e2900abc7167adefd5de6b",
+        "fixtures": {
+          "snapshot_id": "975ffff44d17675fc01e93881268998d35a6e83ccbc714c76b6671b83be795e2"
+        },
+        "source_mode": "publisher_replay",
+        "simulated_transport": null,
+        "version": {
+          "schema": "adzy.campaign-release@1",
+          "release": "candidate",
+          "commit": "8225d78f90b47d4d0c1e66f034b12202c32e2480",
+          "reference_commit": "4648fbc043219661023fa97d92446bec9323fba4",
+          "model": {
+            "provider": null,
+            "model_id": null,
+            "mode": "deterministic"
+          },
+          "prompt": {
+            "id": null,
+            "mode": "no_model_prompt"
+          },
+          "planner": {
+            "policy": "source-campaign-planner@2",
+            "sha256": "e6eccf053d49377e05f1a8636b5c761c37130173a8beac79c896980b316ae3a7",
+            "edition_sha256": null,
+            "edition_implementation_sha256": "3eb341719cf44d10b9f121379328b65ce9640c328980ecf518f85916947ae9d1",
+            "transport_sha256": "5d022857bb9820f1a5206aaa0487c75a5bd3decfc28af36dd4dcd831bbc3796f",
+            "package_sha256": "2530cee4ce36188775e6beef49db6d350c657fd975d30c28d3652d359185f803"
+          },
+          "guardrails": {
+            "policy": "campaign-copy@2",
+            "sha256": "482d85f78e50becbb70c85e24d7a81be40c9f9f39044e3fb19bb4e279dccb370"
+          }
+        },
+        "trace_id": "04fa5c0088f488f99f71df1d7203b7b4",
+        "elapsed_ms": 25.208,
+        "fetch": [
+          "SOURCE_READ"
+        ],
+        "source_failed": false,
+        "stop": "DECISION_EVIDENCE_FOUND",
+        "gap": null,
+        "evidence_match": true,
+        "evidence": [
+          {
+            "scope": "Executive Summary",
+            "quote": "SQLite is an in-process library that implements a self-contained , serverless , zero-configuration , transactional SQL database engine.",
+            "page_url": "https://www.sqlite.org/about.html",
+            "capture_kind": "publisher_snapshot",
+            "body_sha256": "7a439332e54667d8df4f3216f020c663da8fafe7c2c63c5d827e1bf96a48a2de"
+          }
+        ],
+        "cta_match": true,
+        "cta_copy_match": false,
+        "writing_context_sha256": "4baf687258ceaa8e9fd944fd7a925d5bc9fefb118d50f920a59dfcb0f32d0439",
+        "journey": "READY",
+        "cta": {
+          "url": "https://www.sqlite.org/about.html",
+          "evidence_index": 0,
+          "text": "اقرأ الشرح",
+          "action": "READ_FEATURE"
+        },
+        "edits": [
+          {
+            "id": "specific-cta",
+            "field": "cta",
+            "supported": true,
+            "critical": false,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "SUPPORTED_COPY_REJECTED"
+          },
+          {
+            "id": "unsupported-sqlite-guarantee",
+            "field": "headline",
+            "supported": false,
+            "critical": true,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "EXPECTED"
+          }
+        ],
+        "failures": [
+          "CTA_COPY_MISMATCH"
+        ],
+        "page_calls": 1,
+        "provider_calls": 0,
+        "cost_usd": 0
+      }
+    ]
+  },
+  "gate": {
+    "decision": "KEEP_STABLE",
+    "blockers": [
+      {
+        "case": "five-guys-bacon",
+        "release": "candidate",
+        "failures": [
+          "CTA_COPY_MISMATCH"
+        ]
+      },
+      {
+        "case": "nandos-wrap",
+        "release": "candidate",
+        "failures": [
+          "CTA_COPY_MISMATCH"
+        ]
+      },
+      {
+        "case": "osm-local-knowledge",
+        "release": "candidate",
+        "failures": [
+          "CTA_COPY_MISMATCH"
+        ]
+      },
+      {
+        "case": "nasa-mars-orbit",
+        "release": "candidate",
+        "failures": [
+          "CTA_COPY_MISMATCH"
+        ]
+      },
+      {
+        "case": "sqlite-embedded-sql",
+        "release": "candidate",
+        "failures": [
+          "CTA_COPY_MISMATCH"
+        ]
+      },
+      {
+        "failures": [
+          "NO_GENERALIZATION_IMPROVEMENT"
+        ]
+      }
+    ],
+    "restored_edits": [
+      {
+        "case": "nandos-wrap",
+        "edit": "verbatim-heading",
+        "split": "development"
+      },
+      {
+        "case": "osm-local-knowledge",
+        "edit": "verbatim-heading",
+        "split": "development"
+      }
+    ],
+    "default_release": "stable"
+  }
+}

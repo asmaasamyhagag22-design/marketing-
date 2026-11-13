@@ -1,3 +1,4 @@
+from copy import deepcopy
 from datetime import datetime, timedelta, timezone
 
 from workflows.campaign_eval import case_set, case_source, review_input, run_case, release_decision
@@ -15,9 +16,11 @@ def test_frozen_replay_release_and_causal_comparison():
     gate = release_decision(rows["stable"], rows["candidate"])
     assert not gate["blockers"]
     assert gate["default_release"] == "stable"
-    assert {row["case"] for row in gate["restored_edits"]} == {"osm-local-knowledge", "nandos-wrap"}
+    assert {row["case"] for row in gate["restored_edits"]} == {
+        "osm-local-knowledge", "nandos-wrap", "five-guys-bacon", "nasa-mars-orbit", "sqlite-embedded-sql",
+    }
     for result in rows["candidate"]:
-        assert result["version"]["guardrails"]["policy"] == "campaign-copy@2"
+        assert result["version"]["guardrails"]["policy"] == "campaign-copy@3"
         assert result["fixtures"]["snapshot_id"] and result["eval_set_id"] == dataset_id
         for edit in result["edits"]:
             if edit["critical"]:
@@ -45,6 +48,9 @@ def test_candidate_review_follows_saved_version_after_rollback(monkeypatch):
     assert preserved["package"]["copy"]["headline"] == "Local Knowledge"
     assert preserved["planner"]["version"] == original["planner"]["version"]
     assert preserved["planner"]["snapshot_id"] == original["planner"]["snapshot_id"]
+    old_candidate = deepcopy(fresh)
+    old_candidate["planner"]["version"]["guardrails"]["policy"] = "campaign-copy@2"
+    assert review_draft(old_candidate, review)["package"]["copy"]["headline"] == "Local Knowledge"
     for draft in (fresh, {**original, "planner": {k: v for k, v in original["planner"].items() if k != "version"}}):
         with pytest.raises(CampaignConflict, match="COPY_REQUIRES_EVIDENCE_REVIEW"):
             review_draft(draft, review)

@@ -14,8 +14,10 @@ from strategy.campaign_package import Brief, Input, Source, digest, proposal, pu
 from strategy.campaign_research import ResearchGap, same_source
 from strategy.campaign_v2 import CampaignConflict
 from strategy.campaign_editions import build_edition, edit_edition_copy, find_edition
-from strategy.campaign_copy import CopyEdit, plan_copy, validate_copy, writing_for
-from strategy.campaign_release import GUARDRAILS, STABLE_GUARDRAILS, active_release, release_metadata
+from strategy.campaign_copy import CopyEdit, plan_copy, source_read_cta, validate_copy, writing_for
+from strategy.campaign_release import (
+    GUARDRAILS, HEADING_REVIEW_POLICY, SOURCE_CTA_POLICY, STABLE_GUARDRAILS, active_release, release_metadata,
+)
 from workflows.campaign_telemetry import CampaignTrace, source_error
 
 
@@ -310,7 +312,7 @@ def specific_heading(fact, objective):
     return len(label) <= 55 and len(words(label) & words(objective)) >= 2
 
 
-def draft_brief(request, fact, destination):
+def draft_brief(request, fact, destination, *, policy=STABLE_GUARDRAILS):
     arabic = request.language.split("-")[0] == "ar"
     language_index = not arabic
     label = fact["label"]
@@ -371,6 +373,12 @@ def draft_brief(request, fact, destination):
             card_message = label
         if title == card_message:
             card_message = ("الدليل والشرح من موقع البراند.", "The publisher explains the feature.")[language_index]
+        if (policy == SOURCE_CTA_POLICY and destination is None and not writing and option["action"] == "READ_FEATURE"
+                and option["destination"] == fact["page_url"] and title == label
+                and specific_heading(fact, request.objective)):
+            cta = source_read_cta(label, request.language)
+            if cta:
+                option["cta"] = cta
         caption = f"{title.rstrip('.?!؟')} — {card_message.rstrip('.?!؟')}. {option['cta']}."
         if arabic:
             caption = f"{title.rstrip('.?!؟')} · {card_message.rstrip('.?!؟')}. {option['cta']}."
@@ -437,8 +445,10 @@ def build_plan(request, brand_name, load, clock, *, request_id=None, trace=None)
                    version=release_metadata(release, POLICY))
     if planner["gap"]:
         return proposal(None, brand_name, [fact] if fact else [], planner=planner)
-    with trace.stage("campaign.write_copy"):
-        brief, options = draft_brief(request, fact, destination)
+    with trace.stage("campaign.write_copy") as outcome:
+        brief, options = draft_brief(request, fact, destination, policy=GUARDRAILS[release])
+        if options[0]["cta"] == source_read_cta(fact["label"], request.language):
+            outcome["reason"] = "SOURCE_HEADING_CTA"
         sources = [fact] + ([destination] if destination else [])
         planner.update(options=options, claims=[
             {"fields": ["brief.summary", "package.copy.message"], "evidence_index": 0,
@@ -480,7 +490,7 @@ def _review_draft(previous, edit, trace_id):
         source_heading = None
         guardrails = (planner.get("version") or {}).get("guardrails", {}).get("policy", STABLE_GUARDRAILS)
         # Only reuse the baseline's feature headline for directions pointing to the same source.
-        if (guardrails == GUARDRAILS["candidate"] and not writing
+        if (guardrails in {HEADING_REVIEW_POLICY, SOURCE_CTA_POLICY} and not writing
                 and option["destination"] == fact["page_url"]
                 and specific_heading(fact, brief.objective)):
             source_heading = fact["label"]

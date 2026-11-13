@@ -130,3 +130,15 @@
 
 **إزاي الرجوع يحافظ على موافقات الحملات؟**
 شغّلي `python tools/demo_campaign_lifecycle.py --output-dir /tmp/adzy-rollback-demo` بمسار جديد. إعادة تشغيل الخدمة على `ADZY_CAMPAIGN_RELEASE=stable` تؤثر على الطلب الجديد. `Campaigns.decide` يربط الموافقة بـRun محدد، و`stored_poster` يسترجع الملفات المحفوظة منه. اشرحي ليه الحملة المرشحة تظل قابلة للتصدير بعد restart وهي أحدث نسخة، وليه الطلب القديم يرجع 409 بعد إنشاء Run جديدة لنفس البراند مع بقاء قرار الموافقة وملف ZIP الذي تم تنزيله. قارني `proposal_sha256` و`approval_id` وSHA-256 للـZIP في إيصال الديمو.
+
+## من CTA عامة إلى CTA مرتبطة بالدليل
+
+في Buffalo، «شوف المنيو» توصل للمنيو. طلب تغيير الرسالة للصوص يتراجع على وصفي Old School وRastafari، وتعميم الهالبينو رُفض. في Five Guys الهدف Bacon Burger، والخلل التاريخي في اختيار Little Bacon Burger عند `9cb6f42` اتصلّح عند `4648fbc`. عند نقطة بداية الجولة `8225d78` كان الدليل صحيحًا والبوستر بيقول «Read the explanation». ظهر نفس النص في Nando’s. في المرشح صار «Explore Bacon Burger»، وفي NASA الجديدة «Explore Orbit and Rotation». السجل والتصدير والقرار في [دراسة التحرير](editing/README.md).
+
+**إزاي عرفت إنك بتصلّح المرحلة الصح؟**
+
+تتبّعي نفس الحملة في `strategy/campaign_planner.py` من `research_plan` و`best_fact` إلى `draft_brief`. قارني `evidence_hash` في `campaign.select_evidence` و`action` و`source_evidence_index` في الحزمتين. `draft_brief` كانت تكتب عنوان الصنف ثم الدعوة العامة. `strategy/campaign_copy.py:source_read_cta` تركّب دعوة القراءة مع عنوان القسم عند حد الطول الحالي. `build_plan` يسجّل `SOURCE_HEADING_CTA` تحت `campaign.write_copy`. `review_draft` تمر على التحقق المعتاد، ثم `strategy/campaign_package.py:compile_package` و`poster/campaign_package.py:export_package` يضعان النص في JSON وPNG. افتحي [قبل وبعد](editing/README.md#القصة-التي-يمكن-عرضها) من نفس اللقطة. اشرحي ليه تغيير اتجاه الـplanner هنا كان هيغيّر قرارًا سليمًا بالفعل.
+
+**إيه النتيجة اللي لو ظهرت كنت هترفض الإصدار؟**
+
+في `workflows/campaign_eval.py:measure` و`release_decision`، قبول تعميم Buffalo أو وصف Little Bacon Burger لهدف Bacon Burger يحجب المرشح، حتى لو وصل لإخراج ZIP. طفرة متعمدة أعادت الخطأين، ورجّعت CI المحلية 1. قارني [إيصال الفشل](editing/results/regressed.json) مع [النتيجة السليمة](editing/results/replay.json). `e5dce95` أضاف المقارنة والإصدار، و`f46f176` أضاف إسناد الفشل للمرحلة. بدأ مرشح الدراسة فوق `8225d78`، واجتاز المراجعة الآلية المحدودة. قياس وقت وجهد التحرير ينتظر استجابات بشرية للحزمة العمياء التي ينتجها [أمر إعادة الدراسة](editing/README.md).

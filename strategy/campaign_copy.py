@@ -9,10 +9,13 @@ from strategy.campaign_package import Input
 from strategy.campaign_v2 import CampaignConflict
 
 
+CTA_MAX_LENGTH = 30
+
+
 class CopyEdit(Input):
     headline: str = Field(min_length=3, max_length=55)
     message: str = Field(min_length=4, max_length=105)
-    cta: str = Field(min_length=3, max_length=30)
+    cta: str = Field(min_length=3, max_length=CTA_MAX_LENGTH)
     caption: str = Field(min_length=4, max_length=220)
 
 
@@ -94,6 +97,13 @@ def writing_for(fact, action, language):
 
 def plan_copy(fact, options, language):
     return [writing_for(fact, option["action"], language) for option in options]
+
+
+def source_read_cta(label, language):
+    prefix = "اقرأ عن" if language.split("-")[0] == "ar" else "Explore"
+    text = f"{prefix} {label}"
+    if len(text) <= CTA_MAX_LENGTH:
+        return text
 
 
 def validate_copy(direction, edit, writing, *, source_heading=None):

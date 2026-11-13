@@ -1,0 +1,4085 @@
+{
+  "schema": "adzy.campaign-eval-result@1",
+  "eval_set_id": "47c566d550b3c14d8552a12d4eafe229f148028c32e2900abc7167adefd5de6b",
+  "started_at": "2026-11-13T22:26:22.040229+00:00",
+  "mode": "offline_replay",
+  "results": {
+    "stable": [
+      {
+        "case_id": "buffalo-menu",
+        "split": "development",
+        "eval_set_id": "47c566d550b3c14d8552a12d4eafe229f148028c32e2900abc7167adefd5de6b",
+        "fixtures": {
+          "snapshot_id": "15d58cf5bd70ccd824cd582327e5022e1c3ec0db8c4f411e61a167e4cd792f81",
+          "edition_file_id": "53b896dddbc9f6d09b5004c5f70614ad60d4ebd0a344926babf5002a3ed7ae07"
+        },
+        "source_mode": "publisher_replay",
+        "simulated_transport": null,
+        "version": {
+          "schema": "adzy.campaign-release@1",
+          "release": "stable",
+          "commit": "8225d78f90b47d4d0c1e66f034b12202c32e2480",
+          "reference_commit": "4648fbc043219661023fa97d92446bec9323fba4",
+          "model": {
+            "provider": null,
+            "model_id": null,
+            "mode": "deterministic"
+          },
+          "prompt": {
+            "id": null,
+            "mode": "no_model_prompt"
+          },
+          "planner": {
+            "policy": "editorial-campaign@1",
+            "sha256": "ea2355ec04ffadf8e8f7176d8413c9a328fdb32e833c0d214b7639c57f0c7ea4",
+            "edition_sha256": "6a3f45863d9676554efce1f8eb3e1b340bfd45e66cebfb136a0d9948ad148582",
+            "edition_implementation_sha256": "3eb341719cf44d10b9f121379328b65ce9640c328980ecf518f85916947ae9d1",
+            "transport_sha256": "5d022857bb9820f1a5206aaa0487c75a5bd3decfc28af36dd4dcd831bbc3796f",
+            "package_sha256": "2530cee4ce36188775e6beef49db6d350c657fd975d30c28d3652d359185f803"
+          },
+          "guardrails": {
+            "policy": "campaign-copy@1",
+            "sha256": "38a68dddea99dac754339ae46d5e52c008796ff81cab0a1d5b15775335c4098b"
+          }
+        },
+        "trace_id": "0d1cdb0d296111e23edff40c031074e7",
+        "elapsed_ms": 39.799,
+        "fetch": [
+          "QUOTE_OBSERVED",
+          "QUOTE_OBSERVED",
+          "QUOTE_OBSERVED",
+          "QUOTE_OBSERVED"
+        ],
+        "source_failed": false,
+        "stop": "DECISION_EVIDENCE_FOUND",
+        "gap": null,
+        "evidence_match": true,
+        "evidence": [
+          {
+            "scope": "عنوان صفحة المنيو الرسمية",
+            "quote": "قائمة بافلو برجر",
+            "page_url": "https://buffaloburger.com/menu",
+            "capture_kind": "publisher_snapshot",
+            "body_sha256": "82439b02324bf88df9dcc0047fcbf0096ba6ccf45ed0bddf444ca463c99b6975"
+          },
+          {
+            "scope": "وصف أولد سكول من بطاقة مشاركة صفحة الصنف",
+            "quote": "Pure beef burger patty, topped with our signature Buffalo sauce and cheddar cheese.",
+            "page_url": "https://buffaloburger.com/menu/old-school",
+            "capture_kind": "publisher_snapshot",
+            "body_sha256": "0a70ee0c64cacc6703a6891aca25b8539fb660b4998486a500bf2c52a87f792c"
+          },
+          {
+            "scope": "وصف راستافاري من بطاقة مشاركة صفحة الصنف",
+            "quote": "بايتس الجبنة الشيدر المحشوه بالهالپنيو وصوص البافالو الكريمي و مع قطعة البرجر.",
+            "page_url": "https://buffaloburger.com/menu/the-rastafari",
+            "capture_kind": "publisher_snapshot",
+            "body_sha256": "a55a9f865a9b386f7e3545c99fb3921248ead2e7c143556f852fb679763c68d7"
+          }
+        ],
+        "cta_match": true,
+        "cta_copy_match": null,
+        "writing_context_sha256": "a03d232d61e4d7493930eee611052234d538832b4b93f6ef2f183a5ea7f4c97b",
+        "journey": "READY",
+        "cta": {
+          "url": "https://buffaloburger.com/menu",
+          "evidence_index": 0,
+          "text": "شوف المنيو",
+          "action": "OPEN_CATALOG"
+        },
+        "edits": [
+          {
+            "id": "shared-sauce-registered",
+            "field": "message",
+            "supported": true,
+            "critical": false,
+            "accepted": true,
+            "observed": "الاتنين فيهم صوص بافالو.",
+            "reason": null,
+            "classification": "EXPECTED"
+          },
+          {
+            "id": "shared-sauce-unregistered",
+            "field": "message",
+            "supported": true,
+            "critical": false,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "SUPPORTED_COPY_REJECTED"
+          },
+          {
+            "id": "whole-menu-jalapeno",
+            "field": "headline",
+            "supported": false,
+            "critical": true,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "EXPECTED"
+          }
+        ],
+        "failures": [],
+        "page_calls": 4,
+        "provider_calls": 0,
+        "cost_usd": 0
+      },
+      {
+        "case_id": "five-guys-bacon",
+        "split": "development",
+        "eval_set_id": "47c566d550b3c14d8552a12d4eafe229f148028c32e2900abc7167adefd5de6b",
+        "fixtures": {
+          "snapshot_id": "6270a602411f1d60b85f673a0a128d5d1d906785eaf1003cdb316ad7fbb11d67"
+        },
+        "source_mode": "publisher_replay",
+        "simulated_transport": null,
+        "version": {
+          "schema": "adzy.campaign-release@1",
+          "release": "stable",
+          "commit": "8225d78f90b47d4d0c1e66f034b12202c32e2480",
+          "reference_commit": "4648fbc043219661023fa97d92446bec9323fba4",
+          "model": {
+            "provider": null,
+            "model_id": null,
+            "mode": "deterministic"
+          },
+          "prompt": {
+            "id": null,
+            "mode": "no_model_prompt"
+          },
+          "planner": {
+            "policy": "source-campaign-planner@2",
+            "sha256": "ea2355ec04ffadf8e8f7176d8413c9a328fdb32e833c0d214b7639c57f0c7ea4",
+            "edition_sha256": null,
+            "edition_implementation_sha256": "3eb341719cf44d10b9f121379328b65ce9640c328980ecf518f85916947ae9d1",
+            "transport_sha256": "5d022857bb9820f1a5206aaa0487c75a5bd3decfc28af36dd4dcd831bbc3796f",
+            "package_sha256": "2530cee4ce36188775e6beef49db6d350c657fd975d30c28d3652d359185f803"
+          },
+          "guardrails": {
+            "policy": "campaign-copy@1",
+            "sha256": "38a68dddea99dac754339ae46d5e52c008796ff81cab0a1d5b15775335c4098b"
+          }
+        },
+        "trace_id": "23610f14531528c283f57b7a66c023bf",
+        "elapsed_ms": 34.386,
+        "fetch": [
+          "SOURCE_READ"
+        ],
+        "source_failed": false,
+        "stop": "DECISION_EVIDENCE_FOUND",
+        "gap": null,
+        "evidence_match": true,
+        "evidence": [
+          {
+            "scope": "Bacon Burger",
+            "quote": "Fresh, 100% beef patties hot off the grill, layered with strips of crispy Applewood smoked bacon and placed on a soft, toasted sesame seed bun.",
+            "page_url": "https://www.fiveguys.com/menu/burgers/",
+            "capture_kind": "publisher_snapshot",
+            "body_sha256": "d2af53a07c62810586cb020daeeebf8dec361ef4de057da035bd6681ad521a68"
+          }
+        ],
+        "cta_match": true,
+        "cta_copy_match": true,
+        "writing_context_sha256": "8358791ec5964a158ec40b1a20fe6acab6f3af64eb80d5698e60315982342b27",
+        "journey": "READY",
+        "cta": {
+          "url": "https://www.fiveguys.com/menu/burgers/",
+          "evidence_index": 0,
+          "text": "Read the explanation",
+          "action": "READ_FEATURE"
+        },
+        "edits": [
+          {
+            "id": "wrong-variant",
+            "field": "headline",
+            "supported": false,
+            "critical": true,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "EXPECTED"
+          },
+          {
+            "id": "specific-cta",
+            "field": "cta",
+            "supported": true,
+            "critical": false,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "SUPPORTED_COPY_REJECTED"
+          },
+          {
+            "id": "order-promise",
+            "field": "cta",
+            "supported": false,
+            "critical": true,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "EXPECTED"
+          }
+        ],
+        "failures": [],
+        "page_calls": 1,
+        "provider_calls": 0,
+        "cost_usd": 0
+      },
+      {
+        "case_id": "nandos-wrap",
+        "split": "development",
+        "eval_set_id": "47c566d550b3c14d8552a12d4eafe229f148028c32e2900abc7167adefd5de6b",
+        "fixtures": {
+          "snapshot_id": "92aaf397f72f8684824b4b712bb2d46ed805b3ccac66e6420d954e2d79052e51"
+        },
+        "source_mode": "publisher_replay",
+        "simulated_transport": null,
+        "version": {
+          "schema": "adzy.campaign-release@1",
+          "release": "stable",
+          "commit": "8225d78f90b47d4d0c1e66f034b12202c32e2480",
+          "reference_commit": "4648fbc043219661023fa97d92446bec9323fba4",
+          "model": {
+            "provider": null,
+            "model_id": null,
+            "mode": "deterministic"
+          },
+          "prompt": {
+            "id": null,
+            "mode": "no_model_prompt"
+          },
+          "planner": {
+            "policy": "source-campaign-planner@2",
+            "sha256": "ea2355ec04ffadf8e8f7176d8413c9a328fdb32e833c0d214b7639c57f0c7ea4",
+            "edition_sha256": null,
+            "edition_implementation_sha256": "3eb341719cf44d10b9f121379328b65ce9640c328980ecf518f85916947ae9d1",
+            "transport_sha256": "5d022857bb9820f1a5206aaa0487c75a5bd3decfc28af36dd4dcd831bbc3796f",
+            "package_sha256": "2530cee4ce36188775e6beef49db6d350c657fd975d30c28d3652d359185f803"
+          },
+          "guardrails": {
+            "policy": "campaign-copy@1",
+            "sha256": "38a68dddea99dac754339ae46d5e52c008796ff81cab0a1d5b15775335c4098b"
+          }
+        },
+        "trace_id": "d7d5c19f28fc913a31c63566d3264ba6",
+        "elapsed_ms": 31.472,
+        "fetch": [
+          "SOURCE_READ"
+        ],
+        "source_failed": false,
+        "stop": "DECISION_EVIDENCE_FOUND",
+        "gap": null,
+        "evidence_match": true,
+        "evidence": [
+          {
+            "scope": "Grilled Chicken Wrap",
+            "quote": "Chicken breast grilled in your favourite spice.",
+            "page_url": "https://www.nandos.co.uk/food/menu/",
+            "capture_kind": "publisher_snapshot",
+            "body_sha256": "7a309409247ecf1da42448fa46d1832f220748edcdf30d367c27eb514a877b24"
+          }
+        ],
+        "cta_match": true,
+        "cta_copy_match": true,
+        "writing_context_sha256": "4d3d7924cdadd5e5cfc073fc84e8d848379673640de7ccecd6fd62796c850c51",
+        "journey": "READY",
+        "cta": {
+          "url": "https://www.nandos.co.uk/food/menu/",
+          "evidence_index": 0,
+          "text": "Read the explanation",
+          "action": "READ_FEATURE"
+        },
+        "edits": [
+          {
+            "id": "verbatim-heading",
+            "field": "headline",
+            "supported": true,
+            "critical": false,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "SUPPORTED_COPY_REJECTED"
+          },
+          {
+            "id": "unsupported-price",
+            "field": "headline",
+            "supported": false,
+            "critical": true,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "EXPECTED"
+          },
+          {
+            "id": "specific-cta",
+            "field": "cta",
+            "supported": true,
+            "critical": false,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "SUPPORTED_COPY_REJECTED"
+          }
+        ],
+        "failures": [],
+        "page_calls": 1,
+        "provider_calls": 0,
+        "cost_usd": 0
+      },
+      {
+        "case_id": "nandos-page-cap",
+        "split": "development",
+        "eval_set_id": "47c566d550b3c14d8552a12d4eafe229f148028c32e2900abc7167adefd5de6b",
+        "fixtures": {
+          "snapshot_id": "92aaf397f72f8684824b4b712bb2d46ed805b3ccac66e6420d954e2d79052e51"
+        },
+        "source_mode": "simulated_transport",
+        "simulated_transport": "oversize_html",
+        "version": {
+          "schema": "adzy.campaign-release@1",
+          "release": "stable",
+          "commit": "8225d78f90b47d4d0c1e66f034b12202c32e2480",
+          "reference_commit": "4648fbc043219661023fa97d92446bec9323fba4",
+          "model": {
+            "provider": null,
+            "model_id": null,
+            "mode": "deterministic"
+          },
+          "prompt": {
+            "id": null,
+            "mode": "no_model_prompt"
+          },
+          "planner": {
+            "policy": "source-campaign-planner@2",
+            "sha256": "ea2355ec04ffadf8e8f7176d8413c9a328fdb32e833c0d214b7639c57f0c7ea4",
+            "edition_sha256": null,
+            "edition_implementation_sha256": "3eb341719cf44d10b9f121379328b65ce9640c328980ecf518f85916947ae9d1",
+            "transport_sha256": "5d022857bb9820f1a5206aaa0487c75a5bd3decfc28af36dd4dcd831bbc3796f",
+            "package_sha256": "2530cee4ce36188775e6beef49db6d350c657fd975d30c28d3652d359185f803"
+          },
+          "guardrails": {
+            "policy": "campaign-copy@1",
+            "sha256": "38a68dddea99dac754339ae46d5e52c008796ff81cab0a1d5b15775335c4098b"
+          }
+        },
+        "trace_id": "4d235b4491d47990fca59ff8febcc959",
+        "elapsed_ms": 23.336,
+        "fetch": [
+          "PAGE_TOO_LARGE"
+        ],
+        "source_failed": true,
+        "stop": "NO_MORE_RELEVANT_SOURCES",
+        "gap": "FEATURE_EVIDENCE",
+        "evidence_match": null,
+        "evidence": [],
+        "cta_match": null,
+        "cta_copy_match": null,
+        "writing_context_sha256": null,
+        "journey": "BLOCKED",
+        "cta": null,
+        "edits": [],
+        "failures": [],
+        "page_calls": 1,
+        "provider_calls": 0,
+        "cost_usd": 0
+      },
+      {
+        "case_id": "nandos-timeout",
+        "split": "development",
+        "eval_set_id": "47c566d550b3c14d8552a12d4eafe229f148028c32e2900abc7167adefd5de6b",
+        "fixtures": {
+          "snapshot_id": "92aaf397f72f8684824b4b712bb2d46ed805b3ccac66e6420d954e2d79052e51"
+        },
+        "source_mode": "simulated_transport",
+        "simulated_transport": "socket_timeout",
+        "version": {
+          "schema": "adzy.campaign-release@1",
+          "release": "stable",
+          "commit": "8225d78f90b47d4d0c1e66f034b12202c32e2480",
+          "reference_commit": "4648fbc043219661023fa97d92446bec9323fba4",
+          "model": {
+            "provider": null,
+            "model_id": null,
+            "mode": "deterministic"
+          },
+          "prompt": {
+            "id": null,
+            "mode": "no_model_prompt"
+          },
+          "planner": {
+            "policy": "source-campaign-planner@2",
+            "sha256": "ea2355ec04ffadf8e8f7176d8413c9a328fdb32e833c0d214b7639c57f0c7ea4",
+            "edition_sha256": null,
+            "edition_implementation_sha256": "3eb341719cf44d10b9f121379328b65ce9640c328980ecf518f85916947ae9d1",
+            "transport_sha256": "5d022857bb9820f1a5206aaa0487c75a5bd3decfc28af36dd4dcd831bbc3796f",
+            "package_sha256": "2530cee4ce36188775e6beef49db6d350c657fd975d30c28d3652d359185f803"
+          },
+          "guardrails": {
+            "policy": "campaign-copy@1",
+            "sha256": "38a68dddea99dac754339ae46d5e52c008796ff81cab0a1d5b15775335c4098b"
+          }
+        },
+        "trace_id": "31b13d4f9a4946ad07ca0c68cadca4d9",
+        "elapsed_ms": 8.619,
+        "fetch": [
+          "SOURCE_TIMEOUT"
+        ],
+        "source_failed": true,
+        "stop": "NO_MORE_RELEVANT_SOURCES",
+        "gap": "FEATURE_EVIDENCE",
+        "evidence_match": null,
+        "evidence": [],
+        "cta_match": null,
+        "cta_copy_match": null,
+        "writing_context_sha256": null,
+        "journey": "BLOCKED",
+        "cta": null,
+        "edits": [],
+        "failures": [],
+        "page_calls": 1,
+        "provider_calls": 0,
+        "cost_usd": 0
+      },
+      {
+        "case_id": "python-applications",
+        "split": "generalization",
+        "eval_set_id": "47c566d550b3c14d8552a12d4eafe229f148028c32e2900abc7167adefd5de6b",
+        "fixtures": {
+          "snapshot_id": "76df220804082404ecf0c9d0a0e2c4c20ec07491f5ad59cdde21c95a6ca8c597"
+        },
+        "source_mode": "publisher_replay",
+        "simulated_transport": null,
+        "version": {
+          "schema": "adzy.campaign-release@1",
+          "release": "stable",
+          "commit": "8225d78f90b47d4d0c1e66f034b12202c32e2480",
+          "reference_commit": "4648fbc043219661023fa97d92446bec9323fba4",
+          "model": {
+            "provider": null,
+            "model_id": null,
+            "mode": "deterministic"
+          },
+          "prompt": {
+            "id": null,
+            "mode": "no_model_prompt"
+          },
+          "planner": {
+            "policy": "source-campaign-planner@2",
+            "sha256": "ea2355ec04ffadf8e8f7176d8413c9a328fdb32e833c0d214b7639c57f0c7ea4",
+            "edition_sha256": null,
+            "edition_implementation_sha256": "3eb341719cf44d10b9f121379328b65ce9640c328980ecf518f85916947ae9d1",
+            "transport_sha256": "5d022857bb9820f1a5206aaa0487c75a5bd3decfc28af36dd4dcd831bbc3796f",
+            "package_sha256": "2530cee4ce36188775e6beef49db6d350c657fd975d30c28d3652d359185f803"
+          },
+          "guardrails": {
+            "policy": "campaign-copy@1",
+            "sha256": "38a68dddea99dac754339ae46d5e52c008796ff81cab0a1d5b15775335c4098b"
+          }
+        },
+        "trace_id": "21b3ec82b825e1c37de77e6f668b6b9b",
+        "elapsed_ms": 20.145,
+        "fetch": [
+          "SOURCE_READ"
+        ],
+        "source_failed": false,
+        "stop": "DECISION_EVIDENCE_FOUND",
+        "gap": null,
+        "evidence_match": true,
+        "evidence": [
+          {
+            "scope": "Applications",
+            "quote": "The Python Package Index (PyPI) hosts thousands of third-party modules for Python.",
+            "page_url": "https://www.python.org/about/",
+            "capture_kind": "publisher_snapshot",
+            "body_sha256": "4739cc39d7deaad1540d9387f9ee8944063921d24b4e133e7f18c5f7e044f20f"
+          }
+        ],
+        "cta_match": true,
+        "cta_copy_match": null,
+        "writing_context_sha256": "aa39643a57d4b29ae6359b6a9120bd4b8f12ecba2282219af7610faaab7fd049",
+        "journey": "READY",
+        "cta": {
+          "url": "https://www.python.org/about/",
+          "evidence_index": 0,
+          "text": "Read the explanation",
+          "action": "READ_FEATURE"
+        },
+        "edits": [
+          {
+            "id": "all-modules-verified",
+            "field": "headline",
+            "supported": false,
+            "critical": true,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "EXPECTED"
+          }
+        ],
+        "failures": [],
+        "page_calls": 1,
+        "provider_calls": 0,
+        "cost_usd": 0
+      },
+      {
+        "case_id": "osm-local-knowledge",
+        "split": "development",
+        "eval_set_id": "47c566d550b3c14d8552a12d4eafe229f148028c32e2900abc7167adefd5de6b",
+        "fixtures": {
+          "snapshot_id": "45a8bb8a7dd02f76f520d62db20bd83d1cb10e13e931399e291b00d7aaaf8720"
+        },
+        "source_mode": "publisher_replay",
+        "simulated_transport": null,
+        "version": {
+          "schema": "adzy.campaign-release@1",
+          "release": "stable",
+          "commit": "8225d78f90b47d4d0c1e66f034b12202c32e2480",
+          "reference_commit": "4648fbc043219661023fa97d92446bec9323fba4",
+          "model": {
+            "provider": null,
+            "model_id": null,
+            "mode": "deterministic"
+          },
+          "prompt": {
+            "id": null,
+            "mode": "no_model_prompt"
+          },
+          "planner": {
+            "policy": "source-campaign-planner@2",
+            "sha256": "ea2355ec04ffadf8e8f7176d8413c9a328fdb32e833c0d214b7639c57f0c7ea4",
+            "edition_sha256": null,
+            "edition_implementation_sha256": "3eb341719cf44d10b9f121379328b65ce9640c328980ecf518f85916947ae9d1",
+            "transport_sha256": "5d022857bb9820f1a5206aaa0487c75a5bd3decfc28af36dd4dcd831bbc3796f",
+            "package_sha256": "2530cee4ce36188775e6beef49db6d350c657fd975d30c28d3652d359185f803"
+          },
+          "guardrails": {
+            "policy": "campaign-copy@1",
+            "sha256": "38a68dddea99dac754339ae46d5e52c008796ff81cab0a1d5b15775335c4098b"
+          }
+        },
+        "trace_id": "c23194bce70400ab0eee8e14216f5d3f",
+        "elapsed_ms": 22.463,
+        "fetch": [
+          "SOURCE_READ"
+        ],
+        "source_failed": false,
+        "stop": "DECISION_EVIDENCE_FOUND",
+        "gap": null,
+        "evidence_match": true,
+        "evidence": [
+          {
+            "scope": "Local Knowledge",
+            "quote": "Contributors use aerial imagery, GPS devices, and low-tech field maps to verify that OSM is accurate and up to date.",
+            "page_url": "https://www.openstreetmap.org/about",
+            "capture_kind": "publisher_snapshot",
+            "body_sha256": "65f78568d179867afe510e56ad35fd25b989b890a4b48c55a68270fba50da5fe"
+          }
+        ],
+        "cta_match": true,
+        "cta_copy_match": true,
+        "writing_context_sha256": "dff9fe3b3a1daa26628aa61691dbf9e0594556fc6f9b59fe7d41d890e6628140",
+        "journey": "READY",
+        "cta": {
+          "url": "https://www.openstreetmap.org/about",
+          "evidence_index": 0,
+          "text": "Read the explanation",
+          "action": "READ_FEATURE"
+        },
+        "edits": [
+          {
+            "id": "verbatim-heading",
+            "field": "headline",
+            "supported": true,
+            "critical": false,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "SUPPORTED_COPY_REJECTED"
+          },
+          {
+            "id": "every-road-verified",
+            "field": "headline",
+            "supported": false,
+            "critical": true,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "EXPECTED"
+          }
+        ],
+        "failures": [],
+        "page_calls": 1,
+        "provider_calls": 0,
+        "cost_usd": 0
+      },
+      {
+        "case_id": "nasa-mars-orbit",
+        "split": "generalization",
+        "eval_set_id": "47c566d550b3c14d8552a12d4eafe229f148028c32e2900abc7167adefd5de6b",
+        "fixtures": {
+          "snapshot_id": "292c7061e201562f9f4210d548245892c5f9758ac7ff5ca3a75ad8f468dd27a5"
+        },
+        "source_mode": "publisher_replay",
+        "simulated_transport": null,
+        "version": {
+          "schema": "adzy.campaign-release@1",
+          "release": "stable",
+          "commit": "8225d78f90b47d4d0c1e66f034b12202c32e2480",
+          "reference_commit": "4648fbc043219661023fa97d92446bec9323fba4",
+          "model": {
+            "provider": null,
+            "model_id": null,
+            "mode": "deterministic"
+          },
+          "prompt": {
+            "id": null,
+            "mode": "no_model_prompt"
+          },
+          "planner": {
+            "policy": "source-campaign-planner@2",
+            "sha256": "ea2355ec04ffadf8e8f7176d8413c9a328fdb32e833c0d214b7639c57f0c7ea4",
+            "edition_sha256": null,
+            "edition_implementation_sha256": "3eb341719cf44d10b9f121379328b65ce9640c328980ecf518f85916947ae9d1",
+            "transport_sha256": "5d022857bb9820f1a5206aaa0487c75a5bd3decfc28af36dd4dcd831bbc3796f",
+            "package_sha256": "2530cee4ce36188775e6beef49db6d350c657fd975d30c28d3652d359185f803"
+          },
+          "guardrails": {
+            "policy": "campaign-copy@1",
+            "sha256": "38a68dddea99dac754339ae46d5e52c008796ff81cab0a1d5b15775335c4098b"
+          }
+        },
+        "trace_id": "f1bf45d842fd87e7fb8b712895dfd390",
+        "elapsed_ms": 24.693,
+        "fetch": [
+          "SOURCE_READ"
+        ],
+        "source_failed": false,
+        "stop": "DECISION_EVIDENCE_FOUND",
+        "gap": null,
+        "evidence_match": true,
+        "evidence": [
+          {
+            "scope": "Orbit and Rotation",
+            "quote": "As Mars orbits the Sun, it completes one rotation every 24.6 hours, which is very similar to one day on Earth (23.9 hours).",
+            "page_url": "https://science.nasa.gov/mars/facts/",
+            "capture_kind": "publisher_snapshot",
+            "body_sha256": "4d75f5e6eeebbbe1045d241302ebe8b7f98fb7bcb04f7cc4dbf732ce9304144f"
+          }
+        ],
+        "cta_match": true,
+        "cta_copy_match": true,
+        "writing_context_sha256": "1c0956826f2dd03e9662fca6264872e14999de366e29ecf477ce7319bf757a13",
+        "journey": "READY",
+        "cta": {
+          "url": "https://science.nasa.gov/mars/facts/",
+          "evidence_index": 0,
+          "text": "Read the explanation",
+          "action": "READ_FEATURE"
+        },
+        "edits": [
+          {
+            "id": "specific-cta",
+            "field": "cta",
+            "supported": true,
+            "critical": false,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "SUPPORTED_COPY_REJECTED"
+          },
+          {
+            "id": "gravity-promise",
+            "field": "headline",
+            "supported": false,
+            "critical": true,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "EXPECTED"
+          }
+        ],
+        "failures": [],
+        "page_calls": 1,
+        "provider_calls": 0,
+        "cost_usd": 0
+      },
+      {
+        "case_id": "debian-hardware",
+        "split": "development",
+        "eval_set_id": "47c566d550b3c14d8552a12d4eafe229f148028c32e2900abc7167adefd5de6b",
+        "fixtures": {
+          "snapshot_id": "0fbd60a22b853cef920396e2a4c6f101f95b85f4a05cc1c6f00859b8117d8685"
+        },
+        "source_mode": "publisher_replay",
+        "simulated_transport": null,
+        "version": {
+          "schema": "adzy.campaign-release@1",
+          "release": "stable",
+          "commit": "8225d78f90b47d4d0c1e66f034b12202c32e2480",
+          "reference_commit": "4648fbc043219661023fa97d92446bec9323fba4",
+          "model": {
+            "provider": null,
+            "model_id": null,
+            "mode": "deterministic"
+          },
+          "prompt": {
+            "id": null,
+            "mode": "no_model_prompt"
+          },
+          "planner": {
+            "policy": "source-campaign-planner@2",
+            "sha256": "ea2355ec04ffadf8e8f7176d8413c9a328fdb32e833c0d214b7639c57f0c7ea4",
+            "edition_sha256": null,
+            "edition_implementation_sha256": "3eb341719cf44d10b9f121379328b65ce9640c328980ecf518f85916947ae9d1",
+            "transport_sha256": "5d022857bb9820f1a5206aaa0487c75a5bd3decfc28af36dd4dcd831bbc3796f",
+            "package_sha256": "2530cee4ce36188775e6beef49db6d350c657fd975d30c28d3652d359185f803"
+          },
+          "guardrails": {
+            "policy": "campaign-copy@1",
+            "sha256": "38a68dddea99dac754339ae46d5e52c008796ff81cab0a1d5b15775335c4098b"
+          }
+        },
+        "trace_id": "3d9e04c03b3fde5f3dafabff7b0311fa",
+        "elapsed_ms": 41.977,
+        "fetch": [
+          "SOURCE_READ"
+        ],
+        "source_failed": false,
+        "stop": "DECISION_EVIDENCE_FOUND",
+        "gap": null,
+        "evidence_match": true,
+        "evidence": [
+          {
+            "scope": "What hardware is supported?",
+            "quote": "For a complete list of currently supported ones, see the documentation for the stable release .",
+            "page_url": "https://www.debian.org/intro/about",
+            "capture_kind": "publisher_snapshot",
+            "body_sha256": "f54c31f0afc95c0d72277b7f0960d94e8e8dc303b1a0f2d44ca5e5f3ad9244a2"
+          }
+        ],
+        "cta_match": true,
+        "cta_copy_match": true,
+        "writing_context_sha256": "ba8a63c7b3ff58c34b9ebb133310c7c78b488a0269747ec6a312a1241802f69f",
+        "journey": "READY",
+        "cta": {
+          "url": "https://www.debian.org/intro/about",
+          "evidence_index": 0,
+          "text": "Read the explanation",
+          "action": "READ_FEATURE"
+        },
+        "edits": [
+          {
+            "id": "unsupported-compatibility",
+            "field": "cta",
+            "supported": false,
+            "critical": true,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "EXPECTED"
+          }
+        ],
+        "failures": [],
+        "page_calls": 1,
+        "provider_calls": 0,
+        "cost_usd": 0
+      },
+      {
+        "case_id": "sqlite-embedded-sql",
+        "split": "generalization",
+        "eval_set_id": "47c566d550b3c14d8552a12d4eafe229f148028c32e2900abc7167adefd5de6b",
+        "fixtures": {
+          "snapshot_id": "975ffff44d17675fc01e93881268998d35a6e83ccbc714c76b6671b83be795e2"
+        },
+        "source_mode": "publisher_replay",
+        "simulated_transport": null,
+        "version": {
+          "schema": "adzy.campaign-release@1",
+          "release": "stable",
+          "commit": "8225d78f90b47d4d0c1e66f034b12202c32e2480",
+          "reference_commit": "4648fbc043219661023fa97d92446bec9323fba4",
+          "model": {
+            "provider": null,
+            "model_id": null,
+            "mode": "deterministic"
+          },
+          "prompt": {
+            "id": null,
+            "mode": "no_model_prompt"
+          },
+          "planner": {
+            "policy": "source-campaign-planner@2",
+            "sha256": "ea2355ec04ffadf8e8f7176d8413c9a328fdb32e833c0d214b7639c57f0c7ea4",
+            "edition_sha256": null,
+            "edition_implementation_sha256": "3eb341719cf44d10b9f121379328b65ce9640c328980ecf518f85916947ae9d1",
+            "transport_sha256": "5d022857bb9820f1a5206aaa0487c75a5bd3decfc28af36dd4dcd831bbc3796f",
+            "package_sha256": "2530cee4ce36188775e6beef49db6d350c657fd975d30c28d3652d359185f803"
+          },
+          "guardrails": {
+            "policy": "campaign-copy@1",
+            "sha256": "38a68dddea99dac754339ae46d5e52c008796ff81cab0a1d5b15775335c4098b"
+          }
+        },
+        "trace_id": "8095dea791ff15280bad8a432484b985",
+        "elapsed_ms": 23.48,
+        "fetch": [
+          "SOURCE_READ"
+        ],
+        "source_failed": false,
+        "stop": "DECISION_EVIDENCE_FOUND",
+        "gap": null,
+        "evidence_match": true,
+        "evidence": [
+          {
+            "scope": "Executive Summary",
+            "quote": "SQLite is an in-process library that implements a self-contained , serverless , zero-configuration , transactional SQL database engine.",
+            "page_url": "https://www.sqlite.org/about.html",
+            "capture_kind": "publisher_snapshot",
+            "body_sha256": "7a439332e54667d8df4f3216f020c663da8fafe7c2c63c5d827e1bf96a48a2de"
+          }
+        ],
+        "cta_match": true,
+        "cta_copy_match": true,
+        "writing_context_sha256": "72598da3ecffff5e5ab86af68331c53724f4e08ae1092c644433f3a550f9841d",
+        "journey": "READY",
+        "cta": {
+          "url": "https://www.sqlite.org/about.html",
+          "evidence_index": 0,
+          "text": "اقرأ الشرح",
+          "action": "READ_FEATURE"
+        },
+        "edits": [
+          {
+            "id": "specific-cta",
+            "field": "cta",
+            "supported": true,
+            "critical": false,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "SUPPORTED_COPY_REJECTED"
+          },
+          {
+            "id": "unsupported-sqlite-guarantee",
+            "field": "headline",
+            "supported": false,
+            "critical": true,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "EXPECTED"
+          }
+        ],
+        "failures": [],
+        "page_calls": 1,
+        "provider_calls": 0,
+        "cost_usd": 0
+      }
+    ],
+    "candidate": [
+      {
+        "case_id": "buffalo-menu",
+        "split": "development",
+        "eval_set_id": "47c566d550b3c14d8552a12d4eafe229f148028c32e2900abc7167adefd5de6b",
+        "fixtures": {
+          "snapshot_id": "15d58cf5bd70ccd824cd582327e5022e1c3ec0db8c4f411e61a167e4cd792f81",
+          "edition_file_id": "53b896dddbc9f6d09b5004c5f70614ad60d4ebd0a344926babf5002a3ed7ae07"
+        },
+        "source_mode": "publisher_replay",
+        "simulated_transport": null,
+        "version": {
+          "schema": "adzy.campaign-release@1",
+          "release": "candidate",
+          "commit": "8225d78f90b47d4d0c1e66f034b12202c32e2480",
+          "reference_commit": "4648fbc043219661023fa97d92446bec9323fba4",
+          "model": {
+            "provider": null,
+            "model_id": null,
+            "mode": "deterministic"
+          },
+          "prompt": {
+            "id": null,
+            "mode": "no_model_prompt"
+          },
+          "planner": {
+            "policy": "editorial-campaign@1",
+            "sha256": "ea2355ec04ffadf8e8f7176d8413c9a328fdb32e833c0d214b7639c57f0c7ea4",
+            "edition_sha256": "6a3f45863d9676554efce1f8eb3e1b340bfd45e66cebfb136a0d9948ad148582",
+            "edition_implementation_sha256": "3eb341719cf44d10b9f121379328b65ce9640c328980ecf518f85916947ae9d1",
+            "transport_sha256": "5d022857bb9820f1a5206aaa0487c75a5bd3decfc28af36dd4dcd831bbc3796f",
+            "package_sha256": "2530cee4ce36188775e6beef49db6d350c657fd975d30c28d3652d359185f803"
+          },
+          "guardrails": {
+            "policy": "campaign-copy@3",
+            "sha256": "38a68dddea99dac754339ae46d5e52c008796ff81cab0a1d5b15775335c4098b"
+          }
+        },
+        "trace_id": "de4d453cff090a8e79d00e50ee85d7b1",
+        "elapsed_ms": 24.812,
+        "fetch": [
+          "QUOTE_OBSERVED",
+          "QUOTE_OBSERVED",
+          "QUOTE_OBSERVED",
+          "QUOTE_OBSERVED"
+        ],
+        "source_failed": false,
+        "stop": "DECISION_EVIDENCE_FOUND",
+        "gap": null,
+        "evidence_match": true,
+        "evidence": [
+          {
+            "scope": "عنوان صفحة المنيو الرسمية",
+            "quote": "قائمة بافلو برجر",
+            "page_url": "https://buffaloburger.com/menu",
+            "capture_kind": "publisher_snapshot",
+            "body_sha256": "82439b02324bf88df9dcc0047fcbf0096ba6ccf45ed0bddf444ca463c99b6975"
+          },
+          {
+            "scope": "وصف أولد سكول من بطاقة مشاركة صفحة الصنف",
+            "quote": "Pure beef burger patty, topped with our signature Buffalo sauce and cheddar cheese.",
+            "page_url": "https://buffaloburger.com/menu/old-school",
+            "capture_kind": "publisher_snapshot",
+            "body_sha256": "0a70ee0c64cacc6703a6891aca25b8539fb660b4998486a500bf2c52a87f792c"
+          },
+          {
+            "scope": "وصف راستافاري من بطاقة مشاركة صفحة الصنف",
+            "quote": "بايتس الجبنة الشيدر المحشوه بالهالپنيو وصوص البافالو الكريمي و مع قطعة البرجر.",
+            "page_url": "https://buffaloburger.com/menu/the-rastafari",
+            "capture_kind": "publisher_snapshot",
+            "body_sha256": "a55a9f865a9b386f7e3545c99fb3921248ead2e7c143556f852fb679763c68d7"
+          }
+        ],
+        "cta_match": true,
+        "cta_copy_match": null,
+        "writing_context_sha256": "a03d232d61e4d7493930eee611052234d538832b4b93f6ef2f183a5ea7f4c97b",
+        "journey": "READY",
+        "cta": {
+          "url": "https://buffaloburger.com/menu",
+          "evidence_index": 0,
+          "text": "شوف المنيو",
+          "action": "OPEN_CATALOG"
+        },
+        "edits": [
+          {
+            "id": "shared-sauce-registered",
+            "field": "message",
+            "supported": true,
+            "critical": false,
+            "accepted": true,
+            "observed": "الاتنين فيهم صوص بافالو.",
+            "reason": null,
+            "classification": "EXPECTED"
+          },
+          {
+            "id": "shared-sauce-unregistered",
+            "field": "message",
+            "supported": true,
+            "critical": false,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "SUPPORTED_COPY_REJECTED"
+          },
+          {
+            "id": "whole-menu-jalapeno",
+            "field": "headline",
+            "supported": false,
+            "critical": true,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "EXPECTED"
+          }
+        ],
+        "failures": [],
+        "page_calls": 4,
+        "provider_calls": 0,
+        "cost_usd": 0
+      },
+      {
+        "case_id": "five-guys-bacon",
+        "split": "development",
+        "eval_set_id": "47c566d550b3c14d8552a12d4eafe229f148028c32e2900abc7167adefd5de6b",
+        "fixtures": {
+          "snapshot_id": "6270a602411f1d60b85f673a0a128d5d1d906785eaf1003cdb316ad7fbb11d67"
+        },
+        "source_mode": "publisher_replay",
+        "simulated_transport": null,
+        "version": {
+          "schema": "adzy.campaign-release@1",
+          "release": "candidate",
+          "commit": "8225d78f90b47d4d0c1e66f034b12202c32e2480",
+          "reference_commit": "4648fbc043219661023fa97d92446bec9323fba4",
+          "model": {
+            "provider": null,
+            "model_id": null,
+            "mode": "deterministic"
+          },
+          "prompt": {
+            "id": null,
+            "mode": "no_model_prompt"
+          },
+          "planner": {
+            "policy": "source-campaign-planner@2",
+            "sha256": "ea2355ec04ffadf8e8f7176d8413c9a328fdb32e833c0d214b7639c57f0c7ea4",
+            "edition_sha256": null,
+            "edition_implementation_sha256": "3eb341719cf44d10b9f121379328b65ce9640c328980ecf518f85916947ae9d1",
+            "transport_sha256": "5d022857bb9820f1a5206aaa0487c75a5bd3decfc28af36dd4dcd831bbc3796f",
+            "package_sha256": "2530cee4ce36188775e6beef49db6d350c657fd975d30c28d3652d359185f803"
+          },
+          "guardrails": {
+            "policy": "campaign-copy@3",
+            "sha256": "38a68dddea99dac754339ae46d5e52c008796ff81cab0a1d5b15775335c4098b"
+          }
+        },
+        "trace_id": "677c2b11db5d5b931c4de2de812b7a36",
+        "elapsed_ms": 29.692,
+        "fetch": [
+          "SOURCE_READ"
+        ],
+        "source_failed": false,
+        "stop": "DECISION_EVIDENCE_FOUND",
+        "gap": null,
+        "evidence_match": true,
+        "evidence": [
+          {
+            "scope": "Bacon Burger",
+            "quote": "Fresh, 100% beef patties hot off the grill, layered with strips of crispy Applewood smoked bacon and placed on a soft, toasted sesame seed bun.",
+            "page_url": "https://www.fiveguys.com/menu/burgers/",
+            "capture_kind": "publisher_snapshot",
+            "body_sha256": "d2af53a07c62810586cb020daeeebf8dec361ef4de057da035bd6681ad521a68"
+          }
+        ],
+        "cta_match": true,
+        "cta_copy_match": true,
+        "writing_context_sha256": "8358791ec5964a158ec40b1a20fe6acab6f3af64eb80d5698e60315982342b27",
+        "journey": "READY",
+        "cta": {
+          "url": "https://www.fiveguys.com/menu/burgers/",
+          "evidence_index": 0,
+          "text": "Explore Bacon Burger",
+          "action": "READ_FEATURE"
+        },
+        "edits": [
+          {
+            "id": "wrong-variant",
+            "field": "headline",
+            "supported": false,
+            "critical": true,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "EXPECTED"
+          },
+          {
+            "id": "specific-cta",
+            "field": "cta",
+            "supported": true,
+            "critical": false,
+            "accepted": true,
+            "observed": "Explore Bacon Burger",
+            "reason": null,
+            "classification": "EXPECTED"
+          },
+          {
+            "id": "order-promise",
+            "field": "cta",
+            "supported": false,
+            "critical": true,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "EXPECTED"
+          }
+        ],
+        "failures": [],
+        "page_calls": 1,
+        "provider_calls": 0,
+        "cost_usd": 0
+      },
+      {
+        "case_id": "nandos-wrap",
+        "split": "development",
+        "eval_set_id": "47c566d550b3c14d8552a12d4eafe229f148028c32e2900abc7167adefd5de6b",
+        "fixtures": {
+          "snapshot_id": "92aaf397f72f8684824b4b712bb2d46ed805b3ccac66e6420d954e2d79052e51"
+        },
+        "source_mode": "publisher_replay",
+        "simulated_transport": null,
+        "version": {
+          "schema": "adzy.campaign-release@1",
+          "release": "candidate",
+          "commit": "8225d78f90b47d4d0c1e66f034b12202c32e2480",
+          "reference_commit": "4648fbc043219661023fa97d92446bec9323fba4",
+          "model": {
+            "provider": null,
+            "model_id": null,
+            "mode": "deterministic"
+          },
+          "prompt": {
+            "id": null,
+            "mode": "no_model_prompt"
+          },
+          "planner": {
+            "policy": "source-campaign-planner@2",
+            "sha256": "ea2355ec04ffadf8e8f7176d8413c9a328fdb32e833c0d214b7639c57f0c7ea4",
+            "edition_sha256": null,
+            "edition_implementation_sha256": "3eb341719cf44d10b9f121379328b65ce9640c328980ecf518f85916947ae9d1",
+            "transport_sha256": "5d022857bb9820f1a5206aaa0487c75a5bd3decfc28af36dd4dcd831bbc3796f",
+            "package_sha256": "2530cee4ce36188775e6beef49db6d350c657fd975d30c28d3652d359185f803"
+          },
+          "guardrails": {
+            "policy": "campaign-copy@3",
+            "sha256": "38a68dddea99dac754339ae46d5e52c008796ff81cab0a1d5b15775335c4098b"
+          }
+        },
+        "trace_id": "dddca6cae56b889c2727e11ecbc095c3",
+        "elapsed_ms": 33.363,
+        "fetch": [
+          "SOURCE_READ"
+        ],
+        "source_failed": false,
+        "stop": "DECISION_EVIDENCE_FOUND",
+        "gap": null,
+        "evidence_match": true,
+        "evidence": [
+          {
+            "scope": "Grilled Chicken Wrap",
+            "quote": "Chicken breast grilled in your favourite spice.",
+            "page_url": "https://www.nandos.co.uk/food/menu/",
+            "capture_kind": "publisher_snapshot",
+            "body_sha256": "7a309409247ecf1da42448fa46d1832f220748edcdf30d367c27eb514a877b24"
+          }
+        ],
+        "cta_match": true,
+        "cta_copy_match": true,
+        "writing_context_sha256": "4d3d7924cdadd5e5cfc073fc84e8d848379673640de7ccecd6fd62796c850c51",
+        "journey": "READY",
+        "cta": {
+          "url": "https://www.nandos.co.uk/food/menu/",
+          "evidence_index": 0,
+          "text": "Explore Grilled Chicken Wrap",
+          "action": "READ_FEATURE"
+        },
+        "edits": [
+          {
+            "id": "verbatim-heading",
+            "field": "headline",
+            "supported": true,
+            "critical": false,
+            "accepted": true,
+            "observed": "Grilled Chicken Wrap",
+            "reason": null,
+            "classification": "EXPECTED"
+          },
+          {
+            "id": "unsupported-price",
+            "field": "headline",
+            "supported": false,
+            "critical": true,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "EXPECTED"
+          },
+          {
+            "id": "specific-cta",
+            "field": "cta",
+            "supported": true,
+            "critical": false,
+            "accepted": true,
+            "observed": "Explore Grilled Chicken Wrap",
+            "reason": null,
+            "classification": "EXPECTED"
+          }
+        ],
+        "failures": [],
+        "page_calls": 1,
+        "provider_calls": 0,
+        "cost_usd": 0
+      },
+      {
+        "case_id": "nandos-page-cap",
+        "split": "development",
+        "eval_set_id": "47c566d550b3c14d8552a12d4eafe229f148028c32e2900abc7167adefd5de6b",
+        "fixtures": {
+          "snapshot_id": "92aaf397f72f8684824b4b712bb2d46ed805b3ccac66e6420d954e2d79052e51"
+        },
+        "source_mode": "simulated_transport",
+        "simulated_transport": "oversize_html",
+        "version": {
+          "schema": "adzy.campaign-release@1",
+          "release": "candidate",
+          "commit": "8225d78f90b47d4d0c1e66f034b12202c32e2480",
+          "reference_commit": "4648fbc043219661023fa97d92446bec9323fba4",
+          "model": {
+            "provider": null,
+            "model_id": null,
+            "mode": "deterministic"
+          },
+          "prompt": {
+            "id": null,
+            "mode": "no_model_prompt"
+          },
+          "planner": {
+            "policy": "source-campaign-planner@2",
+            "sha256": "ea2355ec04ffadf8e8f7176d8413c9a328fdb32e833c0d214b7639c57f0c7ea4",
+            "edition_sha256": null,
+            "edition_implementation_sha256": "3eb341719cf44d10b9f121379328b65ce9640c328980ecf518f85916947ae9d1",
+            "transport_sha256": "5d022857bb9820f1a5206aaa0487c75a5bd3decfc28af36dd4dcd831bbc3796f",
+            "package_sha256": "2530cee4ce36188775e6beef49db6d350c657fd975d30c28d3652d359185f803"
+          },
+          "guardrails": {
+            "policy": "campaign-copy@3",
+            "sha256": "38a68dddea99dac754339ae46d5e52c008796ff81cab0a1d5b15775335c4098b"
+          }
+        },
+        "trace_id": "f5d065290671888fa21e2bf027b96095",
+        "elapsed_ms": 18.667,
+        "fetch": [
+          "PAGE_TOO_LARGE"
+        ],
+        "source_failed": true,
+        "stop": "NO_MORE_RELEVANT_SOURCES",
+        "gap": "FEATURE_EVIDENCE",
+        "evidence_match": null,
+        "evidence": [],
+        "cta_match": null,
+        "cta_copy_match": null,
+        "writing_context_sha256": null,
+        "journey": "BLOCKED",
+        "cta": null,
+        "edits": [],
+        "failures": [],
+        "page_calls": 1,
+        "provider_calls": 0,
+        "cost_usd": 0
+      },
+      {
+        "case_id": "nandos-timeout",
+        "split": "development",
+        "eval_set_id": "47c566d550b3c14d8552a12d4eafe229f148028c32e2900abc7167adefd5de6b",
+        "fixtures": {
+          "snapshot_id": "92aaf397f72f8684824b4b712bb2d46ed805b3ccac66e6420d954e2d79052e51"
+        },
+        "source_mode": "simulated_transport",
+        "simulated_transport": "socket_timeout",
+        "version": {
+          "schema": "adzy.campaign-release@1",
+          "release": "candidate",
+          "commit": "8225d78f90b47d4d0c1e66f034b12202c32e2480",
+          "reference_commit": "4648fbc043219661023fa97d92446bec9323fba4",
+          "model": {
+            "provider": null,
+            "model_id": null,
+            "mode": "deterministic"
+          },
+          "prompt": {
+            "id": null,
+            "mode": "no_model_prompt"
+          },
+          "planner": {
+            "policy": "source-campaign-planner@2",
+            "sha256": "ea2355ec04ffadf8e8f7176d8413c9a328fdb32e833c0d214b7639c57f0c7ea4",
+            "edition_sha256": null,
+            "edition_implementation_sha256": "3eb341719cf44d10b9f121379328b65ce9640c328980ecf518f85916947ae9d1",
+            "transport_sha256": "5d022857bb9820f1a5206aaa0487c75a5bd3decfc28af36dd4dcd831bbc3796f",
+            "package_sha256": "2530cee4ce36188775e6beef49db6d350c657fd975d30c28d3652d359185f803"
+          },
+          "guardrails": {
+            "policy": "campaign-copy@3",
+            "sha256": "38a68dddea99dac754339ae46d5e52c008796ff81cab0a1d5b15775335c4098b"
+          }
+        },
+        "trace_id": "27fa035dd9e082a9f3f38676b30117ae",
+        "elapsed_ms": 6.889,
+        "fetch": [
+          "SOURCE_TIMEOUT"
+        ],
+        "source_failed": true,
+        "stop": "NO_MORE_RELEVANT_SOURCES",
+        "gap": "FEATURE_EVIDENCE",
+        "evidence_match": null,
+        "evidence": [],
+        "cta_match": null,
+        "cta_copy_match": null,
+        "writing_context_sha256": null,
+        "journey": "BLOCKED",
+        "cta": null,
+        "edits": [],
+        "failures": [],
+        "page_calls": 1,
+        "provider_calls": 0,
+        "cost_usd": 0
+      },
+      {
+        "case_id": "python-applications",
+        "split": "generalization",
+        "eval_set_id": "47c566d550b3c14d8552a12d4eafe229f148028c32e2900abc7167adefd5de6b",
+        "fixtures": {
+          "snapshot_id": "76df220804082404ecf0c9d0a0e2c4c20ec07491f5ad59cdde21c95a6ca8c597"
+        },
+        "source_mode": "publisher_replay",
+        "simulated_transport": null,
+        "version": {
+          "schema": "adzy.campaign-release@1",
+          "release": "candidate",
+          "commit": "8225d78f90b47d4d0c1e66f034b12202c32e2480",
+          "reference_commit": "4648fbc043219661023fa97d92446bec9323fba4",
+          "model": {
+            "provider": null,
+            "model_id": null,
+            "mode": "deterministic"
+          },
+          "prompt": {
+            "id": null,
+            "mode": "no_model_prompt"
+          },
+          "planner": {
+            "policy": "source-campaign-planner@2",
+            "sha256": "ea2355ec04ffadf8e8f7176d8413c9a328fdb32e833c0d214b7639c57f0c7ea4",
+            "edition_sha256": null,
+            "edition_implementation_sha256": "3eb341719cf44d10b9f121379328b65ce9640c328980ecf518f85916947ae9d1",
+            "transport_sha256": "5d022857bb9820f1a5206aaa0487c75a5bd3decfc28af36dd4dcd831bbc3796f",
+            "package_sha256": "2530cee4ce36188775e6beef49db6d350c657fd975d30c28d3652d359185f803"
+          },
+          "guardrails": {
+            "policy": "campaign-copy@3",
+            "sha256": "38a68dddea99dac754339ae46d5e52c008796ff81cab0a1d5b15775335c4098b"
+          }
+        },
+        "trace_id": "204de034320cee69fc4621bb8310fd9f",
+        "elapsed_ms": 19.616,
+        "fetch": [
+          "SOURCE_READ"
+        ],
+        "source_failed": false,
+        "stop": "DECISION_EVIDENCE_FOUND",
+        "gap": null,
+        "evidence_match": true,
+        "evidence": [
+          {
+            "scope": "Applications",
+            "quote": "The Python Package Index (PyPI) hosts thousands of third-party modules for Python.",
+            "page_url": "https://www.python.org/about/",
+            "capture_kind": "publisher_snapshot",
+            "body_sha256": "4739cc39d7deaad1540d9387f9ee8944063921d24b4e133e7f18c5f7e044f20f"
+          }
+        ],
+        "cta_match": true,
+        "cta_copy_match": null,
+        "writing_context_sha256": "aa39643a57d4b29ae6359b6a9120bd4b8f12ecba2282219af7610faaab7fd049",
+        "journey": "READY",
+        "cta": {
+          "url": "https://www.python.org/about/",
+          "evidence_index": 0,
+          "text": "Read the explanation",
+          "action": "READ_FEATURE"
+        },
+        "edits": [
+          {
+            "id": "all-modules-verified",
+            "field": "headline",
+            "supported": false,
+            "critical": true,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "EXPECTED"
+          }
+        ],
+        "failures": [],
+        "page_calls": 1,
+        "provider_calls": 0,
+        "cost_usd": 0
+      },
+      {
+        "case_id": "osm-local-knowledge",
+        "split": "development",
+        "eval_set_id": "47c566d550b3c14d8552a12d4eafe229f148028c32e2900abc7167adefd5de6b",
+        "fixtures": {
+          "snapshot_id": "45a8bb8a7dd02f76f520d62db20bd83d1cb10e13e931399e291b00d7aaaf8720"
+        },
+        "source_mode": "publisher_replay",
+        "simulated_transport": null,
+        "version": {
+          "schema": "adzy.campaign-release@1",
+          "release": "candidate",
+          "commit": "8225d78f90b47d4d0c1e66f034b12202c32e2480",
+          "reference_commit": "4648fbc043219661023fa97d92446bec9323fba4",
+          "model": {
+            "provider": null,
+            "model_id": null,
+            "mode": "deterministic"
+          },
+          "prompt": {
+            "id": null,
+            "mode": "no_model_prompt"
+          },
+          "planner": {
+            "policy": "source-campaign-planner@2",
+            "sha256": "ea2355ec04ffadf8e8f7176d8413c9a328fdb32e833c0d214b7639c57f0c7ea4",
+            "edition_sha256": null,
+            "edition_implementation_sha256": "3eb341719cf44d10b9f121379328b65ce9640c328980ecf518f85916947ae9d1",
+            "transport_sha256": "5d022857bb9820f1a5206aaa0487c75a5bd3decfc28af36dd4dcd831bbc3796f",
+            "package_sha256": "2530cee4ce36188775e6beef49db6d350c657fd975d30c28d3652d359185f803"
+          },
+          "guardrails": {
+            "policy": "campaign-copy@3",
+            "sha256": "38a68dddea99dac754339ae46d5e52c008796ff81cab0a1d5b15775335c4098b"
+          }
+        },
+        "trace_id": "60905c537258f4e9563258b3afb88538",
+        "elapsed_ms": 21.66,
+        "fetch": [
+          "SOURCE_READ"
+        ],
+        "source_failed": false,
+        "stop": "DECISION_EVIDENCE_FOUND",
+        "gap": null,
+        "evidence_match": true,
+        "evidence": [
+          {
+            "scope": "Local Knowledge",
+            "quote": "Contributors use aerial imagery, GPS devices, and low-tech field maps to verify that OSM is accurate and up to date.",
+            "page_url": "https://www.openstreetmap.org/about",
+            "capture_kind": "publisher_snapshot",
+            "body_sha256": "65f78568d179867afe510e56ad35fd25b989b890a4b48c55a68270fba50da5fe"
+          }
+        ],
+        "cta_match": true,
+        "cta_copy_match": true,
+        "writing_context_sha256": "dff9fe3b3a1daa26628aa61691dbf9e0594556fc6f9b59fe7d41d890e6628140",
+        "journey": "READY",
+        "cta": {
+          "url": "https://www.openstreetmap.org/about",
+          "evidence_index": 0,
+          "text": "Explore Local Knowledge",
+          "action": "READ_FEATURE"
+        },
+        "edits": [
+          {
+            "id": "verbatim-heading",
+            "field": "headline",
+            "supported": true,
+            "critical": false,
+            "accepted": true,
+            "observed": "Local Knowledge",
+            "reason": null,
+            "classification": "EXPECTED"
+          },
+          {
+            "id": "every-road-verified",
+            "field": "headline",
+            "supported": false,
+            "critical": true,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "EXPECTED"
+          }
+        ],
+        "failures": [],
+        "page_calls": 1,
+        "provider_calls": 0,
+        "cost_usd": 0
+      },
+      {
+        "case_id": "nasa-mars-orbit",
+        "split": "generalization",
+        "eval_set_id": "47c566d550b3c14d8552a12d4eafe229f148028c32e2900abc7167adefd5de6b",
+        "fixtures": {
+          "snapshot_id": "292c7061e201562f9f4210d548245892c5f9758ac7ff5ca3a75ad8f468dd27a5"
+        },
+        "source_mode": "publisher_replay",
+        "simulated_transport": null,
+        "version": {
+          "schema": "adzy.campaign-release@1",
+          "release": "candidate",
+          "commit": "8225d78f90b47d4d0c1e66f034b12202c32e2480",
+          "reference_commit": "4648fbc043219661023fa97d92446bec9323fba4",
+          "model": {
+            "provider": null,
+            "model_id": null,
+            "mode": "deterministic"
+          },
+          "prompt": {
+            "id": null,
+            "mode": "no_model_prompt"
+          },
+          "planner": {
+            "policy": "source-campaign-planner@2",
+            "sha256": "ea2355ec04ffadf8e8f7176d8413c9a328fdb32e833c0d214b7639c57f0c7ea4",
+            "edition_sha256": null,
+            "edition_implementation_sha256": "3eb341719cf44d10b9f121379328b65ce9640c328980ecf518f85916947ae9d1",
+            "transport_sha256": "5d022857bb9820f1a5206aaa0487c75a5bd3decfc28af36dd4dcd831bbc3796f",
+            "package_sha256": "2530cee4ce36188775e6beef49db6d350c657fd975d30c28d3652d359185f803"
+          },
+          "guardrails": {
+            "policy": "campaign-copy@3",
+            "sha256": "38a68dddea99dac754339ae46d5e52c008796ff81cab0a1d5b15775335c4098b"
+          }
+        },
+        "trace_id": "b68ccb94b9b6a4ea5ffe93224e059ba5",
+        "elapsed_ms": 24.034,
+        "fetch": [
+          "SOURCE_READ"
+        ],
+        "source_failed": false,
+        "stop": "DECISION_EVIDENCE_FOUND",
+        "gap": null,
+        "evidence_match": true,
+        "evidence": [
+          {
+            "scope": "Orbit and Rotation",
+            "quote": "As Mars orbits the Sun, it completes one rotation every 24.6 hours, which is very similar to one day on Earth (23.9 hours).",
+            "page_url": "https://science.nasa.gov/mars/facts/",
+            "capture_kind": "publisher_snapshot",
+            "body_sha256": "4d75f5e6eeebbbe1045d241302ebe8b7f98fb7bcb04f7cc4dbf732ce9304144f"
+          }
+        ],
+        "cta_match": true,
+        "cta_copy_match": true,
+        "writing_context_sha256": "1c0956826f2dd03e9662fca6264872e14999de366e29ecf477ce7319bf757a13",
+        "journey": "READY",
+        "cta": {
+          "url": "https://science.nasa.gov/mars/facts/",
+          "evidence_index": 0,
+          "text": "Explore Orbit and Rotation",
+          "action": "READ_FEATURE"
+        },
+        "edits": [
+          {
+            "id": "specific-cta",
+            "field": "cta",
+            "supported": true,
+            "critical": false,
+            "accepted": true,
+            "observed": "Explore Orbit and Rotation",
+            "reason": null,
+            "classification": "EXPECTED"
+          },
+          {
+            "id": "gravity-promise",
+            "field": "headline",
+            "supported": false,
+            "critical": true,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "EXPECTED"
+          }
+        ],
+        "failures": [],
+        "page_calls": 1,
+        "provider_calls": 0,
+        "cost_usd": 0
+      },
+      {
+        "case_id": "debian-hardware",
+        "split": "development",
+        "eval_set_id": "47c566d550b3c14d8552a12d4eafe229f148028c32e2900abc7167adefd5de6b",
+        "fixtures": {
+          "snapshot_id": "0fbd60a22b853cef920396e2a4c6f101f95b85f4a05cc1c6f00859b8117d8685"
+        },
+        "source_mode": "publisher_replay",
+        "simulated_transport": null,
+        "version": {
+          "schema": "adzy.campaign-release@1",
+          "release": "candidate",
+          "commit": "8225d78f90b47d4d0c1e66f034b12202c32e2480",
+          "reference_commit": "4648fbc043219661023fa97d92446bec9323fba4",
+          "model": {
+            "provider": null,
+            "model_id": null,
+            "mode": "deterministic"
+          },
+          "prompt": {
+            "id": null,
+            "mode": "no_model_prompt"
+          },
+          "planner": {
+            "policy": "source-campaign-planner@2",
+            "sha256": "ea2355ec04ffadf8e8f7176d8413c9a328fdb32e833c0d214b7639c57f0c7ea4",
+            "edition_sha256": null,
+            "edition_implementation_sha256": "3eb341719cf44d10b9f121379328b65ce9640c328980ecf518f85916947ae9d1",
+            "transport_sha256": "5d022857bb9820f1a5206aaa0487c75a5bd3decfc28af36dd4dcd831bbc3796f",
+            "package_sha256": "2530cee4ce36188775e6beef49db6d350c657fd975d30c28d3652d359185f803"
+          },
+          "guardrails": {
+            "policy": "campaign-copy@3",
+            "sha256": "38a68dddea99dac754339ae46d5e52c008796ff81cab0a1d5b15775335c4098b"
+          }
+        },
+        "trace_id": "ec55ccdd87667fe5604b30b255ea959a",
+        "elapsed_ms": 21.929,
+        "fetch": [
+          "SOURCE_READ"
+        ],
+        "source_failed": false,
+        "stop": "DECISION_EVIDENCE_FOUND",
+        "gap": null,
+        "evidence_match": true,
+        "evidence": [
+          {
+            "scope": "What hardware is supported?",
+            "quote": "For a complete list of currently supported ones, see the documentation for the stable release .",
+            "page_url": "https://www.debian.org/intro/about",
+            "capture_kind": "publisher_snapshot",
+            "body_sha256": "f54c31f0afc95c0d72277b7f0960d94e8e8dc303b1a0f2d44ca5e5f3ad9244a2"
+          }
+        ],
+        "cta_match": true,
+        "cta_copy_match": true,
+        "writing_context_sha256": "ba8a63c7b3ff58c34b9ebb133310c7c78b488a0269747ec6a312a1241802f69f",
+        "journey": "READY",
+        "cta": {
+          "url": "https://www.debian.org/intro/about",
+          "evidence_index": 0,
+          "text": "Read the explanation",
+          "action": "READ_FEATURE"
+        },
+        "edits": [
+          {
+            "id": "unsupported-compatibility",
+            "field": "cta",
+            "supported": false,
+            "critical": true,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "EXPECTED"
+          }
+        ],
+        "failures": [],
+        "page_calls": 1,
+        "provider_calls": 0,
+        "cost_usd": 0
+      },
+      {
+        "case_id": "sqlite-embedded-sql",
+        "split": "generalization",
+        "eval_set_id": "47c566d550b3c14d8552a12d4eafe229f148028c32e2900abc7167adefd5de6b",
+        "fixtures": {
+          "snapshot_id": "975ffff44d17675fc01e93881268998d35a6e83ccbc714c76b6671b83be795e2"
+        },
+        "source_mode": "publisher_replay",
+        "simulated_transport": null,
+        "version": {
+          "schema": "adzy.campaign-release@1",
+          "release": "candidate",
+          "commit": "8225d78f90b47d4d0c1e66f034b12202c32e2480",
+          "reference_commit": "4648fbc043219661023fa97d92446bec9323fba4",
+          "model": {
+            "provider": null,
+            "model_id": null,
+            "mode": "deterministic"
+          },
+          "prompt": {
+            "id": null,
+            "mode": "no_model_prompt"
+          },
+          "planner": {
+            "policy": "source-campaign-planner@2",
+            "sha256": "ea2355ec04ffadf8e8f7176d8413c9a328fdb32e833c0d214b7639c57f0c7ea4",
+            "edition_sha256": null,
+            "edition_implementation_sha256": "3eb341719cf44d10b9f121379328b65ce9640c328980ecf518f85916947ae9d1",
+            "transport_sha256": "5d022857bb9820f1a5206aaa0487c75a5bd3decfc28af36dd4dcd831bbc3796f",
+            "package_sha256": "2530cee4ce36188775e6beef49db6d350c657fd975d30c28d3652d359185f803"
+          },
+          "guardrails": {
+            "policy": "campaign-copy@3",
+            "sha256": "38a68dddea99dac754339ae46d5e52c008796ff81cab0a1d5b15775335c4098b"
+          }
+        },
+        "trace_id": "a456b1c4234811ec9fe4c550f46bd5cc",
+        "elapsed_ms": 21.574,
+        "fetch": [
+          "SOURCE_READ"
+        ],
+        "source_failed": false,
+        "stop": "DECISION_EVIDENCE_FOUND",
+        "gap": null,
+        "evidence_match": true,
+        "evidence": [
+          {
+            "scope": "Executive Summary",
+            "quote": "SQLite is an in-process library that implements a self-contained , serverless , zero-configuration , transactional SQL database engine.",
+            "page_url": "https://www.sqlite.org/about.html",
+            "capture_kind": "publisher_snapshot",
+            "body_sha256": "7a439332e54667d8df4f3216f020c663da8fafe7c2c63c5d827e1bf96a48a2de"
+          }
+        ],
+        "cta_match": true,
+        "cta_copy_match": true,
+        "writing_context_sha256": "72598da3ecffff5e5ab86af68331c53724f4e08ae1092c644433f3a550f9841d",
+        "journey": "READY",
+        "cta": {
+          "url": "https://www.sqlite.org/about.html",
+          "evidence_index": 0,
+          "text": "اقرأ عن Executive Summary",
+          "action": "READ_FEATURE"
+        },
+        "edits": [
+          {
+            "id": "specific-cta",
+            "field": "cta",
+            "supported": true,
+            "critical": false,
+            "accepted": true,
+            "observed": "اقرأ عن Executive Summary",
+            "reason": null,
+            "classification": "EXPECTED"
+          },
+          {
+            "id": "unsupported-sqlite-guarantee",
+            "field": "headline",
+            "supported": false,
+            "critical": true,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "EXPECTED"
+          }
+        ],
+        "failures": [],
+        "page_calls": 1,
+        "provider_calls": 0,
+        "cost_usd": 0
+      }
+    ]
+  },
+  "gate": {
+    "decision": "ELIGIBLE_FOR_LOCAL_RELEASE",
+    "blockers": [],
+    "restored_edits": [
+      {
+        "case": "five-guys-bacon",
+        "edit": "specific-cta",
+        "split": "development"
+      },
+      {
+        "case": "nandos-wrap",
+        "edit": "specific-cta",
+        "split": "development"
+      },
+      {
+        "case": "nandos-wrap",
+        "edit": "verbatim-heading",
+        "split": "development"
+      },
+      {
+        "case": "osm-local-knowledge",
+        "edit": "verbatim-heading",
+        "split": "development"
+      },
+      {
+        "case": "nasa-mars-orbit",
+        "edit": "specific-cta",
+        "split": "generalization"
+      },
+      {
+        "case": "sqlite-embedded-sql",
+        "edit": "specific-cta",
+        "split": "generalization"
+      }
+    ],
+    "default_release": "stable"
+  },
+  "langfuse_spans": [
+    {
+      "name": "campaign.fetch",
+      "trace_id": "0d1cdb0d296111e23edff40c031074e7",
+      "span_id": "f4e93aa86c5db704",
+      "parent_span_id": "468e9b479ca7b0c1",
+      "elapsed_ms": 0.617,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"0d1cdb0d296111e23edff40c031074e7\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"reason\": \"SOURCE_READ\", \"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.fetch",
+      "trace_id": "0d1cdb0d296111e23edff40c031074e7",
+      "span_id": "9dcfffc7f9fbb17e",
+      "parent_span_id": "468e9b479ca7b0c1",
+      "elapsed_ms": 0.644,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"0d1cdb0d296111e23edff40c031074e7\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"reason\": \"SOURCE_READ\", \"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.fetch",
+      "trace_id": "0d1cdb0d296111e23edff40c031074e7",
+      "span_id": "55b46cb7288da924",
+      "parent_span_id": "468e9b479ca7b0c1",
+      "elapsed_ms": 0.621,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"0d1cdb0d296111e23edff40c031074e7\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"reason\": \"SOURCE_READ\", \"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.fetch",
+      "trace_id": "0d1cdb0d296111e23edff40c031074e7",
+      "span_id": "454001d1ba8e3b7b",
+      "parent_span_id": "468e9b479ca7b0c1",
+      "elapsed_ms": 0.997,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"0d1cdb0d296111e23edff40c031074e7\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"reason\": \"SOURCE_READ\", \"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.research",
+      "trace_id": "0d1cdb0d296111e23edff40c031074e7",
+      "span_id": "468e9b479ca7b0c1",
+      "parent_span_id": "88a37138c144befa",
+      "elapsed_ms": 15.443,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"0d1cdb0d296111e23edff40c031074e7\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"reason\": \"DECISION_EVIDENCE_FOUND\", \"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.select_evidence",
+      "trace_id": "0d1cdb0d296111e23edff40c031074e7",
+      "span_id": "95c19640ac228fe2",
+      "parent_span_id": "88a37138c144befa",
+      "elapsed_ms": 0.936,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"0d1cdb0d296111e23edff40c031074e7\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\", \"evidence_hash\": \"53c6aa56a48c4081cb837e17c5be8e72c68802aec7c2ba22e43f6f6596d73082\"}"
+      }
+    },
+    {
+      "name": "campaign.write_copy",
+      "trace_id": "0d1cdb0d296111e23edff40c031074e7",
+      "span_id": "08c15f160bd27285",
+      "parent_span_id": "88a37138c144befa",
+      "elapsed_ms": 2.02,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"0d1cdb0d296111e23edff40c031074e7\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "0d1cdb0d296111e23edff40c031074e7",
+      "span_id": "0ef7538d2b7bd435",
+      "parent_span_id": "88a37138c144befa",
+      "elapsed_ms": 1.771,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"0d1cdb0d296111e23edff40c031074e7\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "0d1cdb0d296111e23edff40c031074e7",
+      "span_id": "67100b0819bd7567",
+      "parent_span_id": "88a37138c144befa",
+      "elapsed_ms": 1.59,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"0d1cdb0d296111e23edff40c031074e7\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "0d1cdb0d296111e23edff40c031074e7",
+      "span_id": "28bcec736cfb582f",
+      "parent_span_id": "88a37138c144befa",
+      "elapsed_ms": 0.831,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"0d1cdb0d296111e23edff40c031074e7\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "ERROR",
+        "langfuse.observation.output": "{\"reason\": \"COPY_REQUIRES_EVIDENCE_REVIEW\", \"status\": \"ERROR\"}"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "0d1cdb0d296111e23edff40c031074e7",
+      "span_id": "5474fe37bd3c6995",
+      "parent_span_id": "88a37138c144befa",
+      "elapsed_ms": 0.887,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"0d1cdb0d296111e23edff40c031074e7\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "ERROR",
+        "langfuse.observation.output": "{\"reason\": \"COPY_REQUIRES_EVIDENCE_REVIEW\", \"status\": \"ERROR\"}"
+      }
+    },
+    {
+      "name": "campaign.eval",
+      "trace_id": "0d1cdb0d296111e23edff40c031074e7",
+      "span_id": "88a37138c144befa",
+      "parent_span_id": "8897d250d22d06e3",
+      "elapsed_ms": 32.927,
+      "attributes": {
+        "langfuse.internal.is_app_root": true,
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"0d1cdb0d296111e23edff40c031074e7\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.internal.as_root": true,
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.fetch",
+      "trace_id": "23610f14531528c283f57b7a66c023bf",
+      "span_id": "601ee2f53c871468",
+      "parent_span_id": "b6891e429b8cb55f",
+      "elapsed_ms": 1.272,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"23610f14531528c283f57b7a66c023bf\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"reason\": \"SOURCE_READ\", \"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.select_evidence",
+      "trace_id": "23610f14531528c283f57b7a66c023bf",
+      "span_id": "1b106087027884ed",
+      "parent_span_id": "b6891e429b8cb55f",
+      "elapsed_ms": 1.112,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"23610f14531528c283f57b7a66c023bf\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\", \"evidence_hash\": \"e3460ee9f5a3a2eca1dc653314caf00309488bc92f2ad0598ff75fdf318831a8\"}"
+      }
+    },
+    {
+      "name": "campaign.research",
+      "trace_id": "23610f14531528c283f57b7a66c023bf",
+      "span_id": "b6891e429b8cb55f",
+      "parent_span_id": "2fe5e202dea0b434",
+      "elapsed_ms": 17.12,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"23610f14531528c283f57b7a66c023bf\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"reason\": \"DECISION_EVIDENCE_FOUND\", \"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.write_copy",
+      "trace_id": "23610f14531528c283f57b7a66c023bf",
+      "span_id": "efba75bfb351e066",
+      "parent_span_id": "2fe5e202dea0b434",
+      "elapsed_ms": 5.486,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"23610f14531528c283f57b7a66c023bf\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "23610f14531528c283f57b7a66c023bf",
+      "span_id": "a978f5cdf7a11ffa",
+      "parent_span_id": "2fe5e202dea0b434",
+      "elapsed_ms": 1.701,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"23610f14531528c283f57b7a66c023bf\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "23610f14531528c283f57b7a66c023bf",
+      "span_id": "100974228d2a40f8",
+      "parent_span_id": "2fe5e202dea0b434",
+      "elapsed_ms": 1.17,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"23610f14531528c283f57b7a66c023bf\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "ERROR",
+        "langfuse.observation.output": "{\"reason\": \"COPY_REQUIRES_EVIDENCE_REVIEW\", \"status\": \"ERROR\"}"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "23610f14531528c283f57b7a66c023bf",
+      "span_id": "1c32da7b26416b84",
+      "parent_span_id": "2fe5e202dea0b434",
+      "elapsed_ms": 0.993,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"23610f14531528c283f57b7a66c023bf\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "ERROR",
+        "langfuse.observation.output": "{\"reason\": \"COPY_REQUIRES_EVIDENCE_REVIEW\", \"status\": \"ERROR\"}"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "23610f14531528c283f57b7a66c023bf",
+      "span_id": "33b66d4a2a1969a2",
+      "parent_span_id": "2fe5e202dea0b434",
+      "elapsed_ms": 0.924,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"23610f14531528c283f57b7a66c023bf\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "ERROR",
+        "langfuse.observation.output": "{\"reason\": \"COPY_REQUIRES_EVIDENCE_REVIEW\", \"status\": \"ERROR\"}"
+      }
+    },
+    {
+      "name": "campaign.eval",
+      "trace_id": "23610f14531528c283f57b7a66c023bf",
+      "span_id": "2fe5e202dea0b434",
+      "parent_span_id": "e44fd402aeb01088",
+      "elapsed_ms": 31.545,
+      "attributes": {
+        "langfuse.internal.is_app_root": true,
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"23610f14531528c283f57b7a66c023bf\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.internal.as_root": true,
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.fetch",
+      "trace_id": "d7d5c19f28fc913a31c63566d3264ba6",
+      "span_id": "9bdc10f32f51fa64",
+      "parent_span_id": "473dfb99d3aa61dc",
+      "elapsed_ms": 0.653,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"d7d5c19f28fc913a31c63566d3264ba6\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"reason\": \"SOURCE_READ\", \"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.select_evidence",
+      "trace_id": "d7d5c19f28fc913a31c63566d3264ba6",
+      "span_id": "8d9e3476c00a2075",
+      "parent_span_id": "473dfb99d3aa61dc",
+      "elapsed_ms": 1.368,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"d7d5c19f28fc913a31c63566d3264ba6\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\", \"evidence_hash\": \"b92ec87fbcc2b1633e8dc61ceeaf053c2da2bae64282fca3e8644ca540f5a6ae\"}"
+      }
+    },
+    {
+      "name": "campaign.research",
+      "trace_id": "d7d5c19f28fc913a31c63566d3264ba6",
+      "span_id": "473dfb99d3aa61dc",
+      "parent_span_id": "5828408a75644123",
+      "elapsed_ms": 16.639,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"d7d5c19f28fc913a31c63566d3264ba6\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"reason\": \"DECISION_EVIDENCE_FOUND\", \"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.write_copy",
+      "trace_id": "d7d5c19f28fc913a31c63566d3264ba6",
+      "span_id": "50e5671ce12056db",
+      "parent_span_id": "5828408a75644123",
+      "elapsed_ms": 2.415,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"d7d5c19f28fc913a31c63566d3264ba6\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "d7d5c19f28fc913a31c63566d3264ba6",
+      "span_id": "f21924b4ba40426a",
+      "parent_span_id": "5828408a75644123",
+      "elapsed_ms": 2.736,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"d7d5c19f28fc913a31c63566d3264ba6\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "d7d5c19f28fc913a31c63566d3264ba6",
+      "span_id": "3a73da9a1361408e",
+      "parent_span_id": "5828408a75644123",
+      "elapsed_ms": 1.287,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"d7d5c19f28fc913a31c63566d3264ba6\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "ERROR",
+        "langfuse.observation.output": "{\"reason\": \"COPY_REQUIRES_EVIDENCE_REVIEW\", \"status\": \"ERROR\"}"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "d7d5c19f28fc913a31c63566d3264ba6",
+      "span_id": "6055135fdb77c1d7",
+      "parent_span_id": "5828408a75644123",
+      "elapsed_ms": 1.066,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"d7d5c19f28fc913a31c63566d3264ba6\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "ERROR",
+        "langfuse.observation.output": "{\"reason\": \"COPY_REQUIRES_EVIDENCE_REVIEW\", \"status\": \"ERROR\"}"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "d7d5c19f28fc913a31c63566d3264ba6",
+      "span_id": "fcec3472f4ee07a3",
+      "parent_span_id": "5828408a75644123",
+      "elapsed_ms": 0.998,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"d7d5c19f28fc913a31c63566d3264ba6\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "ERROR",
+        "langfuse.observation.output": "{\"reason\": \"COPY_REQUIRES_EVIDENCE_REVIEW\", \"status\": \"ERROR\"}"
+      }
+    },
+    {
+      "name": "campaign.eval",
+      "trace_id": "d7d5c19f28fc913a31c63566d3264ba6",
+      "span_id": "5828408a75644123",
+      "parent_span_id": "432218ae9d207095",
+      "elapsed_ms": 28.636,
+      "attributes": {
+        "langfuse.internal.is_app_root": true,
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"d7d5c19f28fc913a31c63566d3264ba6\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.internal.as_root": true,
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.fetch",
+      "trace_id": "4d235b4491d47990fca59ff8febcc959",
+      "span_id": "5f7227259b4ce9f3",
+      "parent_span_id": "a920fb43d9607ad4",
+      "elapsed_ms": 15.487,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"simulated_transport\"",
+        "langfuse.observation.metadata.workflow_ref": "\"4d235b4491d47990fca59ff8febcc959\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"reason\": \"PAGE_TOO_LARGE\", \"status\": \"ERROR\"}"
+      }
+    },
+    {
+      "name": "campaign.select_evidence",
+      "trace_id": "4d235b4491d47990fca59ff8febcc959",
+      "span_id": "d4afacbb2f8c3f17",
+      "parent_span_id": "a920fb43d9607ad4",
+      "elapsed_ms": 0.71,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"simulated_transport\"",
+        "langfuse.observation.metadata.workflow_ref": "\"4d235b4491d47990fca59ff8febcc959\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"reason\": \"FEATURE_EVIDENCE\", \"status\": \"BLOCKED\"}"
+      }
+    },
+    {
+      "name": "campaign.research",
+      "trace_id": "4d235b4491d47990fca59ff8febcc959",
+      "span_id": "a920fb43d9607ad4",
+      "parent_span_id": "44fcf2c1ee15bfb1",
+      "elapsed_ms": 17.808,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"simulated_transport\"",
+        "langfuse.observation.metadata.workflow_ref": "\"4d235b4491d47990fca59ff8febcc959\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"reason\": \"NO_MORE_RELEVANT_SOURCES\", \"status\": \"BLOCKED\"}"
+      }
+    },
+    {
+      "name": "campaign.eval",
+      "trace_id": "4d235b4491d47990fca59ff8febcc959",
+      "span_id": "44fcf2c1ee15bfb1",
+      "parent_span_id": "f2a666d55db6095a",
+      "elapsed_ms": 19.596,
+      "attributes": {
+        "langfuse.internal.is_app_root": true,
+        "langfuse.observation.metadata.source_mode": "\"simulated_transport\"",
+        "langfuse.observation.metadata.workflow_ref": "\"4d235b4491d47990fca59ff8febcc959\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.internal.as_root": true,
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.fetch",
+      "trace_id": "31b13d4f9a4946ad07ca0c68cadca4d9",
+      "span_id": "17f6fe102b5a40f7",
+      "parent_span_id": "027b0eb4f27707a7",
+      "elapsed_ms": 0.997,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"simulated_transport\"",
+        "langfuse.observation.metadata.workflow_ref": "\"31b13d4f9a4946ad07ca0c68cadca4d9\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"reason\": \"SOURCE_TIMEOUT\", \"status\": \"ERROR\"}"
+      }
+    },
+    {
+      "name": "campaign.select_evidence",
+      "trace_id": "31b13d4f9a4946ad07ca0c68cadca4d9",
+      "span_id": "8285d69cbc7c5b0f",
+      "parent_span_id": "027b0eb4f27707a7",
+      "elapsed_ms": 0.736,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"simulated_transport\"",
+        "langfuse.observation.metadata.workflow_ref": "\"31b13d4f9a4946ad07ca0c68cadca4d9\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"reason\": \"FEATURE_EVIDENCE\", \"status\": \"BLOCKED\"}"
+      }
+    },
+    {
+      "name": "campaign.research",
+      "trace_id": "31b13d4f9a4946ad07ca0c68cadca4d9",
+      "span_id": "027b0eb4f27707a7",
+      "parent_span_id": "add26b7c88b9d165",
+      "elapsed_ms": 3.437,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"simulated_transport\"",
+        "langfuse.observation.metadata.workflow_ref": "\"31b13d4f9a4946ad07ca0c68cadca4d9\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"reason\": \"NO_MORE_RELEVANT_SOURCES\", \"status\": \"BLOCKED\"}"
+      }
+    },
+    {
+      "name": "campaign.eval",
+      "trace_id": "31b13d4f9a4946ad07ca0c68cadca4d9",
+      "span_id": "add26b7c88b9d165",
+      "parent_span_id": "de0276794eccf89a",
+      "elapsed_ms": 6.038,
+      "attributes": {
+        "langfuse.internal.is_app_root": true,
+        "langfuse.observation.metadata.source_mode": "\"simulated_transport\"",
+        "langfuse.observation.metadata.workflow_ref": "\"31b13d4f9a4946ad07ca0c68cadca4d9\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.internal.as_root": true,
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.fetch",
+      "trace_id": "21b3ec82b825e1c37de77e6f668b6b9b",
+      "span_id": "faea8dcd56fc1a2e",
+      "parent_span_id": "f6cd20e284bbe492",
+      "elapsed_ms": 0.684,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"21b3ec82b825e1c37de77e6f668b6b9b\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"reason\": \"SOURCE_READ\", \"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.select_evidence",
+      "trace_id": "21b3ec82b825e1c37de77e6f668b6b9b",
+      "span_id": "f474461c3e3f2b14",
+      "parent_span_id": "f6cd20e284bbe492",
+      "elapsed_ms": 1.433,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"21b3ec82b825e1c37de77e6f668b6b9b\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\", \"evidence_hash\": \"ac047f6badd7359970b3850b5a29263231af69bd7f710412322511d187409b1a\"}"
+      }
+    },
+    {
+      "name": "campaign.research",
+      "trace_id": "21b3ec82b825e1c37de77e6f668b6b9b",
+      "span_id": "f6cd20e284bbe492",
+      "parent_span_id": "7277b262cd145b86",
+      "elapsed_ms": 9.569,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"21b3ec82b825e1c37de77e6f668b6b9b\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"reason\": \"DECISION_EVIDENCE_FOUND\", \"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.write_copy",
+      "trace_id": "21b3ec82b825e1c37de77e6f668b6b9b",
+      "span_id": "f306e55b39ad88cc",
+      "parent_span_id": "7277b262cd145b86",
+      "elapsed_ms": 1.55,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"21b3ec82b825e1c37de77e6f668b6b9b\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "21b3ec82b825e1c37de77e6f668b6b9b",
+      "span_id": "ae29da12c8b7c57b",
+      "parent_span_id": "7277b262cd145b86",
+      "elapsed_ms": 1.397,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"21b3ec82b825e1c37de77e6f668b6b9b\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "21b3ec82b825e1c37de77e6f668b6b9b",
+      "span_id": "bfe1f2666992e528",
+      "parent_span_id": "7277b262cd145b86",
+      "elapsed_ms": 1.234,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"21b3ec82b825e1c37de77e6f668b6b9b\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "ERROR",
+        "langfuse.observation.output": "{\"reason\": \"COPY_REQUIRES_EVIDENCE_REVIEW\", \"status\": \"ERROR\"}"
+      }
+    },
+    {
+      "name": "campaign.eval",
+      "trace_id": "21b3ec82b825e1c37de77e6f668b6b9b",
+      "span_id": "7277b262cd145b86",
+      "parent_span_id": "36685531a7da2639",
+      "elapsed_ms": 17.566,
+      "attributes": {
+        "langfuse.internal.is_app_root": true,
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"21b3ec82b825e1c37de77e6f668b6b9b\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.internal.as_root": true,
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.fetch",
+      "trace_id": "c23194bce70400ab0eee8e14216f5d3f",
+      "span_id": "6fb3571c3d80e9f1",
+      "parent_span_id": "c536271d7500bea5",
+      "elapsed_ms": 0.565,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"c23194bce70400ab0eee8e14216f5d3f\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"reason\": \"SOURCE_READ\", \"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.select_evidence",
+      "trace_id": "c23194bce70400ab0eee8e14216f5d3f",
+      "span_id": "d13e1d662ba33212",
+      "parent_span_id": "c536271d7500bea5",
+      "elapsed_ms": 1.666,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"c23194bce70400ab0eee8e14216f5d3f\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\", \"evidence_hash\": \"26aeace85a9927a4f679a0149563ec025dce0514e01d947779e0be5d30893804\"}"
+      }
+    },
+    {
+      "name": "campaign.research",
+      "trace_id": "c23194bce70400ab0eee8e14216f5d3f",
+      "span_id": "c536271d7500bea5",
+      "parent_span_id": "d82dca74513d5444",
+      "elapsed_ms": 10.324,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"c23194bce70400ab0eee8e14216f5d3f\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"reason\": \"DECISION_EVIDENCE_FOUND\", \"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.write_copy",
+      "trace_id": "c23194bce70400ab0eee8e14216f5d3f",
+      "span_id": "4dc0411e33e6e5f6",
+      "parent_span_id": "d82dca74513d5444",
+      "elapsed_ms": 2.49,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"c23194bce70400ab0eee8e14216f5d3f\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "c23194bce70400ab0eee8e14216f5d3f",
+      "span_id": "486fa179472ef510",
+      "parent_span_id": "d82dca74513d5444",
+      "elapsed_ms": 1.797,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"c23194bce70400ab0eee8e14216f5d3f\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "c23194bce70400ab0eee8e14216f5d3f",
+      "span_id": "52b90c11302cc9c6",
+      "parent_span_id": "d82dca74513d5444",
+      "elapsed_ms": 1.467,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"c23194bce70400ab0eee8e14216f5d3f\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "ERROR",
+        "langfuse.observation.output": "{\"reason\": \"COPY_REQUIRES_EVIDENCE_REVIEW\", \"status\": \"ERROR\"}"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "c23194bce70400ab0eee8e14216f5d3f",
+      "span_id": "b68687cfc1790b9b",
+      "parent_span_id": "d82dca74513d5444",
+      "elapsed_ms": 0.95,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"c23194bce70400ab0eee8e14216f5d3f\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "ERROR",
+        "langfuse.observation.output": "{\"reason\": \"COPY_REQUIRES_EVIDENCE_REVIEW\", \"status\": \"ERROR\"}"
+      }
+    },
+    {
+      "name": "campaign.eval",
+      "trace_id": "c23194bce70400ab0eee8e14216f5d3f",
+      "span_id": "d82dca74513d5444",
+      "parent_span_id": "942a27a04d4fabb8",
+      "elapsed_ms": 19.987,
+      "attributes": {
+        "langfuse.internal.is_app_root": true,
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"c23194bce70400ab0eee8e14216f5d3f\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.internal.as_root": true,
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.fetch",
+      "trace_id": "f1bf45d842fd87e7fb8b712895dfd390",
+      "span_id": "d5cd2c2b2d1bfb42",
+      "parent_span_id": "847095cbf8f30a8b",
+      "elapsed_ms": 0.913,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"f1bf45d842fd87e7fb8b712895dfd390\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"reason\": \"SOURCE_READ\", \"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.select_evidence",
+      "trace_id": "f1bf45d842fd87e7fb8b712895dfd390",
+      "span_id": "fc5723f8ab3de961",
+      "parent_span_id": "847095cbf8f30a8b",
+      "elapsed_ms": 2.074,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"f1bf45d842fd87e7fb8b712895dfd390\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\", \"evidence_hash\": \"7a013fbc3204e7496bdfafa64df4a7ef3d80e0c3bc044c83d9863852a42b0496\"}"
+      }
+    },
+    {
+      "name": "campaign.research",
+      "trace_id": "f1bf45d842fd87e7fb8b712895dfd390",
+      "span_id": "847095cbf8f30a8b",
+      "parent_span_id": "aec520b21e435702",
+      "elapsed_ms": 13.039,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"f1bf45d842fd87e7fb8b712895dfd390\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"reason\": \"DECISION_EVIDENCE_FOUND\", \"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.write_copy",
+      "trace_id": "f1bf45d842fd87e7fb8b712895dfd390",
+      "span_id": "2fb89442e553757b",
+      "parent_span_id": "aec520b21e435702",
+      "elapsed_ms": 2.102,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"f1bf45d842fd87e7fb8b712895dfd390\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "f1bf45d842fd87e7fb8b712895dfd390",
+      "span_id": "1f6bcc32f2247782",
+      "parent_span_id": "aec520b21e435702",
+      "elapsed_ms": 1.677,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"f1bf45d842fd87e7fb8b712895dfd390\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "f1bf45d842fd87e7fb8b712895dfd390",
+      "span_id": "dec0564dbe1463db",
+      "parent_span_id": "aec520b21e435702",
+      "elapsed_ms": 0.984,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"f1bf45d842fd87e7fb8b712895dfd390\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "ERROR",
+        "langfuse.observation.output": "{\"reason\": \"COPY_REQUIRES_EVIDENCE_REVIEW\", \"status\": \"ERROR\"}"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "f1bf45d842fd87e7fb8b712895dfd390",
+      "span_id": "d2c15562c0069380",
+      "parent_span_id": "aec520b21e435702",
+      "elapsed_ms": 1.057,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"f1bf45d842fd87e7fb8b712895dfd390\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "ERROR",
+        "langfuse.observation.output": "{\"reason\": \"COPY_REQUIRES_EVIDENCE_REVIEW\", \"status\": \"ERROR\"}"
+      }
+    },
+    {
+      "name": "campaign.eval",
+      "trace_id": "f1bf45d842fd87e7fb8b712895dfd390",
+      "span_id": "aec520b21e435702",
+      "parent_span_id": "99a8d46ed03863fb",
+      "elapsed_ms": 21.885,
+      "attributes": {
+        "langfuse.internal.is_app_root": true,
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"f1bf45d842fd87e7fb8b712895dfd390\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.internal.as_root": true,
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.fetch",
+      "trace_id": "3d9e04c03b3fde5f3dafabff7b0311fa",
+      "span_id": "0a400344a9b02c0e",
+      "parent_span_id": "cb9e88c5f8e893ac",
+      "elapsed_ms": 0.756,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"3d9e04c03b3fde5f3dafabff7b0311fa\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"reason\": \"SOURCE_READ\", \"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.select_evidence",
+      "trace_id": "3d9e04c03b3fde5f3dafabff7b0311fa",
+      "span_id": "ca16f7582bf7fdb0",
+      "parent_span_id": "cb9e88c5f8e893ac",
+      "elapsed_ms": 4.299,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"3d9e04c03b3fde5f3dafabff7b0311fa\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\", \"evidence_hash\": \"e03ff977c62230f41341db590f4fa523b9a815580140b0d4dca86b61984ca7ec\"}"
+      }
+    },
+    {
+      "name": "campaign.research",
+      "trace_id": "3d9e04c03b3fde5f3dafabff7b0311fa",
+      "span_id": "cb9e88c5f8e893ac",
+      "parent_span_id": "521cca49f9c949a1",
+      "elapsed_ms": 22.179,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"3d9e04c03b3fde5f3dafabff7b0311fa\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"reason\": \"DECISION_EVIDENCE_FOUND\", \"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.write_copy",
+      "trace_id": "3d9e04c03b3fde5f3dafabff7b0311fa",
+      "span_id": "f39819103a1ecd18",
+      "parent_span_id": "521cca49f9c949a1",
+      "elapsed_ms": 4.908,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"3d9e04c03b3fde5f3dafabff7b0311fa\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "3d9e04c03b3fde5f3dafabff7b0311fa",
+      "span_id": "3894360f4fe01514",
+      "parent_span_id": "521cca49f9c949a1",
+      "elapsed_ms": 4.471,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"3d9e04c03b3fde5f3dafabff7b0311fa\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "3d9e04c03b3fde5f3dafabff7b0311fa",
+      "span_id": "345a374f97a181e1",
+      "parent_span_id": "521cca49f9c949a1",
+      "elapsed_ms": 2.827,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"3d9e04c03b3fde5f3dafabff7b0311fa\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "ERROR",
+        "langfuse.observation.output": "{\"reason\": \"COPY_REQUIRES_EVIDENCE_REVIEW\", \"status\": \"ERROR\"}"
+      }
+    },
+    {
+      "name": "campaign.eval",
+      "trace_id": "3d9e04c03b3fde5f3dafabff7b0311fa",
+      "span_id": "521cca49f9c949a1",
+      "parent_span_id": "16b7c612625fe89d",
+      "elapsed_ms": 39.298,
+      "attributes": {
+        "langfuse.internal.is_app_root": true,
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"3d9e04c03b3fde5f3dafabff7b0311fa\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.internal.as_root": true,
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.fetch",
+      "trace_id": "8095dea791ff15280bad8a432484b985",
+      "span_id": "ee65822529e03ba2",
+      "parent_span_id": "139bc390d7d75f0b",
+      "elapsed_ms": 0.711,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"8095dea791ff15280bad8a432484b985\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"reason\": \"SOURCE_READ\", \"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.select_evidence",
+      "trace_id": "8095dea791ff15280bad8a432484b985",
+      "span_id": "5cb14f0cc86a7add",
+      "parent_span_id": "139bc390d7d75f0b",
+      "elapsed_ms": 1.8,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"8095dea791ff15280bad8a432484b985\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\", \"evidence_hash\": \"e58d0063b23e5c5b9550c9d4ea5114073170492a77be7ad0788eeafc92ab2fca\"}"
+      }
+    },
+    {
+      "name": "campaign.research",
+      "trace_id": "8095dea791ff15280bad8a432484b985",
+      "span_id": "139bc390d7d75f0b",
+      "parent_span_id": "1ec4088903fdefbd",
+      "elapsed_ms": 12.015,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"8095dea791ff15280bad8a432484b985\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"reason\": \"DECISION_EVIDENCE_FOUND\", \"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.write_copy",
+      "trace_id": "8095dea791ff15280bad8a432484b985",
+      "span_id": "37541d5863f8c740",
+      "parent_span_id": "1ec4088903fdefbd",
+      "elapsed_ms": 1.953,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"8095dea791ff15280bad8a432484b985\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "8095dea791ff15280bad8a432484b985",
+      "span_id": "ab22500dc09a30b1",
+      "parent_span_id": "1ec4088903fdefbd",
+      "elapsed_ms": 1.698,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"8095dea791ff15280bad8a432484b985\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "8095dea791ff15280bad8a432484b985",
+      "span_id": "3827b0d593ae8531",
+      "parent_span_id": "1ec4088903fdefbd",
+      "elapsed_ms": 1.241,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"8095dea791ff15280bad8a432484b985\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "ERROR",
+        "langfuse.observation.output": "{\"reason\": \"COPY_REQUIRES_EVIDENCE_REVIEW\", \"status\": \"ERROR\"}"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "8095dea791ff15280bad8a432484b985",
+      "span_id": "06606d8471b98a0a",
+      "parent_span_id": "1ec4088903fdefbd",
+      "elapsed_ms": 0.974,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"8095dea791ff15280bad8a432484b985\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "ERROR",
+        "langfuse.observation.output": "{\"reason\": \"COPY_REQUIRES_EVIDENCE_REVIEW\", \"status\": \"ERROR\"}"
+      }
+    },
+    {
+      "name": "campaign.eval",
+      "trace_id": "8095dea791ff15280bad8a432484b985",
+      "span_id": "1ec4088903fdefbd",
+      "parent_span_id": "fbb779d482fc77b4",
+      "elapsed_ms": 20.842,
+      "attributes": {
+        "langfuse.internal.is_app_root": true,
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"8095dea791ff15280bad8a432484b985\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.internal.as_root": true,
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.fetch",
+      "trace_id": "de4d453cff090a8e79d00e50ee85d7b1",
+      "span_id": "d69c42b21841c8bb",
+      "parent_span_id": "9cc1749541c5cdf8",
+      "elapsed_ms": 0.538,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"de4d453cff090a8e79d00e50ee85d7b1\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"reason\": \"SOURCE_READ\", \"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.fetch",
+      "trace_id": "de4d453cff090a8e79d00e50ee85d7b1",
+      "span_id": "190088e596904cdd",
+      "parent_span_id": "9cc1749541c5cdf8",
+      "elapsed_ms": 0.943,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"de4d453cff090a8e79d00e50ee85d7b1\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"reason\": \"SOURCE_READ\", \"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.fetch",
+      "trace_id": "de4d453cff090a8e79d00e50ee85d7b1",
+      "span_id": "6024816c945c9cda",
+      "parent_span_id": "9cc1749541c5cdf8",
+      "elapsed_ms": 0.562,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"de4d453cff090a8e79d00e50ee85d7b1\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"reason\": \"SOURCE_READ\", \"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.fetch",
+      "trace_id": "de4d453cff090a8e79d00e50ee85d7b1",
+      "span_id": "a978d4179d80eec7",
+      "parent_span_id": "9cc1749541c5cdf8",
+      "elapsed_ms": 0.554,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"de4d453cff090a8e79d00e50ee85d7b1\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"reason\": \"SOURCE_READ\", \"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.research",
+      "trace_id": "de4d453cff090a8e79d00e50ee85d7b1",
+      "span_id": "9cc1749541c5cdf8",
+      "parent_span_id": "3b3bb719064fdca5",
+      "elapsed_ms": 9.741,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"de4d453cff090a8e79d00e50ee85d7b1\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"reason\": \"DECISION_EVIDENCE_FOUND\", \"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.select_evidence",
+      "trace_id": "de4d453cff090a8e79d00e50ee85d7b1",
+      "span_id": "1888aa81786d396c",
+      "parent_span_id": "3b3bb719064fdca5",
+      "elapsed_ms": 0.597,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"de4d453cff090a8e79d00e50ee85d7b1\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\", \"evidence_hash\": \"53c6aa56a48c4081cb837e17c5be8e72c68802aec7c2ba22e43f6f6596d73082\"}"
+      }
+    },
+    {
+      "name": "campaign.write_copy",
+      "trace_id": "de4d453cff090a8e79d00e50ee85d7b1",
+      "span_id": "e5a0757f058ec3e8",
+      "parent_span_id": "3b3bb719064fdca5",
+      "elapsed_ms": 1.676,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"de4d453cff090a8e79d00e50ee85d7b1\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "de4d453cff090a8e79d00e50ee85d7b1",
+      "span_id": "173ed6df7e731cbd",
+      "parent_span_id": "3b3bb719064fdca5",
+      "elapsed_ms": 1.461,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"de4d453cff090a8e79d00e50ee85d7b1\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "de4d453cff090a8e79d00e50ee85d7b1",
+      "span_id": "9925fb2167d25dba",
+      "parent_span_id": "3b3bb719064fdca5",
+      "elapsed_ms": 1.613,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"de4d453cff090a8e79d00e50ee85d7b1\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "de4d453cff090a8e79d00e50ee85d7b1",
+      "span_id": "61f0d713cb28b7d6",
+      "parent_span_id": "3b3bb719064fdca5",
+      "elapsed_ms": 0.78,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"de4d453cff090a8e79d00e50ee85d7b1\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "ERROR",
+        "langfuse.observation.output": "{\"reason\": \"COPY_REQUIRES_EVIDENCE_REVIEW\", \"status\": \"ERROR\"}"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "de4d453cff090a8e79d00e50ee85d7b1",
+      "span_id": "ac86dc9e02376581",
+      "parent_span_id": "3b3bb719064fdca5",
+      "elapsed_ms": 1.077,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"de4d453cff090a8e79d00e50ee85d7b1\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "ERROR",
+        "langfuse.observation.output": "{\"reason\": \"COPY_REQUIRES_EVIDENCE_REVIEW\", \"status\": \"ERROR\"}"
+      }
+    },
+    {
+      "name": "campaign.eval",
+      "trace_id": "de4d453cff090a8e79d00e50ee85d7b1",
+      "span_id": "3b3bb719064fdca5",
+      "parent_span_id": "2eb28431b331ba4c",
+      "elapsed_ms": 21.07,
+      "attributes": {
+        "langfuse.internal.is_app_root": true,
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"de4d453cff090a8e79d00e50ee85d7b1\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.internal.as_root": true,
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.fetch",
+      "trace_id": "677c2b11db5d5b931c4de2de812b7a36",
+      "span_id": "cf29600cde333b3d",
+      "parent_span_id": "4671822bf7e5d78a",
+      "elapsed_ms": 0.582,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"677c2b11db5d5b931c4de2de812b7a36\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"reason\": \"SOURCE_READ\", \"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.select_evidence",
+      "trace_id": "677c2b11db5d5b931c4de2de812b7a36",
+      "span_id": "c73f10b810723364",
+      "parent_span_id": "4671822bf7e5d78a",
+      "elapsed_ms": 1.933,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"677c2b11db5d5b931c4de2de812b7a36\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\", \"evidence_hash\": \"e3460ee9f5a3a2eca1dc653314caf00309488bc92f2ad0598ff75fdf318831a8\"}"
+      }
+    },
+    {
+      "name": "campaign.research",
+      "trace_id": "677c2b11db5d5b931c4de2de812b7a36",
+      "span_id": "4671822bf7e5d78a",
+      "parent_span_id": "c5635a1ec1b456e4",
+      "elapsed_ms": 11.749,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"677c2b11db5d5b931c4de2de812b7a36\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"reason\": \"DECISION_EVIDENCE_FOUND\", \"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.write_copy",
+      "trace_id": "677c2b11db5d5b931c4de2de812b7a36",
+      "span_id": "f37d34db749828f7",
+      "parent_span_id": "c5635a1ec1b456e4",
+      "elapsed_ms": 2.86,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"677c2b11db5d5b931c4de2de812b7a36\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"reason\": \"SOURCE_HEADING_CTA\", \"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "677c2b11db5d5b931c4de2de812b7a36",
+      "span_id": "708e4499ec0540e1",
+      "parent_span_id": "c5635a1ec1b456e4",
+      "elapsed_ms": 2.941,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"677c2b11db5d5b931c4de2de812b7a36\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "677c2b11db5d5b931c4de2de812b7a36",
+      "span_id": "6c84a1fcc1c37c93",
+      "parent_span_id": "c5635a1ec1b456e4",
+      "elapsed_ms": 1.343,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"677c2b11db5d5b931c4de2de812b7a36\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "ERROR",
+        "langfuse.observation.output": "{\"reason\": \"COPY_REQUIRES_EVIDENCE_REVIEW\", \"status\": \"ERROR\"}"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "677c2b11db5d5b931c4de2de812b7a36",
+      "span_id": "c91fc6b4b6c1086b",
+      "parent_span_id": "c5635a1ec1b456e4",
+      "elapsed_ms": 2.554,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"677c2b11db5d5b931c4de2de812b7a36\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "677c2b11db5d5b931c4de2de812b7a36",
+      "span_id": "02123380581d563c",
+      "parent_span_id": "c5635a1ec1b456e4",
+      "elapsed_ms": 1.57,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"677c2b11db5d5b931c4de2de812b7a36\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "ERROR",
+        "langfuse.observation.output": "{\"reason\": \"COPY_REQUIRES_EVIDENCE_REVIEW\", \"status\": \"ERROR\"}"
+      }
+    },
+    {
+      "name": "campaign.eval",
+      "trace_id": "677c2b11db5d5b931c4de2de812b7a36",
+      "span_id": "c5635a1ec1b456e4",
+      "parent_span_id": "3e2ede8842b64c07",
+      "elapsed_ms": 26.912,
+      "attributes": {
+        "langfuse.internal.is_app_root": true,
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"677c2b11db5d5b931c4de2de812b7a36\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.internal.as_root": true,
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.fetch",
+      "trace_id": "dddca6cae56b889c2727e11ecbc095c3",
+      "span_id": "ce95d327983c81ae",
+      "parent_span_id": "93c294c513862c6d",
+      "elapsed_ms": 1.032,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"dddca6cae56b889c2727e11ecbc095c3\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"reason\": \"SOURCE_READ\", \"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.select_evidence",
+      "trace_id": "dddca6cae56b889c2727e11ecbc095c3",
+      "span_id": "a0969a1131714e5c",
+      "parent_span_id": "93c294c513862c6d",
+      "elapsed_ms": 1.898,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"dddca6cae56b889c2727e11ecbc095c3\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\", \"evidence_hash\": \"b92ec87fbcc2b1633e8dc61ceeaf053c2da2bae64282fca3e8644ca540f5a6ae\"}"
+      }
+    },
+    {
+      "name": "campaign.research",
+      "trace_id": "dddca6cae56b889c2727e11ecbc095c3",
+      "span_id": "93c294c513862c6d",
+      "parent_span_id": "f60e080fae8da00f",
+      "elapsed_ms": 16.365,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"dddca6cae56b889c2727e11ecbc095c3\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"reason\": \"DECISION_EVIDENCE_FOUND\", \"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.write_copy",
+      "trace_id": "dddca6cae56b889c2727e11ecbc095c3",
+      "span_id": "a82e975d749497fb",
+      "parent_span_id": "f60e080fae8da00f",
+      "elapsed_ms": 2.391,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"dddca6cae56b889c2727e11ecbc095c3\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"reason\": \"SOURCE_HEADING_CTA\", \"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "dddca6cae56b889c2727e11ecbc095c3",
+      "span_id": "48b99e5d214d1935",
+      "parent_span_id": "f60e080fae8da00f",
+      "elapsed_ms": 1.879,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"dddca6cae56b889c2727e11ecbc095c3\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "dddca6cae56b889c2727e11ecbc095c3",
+      "span_id": "b79db9f2b9f701eb",
+      "parent_span_id": "f60e080fae8da00f",
+      "elapsed_ms": 2.177,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"dddca6cae56b889c2727e11ecbc095c3\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "dddca6cae56b889c2727e11ecbc095c3",
+      "span_id": "86f27b52aef02e3a",
+      "parent_span_id": "f60e080fae8da00f",
+      "elapsed_ms": 1.123,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"dddca6cae56b889c2727e11ecbc095c3\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "ERROR",
+        "langfuse.observation.output": "{\"reason\": \"COPY_REQUIRES_EVIDENCE_REVIEW\", \"status\": \"ERROR\"}"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "dddca6cae56b889c2727e11ecbc095c3",
+      "span_id": "cab9ca4488b4864a",
+      "parent_span_id": "f60e080fae8da00f",
+      "elapsed_ms": 2.603,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"dddca6cae56b889c2727e11ecbc095c3\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.eval",
+      "trace_id": "dddca6cae56b889c2727e11ecbc095c3",
+      "span_id": "f60e080fae8da00f",
+      "parent_span_id": "2734cac6514801ec",
+      "elapsed_ms": 30.194,
+      "attributes": {
+        "langfuse.internal.is_app_root": true,
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"dddca6cae56b889c2727e11ecbc095c3\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.internal.as_root": true,
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.fetch",
+      "trace_id": "f5d065290671888fa21e2bf027b96095",
+      "span_id": "7e76026c6d53ba79",
+      "parent_span_id": "e8d37961c4b3d6ec",
+      "elapsed_ms": 11.845,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"simulated_transport\"",
+        "langfuse.observation.metadata.workflow_ref": "\"f5d065290671888fa21e2bf027b96095\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"reason\": \"PAGE_TOO_LARGE\", \"status\": \"ERROR\"}"
+      }
+    },
+    {
+      "name": "campaign.select_evidence",
+      "trace_id": "f5d065290671888fa21e2bf027b96095",
+      "span_id": "a6987ac8dbad62a1",
+      "parent_span_id": "e8d37961c4b3d6ec",
+      "elapsed_ms": 0.668,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"simulated_transport\"",
+        "langfuse.observation.metadata.workflow_ref": "\"f5d065290671888fa21e2bf027b96095\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"reason\": \"FEATURE_EVIDENCE\", \"status\": \"BLOCKED\"}"
+      }
+    },
+    {
+      "name": "campaign.research",
+      "trace_id": "f5d065290671888fa21e2bf027b96095",
+      "span_id": "e8d37961c4b3d6ec",
+      "parent_span_id": "510a28d8edd76743",
+      "elapsed_ms": 14.048,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"simulated_transport\"",
+        "langfuse.observation.metadata.workflow_ref": "\"f5d065290671888fa21e2bf027b96095\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"reason\": \"NO_MORE_RELEVANT_SOURCES\", \"status\": \"BLOCKED\"}"
+      }
+    },
+    {
+      "name": "campaign.eval",
+      "trace_id": "f5d065290671888fa21e2bf027b96095",
+      "span_id": "510a28d8edd76743",
+      "parent_span_id": "b4691c685f062558",
+      "elapsed_ms": 15.558,
+      "attributes": {
+        "langfuse.internal.is_app_root": true,
+        "langfuse.observation.metadata.source_mode": "\"simulated_transport\"",
+        "langfuse.observation.metadata.workflow_ref": "\"f5d065290671888fa21e2bf027b96095\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.internal.as_root": true,
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.fetch",
+      "trace_id": "27fa035dd9e082a9f3f38676b30117ae",
+      "span_id": "59a23997d6f1d283",
+      "parent_span_id": "2cc92f11f925056e",
+      "elapsed_ms": 0.788,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"simulated_transport\"",
+        "langfuse.observation.metadata.workflow_ref": "\"27fa035dd9e082a9f3f38676b30117ae\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"reason\": \"SOURCE_TIMEOUT\", \"status\": \"ERROR\"}"
+      }
+    },
+    {
+      "name": "campaign.select_evidence",
+      "trace_id": "27fa035dd9e082a9f3f38676b30117ae",
+      "span_id": "c4df6f1cbe646ecc",
+      "parent_span_id": "2cc92f11f925056e",
+      "elapsed_ms": 0.726,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"simulated_transport\"",
+        "langfuse.observation.metadata.workflow_ref": "\"27fa035dd9e082a9f3f38676b30117ae\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"reason\": \"FEATURE_EVIDENCE\", \"status\": \"BLOCKED\"}"
+      }
+    },
+    {
+      "name": "campaign.research",
+      "trace_id": "27fa035dd9e082a9f3f38676b30117ae",
+      "span_id": "2cc92f11f925056e",
+      "parent_span_id": "9f9da0721f9f5394",
+      "elapsed_ms": 2.881,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"simulated_transport\"",
+        "langfuse.observation.metadata.workflow_ref": "\"27fa035dd9e082a9f3f38676b30117ae\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"reason\": \"NO_MORE_RELEVANT_SOURCES\", \"status\": \"BLOCKED\"}"
+      }
+    },
+    {
+      "name": "campaign.eval",
+      "trace_id": "27fa035dd9e082a9f3f38676b30117ae",
+      "span_id": "9f9da0721f9f5394",
+      "parent_span_id": "b9a0f535c1106000",
+      "elapsed_ms": 4.377,
+      "attributes": {
+        "langfuse.internal.is_app_root": true,
+        "langfuse.observation.metadata.source_mode": "\"simulated_transport\"",
+        "langfuse.observation.metadata.workflow_ref": "\"27fa035dd9e082a9f3f38676b30117ae\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.internal.as_root": true,
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.fetch",
+      "trace_id": "204de034320cee69fc4621bb8310fd9f",
+      "span_id": "cc350ae82921c90e",
+      "parent_span_id": "6bd5537548738a31",
+      "elapsed_ms": 0.635,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"204de034320cee69fc4621bb8310fd9f\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"reason\": \"SOURCE_READ\", \"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.select_evidence",
+      "trace_id": "204de034320cee69fc4621bb8310fd9f",
+      "span_id": "25c11ac8ec0e036c",
+      "parent_span_id": "6bd5537548738a31",
+      "elapsed_ms": 2.851,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"204de034320cee69fc4621bb8310fd9f\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\", \"evidence_hash\": \"ac047f6badd7359970b3850b5a29263231af69bd7f710412322511d187409b1a\"}"
+      }
+    },
+    {
+      "name": "campaign.research",
+      "trace_id": "204de034320cee69fc4621bb8310fd9f",
+      "span_id": "6bd5537548738a31",
+      "parent_span_id": "c088dca4628dbf29",
+      "elapsed_ms": 10.532,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"204de034320cee69fc4621bb8310fd9f\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"reason\": \"DECISION_EVIDENCE_FOUND\", \"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.write_copy",
+      "trace_id": "204de034320cee69fc4621bb8310fd9f",
+      "span_id": "1470557374514234",
+      "parent_span_id": "c088dca4628dbf29",
+      "elapsed_ms": 1.801,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"204de034320cee69fc4621bb8310fd9f\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "204de034320cee69fc4621bb8310fd9f",
+      "span_id": "7280451c68326362",
+      "parent_span_id": "c088dca4628dbf29",
+      "elapsed_ms": 1.469,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"204de034320cee69fc4621bb8310fd9f\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "204de034320cee69fc4621bb8310fd9f",
+      "span_id": "4592e080360e6417",
+      "parent_span_id": "c088dca4628dbf29",
+      "elapsed_ms": 0.86,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"204de034320cee69fc4621bb8310fd9f\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "ERROR",
+        "langfuse.observation.output": "{\"reason\": \"COPY_REQUIRES_EVIDENCE_REVIEW\", \"status\": \"ERROR\"}"
+      }
+    },
+    {
+      "name": "campaign.eval",
+      "trace_id": "204de034320cee69fc4621bb8310fd9f",
+      "span_id": "c088dca4628dbf29",
+      "parent_span_id": "37c0d1021e215142",
+      "elapsed_ms": 16.94,
+      "attributes": {
+        "langfuse.internal.is_app_root": true,
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"204de034320cee69fc4621bb8310fd9f\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.internal.as_root": true,
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.fetch",
+      "trace_id": "60905c537258f4e9563258b3afb88538",
+      "span_id": "f95745627fc8194a",
+      "parent_span_id": "b4a732bf07ad422d",
+      "elapsed_ms": 0.536,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"60905c537258f4e9563258b3afb88538\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"reason\": \"SOURCE_READ\", \"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.select_evidence",
+      "trace_id": "60905c537258f4e9563258b3afb88538",
+      "span_id": "f301a064528f477a",
+      "parent_span_id": "b4a732bf07ad422d",
+      "elapsed_ms": 1.476,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"60905c537258f4e9563258b3afb88538\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\", \"evidence_hash\": \"26aeace85a9927a4f679a0149563ec025dce0514e01d947779e0be5d30893804\"}"
+      }
+    },
+    {
+      "name": "campaign.research",
+      "trace_id": "60905c537258f4e9563258b3afb88538",
+      "span_id": "b4a732bf07ad422d",
+      "parent_span_id": "57b7b1b0a30cde4b",
+      "elapsed_ms": 8.832,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"60905c537258f4e9563258b3afb88538\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"reason\": \"DECISION_EVIDENCE_FOUND\", \"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.write_copy",
+      "trace_id": "60905c537258f4e9563258b3afb88538",
+      "span_id": "9d805bc7789b996a",
+      "parent_span_id": "57b7b1b0a30cde4b",
+      "elapsed_ms": 1.848,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"60905c537258f4e9563258b3afb88538\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"reason\": \"SOURCE_HEADING_CTA\", \"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "60905c537258f4e9563258b3afb88538",
+      "span_id": "894beba483a60490",
+      "parent_span_id": "57b7b1b0a30cde4b",
+      "elapsed_ms": 1.705,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"60905c537258f4e9563258b3afb88538\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "60905c537258f4e9563258b3afb88538",
+      "span_id": "2e9cbaa5de2ad035",
+      "parent_span_id": "57b7b1b0a30cde4b",
+      "elapsed_ms": 2.256,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"60905c537258f4e9563258b3afb88538\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "60905c537258f4e9563258b3afb88538",
+      "span_id": "1411bff761404032",
+      "parent_span_id": "57b7b1b0a30cde4b",
+      "elapsed_ms": 1.436,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"60905c537258f4e9563258b3afb88538\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "ERROR",
+        "langfuse.observation.output": "{\"reason\": \"COPY_REQUIRES_EVIDENCE_REVIEW\", \"status\": \"ERROR\"}"
+      }
+    },
+    {
+      "name": "campaign.eval",
+      "trace_id": "60905c537258f4e9563258b3afb88538",
+      "span_id": "57b7b1b0a30cde4b",
+      "parent_span_id": "422c1bb05a3eb0c8",
+      "elapsed_ms": 19.149,
+      "attributes": {
+        "langfuse.internal.is_app_root": true,
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"60905c537258f4e9563258b3afb88538\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.internal.as_root": true,
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.fetch",
+      "trace_id": "b68ccb94b9b6a4ea5ffe93224e059ba5",
+      "span_id": "5de7c24748d57225",
+      "parent_span_id": "a2f7fc8182e6e634",
+      "elapsed_ms": 0.551,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"b68ccb94b9b6a4ea5ffe93224e059ba5\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"reason\": \"SOURCE_READ\", \"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.select_evidence",
+      "trace_id": "b68ccb94b9b6a4ea5ffe93224e059ba5",
+      "span_id": "4fd2a79eac6e8762",
+      "parent_span_id": "a2f7fc8182e6e634",
+      "elapsed_ms": 1.578,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"b68ccb94b9b6a4ea5ffe93224e059ba5\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\", \"evidence_hash\": \"7a013fbc3204e7496bdfafa64df4a7ef3d80e0c3bc044c83d9863852a42b0496\"}"
+      }
+    },
+    {
+      "name": "campaign.research",
+      "trace_id": "b68ccb94b9b6a4ea5ffe93224e059ba5",
+      "span_id": "a2f7fc8182e6e634",
+      "parent_span_id": "7b62b7410f320150",
+      "elapsed_ms": 11.683,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"b68ccb94b9b6a4ea5ffe93224e059ba5\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"reason\": \"DECISION_EVIDENCE_FOUND\", \"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.write_copy",
+      "trace_id": "b68ccb94b9b6a4ea5ffe93224e059ba5",
+      "span_id": "725a011250f27e03",
+      "parent_span_id": "7b62b7410f320150",
+      "elapsed_ms": 2.051,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"b68ccb94b9b6a4ea5ffe93224e059ba5\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"reason\": \"SOURCE_HEADING_CTA\", \"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "b68ccb94b9b6a4ea5ffe93224e059ba5",
+      "span_id": "c2c51c06043899ce",
+      "parent_span_id": "7b62b7410f320150",
+      "elapsed_ms": 1.731,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"b68ccb94b9b6a4ea5ffe93224e059ba5\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "b68ccb94b9b6a4ea5ffe93224e059ba5",
+      "span_id": "82cb8f1df2b2b5d6",
+      "parent_span_id": "7b62b7410f320150",
+      "elapsed_ms": 1.652,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"b68ccb94b9b6a4ea5ffe93224e059ba5\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "b68ccb94b9b6a4ea5ffe93224e059ba5",
+      "span_id": "ee386a6ce048a49f",
+      "parent_span_id": "7b62b7410f320150",
+      "elapsed_ms": 1.104,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"b68ccb94b9b6a4ea5ffe93224e059ba5\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "ERROR",
+        "langfuse.observation.output": "{\"reason\": \"COPY_REQUIRES_EVIDENCE_REVIEW\", \"status\": \"ERROR\"}"
+      }
+    },
+    {
+      "name": "campaign.eval",
+      "trace_id": "b68ccb94b9b6a4ea5ffe93224e059ba5",
+      "span_id": "7b62b7410f320150",
+      "parent_span_id": "3a574794a49f3675",
+      "elapsed_ms": 20.975,
+      "attributes": {
+        "langfuse.internal.is_app_root": true,
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"b68ccb94b9b6a4ea5ffe93224e059ba5\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.internal.as_root": true,
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.fetch",
+      "trace_id": "ec55ccdd87667fe5604b30b255ea959a",
+      "span_id": "0fc71eaa170dd615",
+      "parent_span_id": "125f827a93f1773d",
+      "elapsed_ms": 0.611,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"ec55ccdd87667fe5604b30b255ea959a\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"reason\": \"SOURCE_READ\", \"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.select_evidence",
+      "trace_id": "ec55ccdd87667fe5604b30b255ea959a",
+      "span_id": "95f9f3554de81853",
+      "parent_span_id": "125f827a93f1773d",
+      "elapsed_ms": 2.075,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"ec55ccdd87667fe5604b30b255ea959a\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\", \"evidence_hash\": \"e03ff977c62230f41341db590f4fa523b9a815580140b0d4dca86b61984ca7ec\"}"
+      }
+    },
+    {
+      "name": "campaign.research",
+      "trace_id": "ec55ccdd87667fe5604b30b255ea959a",
+      "span_id": "125f827a93f1773d",
+      "parent_span_id": "a22292269265d36d",
+      "elapsed_ms": 10.294,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"ec55ccdd87667fe5604b30b255ea959a\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"reason\": \"DECISION_EVIDENCE_FOUND\", \"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.write_copy",
+      "trace_id": "ec55ccdd87667fe5604b30b255ea959a",
+      "span_id": "8f5c837e8fc6765b",
+      "parent_span_id": "a22292269265d36d",
+      "elapsed_ms": 2.135,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"ec55ccdd87667fe5604b30b255ea959a\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "ec55ccdd87667fe5604b30b255ea959a",
+      "span_id": "1b307e40c0c3ee22",
+      "parent_span_id": "a22292269265d36d",
+      "elapsed_ms": 2.458,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"ec55ccdd87667fe5604b30b255ea959a\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "ec55ccdd87667fe5604b30b255ea959a",
+      "span_id": "e19775e0318764d1",
+      "parent_span_id": "a22292269265d36d",
+      "elapsed_ms": 1.274,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"ec55ccdd87667fe5604b30b255ea959a\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "ERROR",
+        "langfuse.observation.output": "{\"reason\": \"COPY_REQUIRES_EVIDENCE_REVIEW\", \"status\": \"ERROR\"}"
+      }
+    },
+    {
+      "name": "campaign.eval",
+      "trace_id": "ec55ccdd87667fe5604b30b255ea959a",
+      "span_id": "a22292269265d36d",
+      "parent_span_id": "41c061daef7192ab",
+      "elapsed_ms": 19.073,
+      "attributes": {
+        "langfuse.internal.is_app_root": true,
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"ec55ccdd87667fe5604b30b255ea959a\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.internal.as_root": true,
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.fetch",
+      "trace_id": "a456b1c4234811ec9fe4c550f46bd5cc",
+      "span_id": "d60447f24be42441",
+      "parent_span_id": "0dfdf5a1778d36bd",
+      "elapsed_ms": 0.913,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"a456b1c4234811ec9fe4c550f46bd5cc\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"reason\": \"SOURCE_READ\", \"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.select_evidence",
+      "trace_id": "a456b1c4234811ec9fe4c550f46bd5cc",
+      "span_id": "108eecd0da242446",
+      "parent_span_id": "0dfdf5a1778d36bd",
+      "elapsed_ms": 1.585,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"a456b1c4234811ec9fe4c550f46bd5cc\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\", \"evidence_hash\": \"e58d0063b23e5c5b9550c9d4ea5114073170492a77be7ad0788eeafc92ab2fca\"}"
+      }
+    },
+    {
+      "name": "campaign.research",
+      "trace_id": "a456b1c4234811ec9fe4c550f46bd5cc",
+      "span_id": "0dfdf5a1778d36bd",
+      "parent_span_id": "dec253dc6d20b6e8",
+      "elapsed_ms": 9.258,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"a456b1c4234811ec9fe4c550f46bd5cc\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"reason\": \"DECISION_EVIDENCE_FOUND\", \"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.write_copy",
+      "trace_id": "a456b1c4234811ec9fe4c550f46bd5cc",
+      "span_id": "af8702b3efc5750d",
+      "parent_span_id": "dec253dc6d20b6e8",
+      "elapsed_ms": 3.033,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"a456b1c4234811ec9fe4c550f46bd5cc\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"reason\": \"SOURCE_HEADING_CTA\", \"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "a456b1c4234811ec9fe4c550f46bd5cc",
+      "span_id": "488713d1be74856d",
+      "parent_span_id": "dec253dc6d20b6e8",
+      "elapsed_ms": 1.849,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"a456b1c4234811ec9fe4c550f46bd5cc\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "a456b1c4234811ec9fe4c550f46bd5cc",
+      "span_id": "0271bd8bf0587b51",
+      "parent_span_id": "dec253dc6d20b6e8",
+      "elapsed_ms": 1.675,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"a456b1c4234811ec9fe4c550f46bd5cc\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\"}"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "a456b1c4234811ec9fe4c550f46bd5cc",
+      "span_id": "7304f4de1747ea54",
+      "parent_span_id": "dec253dc6d20b6e8",
+      "elapsed_ms": 0.88,
+      "attributes": {
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"a456b1c4234811ec9fe4c550f46bd5cc\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "ERROR",
+        "langfuse.observation.output": "{\"reason\": \"COPY_REQUIRES_EVIDENCE_REVIEW\", \"status\": \"ERROR\"}"
+      }
+    },
+    {
+      "name": "campaign.eval",
+      "trace_id": "a456b1c4234811ec9fe4c550f46bd5cc",
+      "span_id": "dec253dc6d20b6e8",
+      "parent_span_id": "1900ecc41881938b",
+      "elapsed_ms": 19.464,
+      "attributes": {
+        "langfuse.internal.is_app_root": true,
+        "langfuse.observation.metadata.source_mode": "\"publisher_replay\"",
+        "langfuse.observation.metadata.workflow_ref": "\"a456b1c4234811ec9fe4c550f46bd5cc\"",
+        "langfuse.observation.metadata.cost_status": "\"UNKNOWN\"",
+        "langfuse.internal.as_root": true,
+        "langfuse.observation.type": "span",
+        "langfuse.observation.level": "DEFAULT",
+        "langfuse.observation.output": "{\"status\": \"OK\"}"
+      }
+    }
+  ]
+}

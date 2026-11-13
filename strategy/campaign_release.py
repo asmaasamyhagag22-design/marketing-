@@ -8,7 +8,9 @@ import subprocess
 
 ROOT = Path(__file__).resolve().parents[1]
 REFERENCE_COMMIT = "4648fbc043219661023fa97d92446bec9323fba4"
-GUARDRAILS = {"stable": "campaign-copy@1", "candidate": "campaign-copy@2"}
+HEADING_REVIEW_POLICY = "campaign-copy@2"
+SOURCE_CTA_POLICY = "campaign-copy@3"
+GUARDRAILS = {"stable": "campaign-copy@1", "candidate": SOURCE_CTA_POLICY}
 # This is also the contract read by pre-lifecycle Campaign drafts.
 STABLE_GUARDRAILS = GUARDRAILS["stable"]
 

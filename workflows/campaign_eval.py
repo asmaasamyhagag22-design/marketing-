@@ -17,6 +17,7 @@ from workflows import demo
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURES = ROOT / "docs/campaigns/lifecycle"
+EDITING_FIXTURES = ROOT / "docs/campaigns/editing"
 COPY_FIELDS = ("headline", "message", "cta", "caption")
 
 
@@ -24,15 +25,23 @@ def case_set():
     from strategy.campaign_package import digest
 
     data = json.loads((FIXTURES / "cases.json").read_text(encoding="utf-8"))
-    bindings = []
+    study = json.loads((EDITING_FIXTURES / "cases.json").read_text(encoding="utf-8"))
+    cases = []
     for case in data["cases"]:
+        extension = study["existing_cta_cases"].get(case["id"], {})
+        cases.append({**case, **{key: value for key, value in extension.items() if key != "edits"},
+                      "edits": case.get("edits", []) + extension.get("edits", [])})
+    cases.extend(study["cases"])
+    bindings = []
+    for case in cases:
         manifest = (ROOT / case["snapshot"] / "manifest.json").read_bytes()
         binding = {"snapshot_id": sha256(manifest).hexdigest()}
         if case.get("editions"):
             binding["edition_file_id"] = sha256((ROOT / case["editions"]).read_bytes()).hexdigest()
         bindings.append(binding)
-    return data["cases"], bindings, digest({
-        "labels": data,
+    return cases, bindings, digest({
+        "labels": data, "editing_labels": study,
+        "editing_protocol": sha256((EDITING_FIXTURES / "PROTOCOL.md").read_bytes()).hexdigest(),
         "snapshots": bindings,
         "protocol": sha256((FIXTURES / "PROTOCOL.md").read_bytes()).hexdigest(),
     })
@@ -85,6 +94,7 @@ def review_input(brief, edit=None):
 
 
 def measure(case, draft, *, trace):
+    from strategy.campaign_package import digest
     from strategy.campaign_planner import review_draft
     from strategy.campaign_v2 import CampaignConflict
 
@@ -106,6 +116,8 @@ def measure(case, draft, *, trace):
 
     review = None
     cta_match = None
+    cta_copy_match = None
+    writing_context_hash = None
     edits = []
     if draft["brief"]:
         brief = draft["brief"]
@@ -115,6 +127,21 @@ def measure(case, draft, *, trace):
         cta_match = (package["source_url"] == choice["destination"] == expected.get("destination")
                      and package["source_url"] == evidence[package["source_evidence_index"]]["page_url"]
                      and package["copy"]["cta"] == choice["cta"] and choice["action"] == expected.get("action"))
+        if "cta" in case:
+            release = planner["version"]["release"]
+            expected_cta = case["cta"][release]
+            actual_cta = package["copy"]["cta"]
+            cta_copy_match = actual_cta == expected_cta and package["caption"].endswith(f"{actual_cta}.")
+        # Only the selected CTA and its caption suffix are the treatment.
+        index = brief["selected"]
+        directions = list(brief["directions"])
+        options = list(planner["options"])
+        if "cta" in case:
+            direction = directions[index]
+            suffix = f"{direction['cta']}."
+            directions[index] = {**direction, "cta": None, "caption": direction["caption"].removesuffix(suffix)}
+            options[index] = {**options[index], "cta": None}
+        writing_context_hash = digest({"brief": {**brief, "directions": directions}, "options": options})
         for edit in case.get("edits", []):
             row = {key: edit[key] for key in ("id", "field", "supported")}
             row["critical"] = edit.get("critical", False)
@@ -145,6 +172,8 @@ def measure(case, draft, *, trace):
         failures.append("WRONG_EVIDENCE_SELECTION")
     if "destination" in expected and review and (cta_match is not True or review["status"] != "READY"):
         failures.append("CTA_OR_JOURNEY_MISMATCH")
+    if cta_copy_match is False:
+        failures.append("CTA_COPY_MISMATCH")
     if any(row["classification"] == "WRITING_EXCEEDS_EVIDENCE" or row["reason"] == "EDIT_OUTPUT_MISMATCH"
            or (not row["supported"] and row["reason"] != "COPY_REQUIRES_EVIDENCE_REVIEW") for row in edits):
         failures.append("UNSAFE_COPY_OR_GUARD_FAILURE")
@@ -153,7 +182,9 @@ def measure(case, draft, *, trace):
         "stop": planner["stop"], "gap": planner["gap"], "evidence_match": evidence_match,
         "evidence": [{key: item[key] for key in ("scope", "quote", "page_url", "capture_kind", "body_sha256")}
                      for item in evidence],
-        "cta_match": cta_match, "journey": review["status"] if review else draft["status"],
+        "cta_match": cta_match, "cta_copy_match": cta_copy_match,
+        "writing_context_sha256": writing_context_hash,
+        "journey": review["status"] if review else draft["status"],
         "cta": {
             "url": review["package"]["source_url"], "evidence_index": review["package"]["source_evidence_index"],
             "text": review["package"]["copy"]["cta"], "action": choice["action"],
@@ -208,14 +239,24 @@ def release_decision(stable, candidate):
                 blockers.append({"case": case_id, "release": row["version"]["release"], "failures": row["failures"]})
             if row["provider_calls"] != 0 or row["cost_usd"] != 0:
                 blockers.append({"case": case_id, "failures": ["PROVIDER_CALL"]})
-        if any(left[key] != right[key] for key in ("fetch", "evidence", "page_calls", "cta", "journey")):
+        left_action, right_action = left["cta"], right["cta"]
+        if left["cta_copy_match"] is True and right["cta_copy_match"] is True:
+            left_action, right_action = (
+                {key: value for key, value in action.items() if key != "text"}
+                for action in (left_action, right_action)
+            )
+        if left_action != right_action or any(left[key] != right[key] for key in (
+            "fetch", "evidence", "page_calls", "journey", "writing_context_sha256",
+        )):
             blockers.append({"case": case_id, "failures": ["CHANGE_OUTSIDE_REVIEW_POLICY"]})
         before = {row["id"] for row in left["edits"] if row["classification"] == "SUPPORTED_COPY_REJECTED"}
         after = {row["id"] for row in right["edits"] if row["classification"] == "SUPPORTED_COPY_REJECTED"}
         if after - before:
             blockers.append({"case": case_id, "failures": ["NEW_SUPPORTED_COPY_REJECTION"]})
         restored.extend({"case": case_id, "edit": edit, "split": right["split"]} for edit in sorted(before - after))
-    if not any(item["split"] == "generalization" for item in restored):
+    if not any(item["case"] == "osm-local-knowledge" and item["edit"] == "verbatim-heading" for item in restored):
+        blockers.append({"failures": ["NO_HEADING_REVIEW_IMPROVEMENT"]})
+    if not any(item["split"] == "generalization" and item["edit"] == "specific-cta" for item in restored):
         blockers.append({"failures": ["NO_GENERALIZATION_IMPROVEMENT"]})
     return {"decision": "KEEP_STABLE" if blockers else "ELIGIBLE_FOR_LOCAL_RELEASE",
             "blockers": blockers, "restored_edits": restored, "default_release": "stable"}
