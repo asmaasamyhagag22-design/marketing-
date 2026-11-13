@@ -163,6 +163,7 @@ def test_exact_topic_beats_repeated_collection_context():
     body = b"""<html><body><main><h1>About Collection Online</h1>
       <p>The Online Collection brings together research and images.</p>
       <p>The Online Collection covers works from many periods.</p>
+      <p>The Online Collection includes documents and research from the museum.</p>
       <p>Use the Comparator to place two artworks side by side.</p>
       </main></body></html>"""
     page = inspect(Page(url, body), lambda: datetime.now(timezone.utc), terms)
