@@ -5,7 +5,7 @@
       "id": "buffalo-menu", "split": "development", "snapshot": "docs/demo/campaign-snapshots/buffalo",
       "editions": "docs/campaigns/buffalo/editions.json",
       "input": {"url": "https://buffaloburger.com", "objective": "تشجيع المستخدم على تصفّح المنيو واختيار برجر يناسبه", "language": "ar"},
-      "expected": {"action": "BROWSE_CATALOG", "destination": "https://buffaloburger.com/menu", "proof_urls": ["https://buffaloburger.com/menu", "https://buffaloburger.com/menu/old-school", "https://buffaloburger.com/menu/the-rastafari"], "evidence_source": "QUOTE_OBSERVED"},
+      "expected": {"action": "OPEN_CATALOG", "destination": "https://buffaloburger.com/menu", "proof_urls": ["https://buffaloburger.com/menu", "https://buffaloburger.com/menu/old-school", "https://buffaloburger.com/menu/the-rastafari"], "evidence_source": "QUOTE_OBSERVED"},
       "edits": [
         {"id": "shared-sauce-registered", "field": "message", "text": "الاتنين فيهم صوص بافالو.", "supported": true},
         {"id": "shared-sauce-unregistered", "field": "message", "text": "الاختيارين فيهم صوص بافالو.", "supported": true},
@@ -21,7 +21,7 @@
     {
       "id": "nandos-wrap", "split": "development", "snapshot": "docs/demo/campaign-snapshots/nandos",
       "input": {"url": "https://www.nandos.co.uk/food/menu/", "objective": "Help people discover what comes in the Grilled Chicken Wrap", "language": "en"},
-      "expected": {"subject": "Grilled Chicken Wrap", "quote": "Served in a wrap with lettuce, lightly spiced yoghurt mayo and chilli jam.", "action": "READ_FEATURE", "destination": "https://www.nandos.co.uk/food/menu/"},
+      "expected": {"subject": "Grilled Chicken Wrap", "quote": "Chicken breast grilled in your favourite spice.", "action": "READ_FEATURE", "destination": "https://www.nandos.co.uk/food/menu/"},
       "edits": [
         {"id": "verbatim-heading", "field": "headline", "text": "Grilled Chicken Wrap", "selected": 1, "supported": true},
         {"id": "unsupported-price", "field": "headline", "text": "Every wrap is free today", "supported": false, "critical": true}
