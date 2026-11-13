@@ -1,0 +1,10 @@
+{
+  "outcome": "COMPLETE",
+  "estimated_charge": "0.0012402",
+  "content": "{\n  \"directions\": [\n    {\n      \"angle\": \"Detail-oriented discovery\",\n      \"headline\": \"See the details you've been missing\",\n      \"message\": \"Use the Comparator to place artworks side by side and zoom in on the finest details.\",\n      \"cta\": \"Learn how to use the Comparator\",\n      \"caption\": \"Ever wondered what secrets a masterpiece holds? Our online tool lets you compare paintings side-by-side to see every brushstroke up close.\",\n      \"visual\": \"Close-up split screen of two Rijksmuseum paintings side-by-side\",\n      \"evidence_index\": 0\n    },\n    {\n      \"angle\": \"Curatorial exploration\",\n      \"headline\": \"Curate your own art experience\",\n      \"message\": \"Place artworks side by side and explore the collection with our interactive Comparator tool.\",\n      \"cta\": \"Discover the Comparator tool\",\n      \"caption\": \"Take control of your art journey. Use the Comparator to align your favorite pieces and uncover hidden connections in the collection.\",\n      \"visual\": \"User interface showing two artworks aligned for comparison\",\n      \"evidence_index\": 0\n    },\n    {\n      \"angle\": \"Interactive research\",\n      \"headline\": \"Compare masterpieces side by side\",\n      \"message\": \"Zoom in on the smallest details and place artworks side by side using our Comparator.\",\n      \"cta\": \"Explore the Comparator features\",\n      \"caption\": \"How do different artists capture light and shadow? Use our online tool to compare works directly and study the details.\",\n      \"visual\": \"High-resolution zoom of an artwork detail next to another painting\",\n      \"evidence_index\": 0\n    }\n  ]\n}",
+  "finish_reason": "STOP",
+  "model": "gemini-3.1-flash-lite",
+  "prompt_tokens": 500,
+  "completion_tokens": 376,
+  "seconds": 1.83
+}

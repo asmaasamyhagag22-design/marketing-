@@ -1,0 +1,40 @@
+{
+  "model": "gemini-3.1-flash-lite",
+  "prompt_sha256": "87d7d8daa23134914958688ee39543416c34727590b5db1ed295612d587466cc",
+  "input": {
+    "brief": {
+      "objective": "Increase visits to the Brave Shields explanation for people interested in blocking trackers",
+      "summary": "Third-party ad & tracker blocking , on every page you visit.",
+      "audience": "People who want to understand the feature before acting.",
+      "language": "en",
+      "tone": "Plain and concise",
+      "strategy_reason": "The goal is a visit to a specific explanation. Reopen the choice if it disappears or the goal changes to an action."
+    },
+    "evidence": [
+      {
+        "page_url": "https://brave.com/shields/",
+        "label": "Block third-party ads & trackers",
+        "quote": "Third-party ad & tracker blocking , on every page you visit.",
+        "context": "Third-party ad & tracker blocking , on every page you visit. Available in Standard and Aggressive mode.",
+        "constraints": {
+          "basis": "FULL_SOURCE_CONTEXT",
+          "branch": null,
+          "market": "UNCONFIRMED",
+          "page_path": "/shields/",
+          "price": null,
+          "valid_until": null
+        }
+      }
+    ],
+    "destination": "https://brave.com/shields/",
+    "action": "READ_FEATURE",
+    "baseline": {
+      "cta": "Read the explanation",
+      "headline": "Block third-party ads & trackers",
+      "message": "Third-party ad & tracker blocking , on every page you visit."
+    }
+  },
+  "output_limit": 1300,
+  "reserve_usd": "0.01",
+  "task_exposure_before": "0.03460655"
+}

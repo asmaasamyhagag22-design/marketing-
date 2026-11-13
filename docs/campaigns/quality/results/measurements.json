@@ -1,0 +1,214 @@
+{
+  "scores": {
+    "previous_rules/development": {
+      "directions": 4,
+      "headline_pass": 0,
+      "cta_pass": 3,
+      "claim_fields_beyond_evidence": 0,
+      "directions_beyond_evidence": 0
+    },
+    "previous_rules/heldout": {
+      "directions": 2,
+      "headline_pass": 1,
+      "cta_pass": 2,
+      "claim_fields_beyond_evidence": 0,
+      "directions_beyond_evidence": 0
+    },
+    "release_rules_or_accepted_edit/development": {
+      "directions": 4,
+      "headline_pass": 4,
+      "cta_pass": 4,
+      "claim_fields_beyond_evidence": 0,
+      "directions_beyond_evidence": 0
+    },
+    "release_rules_or_accepted_edit/heldout": {
+      "directions": 2,
+      "headline_pass": 1,
+      "cta_pass": 2,
+      "claim_fields_beyond_evidence": 0,
+      "directions_beyond_evidence": 0
+    },
+    "compact_with_brief/development": {
+      "directions": 12,
+      "headline_pass": 4,
+      "cta_pass": 9,
+      "claim_fields_beyond_evidence": 18,
+      "directions_beyond_evidence": 9
+    },
+    "compact_with_brief/heldout": {
+      "directions": 6,
+      "headline_pass": 5,
+      "cta_pass": 5,
+      "claim_fields_beyond_evidence": 6,
+      "directions_beyond_evidence": 4
+    },
+    "direct_without_brief/development": {
+      "directions": 12,
+      "headline_pass": 4,
+      "cta_pass": 8,
+      "claim_fields_beyond_evidence": 19,
+      "directions_beyond_evidence": 9
+    }
+  },
+  "model_candidate_gate": {
+    "compact/firefox": [
+      {
+        "editorially_eligible": false,
+        "verdict": "COPY_REQUIRES_EVIDENCE_REVIEW"
+      },
+      {
+        "editorially_eligible": false,
+        "verdict": "COPY_REQUIRES_EVIDENCE_REVIEW"
+      },
+      {
+        "editorially_eligible": false,
+        "verdict": "COPY_REQUIRES_EVIDENCE_REVIEW"
+      }
+    ],
+    "compact/firefox-download": [
+      {
+        "editorially_eligible": false,
+        "verdict": "COPY_REQUIRES_EVIDENCE_REVIEW"
+      },
+      {
+        "editorially_eligible": false,
+        "verdict": "COPY_REQUIRES_EVIDENCE_REVIEW"
+      },
+      {
+        "editorially_eligible": false,
+        "verdict": "COPY_REQUIRES_EVIDENCE_REVIEW"
+      }
+    ],
+    "compact/lego": [
+      {
+        "editorially_eligible": false,
+        "verdict": "COPY_REQUIRES_EVIDENCE_REVIEW"
+      },
+      {
+        "editorially_eligible": false,
+        "verdict": "COPY_REQUIRES_EVIDENCE_REVIEW"
+      },
+      {
+        "editorially_eligible": false,
+        "verdict": "COPY_REQUIRES_EVIDENCE_REVIEW"
+      }
+    ],
+    "compact/rijksmuseum": [
+      {
+        "editorially_eligible": false,
+        "verdict": "COPY_REQUIRES_EVIDENCE_REVIEW"
+      },
+      {
+        "editorially_eligible": true,
+        "verdict": "COPY_REQUIRES_EVIDENCE_REVIEW"
+      },
+      {
+        "editorially_eligible": false,
+        "verdict": "COPY_REQUIRES_EVIDENCE_REVIEW"
+      }
+    ],
+    "heldout/diffchecker": [
+      {
+        "editorially_eligible": true,
+        "verdict": "COPY_REQUIRES_EVIDENCE_REVIEW"
+      },
+      {
+        "editorially_eligible": false,
+        "verdict": "COPY_REQUIRES_EVIDENCE_REVIEW"
+      },
+      {
+        "editorially_eligible": true,
+        "verdict": "COPY_REQUIRES_EVIDENCE_REVIEW"
+      }
+    ],
+    "heldout/brave": [
+      {
+        "editorially_eligible": false,
+        "verdict": "COPY_REQUIRES_EVIDENCE_REVIEW"
+      },
+      {
+        "editorially_eligible": false,
+        "verdict": "COPY_REQUIRES_EVIDENCE_REVIEW"
+      },
+      {
+        "editorially_eligible": false,
+        "verdict": "COPY_REQUIRES_EVIDENCE_REVIEW"
+      }
+    ],
+    "direct/firefox": [
+      {
+        "editorially_eligible": true,
+        "verdict": "COPY_REQUIRES_EVIDENCE_REVIEW"
+      },
+      {
+        "editorially_eligible": false,
+        "verdict": "COPY_REQUIRES_EVIDENCE_REVIEW"
+      },
+      {
+        "editorially_eligible": false,
+        "verdict": "COPY_REQUIRES_EVIDENCE_REVIEW"
+      }
+    ],
+    "direct/firefox-download": [
+      {
+        "editorially_eligible": false,
+        "verdict": "COPY_REQUIRES_EVIDENCE_REVIEW"
+      },
+      {
+        "editorially_eligible": false,
+        "verdict": "COPY_REQUIRES_EVIDENCE_REVIEW"
+      },
+      {
+        "editorially_eligible": false,
+        "verdict": "COPY_REQUIRES_EVIDENCE_REVIEW"
+      }
+    ],
+    "direct/lego": [
+      {
+        "editorially_eligible": false,
+        "verdict": "COPY_REQUIRES_EVIDENCE_REVIEW"
+      },
+      {
+        "editorially_eligible": false,
+        "verdict": "COPY_REQUIRES_EVIDENCE_REVIEW"
+      },
+      {
+        "editorially_eligible": false,
+        "verdict": "COPY_REQUIRES_EVIDENCE_REVIEW"
+      }
+    ],
+    "direct/rijksmuseum": [
+      {
+        "editorially_eligible": false,
+        "verdict": "COPY_SCHEMA"
+      },
+      {
+        "editorially_eligible": false,
+        "verdict": "COPY_REQUIRES_EVIDENCE_REVIEW"
+      },
+      {
+        "editorially_eligible": true,
+        "verdict": "COPY_SCHEMA"
+      }
+    ]
+  },
+  "artifacts": {
+    "brave/after.zip": "90f62e2a4bbd72e561098a83e409912eae78e65981079cf6f0dc8d9b760bf050",
+    "diffchecker/after.zip": "f2e736f300ac9c853ab50e106730b05bbb357fc99933549b80fb0ee75e3c75bb",
+    "firefox/after.zip": "61ca117d06a0eaa0146e7400142d1f162410ca600462b0d63a718557abf1b296",
+    "firefox/before.zip": "17f0ddfac87a3ae01d47f5ee20605bf51b781038ba8327efc84d443b2ca853f7",
+    "firefox-download/after.zip": "eda75cd12e9c001bf9e151644317cf6a58706165cd0338c6b0aa1787b4703ca3",
+    "firefox-download/before.zip": "b4b2b4af5fceb68a88e9f248495fcd6a410fd7b938e11bae931d6b27a1f72755",
+    "lego/after.zip": "7b5f89199e2c60fb8c5c9b3a39ab5154e440b551554bf37845ed2d416dd295fe",
+    "lego/before.zip": "6e10aee2102b47032c0d784feb8ccbaa3b7b085e53eb8ecdb2c1d6c4f0869b52",
+    "rijksmuseum/after.zip": "91e342a5f3ef41de6116851b703f9f9c0f231b9fcbebfbeec0c60adf38be49f7",
+    "rijksmuseum/before.zip": "1ad33e87e0a7d0429ad0c8ca088727c9c9ef590bb67c78bafedd1d1ec19cd02a",
+    "rijksmuseum/recovered.zip": "3fdccf81d5c992052c5e2dccc583df671272d7e9ec427c88702d43ebd5ef27a5"
+  },
+  "cost": {
+    "attempts": 16,
+    "estimated_usd": "0.02168910",
+    "holds": 2,
+    "remaining_after_holds_usd": "9.95831090"
+  }
+}

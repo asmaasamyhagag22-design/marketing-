@@ -1,0 +1,40 @@
+{
+  "model": "gemini-3.1-flash-lite",
+  "prompt_sha256": "87d7d8daa23134914958688ee39543416c34727590b5db1ed295612d587466cc",
+  "input": {
+    "brief": {
+      "objective": "Increase visits to the Pick a Brick catalog to find a piece for a build",
+      "summary": "Whether you're searching for the perfect piece to complete your masterpiece, starting a brand-new build, or customize an existing LEGO® set, it's all possible with Pick a Brick.",
+      "audience": "مهتمون يريدون فهم الميزة قبل اتخاذ قرار.",
+      "language": "ar",
+      "tone": "واضحة وهادئة",
+      "strategy_reason": "الهدف زيارة شرح محدد. لو اختفى شرح الميزة أو تغيّر الهدف لإجراء، أعد البحث عن الوجهة."
+    },
+    "evidence": [
+      {
+        "page_url": "https://www.lego.com/en-us/pick-and-build/pick-a-brick",
+        "label": "LEGO® Pick a Brick",
+        "quote": "Whether you're searching for the perfect piece to complete your masterpiece, starting a brand-new build, or customize an existing LEGO® set, it's all possible with Pick a Brick.",
+        "context": "Unleash your creativity and bring your ideas to life with LEGO® Pick a Brick! Whether you're searching for the perfect piece to complete your masterpiece, starting a brand-new build, or customize an existing LEGO® set, it's all possible with Pick a Brick. Our extensive selection of bricks, plates, tiles, minifigure pieces and more has everything you need. Looking for something specific? You can easily browse by piece type, color , and more so you can find the perfect brick for your next creation. There’s no limit to what you can build!",
+        "constraints": {
+          "basis": "FULL_SOURCE_CONTEXT",
+          "branch": null,
+          "market": "UNCONFIRMED",
+          "page_path": "/en-us/pick-and-build/pick-a-brick",
+          "price": null,
+          "valid_until": null
+        }
+      }
+    ],
+    "destination": "https://www.lego.com/en-us/pick-and-build/pick-a-brick",
+    "action": "READ_FEATURE",
+    "baseline": {
+      "cta": "اقرأ الشرح",
+      "headline": "LEGO® Pick a Brick",
+      "message": "الدليل والشرح من موقع البراند."
+    }
+  },
+  "output_limit": 1300,
+  "reserve_usd": "0.01",
+  "task_exposure_before": "0.03067715"
+}

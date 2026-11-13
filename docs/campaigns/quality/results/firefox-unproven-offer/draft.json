@@ -1,0 +1,272 @@
+{
+  "domain_key": "firefox_com",
+  "run_id": "928ba380-9d1e-456f-8b6c-b2957adbd719",
+  "profile_snapshot_id": "de4e2524-46f4-4271-92ce-21af8d7c01f8",
+  "proposal": {
+    "schema_version": 2,
+    "kind": "SOURCE_CAMPAIGN",
+    "brand_name": "www.firefox.com",
+    "brief": null,
+    "evidence": [
+      {
+        "page_url": "https://www.firefox.com/en-US/features/protection/",
+        "capture_kind": "public_http",
+        "captured_at": "2026-11-13T12:39:31.582563+00:00",
+        "body_sha256": "b18e2e05accfb7d93e7b4a893e11bfdb422854ab371fe7bfd41fa625eb8164ea",
+        "text_sha256": "d490c5161a0b2a3a25930cf75695840d01afd59bb6b1da8b9e0f3992c1a033fc",
+        "title": "Protection — Firefox.com",
+        "label": "Enhanced Tracking Protection",
+        "quote": "Firefox blocks thousands of known trackers before they can follow you around the web.",
+        "context": "Firefox blocks thousands of known trackers before they can follow you around the web. No setup required. Just open Firefox and browse with protection already in place. You can also see what’s being blocked by clicking the shield icon in your address bar.",
+        "score": 8,
+        "specificity": 0.533,
+        "scope": "Enhanced Tracking Protection",
+        "outcome": "QUOTE_OBSERVED",
+        "constraints": {
+          "basis": "FULL_SOURCE_CONTEXT",
+          "page_path": "/en-US/features/protection/",
+          "price": null,
+          "branch": null,
+          "valid_until": null,
+          "market": "UNCONFIRMED"
+        }
+      }
+    ],
+    "status": "BLOCKED",
+    "package": null,
+    "changes": [],
+    "planner": {
+      "policy": "source-campaign-planner@1",
+      "input": {
+        "url": "https://www.firefox.com/en-US/features/",
+        "objective": "Increase purchases with a 20% discount on Firefox Enhanced Tracking Protection",
+        "language": "en"
+      },
+      "intent": "OFFER",
+      "question": "Where are the published price, market and validity terms?",
+      "trace": [
+        {
+          "page_url": "https://www.firefox.com/en-US/features/",
+          "reason": "BRAND_ENTRY",
+          "anchor": "",
+          "outcome": "SOURCE_READ",
+          "candidate_count": 8,
+          "gap_after": "COMMERCIAL_TERMS"
+        },
+        {
+          "page_url": "https://www.firefox.com/en-US/features/protection/",
+          "reason": "FIND_COMMERCIAL_TERMS",
+          "anchor": "Protection in Firefox",
+          "outcome": "SOURCE_READ",
+          "candidate_count": 8,
+          "gap_after": "COMMERCIAL_TERMS"
+        },
+        {
+          "page_url": "https://www.firefox.com/en-US/mobile/",
+          "reason": "FIND_COMMERCIAL_TERMS",
+          "anchor": "Get Firefox on your phone",
+          "outcome": "SOURCE_READ",
+          "candidate_count": 4,
+          "gap_after": "COMMERCIAL_TERMS"
+        },
+        {
+          "page_url": "https://www.firefox.com/en-US/firefox/notes/",
+          "reason": "FIND_COMMERCIAL_TERMS",
+          "anchor": "Release Notes",
+          "outcome": "SOURCE_REDIRECT",
+          "http_status": 302,
+          "gap_after": "COMMERCIAL_TERMS"
+        }
+      ],
+      "pages": [
+        {
+          "page_url": "https://www.firefox.com/en-US/features/",
+          "capture_kind": "public_http",
+          "captured_at": "2026-11-13T12:39:29.917345+00:00",
+          "body_sha256": "0d972188dea79e8b20c8f4461e697557a7df9f863117e76a9ef5cc6bcccee4f1",
+          "text_sha256": "f64beea17eebc7036b2a1b0be09b5c404c6729819f811e9fff9f24cb4cff4645",
+          "title": "Learn about Firefox features — Firefox.com",
+          "entries": [
+            {
+              "label": "Made by people on the internet, for people on the internet",
+              "quote": "Firefox blocks trackers automatically and protects your privacy by default, so you can browse confidently without becoming a privacy expert.",
+              "context": "Staying safe online shouldn’t demand constant attention. Firefox blocks trackers automatically and protects your privacy by default, so you can browse confidently without becoming a privacy expert.",
+              "score": 4,
+              "specificity": 1.2
+            },
+            {
+              "label": "Made by people on the internet, for people on the internet",
+              "quote": "We're here to give you the internet on your terms: fast, private and actually useful.",
+              "context": "We're here to give you the internet on your terms: fast, private and actually useful.",
+              "score": 3,
+              "specificity": 1.0
+            },
+            {
+              "label": "Made by people on the internet, for people on the internet",
+              "quote": "Firefox gives you real choices without burying you in settings.",
+              "context": "Firefox gives you real choices without burying you in settings. Choose your tools, customize your experience, and decide how your browser works, instead of adapting to someone else’s defaults.",
+              "score": 3,
+              "specificity": 0.2
+            },
+            {
+              "label": "Made by people on the internet, for people on the internet",
+              "quote": "Firefox is designed to reduce noise, cut distractions, and help you stay oriented, whether you’re reading, researching, or multitasking.",
+              "context": "Your browser shouldn’t compete for your attention. Firefox is designed to reduce noise, cut distractions, and help you stay oriented, whether you’re reading, researching, or multitasking.",
+              "score": 3,
+              "specificity": 0.2
+            },
+            {
+              "label": "Keep up with all things Firefox",
+              "quote": "Get how-tos, advice and news to make your Firefox experience work best for you.",
+              "context": "Get how-tos, advice and news to make your Firefox experience work best for you.",
+              "score": 3,
+              "specificity": 0.2
+            },
+            {
+              "label": "Browse with features that put you first",
+              "quote": "Firefox was built to give you control.",
+              "context": "Most browsers were built to capture your attention and monetize your data. Firefox was built to give you control.",
+              "score": 1,
+              "specificity": 0.2
+            },
+            {
+              "label": "Made by people on the internet, for people on the internet",
+              "quote": "Staying safe online shouldn’t demand constant attention.",
+              "context": "Staying safe online shouldn’t demand constant attention. Firefox blocks trackers automatically and protects your privacy by default, so you can browse confidently without becoming a privacy expert.",
+              "score": 2,
+              "specificity": 0
+            },
+            {
+              "label": "Made by people on the internet, for people on the internet",
+              "quote": "Choose your tools, customize your experience, and decide how your browser works, instead of adapting to someone else’s defaults.",
+              "context": "Firefox gives you real choices without burying you in settings. Choose your tools, customize your experience, and decide how your browser works, instead of adapting to someone else’s defaults.",
+              "score": 2,
+              "specificity": 0
+            }
+          ]
+        },
+        {
+          "page_url": "https://www.firefox.com/en-US/features/protection/",
+          "capture_kind": "public_http",
+          "captured_at": "2026-11-13T12:39:31.582563+00:00",
+          "body_sha256": "b18e2e05accfb7d93e7b4a893e11bfdb422854ab371fe7bfd41fa625eb8164ea",
+          "text_sha256": "d490c5161a0b2a3a25930cf75695840d01afd59bb6b1da8b9e0f3992c1a033fc",
+          "title": "Protection — Firefox.com",
+          "entries": [
+            {
+              "label": "Enhanced Tracking Protection",
+              "quote": "Firefox blocks thousands of known trackers before they can follow you around the web.",
+              "context": "Firefox blocks thousands of known trackers before they can follow you around the web. No setup required. Just open Firefox and browse with protection already in place. You can also see what’s being blocked by clicking the shield icon in your address bar.",
+              "score": 8,
+              "specificity": 0.533
+            },
+            {
+              "label": "Total cookie protection",
+              "quote": "Total Cookie Protection keeps each site’s cookies separate, so companies can’t connect the dots across your browsing.",
+              "context": "Cookies are one of the web’s favorite tracking tools, following you from site to site and quietly building a profile of your activity. Total Cookie Protection keeps each site’s cookies separate, so companies can’t connect the dots across your browsing.",
+              "score": 3,
+              "specificity": 0.5
+            },
+            {
+              "label": "Your online life belongs to you",
+              "quote": "Protection shouldn’t be a premium feature.",
+              "context": "Protection shouldn’t be a premium feature. With Firefox, it’s built in. We block trackers automatically, protect your privacy by default, and give you clear visibility into what’s happening behind the scenes.",
+              "score": 1,
+              "specificity": 0.5
+            },
+            {
+              "label": "Total cookie protection",
+              "quote": "Cookies are one of the web’s favorite tracking tools, following you from site to site and quietly building a profile of your activity.",
+              "context": "Cookies are one of the web’s favorite tracking tools, following you from site to site and quietly building a profile of your activity. Total Cookie Protection keeps each site’s cookies separate, so companies can’t connect the dots across your browsing.",
+              "score": 3,
+              "specificity": 0.333
+            },
+            {
+              "label": "Your online life belongs to you",
+              "quote": "We block trackers automatically, protect your privacy by default, and give you clear visibility into what’s happening behind the scenes.",
+              "context": "Protection shouldn’t be a premium feature. With Firefox, it’s built in. We block trackers automatically, protect your privacy by default, and give you clear visibility into what’s happening behind the scenes.",
+              "score": 1,
+              "specificity": 0.333
+            },
+            {
+              "label": "More Firefox Features",
+              "quote": "Firefox gives you real choices without burying you in settings.",
+              "context": "Firefox gives you real choices without burying you in settings. Choose your tools, customize your experience, and decide how your browser works, instead of adapting to someone else’s defaults.",
+              "score": 3,
+              "specificity": 0.2
+            },
+            {
+              "label": "More Firefox Features",
+              "quote": "Firefox is designed to reduce noise, cut distractions, and help you stay oriented, whether you’re reading, researching, or multitasking.",
+              "context": "Your browser shouldn’t compete for your attention. Firefox is designed to reduce noise, cut distractions, and help you stay oriented, whether you’re reading, researching, or multitasking.",
+              "score": 3,
+              "specificity": 0.2
+            },
+            {
+              "label": "Keep up with all things Firefox",
+              "quote": "Get how-tos, advice and news to make your Firefox experience work best for you.",
+              "context": "Get how-tos, advice and news to make your Firefox experience work best for you.",
+              "score": 3,
+              "specificity": 0.2
+            }
+          ]
+        },
+        {
+          "page_url": "https://www.firefox.com/en-US/mobile/",
+          "capture_kind": "public_http",
+          "captured_at": "2026-11-13T12:39:32.921636+00:00",
+          "body_sha256": "213dd4885396decbde1beee9df75507cd93bbe40dd4c9395e79d65b03c76d674",
+          "text_sha256": "1b97b71a79a2bb50ff700415bd5b13bcb728fa847984d4c7095c76e445f75d9d",
+          "title": "Firefox mobile browsers put your privacy first — Firefox.com",
+          "entries": [
+            {
+              "label": "Firefox for iOS",
+              "quote": "A more private way to browse on iPhone and iPad, with built-in tracking protection.",
+              "context": "A more private way to browse on iPhone and iPad, with built-in tracking protection.",
+              "score": 5,
+              "specificity": 2.333
+            },
+            {
+              "label": "Firefox for Android",
+              "quote": "Private by default, with more ways to make Firefox your own on Android.",
+              "context": "Private by default, with more ways to make Firefox your own on Android.",
+              "score": 4,
+              "specificity": 1.333
+            },
+            {
+              "label": "Firefox on your phone",
+              "quote": "The browser you trust, built for life on the go.",
+              "context": "The browser you trust, built for life on the go.",
+              "score": 5,
+              "specificity": 0.333
+            },
+            {
+              "label": "Firefox Focus",
+              "quote": "A fast, minimal browser that clears your history when you’re done.",
+              "context": "A fast, minimal browser that clears your history when you’re done.",
+              "score": 2,
+              "specificity": 0
+            }
+          ]
+        }
+      ],
+      "conflicts": [],
+      "gap": "COMMERCIAL_TERMS",
+      "missing_question": "Which official page confirms eligibility, price if relevant, market and validity?",
+      "stop": "BUDGET_EXHAUSTED",
+      "page_calls": 4,
+      "elapsed_ms": 4712.85,
+      "provider_calls": 0,
+      "cost_usd": 0,
+      "brief_reviewed": false,
+      "opportunity_hypothesis": "Test whether connecting the feature to a specific action improves clicks from the proposed audience.",
+      "request_id": "97f2d14f-0e25-4251-858c-d725b3c85b1d"
+    },
+    "sha256": "bd3f31fb453e236d6264616cc6e650b34ee38220d5c6cf5db1f0f84a5156c55f"
+  },
+  "reason": "EVIDENCE_GAP",
+  "checked_at": "2026-11-13T12:39:33.709363+00:00",
+  "decision": null,
+  "approved": false,
+  "approval_id": null
+}

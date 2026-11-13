@@ -1,0 +1,10 @@
+{
+  "outcome": "TRUNCATED",
+  "estimated_charge": "0.00192555",
+  "content": "[\n  {\n    \"angle\": \"الخصوصية التلقائية\",\n    \"headline\": \"تصفح بخصوصية دون أي إعدادات\",\n    \"message\": \"يحجب متصفح فايرفوكس آلاف المتعقبات تلقائياً قبل أن تتمكن من ملاحقتك عبر الإنترنت.\",\n    \"cta\": \"اكتشف كيف نحميك\",\n    \"caption\": \"لا حاجة لضبط إعدادات معقدة. بمجرد فتح فايرفوكس، تكون الحماية مفعلة بالفعل. تعرف على كيفية عمل ميزة الحماية المحسنة من التعقب.\",\n    \"visual\": \"أيقونة درع فايرفوكس تظهر في شريط العنوان مع رسوم توضيحية لمتعقبات يتم حجبها.\",\n    \"source_url\": \"https://www.firefox.com/en-US/features/protection/\",\n    \"source_quote\": \"Firefox blocks thousands of known trackers before they can follow you around the web.\"\n  },\n  {\n    \"angle\": \"التحكم في بياناتك\",\n    \"headline\": \"شاهد من يحاول تعقبك أثناء التصفح\",\n    \"message\": \"يقوم فايرفوكس بحجب المتعقبات المعروفة، ويمكنك رؤية ما يتم حظره بضغطة زر واحدة.\",\n    \"cta\": \"تعرف على ميزة الحماية\",\n    \"caption\": \"تحكم في خصوصيتك. اضغط على أيقونة الدرع في شريط العنوان لترى تفاصيل المتعقبات التي يحجبها فايرفوكس عنك في الوقت الفعلي.\",\n    \"visual\": \"لقطة شاشة لواجهة متصفح فايرفوكس تظهر أيقونة الدرع مع قائمة منسدلة توضح المتعقبات المحجوبة.\",\n    \"source_url\": \"https://www.firefox.com/en-US/features/protection/\",\n    \"source_quote\": \"Firefox blocks thousands of known trackers before they can follow you around the web.\"\n  },\n  {\n    \"angle\": \"تصفح آمن ومستقل\",\n    \"headline\": \"تصفح الإنترنت دون ملاحقة\",\n    \"message\": \"آلاف المتعقبات تحاول مراقبة نشاطك، وفايرفوكس يوقفها قبل أن تبدأ.\",\n    \"cta\": \"اقرأ المزيد عن الحماية\",\n    \"caption\": \"استمتع بتجربة تصفح أكثر هدوءاً. فايرفوكس يحجب المتعقبات المعروفة تلقائياً، مما يمنحك خصوصية أكبر دون الحاجة لأي إعدادات إضافية.\",\n    \"visual\": \"صورة تعبيرية لمستخدم يتصفح بهدوء مع ظهور أيقونة الدرع كرمز للأمان الرقمي.\",\n    \"source_url\": \"https://www.firefox.com/en-US/features",
+  "finish_reason": "FinishReason.MAX_TOKENS",
+  "model": "gemini-3.1-flash-lite",
+  "prompt_tokens": 475,
+  "completion_tokens": 634,
+  "seconds": 15.45
+}

@@ -1,0 +1,435 @@
+{
+  "approval_id": "a85054ce-0934-4b72-92a6-9ea8f6250891",
+  "poster_measurements": {
+    "portrait": {
+      "geometry": [
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 136,
+          "color": "rgb(255, 247, 239)",
+          "field": "brand",
+          "overflow": false,
+          "right": 1004,
+          "size": 40,
+          "x": 76,
+          "y": 64
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 792.140625,
+          "color": "rgb(255, 247, 239)",
+          "field": "motif",
+          "overflow": false,
+          "right": 1004,
+          "size": 16,
+          "x": 76,
+          "y": 166
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 1043.890625,
+          "color": "rgb(255, 247, 239)",
+          "field": "H1",
+          "overflow": false,
+          "right": 1004,
+          "size": 88,
+          "x": 76,
+          "y": 822.140625
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 1190.359375,
+          "color": "rgb(255, 247, 239)",
+          "field": "message",
+          "overflow": false,
+          "right": 1004,
+          "size": 44,
+          "x": 76,
+          "y": 1061.890625
+        },
+        {
+          "background": "rgb(255, 201, 131)",
+          "bottom": 1286,
+          "color": "rgb(19, 13, 54)",
+          "field": "cta",
+          "overflow": false,
+          "right": 519,
+          "size": 37,
+          "x": 76,
+          "y": 1208.359375
+        }
+      ],
+      "height": 1350,
+      "sha256": "401bd490558b5631b0f9ed3e2802580ae420aae968d764a6fbc3e529787289f3",
+      "width": 1080
+    },
+    "square": {
+      "geometry": [
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 136,
+          "color": "rgb(255, 247, 239)",
+          "field": "brand",
+          "overflow": false,
+          "right": 1004,
+          "size": 40,
+          "x": 76,
+          "y": 64
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 522.140625,
+          "color": "rgb(255, 247, 239)",
+          "field": "motif",
+          "overflow": false,
+          "right": 1004,
+          "size": 16,
+          "x": 76,
+          "y": 166
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 773.890625,
+          "color": "rgb(255, 247, 239)",
+          "field": "H1",
+          "overflow": false,
+          "right": 1004,
+          "size": 88,
+          "x": 76,
+          "y": 552.140625
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 920.359375,
+          "color": "rgb(255, 247, 239)",
+          "field": "message",
+          "overflow": false,
+          "right": 1004,
+          "size": 44,
+          "x": 76,
+          "y": 791.890625
+        },
+        {
+          "background": "rgb(255, 201, 131)",
+          "bottom": 1016,
+          "color": "rgb(19, 13, 54)",
+          "field": "cta",
+          "overflow": false,
+          "right": 519,
+          "size": 37,
+          "x": 76,
+          "y": 938.359375
+        }
+      ],
+      "height": 1080,
+      "sha256": "74ad25092ca2773b379b46f79bf6ca8b8b1664185c11fa2b3bf6594fdec17716",
+      "width": 1080
+    }
+  },
+  "profile_snapshot_id": "baf7ab46-e06d-437b-bc69-09cca0c0141a",
+  "proposal": {
+    "brand_name": "brave.com",
+    "brief": {
+      "alternatives": [
+        {
+          "name": "Explain the feature",
+          "plan": "Lead with the feature name and link to the publisher’s explanation.",
+          "tradeoff": "Shortens the path to the explanation and leaves the decision to the reader."
+        },
+        {
+          "name": "Evaluate the fit",
+          "plan": "Ask a fit question. Use the publisher’s explanation as one input to a comparison.",
+          "tradeoff": "Supports evaluation and would need comparative evidence for any superiority claim."
+        },
+        {
+          "name": "Explore the topic",
+          "plan": "Use the topic name as an entry point for open-ended reading.",
+          "tradeoff": "Broader discovery with the same explanation page as the destination."
+        }
+      ],
+      "assumption": "The audience is a working hypothesis. Test whether interest in the feature drives the intended click.",
+      "audience": "People who want to understand the feature before acting.",
+      "competitor": null,
+      "direction": "ltr",
+      "directions": [
+        {
+          "caption": "Block third-party ads & trackers — Third-party ad & tracker blocking , on every page you visit. Read the explanation.",
+          "cta": "Read the explanation",
+          "end_shot": "End on the brand name and exact call to action.",
+          "headline": "Block third-party ads & trackers",
+          "hook": "Block third-party ads & trackers",
+          "message": "Third-party ad & tracker blocking , on every page you visit.",
+          "middle_shot": "Reveal the topic label and hold the background still.",
+          "name": "Explain the feature",
+          "rationale": "Lead with the feature name and link to the publisher’s explanation.",
+          "shot": "Reveal the campaign prompt over a simple geometric motif.",
+          "theme": "cobalt"
+        },
+        {
+          "caption": "Would it fit your needs — Third-party ad & tracker blocking , on every page you visit. Review the details.",
+          "cta": "Review the details",
+          "end_shot": "End on the brand name and exact call to action.",
+          "headline": "Would it fit your needs?",
+          "hook": "Would it fit your needs?",
+          "message": "Third-party ad & tracker blocking , on every page you visit.",
+          "middle_shot": "Reveal the topic label and hold the background still.",
+          "name": "Evaluate the fit",
+          "rationale": "Ask a fit question. Use the publisher’s explanation as one input to a comparison.",
+          "shot": "Reveal the campaign prompt over a simple geometric motif.",
+          "theme": "forest"
+        },
+        {
+          "caption": "Where would you start — Third-party ad & tracker blocking , on every page you visit. Explore the topic page.",
+          "cta": "Explore the topic page",
+          "end_shot": "End on the brand name and exact call to action.",
+          "headline": "Where would you start?",
+          "hook": "Where would you start?",
+          "message": "Third-party ad & tracker blocking , on every page you visit.",
+          "middle_shot": "Reveal the topic label and hold the background still.",
+          "name": "Explore the topic",
+          "rationale": "Use the topic name as an entry point for open-ended reading.",
+          "shot": "Reveal the campaign prompt over a simple geometric motif.",
+          "theme": "ember"
+        }
+      ],
+      "human_review": [
+        "Review the original feature label, language, source scope and rights.",
+        "Check the destination on mobile and confirm the conversion measurement."
+      ],
+      "language": "en",
+      "market": "Confirm market scope before publishing.",
+      "metric": "Explanation clicks per impression.",
+      "objective": "Increase visits to the Brave Shields explanation for people interested in blocking trackers",
+      "peer_rationale": null,
+      "peer_source": null,
+      "selected": 0,
+      "source": {
+        "quote": "Third-party ad & tracker blocking , on every page you visit.",
+        "scope": "Block third-party ads & trackers",
+        "url": "https://brave.com/shields/"
+      },
+      "strategy_index": 0,
+      "strategy_reason": "The goal is a visit to a specific explanation. Reopen the choice if it disappears or the goal changes to an action.",
+      "summary": "Third-party ad & tracker blocking , on every page you visit.",
+      "tone": "Plain and concise"
+    },
+    "changes": [],
+    "evidence": [
+      {
+        "body_sha256": "9ddda044ed363dbd76b40df98a0d405c714e5ccd35483be9410e148e102e21e1",
+        "capture_kind": "public_http",
+        "captured_at": "2026-11-13T12:26:18.913358+00:00",
+        "constraints": {
+          "basis": "FULL_SOURCE_CONTEXT",
+          "branch": null,
+          "market": "UNCONFIRMED",
+          "page_path": "/shields/",
+          "price": null,
+          "valid_until": null
+        },
+        "context": "Third-party ad & tracker blocking , on every page you visit. Available in Standard and Aggressive mode.",
+        "label": "Block third-party ads & trackers",
+        "outcome": "QUOTE_OBSERVED",
+        "page_url": "https://brave.com/shields/",
+        "quote": "Third-party ad & tracker blocking , on every page you visit.",
+        "scope": "Block third-party ads & trackers",
+        "score": 6,
+        "specificity": 0.333,
+        "text_sha256": "e59085dc3d7fa29eb08010624befa56b7bacc732663cd05eabdb944acfbd9801",
+        "title": "Brave Shields - Blocking Ads, Trackers & more | Brave"
+      }
+    ],
+    "kind": "SOURCE_CAMPAIGN",
+    "package": {
+      "brand_name": "brave.com",
+      "caption": "Block third-party ads & trackers — Third-party ad & tracker blocking , on every page you visit. Read the explanation.",
+      "copy": {
+        "cta": "Read the explanation",
+        "headline": "Block third-party ads & trackers",
+        "message": "Third-party ad & tracker blocking , on every page you visit."
+      },
+      "direction": "ltr",
+      "factual_review": "SOURCE_LABEL_REUSE_REQUIRES_HUMAN_REVIEW",
+      "language": "en",
+      "poster_layout": "source-campaign@1",
+      "source_evidence_index": 0,
+      "source_url": "https://brave.com/shields/",
+      "storyboard": [
+        {
+          "line": "Block third-party ads & trackers",
+          "seconds": "0–3",
+          "visual": "Reveal the campaign prompt over a simple geometric motif."
+        },
+        {
+          "line": "Third-party ad & tracker blocking , on every page you visit.",
+          "seconds": "3–8",
+          "visual": "Reveal the topic label and hold the background still."
+        },
+        {
+          "line": "Read the explanation",
+          "seconds": "8–12",
+          "visual": "End on the brand name and exact call to action."
+        }
+      ],
+      "theme": "cobalt"
+    },
+    "planner": {
+      "brief_reviewed": true,
+      "claims": [
+        {
+          "basis": "PUBLISHER_QUOTE_AND_SECTION_LABEL",
+          "evidence_index": 0,
+          "fields": [
+            "brief.summary",
+            "package.copy.message"
+          ],
+          "semantic_review": "HUMAN_REVIEW_REQUIRED"
+        }
+      ],
+      "conflicts": [],
+      "cost_usd": 0,
+      "destination_evidence_index": 0,
+      "elapsed_ms": 1318.94,
+      "gap": null,
+      "input": {
+        "language": "en",
+        "objective": "Increase visits to the Brave Shields explanation for people interested in blocking trackers",
+        "url": "https://brave.com/shields/"
+      },
+      "intent": "DISCOVERY",
+      "missing_question": null,
+      "opportunity_hypothesis": "Test whether connecting the feature to a specific action improves clicks from the proposed audience.",
+      "options": [
+        {
+          "action": "READ_FEATURE",
+          "audience": "People who want to understand the feature before acting.",
+          "cta": "Read the explanation",
+          "destination": "https://brave.com/shields/",
+          "evidence_index": 0,
+          "headline": "Start with the feature",
+          "message": "Lead with the feature name and link to the publisher’s explanation.",
+          "metric": "Explanation clicks per impression.",
+          "name": "Explain the feature",
+          "theme": "cobalt",
+          "tradeoff": "Shortens the path to the explanation and leaves the decision to the reader."
+        },
+        {
+          "action": "COMPARE_FIT",
+          "audience": "People comparing alternatives who need to inspect the details.",
+          "cta": "Review the details",
+          "destination": "https://brave.com/shields/",
+          "evidence_index": 0,
+          "headline": "Would it fit your needs?",
+          "message": "Ask a fit question. Use the publisher’s explanation as one input to a comparison.",
+          "metric": "Visits to the explanation from the comparison creative.",
+          "name": "Evaluate the fit",
+          "theme": "forest",
+          "tradeoff": "Supports evaluation and would need comparative evidence for any superiority claim."
+        },
+        {
+          "action": "EXPLORE_TOPIC",
+          "audience": "People at the start of discovery.",
+          "cta": "Explore the topic page",
+          "destination": "https://brave.com/shields/",
+          "evidence_index": 0,
+          "headline": "Where would you start?",
+          "message": "Use the topic name as an entry point for open-ended reading.",
+          "metric": "Topic-page clicks from the discovery creative.",
+          "name": "Explore the topic",
+          "theme": "ember",
+          "tradeoff": "Broader discovery with the same explanation page as the destination."
+        }
+      ],
+      "page_calls": 1,
+      "pages": [
+        {
+          "body_sha256": "9ddda044ed363dbd76b40df98a0d405c714e5ccd35483be9410e148e102e21e1",
+          "capture_kind": "public_http",
+          "captured_at": "2026-11-13T12:26:18.913358+00:00",
+          "entries": [
+            {
+              "context": "Third-party ad & tracker blocking , on every page you visit. Available in Standard and Aggressive mode.",
+              "label": "Block third-party ads & trackers",
+              "quote": "Third-party ad & tracker blocking , on every page you visit.",
+              "score": 6,
+              "specificity": 0.333
+            },
+            {
+              "context": "CNAME uncloaking : Some third-party trackers use cloaking tactics to hide where code really comes from, and circumvent ad blockers. Brave can see through this evasion, and stop it from happening.",
+              "label": "Block third-party ads & trackers",
+              "quote": "CNAME uncloaking : Some third-party trackers use cloaking tactics to hide where code really comes from, and circumvent ad blockers.",
+              "score": 6,
+              "specificity": 0.333
+            },
+            {
+              "context": "Block cross-site cookies , and thus prevent site-to-site tracking.",
+              "label": "Cookie partitioning",
+              "quote": "Block cross-site cookies , and thus prevent site-to-site tracking.",
+              "score": 2,
+              "specificity": 0.333
+            },
+            {
+              "context": "Resource replacement : Brave will block-and-replace problematic resource scripts with a stripped-down, more private version that still allows the page to function.",
+              "label": "Block third-party ads & trackers",
+              "quote": "Resource replacement : Brave will block-and-replace problematic resource scripts with a stripped-down, more private version that still allows the page to function.",
+              "score": 6,
+              "specificity": 0.31
+            },
+            {
+              "context": "Yes. But know that with Shields down, some of the privacy protections of Brave will be disabled. If you see a site that’s not working, first verify that the site is trusted before putting Shields down.",
+              "label": "One of the websites I’m visiting isn’t working. Can I turn off Shields?",
+              "quote": "But know that with Shields down, some of the privacy protections of Brave will be disabled.",
+              "score": 4,
+              "specificity": 0.31
+            },
+            {
+              "context": "Your digital fingerprint is the unique set of data points (like your graphics hardware, audio hardware, device type, and more) that, when combined, could help identify you online. By default, Brave protects you from tracking based on your browser fingerprint, by randomizing that fingerprint . The Brave browser makes you look different to every site, each time you restart the browser. This prevents sites from using fingerprinting to track you across sites or even from one online session to another.",
+              "label": "How does fingerprint randomization work?",
+              "quote": "By default, Brave protects you from tracking based on your browser fingerprint, by randomizing that fingerprint .",
+              "score": 2,
+              "specificity": 0.31
+            },
+            {
+              "context": "By default, Brave has the strongest privacy protections of any popular browser. And Shields are a core part of that protection. Here’s a long list of what they can do:",
+              "label": "A long list of what Shields can do",
+              "quote": "And Shields are a core part of that protection.",
+              "score": 3,
+              "specificity": 0.167
+            },
+            {
+              "context": "Yes. But know that with Shields down, some of the privacy protections of Brave will be disabled. If you see a site that’s not working, first verify that the site is trusted before putting Shields down.",
+              "label": "One of the websites I’m visiting isn’t working. Can I turn off Shields?",
+              "quote": "If you see a site that’s not working, first verify that the site is trusted before putting Shields down.",
+              "score": 3,
+              "specificity": 0.167
+            }
+          ],
+          "page_url": "https://brave.com/shields/",
+          "text_sha256": "e59085dc3d7fa29eb08010624befa56b7bacc732663cd05eabdb944acfbd9801",
+          "title": "Brave Shields - Blocking Ads, Trackers & more | Brave"
+        }
+      ],
+      "policy": "source-campaign-planner@1",
+      "provider_calls": 0,
+      "question": "Which brand page describes the feature in the goal?",
+      "request_id": null,
+      "stop": "DECISION_EVIDENCE_FOUND",
+      "trace": [
+        {
+          "anchor": "",
+          "candidate_count": 8,
+          "gap_after": null,
+          "outcome": "SOURCE_READ",
+          "page_url": "https://brave.com/shields/",
+          "reason": "BRAND_ENTRY"
+        }
+      ]
+    },
+    "schema_version": 2,
+    "sha256": "207bdd04753f8c1fc08a4e9255266c81a6c57559a018f9798acd56afed290b6b",
+    "status": "READY"
+  },
+  "review_status": "LOCAL_REVIEW",
+  "run_id": "775dd8c0-39fb-4991-aed6-8f0b67beca60",
+  "video": "SCRIPT_AND_STORYBOARD_ONLY"
+}

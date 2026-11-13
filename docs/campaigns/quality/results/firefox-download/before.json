@@ -1,0 +1,583 @@
+{
+  "approval_id": "29cfcc96-db67-405f-b859-9d195f9ed6ba",
+  "poster_measurements": {
+    "portrait": {
+      "geometry": [
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 136,
+          "color": "rgb(255, 244, 220)",
+          "field": "brand",
+          "overflow": false,
+          "right": 1004,
+          "size": 40,
+          "x": 76,
+          "y": 64
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 967.25,
+          "color": "rgb(255, 244, 220)",
+          "field": "motif",
+          "overflow": false,
+          "right": 1004,
+          "size": 16,
+          "x": 76,
+          "y": 166
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 1108.125,
+          "color": "rgb(255, 244, 220)",
+          "field": "H1",
+          "overflow": false,
+          "right": 1004,
+          "size": 88,
+          "x": 76,
+          "y": 997.25
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 1190.359375,
+          "color": "rgb(255, 244, 220)",
+          "field": "message",
+          "overflow": false,
+          "right": 1004,
+          "size": 44,
+          "x": 76,
+          "y": 1126.125
+        },
+        {
+          "background": "rgb(255, 187, 94)",
+          "bottom": 1286,
+          "color": "rgb(50, 21, 23)",
+          "field": "cta",
+          "overflow": false,
+          "right": 1004,
+          "size": 37,
+          "x": 610,
+          "y": 1208.359375
+        }
+      ],
+      "height": 1350,
+      "sha256": "afb438687215fc299f4b7242ac6e7e0a1e902fae3a95f278a558cc7b81848ba2",
+      "width": 1080
+    },
+    "square": {
+      "geometry": [
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 136,
+          "color": "rgb(255, 244, 220)",
+          "field": "brand",
+          "overflow": false,
+          "right": 1004,
+          "size": 40,
+          "x": 76,
+          "y": 64
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 697.25,
+          "color": "rgb(255, 244, 220)",
+          "field": "motif",
+          "overflow": false,
+          "right": 1004,
+          "size": 16,
+          "x": 76,
+          "y": 166
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 838.125,
+          "color": "rgb(255, 244, 220)",
+          "field": "H1",
+          "overflow": false,
+          "right": 1004,
+          "size": 88,
+          "x": 76,
+          "y": 727.25
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 920.359375,
+          "color": "rgb(255, 244, 220)",
+          "field": "message",
+          "overflow": false,
+          "right": 1004,
+          "size": 44,
+          "x": 76,
+          "y": 856.125
+        },
+        {
+          "background": "rgb(255, 187, 94)",
+          "bottom": 1016,
+          "color": "rgb(50, 21, 23)",
+          "field": "cta",
+          "overflow": false,
+          "right": 1004,
+          "size": 37,
+          "x": 610,
+          "y": 938.359375
+        }
+      ],
+      "height": 1080,
+      "sha256": "d01694712308bf75a9ce0867ce56a42b5e1afb23af3dd28ed592504fafab6275",
+      "width": 1080
+    }
+  },
+  "profile_snapshot_id": "ee360ea8-7814-4749-a3b0-8db6d80c2a2a",
+  "proposal": {
+    "brand_name": "www.firefox.com",
+    "brief": {
+      "alternatives": [
+        {
+          "name": "شرح الميزة",
+          "plan": "ابدأ باسم الميزة ووجّه القارئ إلى شرحها الرسمي.",
+          "tradeoff": "يقلّل خطوة البحث للقارئ ويترك التقييم له."
+        },
+        {
+          "name": "قيّم الملاءمة",
+          "plan": "اطرح سؤال ملاءمة. استخدم شرح الناشر كنقطة للمقارنة.",
+          "tradeoff": "يخدم مرحلة الاختيار ويحتاج بيانات قبل ادعاء تفوّق."
+        },
+        {
+          "name": "اختيار التنزيل",
+          "plan": "وجّه المهتم إلى خيارات التنزيل الرسمية.",
+          "tradeoff": "أقرب للتنزيل، ويحتاج رصد التثبيت لقياس النتيجة."
+        }
+      ],
+      "assumption": "الجمهور فرضية تحريرية. نختبر هل اهتمامه بالميزة يدفعه للنقر.",
+      "audience": "مهتمون وصلوا لمرحلة اختيار نسخة للتنزيل.",
+      "competitor": null,
+      "direction": "rtl",
+      "directions": [
+        {
+          "caption": "Enhanced Tracking Protection · الدليل والشرح من موقع البراند. اقرأ الشرح.",
+          "cta": "اقرأ الشرح",
+          "end_shot": "تظهر بطاقة باسم البراند والدعوة.",
+          "headline": "Enhanced Tracking Protection",
+          "hook": "Enhanced Tracking Protection",
+          "message": "الدليل والشرح من موقع البراند.",
+          "middle_shot": "يظهر اسم الميزة وتظل الخلفية ثابتة.",
+          "name": "شرح الميزة",
+          "rationale": "ابدأ باسم الميزة ووجّه القارئ إلى شرحها الرسمي.",
+          "shot": "يظهر سؤال الحملة فوق شكل هندسي بسيط.",
+          "theme": "cobalt"
+        },
+        {
+          "caption": "هل تناسب احتياجك · Enhanced Tracking Protection. راجع تفاصيل الميزة.",
+          "cta": "راجع تفاصيل الميزة",
+          "end_shot": "تظهر بطاقة باسم البراند والدعوة.",
+          "headline": "هل تناسب احتياجك؟",
+          "hook": "هل تناسب احتياجك؟",
+          "message": "Enhanced Tracking Protection",
+          "middle_shot": "يظهر اسم الميزة وتظل الخلفية ثابتة.",
+          "name": "قيّم الملاءمة",
+          "rationale": "اطرح سؤال ملاءمة. استخدم شرح الناشر كنقطة للمقارنة.",
+          "shot": "يظهر سؤال الحملة فوق شكل هندسي بسيط.",
+          "theme": "forest"
+        },
+        {
+          "caption": "اختر نسخة التنزيل · Enhanced Tracking Protection. اعرض خيارات التنزيل.",
+          "cta": "اعرض خيارات التنزيل",
+          "end_shot": "تظهر بطاقة باسم البراند والدعوة.",
+          "headline": "اختر نسخة التنزيل",
+          "hook": "اختر نسخة التنزيل",
+          "message": "Enhanced Tracking Protection",
+          "middle_shot": "يظهر اسم الميزة وتظل الخلفية ثابتة.",
+          "name": "اختيار التنزيل",
+          "rationale": "وجّه المهتم إلى خيارات التنزيل الرسمية.",
+          "shot": "يظهر سؤال الحملة فوق شكل هندسي بسيط.",
+          "theme": "ember"
+        }
+      ],
+      "human_review": [
+        "راجع الاسم الأصلي للميزة واللغة ونطاق المصدر والحقوق.",
+        "راجع الوجهة على الموبايل ووسيلة قياس النتيجة."
+      ],
+      "language": "ar",
+      "market": "نطاق السوق يحتاج تأكيدًا قبل النشر.",
+      "metric": "نقرات خيارات التنزيل، والتثبيت عند توفر رصد.",
+      "objective": "Increase Firefox downloads for people concerned about Enhanced Tracking Protection",
+      "peer_rationale": null,
+      "peer_source": null,
+      "selected": 2,
+      "source": {
+        "quote": "Firefox blocks thousands of known trackers before they can follow you around the web.",
+        "scope": "Enhanced Tracking Protection",
+        "url": "https://www.firefox.com/en-US/features/protection/"
+      },
+      "strategy_index": 2,
+      "strategy_reason": "وجد البحث صفحة رسمية لخيارات التنزيل. لو تغيّرت الوجهة أو فقدنا شرح الميزة، أعد القرار.",
+      "summary": "Firefox blocks thousands of known trackers before they can follow you around the web.",
+      "tone": "واضحة وهادئة"
+    },
+    "changes": [],
+    "evidence": [
+      {
+        "body_sha256": "b18e2e05accfb7d93e7b4a893e11bfdb422854ab371fe7bfd41fa625eb8164ea",
+        "capture_kind": "public_http",
+        "captured_at": "2026-11-13T08:24:49.357520+00:00",
+        "constraints": {
+          "basis": "FULL_SOURCE_CONTEXT",
+          "branch": null,
+          "market": "UNCONFIRMED",
+          "page_path": "/en-US/features/protection/",
+          "price": null,
+          "valid_until": null
+        },
+        "context": "Firefox blocks thousands of known trackers before they can follow you around the web. No setup required. Just open Firefox and browse with protection already in place. You can also see what’s being blocked by clicking the shield icon in your address bar.",
+        "label": "Enhanced Tracking Protection",
+        "outcome": "QUOTE_OBSERVED",
+        "page_url": "https://www.firefox.com/en-US/features/protection/",
+        "quote": "Firefox blocks thousands of known trackers before they can follow you around the web.",
+        "scope": "Enhanced Tracking Protection",
+        "score": 8,
+        "specificity": 0.533,
+        "text_sha256": "d490c5161a0b2a3a25930cf75695840d01afd59bb6b1da8b9e0f3992c1a033fc",
+        "title": "Protection — Firefox.com"
+      },
+      {
+        "anchor": "Custom Download Options",
+        "body_sha256": "ca5c73d0c638afd73d574f66cf27566dd3197bad1b29e277282c2a23236761ea",
+        "capture_kind": "public_http",
+        "captured_at": "2026-11-13T08:24:48.493613+00:00",
+        "context": "Download Firefox in English (US) and more than 90 other languages — Firefox.com",
+        "outcome": "QUOTE_OBSERVED",
+        "page_url": "https://www.firefox.com/en-US/download/all/",
+        "quote": "Download Firefox in English (US) and more than 90 other languages — Firefox.com",
+        "scope": "OFFICIAL_DESTINATION_TITLE",
+        "text_sha256": "e2a8bec8bc2f4ddf2575589ddd9c437aa4d58c10d78d6a6f21b51bd2ded5c9da",
+        "title": "Download Firefox in English (US) and more than 90 other languages — Firefox.com"
+      }
+    ],
+    "kind": "SOURCE_CAMPAIGN",
+    "package": {
+      "brand_name": "www.firefox.com",
+      "caption": "اختر نسخة التنزيل · Enhanced Tracking Protection. اعرض خيارات التنزيل.",
+      "copy": {
+        "cta": "اعرض خيارات التنزيل",
+        "headline": "اختر نسخة التنزيل",
+        "message": "Enhanced Tracking Protection"
+      },
+      "direction": "rtl",
+      "factual_review": "SOURCE_LABEL_REUSE_REQUIRES_HUMAN_REVIEW",
+      "language": "ar",
+      "poster_layout": "source-campaign@1",
+      "source_evidence_index": 1,
+      "source_url": "https://www.firefox.com/en-US/download/all/",
+      "storyboard": [
+        {
+          "line": "اختر نسخة التنزيل",
+          "seconds": "0–3",
+          "visual": "يظهر سؤال الحملة فوق شكل هندسي بسيط."
+        },
+        {
+          "line": "Enhanced Tracking Protection",
+          "seconds": "3–8",
+          "visual": "يظهر اسم الميزة وتظل الخلفية ثابتة."
+        },
+        {
+          "line": "اعرض خيارات التنزيل",
+          "seconds": "8–12",
+          "visual": "تظهر بطاقة باسم البراند والدعوة."
+        }
+      ],
+      "theme": "ember"
+    },
+    "planner": {
+      "brief_reviewed": true,
+      "claims": [
+        {
+          "basis": "PUBLISHER_QUOTE_AND_SECTION_LABEL",
+          "evidence_index": 0,
+          "fields": [
+            "brief.summary",
+            "package.copy.message"
+          ],
+          "semantic_review": "HUMAN_REVIEW_REQUIRED"
+        }
+      ],
+      "conflicts": [],
+      "cost_usd": 0,
+      "destination_evidence_index": 1,
+      "elapsed_ms": 3685.42,
+      "gap": null,
+      "input": {
+        "language": "ar",
+        "objective": "Increase Firefox downloads for people concerned about Enhanced Tracking Protection",
+        "url": "https://www.firefox.com/en-US/features/"
+      },
+      "intent": "DOWNLOAD",
+      "missing_question": null,
+      "opportunity_hypothesis": "اختبر هل ربط الميزة بالخطوة المطلوبة يرفع معدل النقر من الشريحة المقترحة.",
+      "options": [
+        {
+          "action": "READ_FEATURE",
+          "audience": "مهتمون يريدون فهم الميزة قبل اتخاذ قرار.",
+          "cta": "اقرأ الشرح",
+          "destination": "https://www.firefox.com/en-US/features/protection/",
+          "evidence_index": 0,
+          "headline": "افهم الميزة أولًا",
+          "message": "ابدأ باسم الميزة ووجّه القارئ إلى شرحها الرسمي.",
+          "metric": "النقرات إلى الشرح لكل ظهور.",
+          "name": "شرح الميزة",
+          "theme": "cobalt",
+          "tradeoff": "يقلّل خطوة البحث للقارئ ويترك التقييم له."
+        },
+        {
+          "action": "COMPARE_FIT",
+          "audience": "أشخاص يقارنون بدائل ويحتاجون مراجعة التفاصيل.",
+          "cta": "راجع تفاصيل الميزة",
+          "destination": "https://www.firefox.com/en-US/features/protection/",
+          "evidence_index": 0,
+          "headline": "هل تناسب احتياجك؟",
+          "message": "اطرح سؤال ملاءمة. استخدم شرح الناشر كنقطة للمقارنة.",
+          "metric": "زيارات صفحة الشرح بعد النقر على سؤال المقارنة.",
+          "name": "قيّم الملاءمة",
+          "theme": "forest",
+          "tradeoff": "يخدم مرحلة الاختيار ويحتاج بيانات قبل ادعاء تفوّق."
+        },
+        {
+          "action": "DOWNLOAD_OPTIONS",
+          "audience": "مهتمون وصلوا لمرحلة اختيار نسخة للتنزيل.",
+          "cta": "اعرض خيارات التنزيل",
+          "destination": "https://www.firefox.com/en-US/download/all/",
+          "evidence_index": 1,
+          "headline": "اختر نسخة التنزيل",
+          "message": "وجّه المهتم إلى خيارات التنزيل الرسمية.",
+          "metric": "نقرات خيارات التنزيل، والتثبيت عند توفر رصد.",
+          "name": "اختيار التنزيل",
+          "theme": "ember",
+          "tradeoff": "أقرب للتنزيل، ويحتاج رصد التثبيت لقياس النتيجة."
+        }
+      ],
+      "page_calls": 4,
+      "pages": [
+        {
+          "body_sha256": "0d972188dea79e8b20c8f4461e697557a7df9f863117e76a9ef5cc6bcccee4f1",
+          "capture_kind": "public_http",
+          "captured_at": "2026-11-13T08:24:46.632898+00:00",
+          "entries": [
+            {
+              "context": "Staying safe online shouldn’t demand constant attention. Firefox blocks trackers automatically and protects your privacy by default, so you can browse confidently without becoming a privacy expert.",
+              "label": "Made by people on the internet, for people on the internet",
+              "quote": "Firefox blocks trackers automatically and protects your privacy by default, so you can browse confidently without becoming a privacy expert.",
+              "score": 2,
+              "specificity": 1.2
+            },
+            {
+              "context": "Get how-tos, advice and news to make your Firefox experience work best for you.",
+              "label": "Keep up with all things Firefox",
+              "quote": "Get how-tos, advice and news to make your Firefox experience work best for you.",
+              "score": 3,
+              "specificity": 0.2
+            },
+            {
+              "context": "Most browsers were built to capture your attention and monetize your data. Firefox was built to give you control.",
+              "label": "Browse with features that put you first",
+              "quote": "Firefox was built to give you control.",
+              "score": 1,
+              "specificity": 0.2
+            },
+            {
+              "context": "Firefox gives you real choices without burying you in settings. Choose your tools, customize your experience, and decide how your browser works, instead of adapting to someone else’s defaults.",
+              "label": "Made by people on the internet, for people on the internet",
+              "quote": "Firefox gives you real choices without burying you in settings.",
+              "score": 1,
+              "specificity": 0.2
+            },
+            {
+              "context": "Your browser shouldn’t compete for your attention. Firefox is designed to reduce noise, cut distractions, and help you stay oriented, whether you’re reading, researching, or multitasking.",
+              "label": "Made by people on the internet, for people on the internet",
+              "quote": "Firefox is designed to reduce noise, cut distractions, and help you stay oriented, whether you’re reading, researching, or multitasking.",
+              "score": 1,
+              "specificity": 0.2
+            }
+          ],
+          "page_url": "https://www.firefox.com/en-US/features/",
+          "text_sha256": "f64beea17eebc7036b2a1b0be09b5c404c6729819f811e9fff9f24cb4cff4645",
+          "title": "Learn about Firefox features — Firefox.com"
+        },
+        {
+          "body_sha256": "ca5c73d0c638afd73d574f66cf27566dd3197bad1b29e277282c2a23236761ea",
+          "capture_kind": "public_http",
+          "captured_at": "2026-11-13T08:24:48.493613+00:00",
+          "entries": [
+            {
+              "context": "Everyone deserves access to the internet — your language should never be a barrier. That’s why — with the help of dedicated volunteers around the world — we make Firefox available in more than 90 languages.",
+              "label": "Choose which Firefox Browser to download in your language",
+              "quote": "That’s why — with the help of dedicated volunteers around the world — we make Firefox available in more than 90 languages.",
+              "score": 3,
+              "specificity": 0.143
+            },
+            {
+              "context": "The standard Firefox browser — fast and private. If you’re not sure which Firefox to choose, choose this.",
+              "label": "Firefox",
+              "quote": "The standard Firefox browser — fast and private.",
+              "score": 3,
+              "specificity": 0.143
+            },
+            {
+              "context": "The standard Firefox browser — fast and private. If you’re not sure which Firefox to choose, choose this.",
+              "label": "Firefox",
+              "quote": "If you’re not sure which Firefox to choose, choose this.",
+              "score": 3,
+              "specificity": 0.143
+            },
+            {
+              "context": "Get a sneak peek at the latest Firefox browser features before they’re released.",
+              "label": "Firefox Beta",
+              "quote": "Get a sneak peek at the latest Firefox browser features before they’re released.",
+              "score": 3,
+              "specificity": 0.143
+            },
+            {
+              "context": "Test your sites against soon-to-be-released Firefox browser features with powerful, flexible DevTools that are on by default.",
+              "label": "Firefox Developer Edition",
+              "quote": "Test your sites against soon-to-be-released Firefox browser features with powerful, flexible DevTools that are on by default.",
+              "score": 3,
+              "specificity": 0.143
+            },
+            {
+              "context": "Count on stability and ease of use with this Firefox browser built for enterprise.",
+              "label": "Firefox Extended Support Release",
+              "quote": "Count on stability and ease of use with this Firefox browser built for enterprise.",
+              "score": 3,
+              "specificity": 0.143
+            },
+            {
+              "context": "The familiar Firefox browser with additional security controls, paired with an admin console to help organizations meet strict security, governance, and compliance requirements.",
+              "label": "Firefox Enterprise",
+              "quote": "The familiar Firefox browser with additional security controls, paired with an admin console to help organizations meet strict security, governance, and compliance requirements.",
+              "score": 3,
+              "specificity": 0.143
+            },
+            {
+              "context": "Everyone deserves access to the internet — your language should never be a barrier. That’s why — with the help of dedicated volunteers around the world — we make Firefox available in more than 90 languages.",
+              "label": "Choose which Firefox Browser to download in your language",
+              "quote": "Everyone deserves access to the internet — your language should never be a barrier.",
+              "score": 2,
+              "specificity": 0
+            }
+          ],
+          "page_url": "https://www.firefox.com/en-US/download/all/",
+          "text_sha256": "e2a8bec8bc2f4ddf2575589ddd9c437aa4d58c10d78d6a6f21b51bd2ded5c9da",
+          "title": "Download Firefox in English (US) and more than 90 other languages — Firefox.com"
+        },
+        {
+          "body_sha256": "b18e2e05accfb7d93e7b4a893e11bfdb422854ab371fe7bfd41fa625eb8164ea",
+          "capture_kind": "public_http",
+          "captured_at": "2026-11-13T08:24:49.357520+00:00",
+          "entries": [
+            {
+              "context": "Firefox blocks thousands of known trackers before they can follow you around the web. No setup required. Just open Firefox and browse with protection already in place. You can also see what’s being blocked by clicking the shield icon in your address bar.",
+              "label": "Enhanced Tracking Protection",
+              "quote": "Firefox blocks thousands of known trackers before they can follow you around the web.",
+              "score": 8,
+              "specificity": 0.533
+            },
+            {
+              "context": "Cookies are one of the web’s favorite tracking tools, following you from site to site and quietly building a profile of your activity. Total Cookie Protection keeps each site’s cookies separate, so companies can’t connect the dots across your browsing.",
+              "label": "Total cookie protection",
+              "quote": "Total Cookie Protection keeps each site’s cookies separate, so companies can’t connect the dots across your browsing.",
+              "score": 3,
+              "specificity": 0.5
+            },
+            {
+              "context": "Protection shouldn’t be a premium feature. With Firefox, it’s built in. We block trackers automatically, protect your privacy by default, and give you clear visibility into what’s happening behind the scenes.",
+              "label": "Your online life belongs to you",
+              "quote": "Protection shouldn’t be a premium feature.",
+              "score": 1,
+              "specificity": 0.5
+            },
+            {
+              "context": "Cookies are one of the web’s favorite tracking tools, following you from site to site and quietly building a profile of your activity. Total Cookie Protection keeps each site’s cookies separate, so companies can’t connect the dots across your browsing.",
+              "label": "Total cookie protection",
+              "quote": "Cookies are one of the web’s favorite tracking tools, following you from site to site and quietly building a profile of your activity.",
+              "score": 3,
+              "specificity": 0.333
+            },
+            {
+              "context": "Protection shouldn’t be a premium feature. With Firefox, it’s built in. We block trackers automatically, protect your privacy by default, and give you clear visibility into what’s happening behind the scenes.",
+              "label": "Your online life belongs to you",
+              "quote": "We block trackers automatically, protect your privacy by default, and give you clear visibility into what’s happening behind the scenes.",
+              "score": 1,
+              "specificity": 0.333
+            },
+            {
+              "context": "Firefox gives you real choices without burying you in settings. Choose your tools, customize your experience, and decide how your browser works, instead of adapting to someone else’s defaults.",
+              "label": "More Firefox Features",
+              "quote": "Firefox gives you real choices without burying you in settings.",
+              "score": 3,
+              "specificity": 0.2
+            },
+            {
+              "context": "Your browser shouldn’t compete for your attention. Firefox is designed to reduce noise, cut distractions, and help you stay oriented, whether you’re reading, researching, or multitasking.",
+              "label": "More Firefox Features",
+              "quote": "Firefox is designed to reduce noise, cut distractions, and help you stay oriented, whether you’re reading, researching, or multitasking.",
+              "score": 3,
+              "specificity": 0.2
+            },
+            {
+              "context": "Get how-tos, advice and news to make your Firefox experience work best for you.",
+              "label": "Keep up with all things Firefox",
+              "quote": "Get how-tos, advice and news to make your Firefox experience work best for you.",
+              "score": 3,
+              "specificity": 0.2
+            }
+          ],
+          "page_url": "https://www.firefox.com/en-US/features/protection/",
+          "text_sha256": "d490c5161a0b2a3a25930cf75695840d01afd59bb6b1da8b9e0f3992c1a033fc",
+          "title": "Protection — Firefox.com"
+        }
+      ],
+      "policy": "source-campaign-planner@1",
+      "provider_calls": 0,
+      "question": "أين شرح الميزة ورابط التنزيل المباشر المعتمد؟",
+      "request_id": null,
+      "stop": "DECISION_EVIDENCE_FOUND",
+      "trace": [
+        {
+          "anchor": "",
+          "candidate_count": 5,
+          "gap_after": "ACTION_DESTINATION",
+          "outcome": "SOURCE_READ",
+          "page_url": "https://www.firefox.com/en-US/features/",
+          "reason": "BRAND_ENTRY"
+        },
+        {
+          "anchor": "Download Firefox",
+          "gap_after": "ACTION_DESTINATION",
+          "http_status": 302,
+          "outcome": "SOURCE_REDIRECT",
+          "page_url": "https://www.firefox.com/en-US/download/",
+          "reason": "ACTION_DESTINATION"
+        },
+        {
+          "anchor": "Custom Download Options",
+          "candidate_count": 8,
+          "gap_after": null,
+          "outcome": "SOURCE_READ",
+          "page_url": "https://www.firefox.com/en-US/download/all/",
+          "reason": "ACTION_DESTINATION"
+        },
+        {
+          "anchor": "Protection in Firefox",
+          "candidate_count": 8,
+          "gap_after": null,
+          "outcome": "SOURCE_READ",
+          "page_url": "https://www.firefox.com/en-US/features/protection/",
+          "reason": "MORE_SPECIFIC_FEATURE"
+        }
+      ]
+    },
+    "schema_version": 2,
+    "sha256": "fb76f055b6d7929261db2bf4387d5172128471aa6d226671fe9a74fc1c63bf85",
+    "status": "READY"
+  },
+  "review_status": "LOCAL_REVIEW",
+  "run_id": "6c5e743b-d809-40ab-a3bf-7ef168113d68",
+  "video": "SCRIPT_AND_STORYBOARD_ONLY"
+}

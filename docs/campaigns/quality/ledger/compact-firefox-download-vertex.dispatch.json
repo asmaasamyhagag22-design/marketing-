@@ -1,0 +1,47 @@
+{
+  "model": "gemini-3.1-flash-lite",
+  "prompt_sha256": "87d7d8daa23134914958688ee39543416c34727590b5db1ed295612d587466cc",
+  "input": {
+    "brief": {
+      "objective": "Increase Firefox downloads for people concerned about Enhanced Tracking Protection",
+      "summary": "Firefox blocks thousands of known trackers before they can follow you around the web.",
+      "audience": "مهتمون وصلوا لمرحلة اختيار نسخة للتنزيل.",
+      "language": "ar",
+      "tone": "واضحة وهادئة",
+      "strategy_reason": "وجد البحث صفحة رسمية لخيارات التنزيل. لو تغيّرت الوجهة أو فقدنا شرح الميزة، أعد القرار."
+    },
+    "evidence": [
+      {
+        "page_url": "https://www.firefox.com/en-US/features/protection/",
+        "label": "Enhanced Tracking Protection",
+        "quote": "Firefox blocks thousands of known trackers before they can follow you around the web.",
+        "context": "Firefox blocks thousands of known trackers before they can follow you around the web. No setup required. Just open Firefox and browse with protection already in place. You can also see what’s being blocked by clicking the shield icon in your address bar.",
+        "constraints": {
+          "basis": "FULL_SOURCE_CONTEXT",
+          "branch": null,
+          "market": "UNCONFIRMED",
+          "page_path": "/en-US/features/protection/",
+          "price": null,
+          "valid_until": null
+        }
+      },
+      {
+        "page_url": "https://www.firefox.com/en-US/download/all/",
+        "label": null,
+        "quote": "Download Firefox in English (US) and more than 90 other languages — Firefox.com",
+        "context": "Download Firefox in English (US) and more than 90 other languages — Firefox.com",
+        "constraints": null
+      }
+    ],
+    "destination": "https://www.firefox.com/en-US/download/all/",
+    "action": "DOWNLOAD_OPTIONS",
+    "baseline": {
+      "cta": "اعرض خيارات التنزيل",
+      "headline": "اختر نسخة التنزيل",
+      "message": "Enhanced Tracking Protection"
+    }
+  },
+  "output_limit": 1300,
+  "reserve_usd": "0.01",
+  "task_exposure_before": "0.02904995"
+}

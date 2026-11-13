@@ -1,0 +1,373 @@
+{
+  "domain_key": "lego_com",
+  "run_id": "1b085e7c-aae2-4b09-baf7-9901cc6e00a5",
+  "profile_snapshot_id": "f1fe2766-a02f-481c-9e47-bf01e483d41f",
+  "proposal": {
+    "schema_version": 2,
+    "kind": "SOURCE_CAMPAIGN",
+    "brand_name": "www.lego.com",
+    "brief": {
+      "summary": "Whether you're searching for the perfect piece to complete your masterpiece, starting a brand-new build, or customize an existing LEGO® set, it's all possible with Pick a Brick.",
+      "audience": "مهتمون يريدون فهم الميزة قبل اتخاذ قرار.",
+      "market": "نطاق السوق يحتاج تأكيدًا قبل النشر.",
+      "competitor": null,
+      "peer_rationale": null,
+      "source": {
+        "url": "https://www.lego.com/en-us/pick-and-build/pick-a-brick",
+        "quote": "Whether you're searching for the perfect piece to complete your masterpiece, starting a brand-new build, or customize an existing LEGO® set, it's all possible with Pick a Brick.",
+        "scope": "LEGO® Pick a Brick"
+      },
+      "peer_source": null,
+      "objective": "Increase visits to the Pick a Brick catalog to find a piece for a build",
+      "metric": "النقرات إلى الشرح لكل ظهور.",
+      "assumption": "الجمهور فرضية تحريرية. نختبر هل اهتمامه بالميزة يدفعه للنقر.",
+      "alternatives": [
+        {
+          "name": "شرح الميزة",
+          "plan": "ابدأ باسم الميزة ووجّه القارئ إلى شرحها الرسمي.",
+          "tradeoff": "يقلّل خطوة البحث للقارئ ويترك التقييم له."
+        },
+        {
+          "name": "قيّم الملاءمة",
+          "plan": "اطرح سؤال ملاءمة. استخدم شرح الناشر كنقطة للمقارنة.",
+          "tradeoff": "يخدم مرحلة الاختيار ويحتاج بيانات قبل ادعاء تفوّق."
+        },
+        {
+          "name": "استكشاف الموضوع",
+          "plan": "قدّم اسم الموضوع كمدخل للقراءة المفتوحة.",
+          "tradeoff": "أوسع في الاستكشاف ويستخدم نفس صفحة الشرح."
+        }
+      ],
+      "strategy_index": 0,
+      "strategy_reason": "الهدف زيارة شرح محدد. لو اختفى شرح الميزة أو تغيّر الهدف لإجراء، أعد البحث عن الوجهة.",
+      "tone": "واضحة وهادئة",
+      "directions": [
+        {
+          "name": "شرح الميزة",
+          "rationale": "ابدأ باسم الميزة ووجّه القارئ إلى شرحها الرسمي.",
+          "headline": "مشروعك ناقص قطعة؟",
+          "message": "ابحث عن قطعة لمشروعك في الكتالوج.",
+          "cta": "تصفّح القطع",
+          "theme": "cobalt",
+          "caption": "بتكمّل مشروع بناء؟ تصفّح الكتالوج وابحث عن القطعة اللي محتاجها.",
+          "hook": "مشروعك ناقص قطعة؟",
+          "shot": "يظهر سؤال الحملة فوق شكل هندسي بسيط.",
+          "middle_shot": "يظهر اسم الميزة وتظل الخلفية ثابتة.",
+          "end_shot": "تظهر بطاقة باسم البراند والدعوة."
+        },
+        {
+          "name": "قيّم الملاءمة",
+          "rationale": "اطرح سؤال ملاءمة. استخدم شرح الناشر كنقطة للمقارنة.",
+          "headline": "إيه اللي يهمّك في الاختيار؟",
+          "message": "ابحث عن قطعة لمشروعك في الكتالوج.",
+          "cta": "تصفّح القطع",
+          "theme": "forest",
+          "caption": "إيه اللي يهمّك في الاختيار؟ بتكمّل مشروع بناء؟ تصفّح الكتالوج وابحث عن القطعة اللي محتاجها.",
+          "hook": "إيه اللي يهمّك في الاختيار؟",
+          "shot": "يظهر سؤال الحملة فوق شكل هندسي بسيط.",
+          "middle_shot": "يظهر اسم الميزة وتظل الخلفية ثابتة.",
+          "end_shot": "تظهر بطاقة باسم البراند والدعوة."
+        },
+        {
+          "name": "استكشاف الموضوع",
+          "rationale": "قدّم اسم الموضوع كمدخل للقراءة المفتوحة.",
+          "headline": "ابدأ بسؤال",
+          "message": "ابحث عن قطعة لمشروعك في الكتالوج.",
+          "cta": "تصفّح القطع",
+          "theme": "ember",
+          "caption": "ابدأ بسؤال · بتكمّل مشروع بناء؟ تصفّح الكتالوج وابحث عن القطعة اللي محتاجها.",
+          "hook": "ابدأ بسؤال",
+          "shot": "يظهر سؤال الحملة فوق شكل هندسي بسيط.",
+          "middle_shot": "يظهر اسم الميزة وتظل الخلفية ثابتة.",
+          "end_shot": "تظهر بطاقة باسم البراند والدعوة."
+        }
+      ],
+      "selected": 0,
+      "human_review": [
+        "راجع الاسم الأصلي للميزة واللغة ونطاق المصدر والحقوق.",
+        "راجع الوجهة على الموبايل ووسيلة قياس النتيجة."
+      ],
+      "language": "ar",
+      "direction": "rtl"
+    },
+    "evidence": [
+      {
+        "page_url": "https://www.lego.com/en-us/pick-and-build/pick-a-brick",
+        "capture_kind": "public_http",
+        "captured_at": "2026-11-13T12:35:46.513392+00:00",
+        "body_sha256": "b03d9de351f566aa38c5394cc8d99f0d35d28c0813bdb047700e7bdfd63e0250",
+        "text_sha256": "484fb7d3b6c5a534466271e21a829eb05957e9864f8ddfd5a833fd41e12bc513",
+        "title": "LEGO® Pick a Brick | Official LEGO® Shop US",
+        "label": "LEGO® Pick a Brick",
+        "quote": "Whether you're searching for the perfect piece to complete your masterpiece, starting a brand-new build, or customize an existing LEGO® set, it's all possible with Pick a Brick.",
+        "context": "Unleash your creativity and bring your ideas to life with LEGO® Pick a Brick! Whether you're searching for the perfect piece to complete your masterpiece, starting a brand-new build, or customize an existing LEGO® set, it's all possible with Pick a Brick. Our extensive selection of bricks, plates, tiles, minifigure pieces and more has everything you need. Looking for something specific? You can easily browse by piece type, color , and more so you can find the perfect brick for your next creation. There’s no limit to what you can build!",
+        "score": 7,
+        "specificity": 0.893,
+        "scope": "LEGO® Pick a Brick",
+        "outcome": "QUOTE_OBSERVED",
+        "constraints": {
+          "basis": "FULL_SOURCE_CONTEXT",
+          "page_path": "/en-us/pick-and-build/pick-a-brick",
+          "price": null,
+          "branch": null,
+          "valid_until": null,
+          "market": "UNCONFIRMED"
+        }
+      }
+    ],
+    "status": "DRAFT",
+    "package": null,
+    "changes": [],
+    "planner": {
+      "policy": "source-campaign-planner@1",
+      "input": {
+        "url": "https://www.lego.com/en-us/pick-and-build",
+        "objective": "Increase visits to the Pick a Brick catalog to find a piece for a build",
+        "language": "ar"
+      },
+      "intent": "DISCOVERY",
+      "question": "أين يشرح الموقع الميزة المرتبطة بالهدف؟",
+      "trace": [
+        {
+          "page_url": "https://www.lego.com/en-us/pick-and-build",
+          "reason": "BRAND_ENTRY",
+          "anchor": "",
+          "outcome": "SOURCE_READ",
+          "candidate_count": 8,
+          "gap_after": null
+        },
+        {
+          "page_url": "https://www.lego.com/pick-and-build/trending-pieces-on-pick-a-brick",
+          "reason": "MORE_SPECIFIC_FEATURE",
+          "anchor": "bricks and pieces are trending",
+          "outcome": "SOURCE_REDIRECT",
+          "http_status": 302,
+          "gap_after": null
+        },
+        {
+          "page_url": "https://www.lego.com/pick-and-build/pick-a-brick-inspiration",
+          "reason": "MORE_SPECIFIC_FEATURE",
+          "anchor": "Pick a Brick inspiration",
+          "outcome": "SOURCE_REDIRECT",
+          "http_status": 302,
+          "gap_after": null
+        },
+        {
+          "page_url": "https://www.lego.com/en-us/pick-and-build/pick-a-brick",
+          "reason": "MORE_SPECIFIC_FEATURE",
+          "anchor": "View all pieces",
+          "outcome": "SOURCE_READ",
+          "candidate_count": 8,
+          "gap_after": null
+        }
+      ],
+      "pages": [
+        {
+          "page_url": "https://www.lego.com/en-us/pick-and-build",
+          "capture_kind": "public_http",
+          "captured_at": "2026-11-13T12:35:41.636958+00:00",
+          "body_sha256": "32c1a3f19a2ac47394f03e8e54755a5064a5ac143e6f23f564f71f8b5691b4cf",
+          "text_sha256": "b6a26e0b96666ce3fa16284b75d87f7ca34efe7694d2538d29ed2ee636404fb7",
+          "title": "LEGO® Bricks, Pieces and Minifigures | Official LEGO® Shop US",
+          "entries": [
+            {
+              "label": "Bricks and Pieces",
+              "quote": "Explore Pick a Brick inspiration , browse the collection of mini-builds or take a look at what bricks and pieces are trending here.",
+              "context": "If you’re looking to create something truly unique, or wanting to customise an existing build, Bricks and Pieces is your go-to destination! Discover an extensive selection of individual bricks and minifigure pieces to mix, match, and create your next masterpiece. Whether you're a seasoned builder or just starting your LEGO® journey, you'll find everything you need right here. Explore Pick a Brick inspiration , browse the collection of mini-builds or take a look at what bricks and pieces are trending here.",
+              "score": 7,
+              "specificity": 0.435
+            },
+            {
+              "label": "What is the largest LEGO piece available?",
+              "quote": "If you're looking to add this piece to your build, search for the element ID 6421400 on Pick a Brick.",
+              "context": "Outside of the baseplates, the largest LEGO piece is the Boat Hull, which measures an impressive 28 x 8 x 3 in studs. This large piece provides a solid foundation for creating intricate boat designs and adds significant size to any LEGO build! If you're looking to add this piece to your build, search for the element ID 6421400 on Pick a Brick.",
+              "score": 5,
+              "specificity": 0.435
+            },
+            {
+              "label": "Bricks and Pieces",
+              "quote": "If you’re looking to create something truly unique, or wanting to customise an existing build, Bricks and Pieces is your go-to destination!",
+              "context": "If you’re looking to create something truly unique, or wanting to customise an existing build, Bricks and Pieces is your go-to destination! Discover an extensive selection of individual bricks and minifigure pieces to mix, match, and create your next masterpiece. Whether you're a seasoned builder or just starting your LEGO® journey, you'll find everything you need right here. Explore Pick a Brick inspiration , browse the collection of mini-builds or take a look at what bricks and pieces are trending here.",
+              "score": 6,
+              "specificity": 0.292
+            },
+            {
+              "label": "Bricks and Pieces",
+              "quote": "Discover an extensive selection of individual bricks and minifigure pieces to mix, match, and create your next masterpiece.",
+              "context": "If you’re looking to create something truly unique, or wanting to customise an existing build, Bricks and Pieces is your go-to destination! Discover an extensive selection of individual bricks and minifigure pieces to mix, match, and create your next masterpiece. Whether you're a seasoned builder or just starting your LEGO® journey, you'll find everything you need right here. Explore Pick a Brick inspiration , browse the collection of mini-builds or take a look at what bricks and pieces are trending here.",
+              "score": 6,
+              "specificity": 0.292
+            },
+            {
+              "label": "What is Pick and Build?",
+              "quote": "LEGO® Pick and Build is the one-stop shop for browsing individual LEGO® bricks and customizing minifigures.",
+              "context": "LEGO® Pick and Build is the one-stop shop for browsing individual LEGO® bricks and customizing minifigures. The popular Pick a Brick and Build a Minifigure experiences are now available online, as well as in-store.",
+              "score": 4,
+              "specificity": 0.268
+            },
+            {
+              "label": "What is Pick and Build?",
+              "quote": "The popular Pick a Brick and Build a Minifigure experiences are now available online, as well as in-store.",
+              "context": "LEGO® Pick and Build is the one-stop shop for browsing individual LEGO® bricks and customizing minifigures. The popular Pick a Brick and Build a Minifigure experiences are now available online, as well as in-store.",
+              "score": 4,
+              "specificity": 0.268
+            },
+            {
+              "label": "What can I use Pick and Build for?",
+              "quote": "Pick and Build is your portal to finding the perfect LEGO brick or creating your own minifigure that will complete your next build.",
+              "context": "Pick and Build is your portal to finding the perfect LEGO brick or creating your own minifigure that will complete your next build. So, whether you want to customise an existing LEGO set, searching for a particular minifigure or looking for building inspiration, you can find it here at Pick and Build.",
+              "score": 4,
+              "specificity": 0.268
+            },
+            {
+              "label": "What is the largest LEGO piece available?",
+              "quote": "Outside of the baseplates, the largest LEGO piece is the Boat Hull, which measures an impressive 28 x 8 x 3 in studs.",
+              "context": "Outside of the baseplates, the largest LEGO piece is the Boat Hull, which measures an impressive 28 x 8 x 3 in studs. This large piece provides a solid foundation for creating intricate boat designs and adds significant size to any LEGO build! If you're looking to add this piece to your build, search for the element ID 6421400 on Pick a Brick.",
+              "score": 3,
+              "specificity": 0.167
+            }
+          ]
+        },
+        {
+          "page_url": "https://www.lego.com/en-us/pick-and-build/pick-a-brick",
+          "capture_kind": "public_http",
+          "captured_at": "2026-11-13T12:35:46.513392+00:00",
+          "body_sha256": "b03d9de351f566aa38c5394cc8d99f0d35d28c0813bdb047700e7bdfd63e0250",
+          "text_sha256": "484fb7d3b6c5a534466271e21a829eb05957e9864f8ddfd5a833fd41e12bc513",
+          "title": "LEGO® Pick a Brick | Official LEGO® Shop US",
+          "entries": [
+            {
+              "label": "LEGO® Pick a Brick",
+              "quote": "Whether you're searching for the perfect piece to complete your masterpiece, starting a brand-new build, or customize an existing LEGO® set, it's all possible with Pick a Brick.",
+              "context": "Unleash your creativity and bring your ideas to life with LEGO® Pick a Brick! Whether you're searching for the perfect piece to complete your masterpiece, starting a brand-new build, or customize an existing LEGO® set, it's all possible with Pick a Brick. Our extensive selection of bricks, plates, tiles, minifigure pieces and more has everything you need. Looking for something specific? You can easily browse by piece type, color , and more so you can find the perfect brick for your next creation. There’s no limit to what you can build!",
+              "score": 7,
+              "specificity": 0.893
+            },
+            {
+              "label": "LEGO® Pick a Brick",
+              "quote": "Unleash your creativity and bring your ideas to life with LEGO® Pick a Brick!",
+              "context": "Unleash your creativity and bring your ideas to life with LEGO® Pick a Brick! Whether you're searching for the perfect piece to complete your masterpiece, starting a brand-new build, or customize an existing LEGO® set, it's all possible with Pick a Brick. Our extensive selection of bricks, plates, tiles, minifigure pieces and more has everything you need. Looking for something specific? You can easily browse by piece type, color , and more so you can find the perfect brick for your next creation. There’s no limit to what you can build!",
+              "score": 6,
+              "specificity": 0.75
+            },
+            {
+              "label": "LEGO® Pick a Brick",
+              "quote": "Our extensive selection of bricks, plates, tiles, minifigure pieces and more has everything you need.",
+              "context": "Unleash your creativity and bring your ideas to life with LEGO® Pick a Brick! Whether you're searching for the perfect piece to complete your masterpiece, starting a brand-new build, or customize an existing LEGO® set, it's all possible with Pick a Brick. Our extensive selection of bricks, plates, tiles, minifigure pieces and more has everything you need. Looking for something specific? You can easily browse by piece type, color , and more so you can find the perfect brick for your next creation. There’s no limit to what you can build!",
+              "score": 6,
+              "specificity": 0.393
+            },
+            {
+              "label": "LEGO® Pick a Brick",
+              "quote": "You can easily browse by piece type, color , and more so you can find the perfect brick for your next creation.",
+              "context": "Unleash your creativity and bring your ideas to life with LEGO® Pick a Brick! Whether you're searching for the perfect piece to complete your masterpiece, starting a brand-new build, or customize an existing LEGO® set, it's all possible with Pick a Brick. Our extensive selection of bricks, plates, tiles, minifigure pieces and more has everything you need. Looking for something specific? You can easily browse by piece type, color , and more so you can find the perfect brick for your next creation. There’s no limit to what you can build!",
+              "score": 6,
+              "specificity": 0.393
+            },
+            {
+              "label": "Need to order many pieces at once?",
+              "quote": "You can upload a list with up to 200 different pieces right here.",
+              "context": "You can upload a list with up to 200 different pieces right here. The file should include the piece numbers and quantities you're looking for, and then you can add them to your bag with just a few clicks.",
+              "score": 3,
+              "specificity": 0.143
+            },
+            {
+              "label": "Need to order many pieces at once?",
+              "quote": "The file should include the piece numbers and quantities you're looking for, and then you can add them to your bag with just a few clicks.",
+              "context": "You can upload a list with up to 200 different pieces right here. The file should include the piece numbers and quantities you're looking for, and then you can add them to your bag with just a few clicks.",
+              "score": 3,
+              "specificity": 0.143
+            },
+            {
+              "label": "Need to order many pieces at once?",
+              "quote": "Use one of these templates (just add the pieces you’re looking for):",
+              "context": "Need help? Use one of these templates (just add the pieces you’re looking for):",
+              "score": 3,
+              "specificity": 0.143
+            },
+            {
+              "label": "Unavailable Pieces",
+              "quote": "We encountered errors when trying to upload you list, and were unable to upload these pieces.",
+              "context": "We encountered errors when trying to upload you list, and were unable to upload these pieces.",
+              "score": 3,
+              "specificity": 0.143
+            }
+          ]
+        }
+      ],
+      "conflicts": [],
+      "gap": null,
+      "missing_question": null,
+      "stop": "DECISION_EVIDENCE_FOUND",
+      "page_calls": 4,
+      "elapsed_ms": 8897.44,
+      "provider_calls": 0,
+      "cost_usd": 0,
+      "brief_reviewed": false,
+      "opportunity_hypothesis": "اختبر هل ربط الميزة بالخطوة المطلوبة يرفع معدل النقر من الشريحة المقترحة.",
+      "request_id": "e514675f-9fca-4a86-aa39-6e339d2d3ecc",
+      "options": [
+        {
+          "action": "READ_FEATURE",
+          "destination": "https://www.lego.com/en-us/pick-and-build/pick-a-brick",
+          "evidence_index": 0,
+          "name": "شرح الميزة",
+          "audience": "مهتمون يريدون فهم الميزة قبل اتخاذ قرار.",
+          "message": "ابدأ باسم الميزة ووجّه القارئ إلى شرحها الرسمي.",
+          "headline": "افهم الميزة أولًا",
+          "cta": "تصفّح القطع",
+          "metric": "النقرات إلى الشرح لكل ظهور.",
+          "tradeoff": "يقلّل خطوة البحث للقارئ ويترك التقييم له.",
+          "theme": "cobalt",
+          "concept": "assemble"
+        },
+        {
+          "action": "COMPARE_FIT",
+          "destination": "https://www.lego.com/en-us/pick-and-build/pick-a-brick",
+          "evidence_index": 0,
+          "name": "قيّم الملاءمة",
+          "audience": "أشخاص يقارنون بدائل ويحتاجون مراجعة التفاصيل.",
+          "message": "اطرح سؤال ملاءمة. استخدم شرح الناشر كنقطة للمقارنة.",
+          "headline": "هل تناسب احتياجك؟",
+          "cta": "تصفّح القطع",
+          "metric": "زيارات صفحة الشرح بعد النقر على سؤال المقارنة.",
+          "tradeoff": "يخدم مرحلة الاختيار ويحتاج بيانات قبل ادعاء تفوّق.",
+          "theme": "forest",
+          "concept": "assemble"
+        },
+        {
+          "action": "EXPLORE_TOPIC",
+          "destination": "https://www.lego.com/en-us/pick-and-build/pick-a-brick",
+          "evidence_index": 0,
+          "name": "استكشاف الموضوع",
+          "audience": "جمهور في مرحلة الاستكشاف الأولي.",
+          "message": "قدّم اسم الموضوع كمدخل للقراءة المفتوحة.",
+          "headline": "من أين تبدأ؟",
+          "cta": "تصفّح القطع",
+          "metric": "النقرات من مادة الاستكشاف إلى صفحة الموضوع.",
+          "tradeoff": "أوسع في الاستكشاف ويستخدم نفس صفحة الشرح.",
+          "theme": "ember",
+          "concept": "assemble"
+        }
+      ],
+      "claims": [
+        {
+          "fields": [
+            "brief.summary",
+            "package.copy.message"
+          ],
+          "evidence_index": 0,
+          "basis": "PUBLISHER_QUOTE_AND_SECTION_LABEL",
+          "semantic_review": "HUMAN_REVIEW_REQUIRED"
+        }
+      ]
+    },
+    "sha256": "7b02e48454a2eafdac6198b1ac9c944b4950c351030aa733b2854dea6a808b21"
+  },
+  "reason": "BRIEF_REVIEW_REQUIRED",
+  "checked_at": "2026-11-13T12:35:47.317644+00:00",
+  "recheck_at": "2026-11-20T12:35:46.513392+00:00",
+  "decision": null,
+  "approved": false,
+  "approval_id": null
+}

@@ -9,6 +9,7 @@ import json
 import os
 from pathlib import Path
 from time import monotonic
+from uuid import UUID
 from zipfile import ZipFile
 
 from openai import APIStatusError, OpenAI
@@ -127,6 +128,8 @@ def main():
     client = OpenAI(api_key=token, max_retries=0, timeout=35.0) if provider == "openai" else None
     for package in args.packages:
         case_name = package.parent.parent.name if package.parent.name == "initial" else package.parent.name
+        if package.suffix == ".json":
+            case_name = str(UUID(json.loads(package.read_text())["run_id"]))
         label = f"{args.round}-{case_name}" + ("" if client else f"-{provider}")
         intent = args.ledger / f"{label}.dispatch.json"
         if intent.exists():

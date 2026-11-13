@@ -1,0 +1,75 @@
+{
+  "reviewer": "AI editorial review of rendered rules and raw model responses; no human ratings",
+  "columns": ["headline_pass", "cta_pass", "fields_exceeding_evidence", "note"],
+  "policy": "Headline must sound natural, name a concrete benefit or ask a specific question and avoid overclaiming. CTA must fit the supplied destination. Count each headline, message or caption at most once for scope or reference drift. Mark implied availability, a procedure and exact outcomes conservatively.",
+  "previous_rules": {
+    "firefox": [0, 1, [], "Feature label and generic but accurate reading action."],
+    "firefox-download": [0, 1, [], "Headline repeats CTA's job, feature label gives no benefit."],
+    "lego": [0, 0, [], "Brand label and reading CTA for a searchable catalog."],
+    "rijksmuseum": [0, 1, [], "Section title omits comparison; reading action is accurate."],
+    "diffchecker": [0, 1, [], "Split view labels the feature; explanation CTA is accurate."],
+    "brave": [1, 1, [], "Specific headline and accurate generic CTA; inspect mode scope on the message separately."]
+  },
+  "release_rules_or_accepted_edit": {
+    "firefox": [1, 1, [], "Question frames the claim; exact known-tracker scope in message."],
+    "firefox-download": [1, 1, [], "Bounded benefit and specific options destination."],
+    "lego": [1, 1, [], "Natural build question; browse CTA, no stock promise."],
+    "rijksmuseum": [1, 1, [], "Accepted model headline/message with conservative reading CTA and caption."],
+    "diffchecker": [0, 1, [], "Still uses a label and generic artwork."],
+    "brave": [1, 1, [], "Specific source wording; confirm Standard/Aggressive scope if repurposed."]
+  },
+  "compact_with_brief": {
+    "firefox": [
+      [0, 1, ["headline", "caption"], "Privacy/safety language exceeds the scoped blocking claim; message keeps known."],
+      [0, 1, ["headline", "message", "caption"], "Who tracks you is broader than what the shield shows; real-time and known-scope drift."],
+      [0, 1, ["headline"], "Total privacy; the message retains known."]
+    ],
+    "firefox-download": [
+      [0, 1, ["headline", "message", "caption"], "Privacy, unqualified trackers and safer browsing."],
+      [0, 1, ["headline"], "The shield shows what is blocked, not all parties trying to track."],
+      [0, 0, ["headline", "message", "caption"], "Safe-browsing promise; evidence row 1 is about languages and does not support the protection claim in the text."]
+    ],
+    "lego": [
+      [0, 1, ["message"], "Arabic agreement error in the headline; imperative implies the specific piece will be found."],
+      [1, 1, ["message", "caption"], "Any set and unbounded capability."],
+      [1, 1, ["message", "caption"], "Filtering is supported; guaranteed precise discovery and complete freedom exceed the page."]
+    ],
+    "rijksmuseum": [
+      [1, 0, [], "Comparing and zooming are supported; learn how to use implies a procedure."],
+      [1, 1, [], "Specific detail benefit and a reading action."],
+      [0, 0, [], "Headline and CTA position an instruction guide while the destination gives a feature description."]
+    ],
+    "diffchecker": [
+      [1, 1, [], "Exact synchronized zoom behavior in context."],
+      [1, 0, ["message"], "General product page under an explanation objective; try is an action drift and instantly is an unsupported result."],
+      [1, 1, [], "Specific feature and faithful description of synchronization."]
+    ],
+    "brave": [
+      [1, 1, ["message", "caption"], "Drops third-party when broadening the ad/tracker claim."],
+      [1, 1, ["caption"], "Full breakdown of both modes exceeds the captured context."],
+      [0, 1, ["message", "caption"], "Broad headline; automatic behavior and settings claims need their own support."]
+    ]
+  },
+  "direct_without_brief": {
+    "firefox": [
+      [1, 1, [], "Specific question; context supports behavior on opening without extra setup."],
+      [0, 1, ["headline", "message"], "Unqualified privacy and tracking."],
+      [0, 1, ["headline", "message", "caption"], "Broad control promise, lost known qualifier, safer-browsing guarantee."]
+    ],
+    "firefox-download": [
+      [0, 0, ["headline", "message", "caption"], "Broad privacy, lost known qualifier, instant/install promise; options page."],
+      [0, 0, ["headline", "message"], "Who tracks you is broader than shield output, and timing is unverified."],
+      [0, 0, ["headline", "message", "caption"], "Superior privacy, lost known scope and unsupported millions."]
+    ],
+    "lego": [
+      [0, 1, ["message", "caption"], "Agreement and guaranteed exact piece."],
+      [1, 1, ["message"], "Source excerpt does not quantify thousands."],
+      [1, 1, ["message", "caption"], "Exact result claim exceeds browsing by type or color."]
+    ],
+    "rijksmuseum": [
+      [0, 0, ["caption"], "Generic headline, tutorial CTA and every brushstroke."],
+      [0, 1, [], "Broad curatorial framing; CTA and capability match the feature."],
+      [1, 1, [], "Specific comparison and supported zoom capability."]
+    ]
+  }
+}

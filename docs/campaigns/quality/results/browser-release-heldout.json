@@ -1,0 +1,35 @@
+{
+  "cases": {
+    "diffchecker": {
+      "status": "EXPORTED",
+      "seconds": 23.44,
+      "public_pages": 1,
+      "stale_export_http": 409,
+      "rejected_copy_http": null,
+      "stale_copy_packet_rejected": false,
+      "accepted_copy_fields": [],
+      "restored_png_sha256": {
+        "portrait": "f8a6965704617d67adf591df9673aa7dbfb2dbdb74e21151b067ba5d128c3fb1",
+        "square": "dd3510fe312217e24b9e55c6a889474d5e7a47c7bd0ec3b2ec64ab750e8423f3"
+      }
+    },
+    "brave": {
+      "status": "EXPORTED",
+      "seconds": 21.0,
+      "public_pages": 1,
+      "stale_export_http": 409,
+      "rejected_copy_http": null,
+      "stale_copy_packet_rejected": false,
+      "accepted_copy_fields": [],
+      "restored_png_sha256": {
+        "portrait": "1fc0111de8eef10e93491c8d9df88d49775a2a57ada99ffa868934492f0628b6",
+        "square": "8f8e26170b890280a45823de23df6964c85fc929550ec5b1d5e27e18f87f7d2c"
+      }
+    }
+  },
+  "elapsed_seconds": 51.58,
+  "campaign_runs": 6,
+  "automated_review_actions": 4,
+  "provider_usage_rows": 0,
+  "browser_errors": []
+}

@@ -1,0 +1,39 @@
+{
+  "model": "gpt-4o-mini-2024-07-18",
+  "prompt_sha256": "b247d0dbc05ea5f9f125978eba3ca91f2d545260fa9d9b03d0e8ac4739d34175",
+  "input": {
+    "brief": {
+      "objective": "Increase visits to the Enhanced Tracking Protection explanation",
+      "summary": "Firefox blocks thousands of known trackers before they can follow you around the web.",
+      "audience": "فرضية جمهور بعد مراجعة المسودة.",
+      "language": "ar",
+      "tone": "واضحة وهادئة",
+      "strategy_reason": "الهدف زيارة شرح محدد. لو اختفى شرح الميزة أو تغيّر الهدف لإجراء، أعد البحث عن الوجهة."
+    },
+    "evidence": [
+      {
+        "page_url": "https://www.firefox.com/en-US/features/protection/",
+        "label": "Enhanced Tracking Protection",
+        "quote": "Firefox blocks thousands of known trackers before they can follow you around the web.",
+        "context": "Firefox blocks thousands of known trackers before they can follow you around the web. No setup required. Just open Firefox and browse with protection already in place. You can also see what’s being blocked by clicking the shield icon in your address bar.",
+        "constraints": {
+          "basis": "FULL_SOURCE_CONTEXT",
+          "branch": null,
+          "market": "UNCONFIRMED",
+          "page_path": "/en-US/features/protection/",
+          "price": null,
+          "valid_until": null
+        }
+      }
+    ],
+    "destination": "https://www.firefox.com/en-US/features/protection/",
+    "action": "READ_FEATURE",
+    "baseline": {
+      "cta": "اقرأ الشرح",
+      "headline": "Enhanced Tracking Protection",
+      "message": "الدليل والشرح من موقع البراند."
+    }
+  },
+  "reserve_usd": "0.01",
+  "task_exposure_before": "0"
+}

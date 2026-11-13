@@ -1,0 +1,39 @@
+{
+  "model": "gemini-3.1-flash-lite",
+  "prompt_sha256": "b247d0dbc05ea5f9f125978eba3ca91f2d545260fa9d9b03d0e8ac4739d34175",
+  "input": {
+    "brief": {
+      "objective": "Increase visits to the Collection Online Comparator explanation",
+      "summary": "Use the Comparator to place artworks side by side and zoom in on the smallest details.",
+      "audience": "People who want to understand the feature before acting.",
+      "language": "en",
+      "tone": "Plain and concise",
+      "strategy_reason": "The goal is a visit to a specific explanation. Reopen the choice if it disappears or the goal changes to an action."
+    },
+    "evidence": [
+      {
+        "page_url": "https://www.rijksmuseum.nl/en/about-collection-online",
+        "label": "About Collection Online",
+        "quote": "Use the Comparator to place artworks side by side and zoom in on the smallest details.",
+        "context": "Discover & Create For instance, create your own Collections , which automatically generate an interactive video clip featuring your selected artworks. Use the Comparator to place artworks side by side and zoom in on the smallest details. What will you discover? Share your findings with the rest of the world. Visitors are also welcomed into My Gallery of Honour , a virtual space inspired by the Rijksmuseum's most iconic room. Curate your own Gallery of Honour and tell your story in this legendary setting. Thanks to the Art Explorer , exploring the collection has become even more accessible. This new AI-powered tool invites visitors to answer thought-provoking questions. Their answers lead to surprising and unexpected suggestions from the collection. Please note that the results are unfiltered and may sometimes show unexpectedly shocking and/or explicit images.",
+        "constraints": {
+          "basis": "FULL_SOURCE_CONTEXT",
+          "branch": null,
+          "market": "UNCONFIRMED",
+          "page_path": "/en/about-collection-online",
+          "price": null,
+          "valid_until": null
+        }
+      }
+    ],
+    "destination": "https://www.rijksmuseum.nl/en/about-collection-online",
+    "action": "READ_FEATURE",
+    "baseline": {
+      "cta": "Read the explanation",
+      "headline": "About Collection Online",
+      "message": "Use the Comparator to place artworks side by side and zoom in on the smallest details."
+    }
+  },
+  "reserve_usd": "0.01",
+  "task_exposure_before": "0.02588915"
+}

@@ -1,0 +1,467 @@
+{
+  "approval_id": "c58d25a3-b587-49ca-bdc3-3aa15b6e96d1",
+  "poster_measurements": {
+    "portrait": {
+      "geometry": [
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 136,
+          "color": "rgb(255, 247, 239)",
+          "field": "brand",
+          "overflow": false,
+          "right": 1004,
+          "size": 40,
+          "x": 76,
+          "y": 64
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 727.90625,
+          "color": "rgb(255, 247, 239)",
+          "field": "motif",
+          "overflow": false,
+          "right": 1004,
+          "size": 16,
+          "x": 76,
+          "y": 166
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 979.65625,
+          "color": "rgb(255, 247, 239)",
+          "field": "H1",
+          "overflow": false,
+          "right": 1004,
+          "size": 88,
+          "x": 76,
+          "y": 757.90625
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 1190.359375,
+          "color": "rgb(255, 247, 239)",
+          "field": "message",
+          "overflow": false,
+          "right": 1004,
+          "size": 44,
+          "x": 76,
+          "y": 997.65625
+        },
+        {
+          "background": "rgb(255, 201, 131)",
+          "bottom": 1286,
+          "color": "rgb(19, 13, 54)",
+          "field": "cta",
+          "overflow": false,
+          "right": 641,
+          "size": 37,
+          "x": 76,
+          "y": 1208.359375
+        }
+      ],
+      "height": 1350,
+      "sha256": "e205f906f1a680b6c35c2db78e946b953cf82b098f1188f741c31116c6ec7850",
+      "width": 1080
+    },
+    "square": {
+      "geometry": [
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 136,
+          "color": "rgb(255, 247, 239)",
+          "field": "brand",
+          "overflow": false,
+          "right": 1004,
+          "size": 40,
+          "x": 76,
+          "y": 64
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 457.90625,
+          "color": "rgb(255, 247, 239)",
+          "field": "motif",
+          "overflow": false,
+          "right": 1004,
+          "size": 16,
+          "x": 76,
+          "y": 166
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 709.65625,
+          "color": "rgb(255, 247, 239)",
+          "field": "H1",
+          "overflow": false,
+          "right": 1004,
+          "size": 88,
+          "x": 76,
+          "y": 487.90625
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 920.359375,
+          "color": "rgb(255, 247, 239)",
+          "field": "message",
+          "overflow": false,
+          "right": 1004,
+          "size": 44,
+          "x": 76,
+          "y": 727.65625
+        },
+        {
+          "background": "rgb(255, 201, 131)",
+          "bottom": 1016,
+          "color": "rgb(19, 13, 54)",
+          "field": "cta",
+          "overflow": false,
+          "right": 641,
+          "size": 37,
+          "x": 76,
+          "y": 938.359375
+        }
+      ],
+      "height": 1080,
+      "sha256": "244f18832b7e226604d28754ac2db57c82fdddd47dd41f028c0e3816026d7c28",
+      "width": 1080
+    }
+  },
+  "profile_snapshot_id": "c6f68615-05c1-4ce9-b399-8aa140d8d8c9",
+  "proposal": {
+    "brand_name": "www.rijksmuseum.nl",
+    "brief": {
+      "alternatives": [
+        {
+          "name": "Explain the feature",
+          "plan": "Lead with the feature name and link to the publisher’s explanation.",
+          "tradeoff": "Shortens the path to the explanation and leaves the decision to the reader."
+        },
+        {
+          "name": "Evaluate the fit",
+          "plan": "Ask a fit question. Use the publisher’s explanation as one input to a comparison.",
+          "tradeoff": "Supports evaluation and would need comparative evidence for any superiority claim."
+        },
+        {
+          "name": "Explore the topic",
+          "plan": "Use the topic name as an entry point for open-ended reading.",
+          "tradeoff": "Broader discovery with the same explanation page as the destination."
+        }
+      ],
+      "assumption": "The audience is a working hypothesis. Test whether interest in the feature drives the intended click.",
+      "audience": "Audience hypothesis after reviewing the draft.",
+      "competitor": null,
+      "direction": "ltr",
+      "directions": [
+        {
+          "caption": "What changes when you look at two artworks together? Read about the Comparator.",
+          "cta": "Read about the Comparator",
+          "end_shot": "End on the brand name and exact call to action.",
+          "headline": "Compare Artworks Side by Side",
+          "hook": "Compare Artworks Side by Side",
+          "message": "Use the Comparator to place artworks next to each other and zoom in on the smallest details.",
+          "middle_shot": "Reveal the topic label and hold the background still.",
+          "name": "Explain the feature",
+          "rationale": "Lead with the feature name and link to the publisher’s explanation.",
+          "shot": "Reveal the campaign prompt over a simple geometric motif.",
+          "theme": "cobalt"
+        },
+        {
+          "caption": "What matters in the comparison? What changes when you look at two artworks together? Read about the Comparator.",
+          "cta": "Read about the Comparator",
+          "end_shot": "End on the brand name and exact call to action.",
+          "headline": "What matters in the comparison?",
+          "hook": "What matters in the comparison?",
+          "message": "Compare artworks and zoom into details.",
+          "middle_shot": "Reveal the topic label and hold the background still.",
+          "name": "Evaluate the fit",
+          "rationale": "Ask a fit question. Use the publisher’s explanation as one input to a comparison.",
+          "shot": "Reveal the campaign prompt over a simple geometric motif.",
+          "theme": "forest"
+        },
+        {
+          "caption": "Start with a question · What changes when you look at two artworks together? Read about the Comparator.",
+          "cta": "Read about the Comparator",
+          "end_shot": "End on the brand name and exact call to action.",
+          "headline": "Start with a question",
+          "hook": "Start with a question",
+          "message": "Compare artworks and zoom into details.",
+          "middle_shot": "Reveal the topic label and hold the background still.",
+          "name": "Explore the topic",
+          "rationale": "Use the topic name as an entry point for open-ended reading.",
+          "shot": "Reveal the campaign prompt over a simple geometric motif.",
+          "theme": "ember"
+        }
+      ],
+      "human_review": [
+        "Review the original feature label, language, source scope and rights.",
+        "Check the destination on mobile and confirm the conversion measurement."
+      ],
+      "language": "en",
+      "market": "Confirm market scope before publishing.",
+      "metric": "Explanation clicks per impression.",
+      "objective": "Increase visits to the Collection Online Comparator explanation",
+      "peer_rationale": null,
+      "peer_source": null,
+      "selected": 0,
+      "source": {
+        "quote": "Use the Comparator to place artworks side by side and zoom in on the smallest details.",
+        "scope": "About Collection Online",
+        "url": "https://www.rijksmuseum.nl/en/about-collection-online"
+      },
+      "strategy_index": 0,
+      "strategy_reason": "The goal is a visit to a specific explanation. Reopen the choice if it disappears or the goal changes to an action.",
+      "summary": "Use the Comparator to place artworks side by side and zoom in on the smallest details.",
+      "tone": "Plain and concise"
+    },
+    "changes": [
+      {
+        "after": "Audience hypothesis after reviewing the draft.",
+        "before": "People who want to understand the feature before acting.",
+        "field": "audience"
+      },
+      {
+        "after": "Use the Comparator to place artworks next to each other and zoom in on the smallest details.",
+        "before": "Compare artworks and zoom into details.",
+        "field": "copy"
+      }
+    ],
+    "evidence": [
+      {
+        "body_sha256": "91cce0ab001ac03c606b5000037a9bba54d2b879426403fd1c8c3b28c852fb02",
+        "capture_kind": "public_http",
+        "captured_at": "2026-11-13T12:36:20.254175+00:00",
+        "constraints": {
+          "basis": "FULL_SOURCE_CONTEXT",
+          "branch": null,
+          "market": "UNCONFIRMED",
+          "page_path": "/en/about-collection-online",
+          "price": null,
+          "valid_until": null
+        },
+        "context": "Discover & Create For instance, create your own Collections , which automatically generate an interactive video clip featuring your selected artworks. Use the Comparator to place artworks side by side and zoom in on the smallest details. What will you discover? Share your findings with the rest of the world. Visitors are also welcomed into My Gallery of Honour , a virtual space inspired by the Rijksmuseum's most iconic room. Curate your own Gallery of Honour and tell your story in this legendary setting. Thanks to the Art Explorer , exploring the collection has become even more accessible. This new AI-powered tool invites visitors to answer thought-provoking questions. Their answers lead to surprising and unexpected suggestions from the collection. Please note that the results are unfiltered and may sometimes show unexpectedly shocking and/or explicit images.",
+        "label": "About Collection Online",
+        "outcome": "QUOTE_OBSERVED",
+        "page_url": "https://www.rijksmuseum.nl/en/about-collection-online",
+        "quote": "Use the Comparator to place artworks side by side and zoom in on the smallest details.",
+        "scope": "About Collection Online",
+        "score": 5,
+        "specificity": 1.0,
+        "text_sha256": "d44795ff8109d8ec2d9c9c7160387f58a82537b18db471283d1624567fb5794c",
+        "title": "about-collection-online - Rijksmuseum"
+      }
+    ],
+    "kind": "SOURCE_CAMPAIGN",
+    "package": {
+      "brand_name": "www.rijksmuseum.nl",
+      "caption": "What changes when you look at two artworks together? Read about the Comparator.",
+      "concept": "compare",
+      "copy": {
+        "cta": "Read about the Comparator",
+        "headline": "Compare Artworks Side by Side",
+        "message": "Use the Comparator to place artworks next to each other and zoom in on the smallest details."
+      },
+      "direction": "ltr",
+      "factual_review": "BOUNDED_REWRITE_REQUIRES_HUMAN_REVIEW",
+      "language": "en",
+      "poster_layout": "source-campaign@2",
+      "source_evidence_index": 0,
+      "source_url": "https://www.rijksmuseum.nl/en/about-collection-online",
+      "storyboard": [
+        {
+          "line": "Compare Artworks Side by Side",
+          "seconds": "0–3",
+          "visual": "Reveal the campaign prompt over a simple geometric motif."
+        },
+        {
+          "line": "Use the Comparator to place artworks next to each other and zoom in on the smallest details.",
+          "seconds": "3–8",
+          "visual": "Reveal the topic label and hold the background still."
+        },
+        {
+          "line": "Read about the Comparator",
+          "seconds": "8–12",
+          "visual": "End on the brand name and exact call to action."
+        }
+      ],
+      "theme": "cobalt"
+    },
+    "planner": {
+      "brief_reviewed": true,
+      "claims": [
+        {
+          "basis": "PUBLISHER_QUOTE_AND_SECTION_LABEL",
+          "evidence_index": 0,
+          "fields": [
+            "brief.summary",
+            "package.copy.message"
+          ],
+          "semantic_review": "HUMAN_REVIEW_REQUIRED"
+        }
+      ],
+      "conflicts": [],
+      "cost_usd": 0,
+      "destination_evidence_index": 0,
+      "elapsed_ms": 2256.64,
+      "gap": null,
+      "input": {
+        "language": "en",
+        "objective": "Increase visits to the Collection Online Comparator explanation",
+        "url": "https://www.rijksmuseum.nl/en/collection"
+      },
+      "intent": "DISCOVERY",
+      "missing_question": null,
+      "opportunity_hypothesis": "Test whether connecting the feature to a specific action improves clicks from the proposed audience.",
+      "options": [
+        {
+          "action": "READ_FEATURE",
+          "audience": "People who want to understand the feature before acting.",
+          "concept": "compare",
+          "cta": "Read about the Comparator",
+          "destination": "https://www.rijksmuseum.nl/en/about-collection-online",
+          "evidence_index": 0,
+          "headline": "Start with the feature",
+          "message": "Lead with the feature name and link to the publisher’s explanation.",
+          "metric": "Explanation clicks per impression.",
+          "name": "Explain the feature",
+          "theme": "cobalt",
+          "tradeoff": "Shortens the path to the explanation and leaves the decision to the reader."
+        },
+        {
+          "action": "COMPARE_FIT",
+          "audience": "People comparing alternatives who need to inspect the details.",
+          "concept": "compare",
+          "cta": "Read about the Comparator",
+          "destination": "https://www.rijksmuseum.nl/en/about-collection-online",
+          "evidence_index": 0,
+          "headline": "Would it fit your needs?",
+          "message": "Ask a fit question. Use the publisher’s explanation as one input to a comparison.",
+          "metric": "Visits to the explanation from the comparison creative.",
+          "name": "Evaluate the fit",
+          "theme": "forest",
+          "tradeoff": "Supports evaluation and would need comparative evidence for any superiority claim."
+        },
+        {
+          "action": "EXPLORE_TOPIC",
+          "audience": "People at the start of discovery.",
+          "concept": "compare",
+          "cta": "Read about the Comparator",
+          "destination": "https://www.rijksmuseum.nl/en/about-collection-online",
+          "evidence_index": 0,
+          "headline": "Where would you start?",
+          "message": "Use the topic name as an entry point for open-ended reading.",
+          "metric": "Topic-page clicks from the discovery creative.",
+          "name": "Explore the topic",
+          "theme": "ember",
+          "tradeoff": "Broader discovery with the same explanation page as the destination."
+        }
+      ],
+      "page_calls": 2,
+      "pages": [
+        {
+          "body_sha256": "e702cad0b30bda2bbcaa82b3006449f67b56a221dd8d6009f380c7592f5f9359",
+          "capture_kind": "public_http",
+          "captured_at": "2026-11-13T12:36:18.783860+00:00",
+          "entries": [],
+          "page_url": "https://www.rijksmuseum.nl/en/collection",
+          "text_sha256": "39405f42eb00fe1b8aef342aed97ba3154199b4664fd7754eb284d5bfdf667d7",
+          "title": "Collection - Rijksmuseum"
+        },
+        {
+          "body_sha256": "91cce0ab001ac03c606b5000037a9bba54d2b879426403fd1c8c3b28c852fb02",
+          "capture_kind": "public_http",
+          "captured_at": "2026-11-13T12:36:20.254175+00:00",
+          "entries": [
+            {
+              "context": "Discover & Create For instance, create your own Collections , which automatically generate an interactive video clip featuring your selected artworks. Use the Comparator to place artworks side by side and zoom in on the smallest details. What will you discover? Share your findings with the rest of the world. Visitors are also welcomed into My Gallery of Honour , a virtual space inspired by the Rijksmuseum's most iconic room. Curate your own Gallery of Honour and tell your story in this legendary setting. Thanks to the Art Explorer , exploring the collection has become even more accessible. This new AI-powered tool invites visitors to answer thought-provoking questions. Their answers lead to surprising and unexpected suggestions from the collection. Please note that the results are unfiltered and may sometimes show unexpectedly shocking and/or explicit images.",
+              "label": "About Collection Online",
+              "quote": "Use the Comparator to place artworks side by side and zoom in on the smallest details.",
+              "score": 5,
+              "specificity": 1.0
+            },
+            {
+              "context": "With the launch of the new Online Collection, the Rijksmuseum brings art and history closer than ever. This innovative platform opens a world of beauty and knowledge, where images, archival sources, stories, and research come together.",
+              "label": "About Collection Online",
+              "quote": "With the launch of the new Online Collection, the Rijksmuseum brings art and history closer than ever.",
+              "score": 6,
+              "specificity": 0.458
+            },
+            {
+              "context": "The introduction of the new Online Collection marks another step in the Rijksmuseum's important mission: making art and heritage accessible to everyone. Through an innovative search bar and hundreds of automatically generated theme pages, you step into a treasure trove of art, history, and knowledge. The possibilities are endless.",
+              "label": "About Collection Online",
+              "quote": "The introduction of the new Online Collection marks another step in the Rijksmuseum's important mission: making art and heritage accessible to everyone.",
+              "score": 6,
+              "specificity": 0.458
+            },
+            {
+              "context": "Linked Open Data The Online Collection uses Linked Open Data, making art and knowledge available in a structured and accessible way. The platform continues to grow with new images, data, and an expanding range of collection sources. The Rijksmuseum offers renewed open data services, enabling the collection to be easily used in personal applications via open APIs. All freely available works can be downloaded in high resolution for both personal and commercial use.",
+              "label": "About Collection Online",
+              "quote": "Linked Open Data The Online Collection uses Linked Open Data, making art and knowledge available in a structured and accessible way.",
+              "score": 6,
+              "specificity": 0.458
+            },
+            {
+              "context": "Discover & Create For instance, create your own Collections , which automatically generate an interactive video clip featuring your selected artworks. Use the Comparator to place artworks side by side and zoom in on the smallest details. What will you discover? Share your findings with the rest of the world. Visitors are also welcomed into My Gallery of Honour , a virtual space inspired by the Rijksmuseum's most iconic room. Curate your own Gallery of Honour and tell your story in this legendary setting. Thanks to the Art Explorer , exploring the collection has become even more accessible. This new AI-powered tool invites visitors to answer thought-provoking questions. Their answers lead to surprising and unexpected suggestions from the collection. Please note that the results are unfiltered and may sometimes show unexpectedly shocking and/or explicit images.",
+              "label": "About Collection Online",
+              "quote": "Discover & Create For instance, create your own Collections , which automatically generate an interactive video clip featuring your selected artworks.",
+              "score": 5,
+              "specificity": 0.125
+            },
+            {
+              "context": "Discover & Create For instance, create your own Collections , which automatically generate an interactive video clip featuring your selected artworks. Use the Comparator to place artworks side by side and zoom in on the smallest details. What will you discover? Share your findings with the rest of the world. Visitors are also welcomed into My Gallery of Honour , a virtual space inspired by the Rijksmuseum's most iconic room. Curate your own Gallery of Honour and tell your story in this legendary setting. Thanks to the Art Explorer , exploring the collection has become even more accessible. This new AI-powered tool invites visitors to answer thought-provoking questions. Their answers lead to surprising and unexpected suggestions from the collection. Please note that the results are unfiltered and may sometimes show unexpectedly shocking and/or explicit images.",
+              "label": "About Collection Online",
+              "quote": "Thanks to the Art Explorer , exploring the collection has become even more accessible.",
+              "score": 5,
+              "specificity": 0.125
+            },
+            {
+              "context": "Discover & Create For instance, create your own Collections , which automatically generate an interactive video clip featuring your selected artworks. Use the Comparator to place artworks side by side and zoom in on the smallest details. What will you discover? Share your findings with the rest of the world. Visitors are also welcomed into My Gallery of Honour , a virtual space inspired by the Rijksmuseum's most iconic room. Curate your own Gallery of Honour and tell your story in this legendary setting. Thanks to the Art Explorer , exploring the collection has become even more accessible. This new AI-powered tool invites visitors to answer thought-provoking questions. Their answers lead to surprising and unexpected suggestions from the collection. Please note that the results are unfiltered and may sometimes show unexpectedly shocking and/or explicit images.",
+              "label": "About Collection Online",
+              "quote": "Their answers lead to surprising and unexpected suggestions from the collection.",
+              "score": 5,
+              "specificity": 0.125
+            },
+            {
+              "context": "Linked Open Data The Online Collection uses Linked Open Data, making art and knowledge available in a structured and accessible way. The platform continues to grow with new images, data, and an expanding range of collection sources. The Rijksmuseum offers renewed open data services, enabling the collection to be easily used in personal applications via open APIs. All freely available works can be downloaded in high resolution for both personal and commercial use.",
+              "label": "About Collection Online",
+              "quote": "The platform continues to grow with new images, data, and an expanding range of collection sources.",
+              "score": 5,
+              "specificity": 0.125
+            }
+          ],
+          "page_url": "https://www.rijksmuseum.nl/en/about-collection-online",
+          "text_sha256": "d44795ff8109d8ec2d9c9c7160387f58a82537b18db471283d1624567fb5794c",
+          "title": "about-collection-online - Rijksmuseum"
+        }
+      ],
+      "policy": "source-campaign-planner@1",
+      "provider_calls": 0,
+      "question": "Which brand page describes the feature in the goal?",
+      "request_id": null,
+      "stop": "DECISION_EVIDENCE_FOUND",
+      "trace": [
+        {
+          "anchor": "",
+          "candidate_count": 0,
+          "gap_after": "FEATURE_EVIDENCE",
+          "outcome": "SOURCE_READ",
+          "page_url": "https://www.rijksmuseum.nl/en/collection",
+          "reason": "BRAND_ENTRY"
+        },
+        {
+          "anchor": "About the collection",
+          "candidate_count": 8,
+          "gap_after": null,
+          "outcome": "SOURCE_READ",
+          "page_url": "https://www.rijksmuseum.nl/en/about-collection-online",
+          "reason": "FILL_FEATURE_GAP"
+        }
+      ]
+    },
+    "schema_version": 2,
+    "sha256": "7a429230120cf114f2b28ad1b5cec11349699f0bd7600ae734cd988266478172",
+    "status": "READY"
+  },
+  "review_status": "LOCAL_REVIEW",
+  "run_id": "1a15bf2a-18a9-4adf-8633-c73e5191092d",
+  "video": "SCRIPT_AND_STORYBOARD_ONLY"
+}

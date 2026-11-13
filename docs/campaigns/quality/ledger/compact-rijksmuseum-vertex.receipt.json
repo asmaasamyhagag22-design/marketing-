@@ -1,0 +1,10 @@
+{
+  "outcome": "COMPLETE",
+  "estimated_charge": "0.00125685",
+  "content": "{\n  \"directions\": [\n    {\n      \"angle\": \"Comparative Analysis\",\n      \"headline\": \"Compare Artworks Side by Side\",\n      \"message\": \"Use the Comparator to place artworks next to each other and zoom in on the smallest details.\",\n      \"cta\": \"Learn how to use Comparator\",\n      \"caption\": \"Ever wondered how two masterpieces look side by side? Our Comparator tool lets you analyze details closely. See how it works.\",\n      \"visual\": \"Split-screen view of two historical paintings with a zoom-in effect.\",\n      \"evidence_index\": 0\n    },\n    {\n      \"angle\": \"Detail Discovery\",\n      \"headline\": \"Zoom In on Masterpiece Details\",\n      \"message\": \"Discover the hidden details of our collection by placing artworks side by side for comparison.\",\n      \"cta\": \"See the feature explanation\",\n      \"caption\": \"Get a closer look at the collection. Our Comparator tool allows you to examine fine details across multiple artworks at once.\",\n      \"visual\": \"Macro shot of a brushstroke next to a full artwork view.\",\n      \"evidence_index\": 0\n    },\n    {\n      \"angle\": \"Curatorial Tool\",\n      \"headline\": \"How to Use the Collection Comparator\",\n      \"message\": \"Curate your own view by placing artworks side by side and zooming in to explore fine details.\",\n      \"cta\": \"Read the feature guide\",\n      \"caption\": \"Interested in exploring the collection more deeply? Learn how to use our Comparator to align and inspect artworks side by side.\",\n      \"visual\": \"User interface showing two artworks aligned for comparison.\",\n      \"evidence_index\": 0\n    }\n  ]\n}",
+  "finish_reason": "STOP",
+  "model": "gemini-3.1-flash-lite",
+  "prompt_tokens": 555,
+  "completion_tokens": 373,
+  "seconds": 1.64
+}

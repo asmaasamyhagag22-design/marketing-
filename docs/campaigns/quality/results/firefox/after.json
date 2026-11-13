@@ -1,0 +1,456 @@
+{
+  "approval_id": "ad59515e-0e9c-4f6d-8dfa-e93e500660fe",
+  "poster_measurements": {
+    "portrait": {
+      "geometry": [
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 136,
+          "color": "rgb(255, 247, 239)",
+          "field": "brand",
+          "overflow": false,
+          "right": 1004,
+          "size": 40,
+          "x": 76,
+          "y": 64
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 967.25,
+          "color": "rgb(255, 247, 239)",
+          "field": "motif",
+          "overflow": false,
+          "right": 1004,
+          "size": 16,
+          "x": 76,
+          "y": 166
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 1108.125,
+          "color": "rgb(255, 247, 239)",
+          "field": "H1",
+          "overflow": false,
+          "right": 1004,
+          "size": 88,
+          "x": 76,
+          "y": 997.25
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 1190.359375,
+          "color": "rgb(255, 247, 239)",
+          "field": "message",
+          "overflow": false,
+          "right": 1004,
+          "size": 44,
+          "x": 76,
+          "y": 1126.125
+        },
+        {
+          "background": "rgb(255, 201, 131)",
+          "bottom": 1286,
+          "color": "rgb(19, 13, 54)",
+          "field": "cta",
+          "overflow": false,
+          "right": 1004,
+          "size": 37,
+          "x": 584,
+          "y": 1208.359375
+        }
+      ],
+      "height": 1350,
+      "sha256": "067b08b1dc84f825d070198a32e76d5c30eaeb4c6630beca7b9905074d958dd1",
+      "width": 1080
+    },
+    "square": {
+      "geometry": [
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 136,
+          "color": "rgb(255, 247, 239)",
+          "field": "brand",
+          "overflow": false,
+          "right": 1004,
+          "size": 40,
+          "x": 76,
+          "y": 64
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 697.25,
+          "color": "rgb(255, 247, 239)",
+          "field": "motif",
+          "overflow": false,
+          "right": 1004,
+          "size": 16,
+          "x": 76,
+          "y": 166
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 838.125,
+          "color": "rgb(255, 247, 239)",
+          "field": "H1",
+          "overflow": false,
+          "right": 1004,
+          "size": 88,
+          "x": 76,
+          "y": 727.25
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 920.359375,
+          "color": "rgb(255, 247, 239)",
+          "field": "message",
+          "overflow": false,
+          "right": 1004,
+          "size": 44,
+          "x": 76,
+          "y": 856.125
+        },
+        {
+          "background": "rgb(255, 201, 131)",
+          "bottom": 1016,
+          "color": "rgb(19, 13, 54)",
+          "field": "cta",
+          "overflow": false,
+          "right": 1004,
+          "size": 37,
+          "x": 584,
+          "y": 938.359375
+        }
+      ],
+      "height": 1080,
+      "sha256": "7fd03b950e35da1ae56c39e8b4f815bb06b39dedddadce4f27d61e26b961f9e5",
+      "width": 1080
+    }
+  },
+  "profile_snapshot_id": "663aa1ae-dc76-4cb1-844c-c4443ef96b3a",
+  "proposal": {
+    "brand_name": "www.firefox.com",
+    "brief": {
+      "alternatives": [
+        {
+          "name": "شرح الميزة",
+          "plan": "ابدأ باسم الميزة ووجّه القارئ إلى شرحها الرسمي.",
+          "tradeoff": "يقلّل خطوة البحث للقارئ ويترك التقييم له."
+        },
+        {
+          "name": "قيّم الملاءمة",
+          "plan": "اطرح سؤال ملاءمة. استخدم شرح الناشر كنقطة للمقارنة.",
+          "tradeoff": "يخدم مرحلة الاختيار ويحتاج بيانات قبل ادعاء تفوّق."
+        },
+        {
+          "name": "استكشاف الموضوع",
+          "plan": "قدّم اسم الموضوع كمدخل للقراءة المفتوحة.",
+          "tradeoff": "أوسع في الاستكشاف ويستخدم نفس صفحة الشرح."
+        }
+      ],
+      "assumption": "الجمهور فرضية تحريرية. نختبر هل اهتمامه بالميزة يدفعه للنقر.",
+      "audience": "فرضية جمهور بعد مراجعة المسودة.",
+      "competitor": null,
+      "direction": "rtl",
+      "directions": [
+        {
+          "caption": "يحظر المتصفّح آلاف المتعقّبات المعروفة أثناء تصفّح الويب. اقرأ كيف تعمل الميزة.",
+          "cta": "اقرأ عن حظر المتعقّبات",
+          "end_shot": "تظهر بطاقة باسم البراند والدعوة.",
+          "headline": "ماذا يحظر متصفّحك؟",
+          "hook": "ماذا يحظر متصفّحك؟",
+          "message": "يحظر المتصفّح آلاف المتعقّبات المعروفة.",
+          "middle_shot": "يظهر اسم الميزة وتظل الخلفية ثابتة.",
+          "name": "شرح الميزة",
+          "rationale": "ابدأ باسم الميزة ووجّه القارئ إلى شرحها الرسمي.",
+          "shot": "يظهر سؤال الحملة فوق شكل هندسي بسيط.",
+          "theme": "cobalt"
+        },
+        {
+          "caption": "إيه اللي يهمّك في الاختيار؟ يحظر المتصفّح آلاف المتعقّبات المعروفة أثناء تصفّح الويب. اقرأ كيف تعمل الميزة.",
+          "cta": "اقرأ عن حظر المتعقّبات",
+          "end_shot": "تظهر بطاقة باسم البراند والدعوة.",
+          "headline": "إيه اللي يهمّك في الاختيار؟",
+          "hook": "إيه اللي يهمّك في الاختيار؟",
+          "message": "يحظر المتصفّح آلاف المتعقّبات المعروفة.",
+          "middle_shot": "يظهر اسم الميزة وتظل الخلفية ثابتة.",
+          "name": "قيّم الملاءمة",
+          "rationale": "اطرح سؤال ملاءمة. استخدم شرح الناشر كنقطة للمقارنة.",
+          "shot": "يظهر سؤال الحملة فوق شكل هندسي بسيط.",
+          "theme": "forest"
+        },
+        {
+          "caption": "ابدأ بسؤال · يحظر المتصفّح آلاف المتعقّبات المعروفة أثناء تصفّح الويب. اقرأ كيف تعمل الميزة.",
+          "cta": "اقرأ عن حظر المتعقّبات",
+          "end_shot": "تظهر بطاقة باسم البراند والدعوة.",
+          "headline": "ابدأ بسؤال",
+          "hook": "ابدأ بسؤال",
+          "message": "يحظر المتصفّح آلاف المتعقّبات المعروفة.",
+          "middle_shot": "يظهر اسم الميزة وتظل الخلفية ثابتة.",
+          "name": "استكشاف الموضوع",
+          "rationale": "قدّم اسم الموضوع كمدخل للقراءة المفتوحة.",
+          "shot": "يظهر سؤال الحملة فوق شكل هندسي بسيط.",
+          "theme": "ember"
+        }
+      ],
+      "human_review": [
+        "راجع الاسم الأصلي للميزة واللغة ونطاق المصدر والحقوق.",
+        "راجع الوجهة على الموبايل ووسيلة قياس النتيجة."
+      ],
+      "language": "ar",
+      "market": "نطاق السوق يحتاج تأكيدًا قبل النشر.",
+      "metric": "النقرات إلى الشرح لكل ظهور.",
+      "objective": "Increase visits to the Enhanced Tracking Protection explanation",
+      "peer_rationale": null,
+      "peer_source": null,
+      "selected": 0,
+      "source": {
+        "quote": "Firefox blocks thousands of known trackers before they can follow you around the web.",
+        "scope": "Enhanced Tracking Protection",
+        "url": "https://www.firefox.com/en-US/features/protection/"
+      },
+      "strategy_index": 0,
+      "strategy_reason": "الهدف زيارة شرح محدد. لو اختفى شرح الميزة أو تغيّر الهدف لإجراء، أعد البحث عن الوجهة.",
+      "summary": "Firefox blocks thousands of known trackers before they can follow you around the web.",
+      "tone": "واضحة وهادئة"
+    },
+    "changes": [
+      {
+        "after": "فرضية جمهور بعد مراجعة المسودة.",
+        "before": "مهتمون يريدون فهم الميزة قبل اتخاذ قرار.",
+        "field": "audience"
+      }
+    ],
+    "evidence": [
+      {
+        "body_sha256": "b18e2e05accfb7d93e7b4a893e11bfdb422854ab371fe7bfd41fa625eb8164ea",
+        "capture_kind": "public_http",
+        "captured_at": "2026-11-13T12:34:27.762175+00:00",
+        "constraints": {
+          "basis": "FULL_SOURCE_CONTEXT",
+          "branch": null,
+          "market": "UNCONFIRMED",
+          "page_path": "/en-US/features/protection/",
+          "price": null,
+          "valid_until": null
+        },
+        "context": "Firefox blocks thousands of known trackers before they can follow you around the web. No setup required. Just open Firefox and browse with protection already in place. You can also see what’s being blocked by clicking the shield icon in your address bar.",
+        "label": "Enhanced Tracking Protection",
+        "outcome": "QUOTE_OBSERVED",
+        "page_url": "https://www.firefox.com/en-US/features/protection/",
+        "quote": "Firefox blocks thousands of known trackers before they can follow you around the web.",
+        "scope": "Enhanced Tracking Protection",
+        "score": 7,
+        "specificity": 0.333,
+        "text_sha256": "d490c5161a0b2a3a25930cf75695840d01afd59bb6b1da8b9e0f3992c1a033fc",
+        "title": "Protection — Firefox.com"
+      }
+    ],
+    "kind": "SOURCE_CAMPAIGN",
+    "package": {
+      "brand_name": "www.firefox.com",
+      "caption": "يحظر المتصفّح آلاف المتعقّبات المعروفة أثناء تصفّح الويب. اقرأ كيف تعمل الميزة.",
+      "concept": "filter",
+      "copy": {
+        "cta": "اقرأ عن حظر المتعقّبات",
+        "headline": "ماذا يحظر متصفّحك؟",
+        "message": "يحظر المتصفّح آلاف المتعقّبات المعروفة."
+      },
+      "direction": "rtl",
+      "factual_review": "BOUNDED_REWRITE_REQUIRES_HUMAN_REVIEW",
+      "language": "ar",
+      "poster_layout": "source-campaign@2",
+      "source_evidence_index": 0,
+      "source_url": "https://www.firefox.com/en-US/features/protection/",
+      "storyboard": [
+        {
+          "line": "ماذا يحظر متصفّحك؟",
+          "seconds": "0–3",
+          "visual": "يظهر سؤال الحملة فوق شكل هندسي بسيط."
+        },
+        {
+          "line": "يحظر المتصفّح آلاف المتعقّبات المعروفة.",
+          "seconds": "3–8",
+          "visual": "يظهر اسم الميزة وتظل الخلفية ثابتة."
+        },
+        {
+          "line": "اقرأ عن حظر المتعقّبات",
+          "seconds": "8–12",
+          "visual": "تظهر بطاقة باسم البراند والدعوة."
+        }
+      ],
+      "theme": "cobalt"
+    },
+    "planner": {
+      "brief_reviewed": true,
+      "claims": [
+        {
+          "basis": "PUBLISHER_QUOTE_AND_SECTION_LABEL",
+          "evidence_index": 0,
+          "fields": [
+            "brief.summary",
+            "package.copy.message"
+          ],
+          "semantic_review": "HUMAN_REVIEW_REQUIRED"
+        }
+      ],
+      "conflicts": [],
+      "cost_usd": 0,
+      "destination_evidence_index": 0,
+      "elapsed_ms": 3138.02,
+      "gap": null,
+      "input": {
+        "language": "ar",
+        "objective": "Increase visits to the Enhanced Tracking Protection explanation",
+        "url": "https://www.firefox.com/en-US/features/"
+      },
+      "intent": "DISCOVERY",
+      "missing_question": null,
+      "opportunity_hypothesis": "اختبر هل ربط الميزة بالخطوة المطلوبة يرفع معدل النقر من الشريحة المقترحة.",
+      "options": [
+        {
+          "action": "READ_FEATURE",
+          "audience": "مهتمون يريدون فهم الميزة قبل اتخاذ قرار.",
+          "concept": "filter",
+          "cta": "اقرأ عن حظر المتعقّبات",
+          "destination": "https://www.firefox.com/en-US/features/protection/",
+          "evidence_index": 0,
+          "headline": "افهم الميزة أولًا",
+          "message": "ابدأ باسم الميزة ووجّه القارئ إلى شرحها الرسمي.",
+          "metric": "النقرات إلى الشرح لكل ظهور.",
+          "name": "شرح الميزة",
+          "theme": "cobalt",
+          "tradeoff": "يقلّل خطوة البحث للقارئ ويترك التقييم له."
+        },
+        {
+          "action": "COMPARE_FIT",
+          "audience": "أشخاص يقارنون بدائل ويحتاجون مراجعة التفاصيل.",
+          "concept": "filter",
+          "cta": "اقرأ عن حظر المتعقّبات",
+          "destination": "https://www.firefox.com/en-US/features/protection/",
+          "evidence_index": 0,
+          "headline": "هل تناسب احتياجك؟",
+          "message": "اطرح سؤال ملاءمة. استخدم شرح الناشر كنقطة للمقارنة.",
+          "metric": "زيارات صفحة الشرح بعد النقر على سؤال المقارنة.",
+          "name": "قيّم الملاءمة",
+          "theme": "forest",
+          "tradeoff": "يخدم مرحلة الاختيار ويحتاج بيانات قبل ادعاء تفوّق."
+        },
+        {
+          "action": "EXPLORE_TOPIC",
+          "audience": "جمهور في مرحلة الاستكشاف الأولي.",
+          "concept": "filter",
+          "cta": "اقرأ عن حظر المتعقّبات",
+          "destination": "https://www.firefox.com/en-US/features/protection/",
+          "evidence_index": 0,
+          "headline": "من أين تبدأ؟",
+          "message": "قدّم اسم الموضوع كمدخل للقراءة المفتوحة.",
+          "metric": "النقرات من مادة الاستكشاف إلى صفحة الموضوع.",
+          "name": "استكشاف الموضوع",
+          "theme": "ember",
+          "tradeoff": "أوسع في الاستكشاف ويستخدم نفس صفحة الشرح."
+        }
+      ],
+      "page_calls": 2,
+      "pages": [
+        {
+          "body_sha256": "0d972188dea79e8b20c8f4461e697557a7df9f863117e76a9ef5cc6bcccee4f1",
+          "capture_kind": "public_http",
+          "captured_at": "2026-11-13T12:34:26.022030+00:00",
+          "entries": [
+            {
+              "context": "Staying safe online shouldn’t demand constant attention. Firefox blocks trackers automatically and protects your privacy by default, so you can browse confidently without becoming a privacy expert.",
+              "label": "Made by people on the internet, for people on the internet",
+              "quote": "Firefox blocks trackers automatically and protects your privacy by default, so you can browse confidently without becoming a privacy expert.",
+              "score": 1,
+              "specificity": 1.0
+            }
+          ],
+          "page_url": "https://www.firefox.com/en-US/features/",
+          "text_sha256": "f64beea17eebc7036b2a1b0be09b5c404c6729819f811e9fff9f24cb4cff4645",
+          "title": "Learn about Firefox features — Firefox.com"
+        },
+        {
+          "body_sha256": "b18e2e05accfb7d93e7b4a893e11bfdb422854ab371fe7bfd41fa625eb8164ea",
+          "capture_kind": "public_http",
+          "captured_at": "2026-11-13T12:34:27.762175+00:00",
+          "entries": [
+            {
+              "context": "Cookies are one of the web’s favorite tracking tools, following you from site to site and quietly building a profile of your activity. Total Cookie Protection keeps each site’s cookies separate, so companies can’t connect the dots across your browsing.",
+              "label": "Total cookie protection",
+              "quote": "Total Cookie Protection keeps each site’s cookies separate, so companies can’t connect the dots across your browsing.",
+              "score": 3,
+              "specificity": 0.5
+            },
+            {
+              "context": "Protection shouldn’t be a premium feature. With Firefox, it’s built in. We block trackers automatically, protect your privacy by default, and give you clear visibility into what’s happening behind the scenes.",
+              "label": "Your online life belongs to you",
+              "quote": "Protection shouldn’t be a premium feature.",
+              "score": 1,
+              "specificity": 0.5
+            },
+            {
+              "context": "Firefox blocks thousands of known trackers before they can follow you around the web. No setup required. Just open Firefox and browse with protection already in place. You can also see what’s being blocked by clicking the shield icon in your address bar.",
+              "label": "Enhanced Tracking Protection",
+              "quote": "Firefox blocks thousands of known trackers before they can follow you around the web.",
+              "score": 7,
+              "specificity": 0.333
+            },
+            {
+              "context": "Cookies are one of the web’s favorite tracking tools, following you from site to site and quietly building a profile of your activity. Total Cookie Protection keeps each site’s cookies separate, so companies can’t connect the dots across your browsing.",
+              "label": "Total cookie protection",
+              "quote": "Cookies are one of the web’s favorite tracking tools, following you from site to site and quietly building a profile of your activity.",
+              "score": 3,
+              "specificity": 0.333
+            },
+            {
+              "context": "Protection shouldn’t be a premium feature. With Firefox, it’s built in. We block trackers automatically, protect your privacy by default, and give you clear visibility into what’s happening behind the scenes.",
+              "label": "Your online life belongs to you",
+              "quote": "We block trackers automatically, protect your privacy by default, and give you clear visibility into what’s happening behind the scenes.",
+              "score": 1,
+              "specificity": 0.333
+            },
+            {
+              "context": "Firefox blocks thousands of known trackers before they can follow you around the web. No setup required. Just open Firefox and browse with protection already in place. You can also see what’s being blocked by clicking the shield icon in your address bar.",
+              "label": "Enhanced Tracking Protection",
+              "quote": "You can also see what’s being blocked by clicking the shield icon in your address bar.",
+              "score": 6,
+              "specificity": 0
+            }
+          ],
+          "page_url": "https://www.firefox.com/en-US/features/protection/",
+          "text_sha256": "d490c5161a0b2a3a25930cf75695840d01afd59bb6b1da8b9e0f3992c1a033fc",
+          "title": "Protection — Firefox.com"
+        }
+      ],
+      "policy": "source-campaign-planner@1",
+      "provider_calls": 0,
+      "question": "أين يشرح الموقع الميزة المرتبطة بالهدف؟",
+      "request_id": null,
+      "stop": "DECISION_EVIDENCE_FOUND",
+      "trace": [
+        {
+          "anchor": "",
+          "candidate_count": 1,
+          "gap_after": "FEATURE_EVIDENCE",
+          "outcome": "SOURCE_READ",
+          "page_url": "https://www.firefox.com/en-US/features/",
+          "reason": "BRAND_ENTRY"
+        },
+        {
+          "anchor": "Protection",
+          "candidate_count": 6,
+          "gap_after": null,
+          "outcome": "SOURCE_READ",
+          "page_url": "https://www.firefox.com/en-US/features/protection/",
+          "reason": "FILL_FEATURE_GAP"
+        }
+      ]
+    },
+    "schema_version": 2,
+    "sha256": "e55f5f97ce92fa71fc7a84675a7274200f870492b2a6ccf81ec2cc1fcb013ba9",
+    "status": "READY"
+  },
+  "review_status": "LOCAL_REVIEW",
+  "run_id": "359bedf7-3370-4d56-ac5b-3cdecc7484e2",
+  "video": "SCRIPT_AND_STORYBOARD_ONLY"
+}

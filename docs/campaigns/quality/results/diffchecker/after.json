@@ -1,0 +1,441 @@
+{
+  "approval_id": "60ade9ed-3888-4f5b-aaaf-3c7dcef7071a",
+  "poster_measurements": {
+    "portrait": {
+      "geometry": [
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 136,
+          "color": "rgb(255, 247, 239)",
+          "field": "brand",
+          "overflow": false,
+          "right": 1004,
+          "size": 40,
+          "x": 76,
+          "y": 64
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 903.015625,
+          "color": "rgb(255, 247, 239)",
+          "field": "motif",
+          "overflow": false,
+          "right": 1004,
+          "size": 16,
+          "x": 76,
+          "y": 166
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 1043.890625,
+          "color": "rgb(255, 247, 239)",
+          "field": "H1",
+          "overflow": false,
+          "right": 1004,
+          "size": 88,
+          "x": 76,
+          "y": 933.015625
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 1190.359375,
+          "color": "rgb(255, 247, 239)",
+          "field": "message",
+          "overflow": false,
+          "right": 1004,
+          "size": 44,
+          "x": 76,
+          "y": 1061.890625
+        },
+        {
+          "background": "rgb(255, 201, 131)",
+          "bottom": 1286,
+          "color": "rgb(19, 13, 54)",
+          "field": "cta",
+          "overflow": false,
+          "right": 519,
+          "size": 37,
+          "x": 76,
+          "y": 1208.359375
+        }
+      ],
+      "height": 1350,
+      "sha256": "8a8324caabb67504cf4fb1d87e29f1b7e2c846a6bddedbdd4d0c5a3e9aca7b3d",
+      "width": 1080
+    },
+    "square": {
+      "geometry": [
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 136,
+          "color": "rgb(255, 247, 239)",
+          "field": "brand",
+          "overflow": false,
+          "right": 1004,
+          "size": 40,
+          "x": 76,
+          "y": 64
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 633.015625,
+          "color": "rgb(255, 247, 239)",
+          "field": "motif",
+          "overflow": false,
+          "right": 1004,
+          "size": 16,
+          "x": 76,
+          "y": 166
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 773.890625,
+          "color": "rgb(255, 247, 239)",
+          "field": "H1",
+          "overflow": false,
+          "right": 1004,
+          "size": 88,
+          "x": 76,
+          "y": 663.015625
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 920.359375,
+          "color": "rgb(255, 247, 239)",
+          "field": "message",
+          "overflow": false,
+          "right": 1004,
+          "size": 44,
+          "x": 76,
+          "y": 791.890625
+        },
+        {
+          "background": "rgb(255, 201, 131)",
+          "bottom": 1016,
+          "color": "rgb(19, 13, 54)",
+          "field": "cta",
+          "overflow": false,
+          "right": 519,
+          "size": 37,
+          "x": 76,
+          "y": 938.359375
+        }
+      ],
+      "height": 1080,
+      "sha256": "62905910a6adbe4bffda586c9f10a2a67b752d3efd5ad01ccccc72ace2079db3",
+      "width": 1080
+    }
+  },
+  "profile_snapshot_id": "72ff3374-4f63-4a56-8ec3-844a053627c4",
+  "proposal": {
+    "brand_name": "www.diffchecker.com",
+    "brief": {
+      "alternatives": [
+        {
+          "name": "Explain the feature",
+          "plan": "Lead with the feature name and link to the publisher’s explanation.",
+          "tradeoff": "Shortens the path to the explanation and leaves the decision to the reader."
+        },
+        {
+          "name": "Evaluate the fit",
+          "plan": "Ask a fit question. Use the publisher’s explanation as one input to a comparison.",
+          "tradeoff": "Supports evaluation and would need comparative evidence for any superiority claim."
+        },
+        {
+          "name": "Explore the topic",
+          "plan": "Use the topic name as an entry point for open-ended reading.",
+          "tradeoff": "Broader discovery with the same explanation page as the destination."
+        }
+      ],
+      "assumption": "The audience is a working hypothesis. Test whether interest in the feature drives the intended click.",
+      "audience": "Audience hypothesis after reviewing the draft.",
+      "competitor": null,
+      "direction": "ltr",
+      "directions": [
+        {
+          "caption": "Split view — Both images side by side with synchronized zoom and pan. Read the explanation.",
+          "cta": "Read the explanation",
+          "end_shot": "End on the brand name and exact call to action.",
+          "headline": "Split view",
+          "hook": "Split view",
+          "message": "Both images side by side with synchronized zoom and pan.",
+          "middle_shot": "Reveal the topic label and hold the background still.",
+          "name": "Explain the feature",
+          "rationale": "Lead with the feature name and link to the publisher’s explanation.",
+          "shot": "Reveal the campaign prompt over a simple geometric motif.",
+          "theme": "cobalt"
+        },
+        {
+          "caption": "Would it fit your needs — Both images side by side with synchronized zoom and pan. Review the details.",
+          "cta": "Review the details",
+          "end_shot": "End on the brand name and exact call to action.",
+          "headline": "Would it fit your needs?",
+          "hook": "Would it fit your needs?",
+          "message": "Both images side by side with synchronized zoom and pan.",
+          "middle_shot": "Reveal the topic label and hold the background still.",
+          "name": "Evaluate the fit",
+          "rationale": "Ask a fit question. Use the publisher’s explanation as one input to a comparison.",
+          "shot": "Reveal the campaign prompt over a simple geometric motif.",
+          "theme": "forest"
+        },
+        {
+          "caption": "Where would you start — Both images side by side with synchronized zoom and pan. Explore the topic page.",
+          "cta": "Explore the topic page",
+          "end_shot": "End on the brand name and exact call to action.",
+          "headline": "Where would you start?",
+          "hook": "Where would you start?",
+          "message": "Both images side by side with synchronized zoom and pan.",
+          "middle_shot": "Reveal the topic label and hold the background still.",
+          "name": "Explore the topic",
+          "rationale": "Use the topic name as an entry point for open-ended reading.",
+          "shot": "Reveal the campaign prompt over a simple geometric motif.",
+          "theme": "ember"
+        }
+      ],
+      "human_review": [
+        "Review the original feature label, language, source scope and rights.",
+        "Check the destination on mobile and confirm the conversion measurement."
+      ],
+      "language": "en",
+      "market": "Confirm market scope before publishing.",
+      "metric": "Explanation clicks per impression.",
+      "objective": "Increase visits to the Diffchecker image comparison split view and synchronized zoom explanation",
+      "peer_rationale": null,
+      "peer_source": null,
+      "selected": 0,
+      "source": {
+        "quote": "Both images side by side with synchronized zoom and pan.",
+        "scope": "Split view",
+        "url": "https://www.diffchecker.com/image-compare/"
+      },
+      "strategy_index": 0,
+      "strategy_reason": "The goal is a visit to a specific explanation. Reopen the choice if it disappears or the goal changes to an action.",
+      "summary": "Both images side by side with synchronized zoom and pan.",
+      "tone": "Plain and concise"
+    },
+    "changes": [
+      {
+        "after": "Audience hypothesis after reviewing the draft.",
+        "before": "People who want to understand the feature before acting.",
+        "field": "audience"
+      }
+    ],
+    "evidence": [
+      {
+        "body_sha256": "2749b96dd5722af993d1ff5ef5d9c1c4436d7b6f353d0cba1e35f20c2dc5ac15",
+        "capture_kind": "public_http",
+        "captured_at": "2026-11-13T12:25:39.085336+00:00",
+        "constraints": {
+          "basis": "FULL_SOURCE_CONTEXT",
+          "branch": null,
+          "market": "UNCONFIRMED",
+          "page_path": "/image-compare/",
+          "price": null,
+          "valid_until": null
+        },
+        "context": "Both images side by side with synchronized zoom and pan. Zoom into a corner of one and the other follows, so you are always looking at the same region of both.",
+        "label": "Split view",
+        "outcome": "QUOTE_OBSERVED",
+        "page_url": "https://www.diffchecker.com/image-compare/",
+        "quote": "Both images side by side with synchronized zoom and pan.",
+        "scope": "Split view",
+        "score": 7,
+        "specificity": 1.536,
+        "text_sha256": "a400e186b4a60312c898b332d1d299fe98c4db1105fafffd45393f00944c5a70",
+        "title": "Compare images to find differences online or offline - Diffchecker"
+      }
+    ],
+    "kind": "SOURCE_CAMPAIGN",
+    "package": {
+      "brand_name": "www.diffchecker.com",
+      "caption": "Split view — Both images side by side with synchronized zoom and pan. Read the explanation.",
+      "copy": {
+        "cta": "Read the explanation",
+        "headline": "Split view",
+        "message": "Both images side by side with synchronized zoom and pan."
+      },
+      "direction": "ltr",
+      "factual_review": "SOURCE_LABEL_REUSE_REQUIRES_HUMAN_REVIEW",
+      "language": "en",
+      "poster_layout": "source-campaign@1",
+      "source_evidence_index": 0,
+      "source_url": "https://www.diffchecker.com/image-compare/",
+      "storyboard": [
+        {
+          "line": "Split view",
+          "seconds": "0–3",
+          "visual": "Reveal the campaign prompt over a simple geometric motif."
+        },
+        {
+          "line": "Both images side by side with synchronized zoom and pan.",
+          "seconds": "3–8",
+          "visual": "Reveal the topic label and hold the background still."
+        },
+        {
+          "line": "Read the explanation",
+          "seconds": "8–12",
+          "visual": "End on the brand name and exact call to action."
+        }
+      ],
+      "theme": "cobalt"
+    },
+    "planner": {
+      "brief_reviewed": true,
+      "claims": [
+        {
+          "basis": "PUBLISHER_QUOTE_AND_SECTION_LABEL",
+          "evidence_index": 0,
+          "fields": [
+            "brief.summary",
+            "package.copy.message"
+          ],
+          "semantic_review": "HUMAN_REVIEW_REQUIRED"
+        }
+      ],
+      "conflicts": [],
+      "cost_usd": 0,
+      "destination_evidence_index": 0,
+      "elapsed_ms": 2113.02,
+      "gap": null,
+      "input": {
+        "language": "en",
+        "objective": "Increase visits to the Diffchecker image comparison split view and synchronized zoom explanation",
+        "url": "https://www.diffchecker.com/image-compare/"
+      },
+      "intent": "DISCOVERY",
+      "missing_question": null,
+      "opportunity_hypothesis": "Test whether connecting the feature to a specific action improves clicks from the proposed audience.",
+      "options": [
+        {
+          "action": "READ_FEATURE",
+          "audience": "People who want to understand the feature before acting.",
+          "cta": "Read the explanation",
+          "destination": "https://www.diffchecker.com/image-compare/",
+          "evidence_index": 0,
+          "headline": "Start with the feature",
+          "message": "Lead with the feature name and link to the publisher’s explanation.",
+          "metric": "Explanation clicks per impression.",
+          "name": "Explain the feature",
+          "theme": "cobalt",
+          "tradeoff": "Shortens the path to the explanation and leaves the decision to the reader."
+        },
+        {
+          "action": "COMPARE_FIT",
+          "audience": "People comparing alternatives who need to inspect the details.",
+          "cta": "Review the details",
+          "destination": "https://www.diffchecker.com/image-compare/",
+          "evidence_index": 0,
+          "headline": "Would it fit your needs?",
+          "message": "Ask a fit question. Use the publisher’s explanation as one input to a comparison.",
+          "metric": "Visits to the explanation from the comparison creative.",
+          "name": "Evaluate the fit",
+          "theme": "forest",
+          "tradeoff": "Supports evaluation and would need comparative evidence for any superiority claim."
+        },
+        {
+          "action": "EXPLORE_TOPIC",
+          "audience": "People at the start of discovery.",
+          "cta": "Explore the topic page",
+          "destination": "https://www.diffchecker.com/image-compare/",
+          "evidence_index": 0,
+          "headline": "Where would you start?",
+          "message": "Use the topic name as an entry point for open-ended reading.",
+          "metric": "Topic-page clicks from the discovery creative.",
+          "name": "Explore the topic",
+          "theme": "ember",
+          "tradeoff": "Broader discovery with the same explanation page as the destination."
+        }
+      ],
+      "page_calls": 1,
+      "pages": [
+        {
+          "body_sha256": "2749b96dd5722af993d1ff5ef5d9c1c4436d7b6f353d0cba1e35f20c2dc5ac15",
+          "capture_kind": "public_http",
+          "captured_at": "2026-11-13T12:25:39.085336+00:00",
+          "entries": [
+            {
+              "context": "Both images side by side with synchronized zoom and pan. Zoom into a corner of one and the other follows, so you are always looking at the same region of both.",
+              "label": "Split view",
+              "quote": "Both images side by side with synchronized zoom and pan.",
+              "score": 7,
+              "specificity": 1.536
+            },
+            {
+              "context": "Start with split or highlight, then try slider, fade, flicker, or subtract depending on what you are looking for.",
+              "label": "Pick a view",
+              "quote": "Start with split or highlight, then try slider, fade, flicker, or subtract depending on what you are looking for.",
+              "score": 3,
+              "specificity": 1.0
+            },
+            {
+              "context": "Both images side by side with synchronized zoom and pan. Zoom into a corner of one and the other follows, so you are always looking at the same region of both.",
+              "label": "Split view",
+              "quote": "Zoom into a corner of one and the other follows, so you are always looking at the same region of both.",
+              "score": 5,
+              "specificity": 0.5
+            },
+            {
+              "context": "Nine views of the same two images: side by side, a draggable reveal, a flicker, a pixel subtraction, and views that read the text inside them or compare their metadata.",
+              "label": "Everything in the image diff tool",
+              "quote": "Nine views of the same two images: side by side, a draggable reveal, a flicker, a pixel subtraction, and views that read the text inside them or compare their metadata.",
+              "score": 4,
+              "specificity": 0.236
+            },
+            {
+              "context": "Every region gets a numbered entry with a crop of it from both images. Select one to bring it into view, hide the boxes when you want to look at the image itself, or darken everything outside them.",
+              "label": "A list you can step through",
+              "quote": "Select one to bring it into view, hide the boxes when you want to look at the image itself, or darken everything outside them.",
+              "score": 2,
+              "specificity": 0.236
+            },
+            {
+              "context": "Highlight view does more than tint the pixels that differ. It groups them into regions, draws each one on the image, and lists them beside it, so a comparison arrives as a list of changes to work through.",
+              "label": "The change log",
+              "quote": "Highlight view does more than tint the pixels that differ.",
+              "score": 1,
+              "specificity": 0.2
+            },
+            {
+              "context": "What cameras and phones produce, with EXIF data preserved for the file details view.",
+              "label": "Photographic formats",
+              "quote": "What cameras and phones produce, with EXIF data preserved for the file details view.",
+              "score": 1,
+              "specificity": 0.2
+            },
+            {
+              "context": "Our information security management system is independently audited and certified. View the certificate in our Trust Center.",
+              "label": "ISO/IEC 27001 certified",
+              "quote": "View the certificate in our Trust Center.",
+              "score": 1,
+              "specificity": 0.2
+            }
+          ],
+          "page_url": "https://www.diffchecker.com/image-compare/",
+          "text_sha256": "a400e186b4a60312c898b332d1d299fe98c4db1105fafffd45393f00944c5a70",
+          "title": "Compare images to find differences online or offline - Diffchecker"
+        }
+      ],
+      "policy": "source-campaign-planner@1",
+      "provider_calls": 0,
+      "question": "Which brand page describes the feature in the goal?",
+      "request_id": null,
+      "stop": "DECISION_EVIDENCE_FOUND",
+      "trace": [
+        {
+          "anchor": "",
+          "candidate_count": 8,
+          "gap_after": null,
+          "outcome": "SOURCE_READ",
+          "page_url": "https://www.diffchecker.com/image-compare/",
+          "reason": "BRAND_ENTRY"
+        }
+      ]
+    },
+    "schema_version": 2,
+    "sha256": "2a2dcd2955f93fee2dd9fd23772452a09aef6777068853a896b1c00b54e243f6",
+    "status": "READY"
+  },
+  "review_status": "LOCAL_REVIEW",
+  "run_id": "83b21ffa-cb9d-4854-a1e0-03eab3f11087",
+  "video": "SCRIPT_AND_STORYBOARD_ONLY"
+}

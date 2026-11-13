@@ -1,0 +1,7 @@
+{
+  "outcome": "REJECTED",
+  "estimated_charge": null,
+  "http_status": 401,
+  "code": "invalid_api_key",
+  "seconds": 2.67
+}

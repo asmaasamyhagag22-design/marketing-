@@ -1,0 +1,64 @@
+{
+  "cases": {
+    "firefox": {
+      "status": "EXPORTED",
+      "seconds": 25.8,
+      "public_pages": 2,
+      "stale_export_http": 409,
+      "rejected_copy_http": null,
+      "stale_copy_packet_rejected": false,
+      "accepted_copy_fields": [],
+      "restored_png_sha256": {
+        "portrait": "1dc8d9cd7de0082e95b7963e4f7509cc6f0b98dc8558e99dc84b40967caecc9d",
+        "square": "eaff831f72b578304910c5361e7ee03de469879cb573db3ce027be2e93185e2f"
+      }
+    },
+    "firefox-download": {
+      "status": "EXPORTED",
+      "seconds": 27.33,
+      "public_pages": 4,
+      "stale_export_http": 409,
+      "rejected_copy_http": null,
+      "stale_copy_packet_rejected": false,
+      "accepted_copy_fields": [],
+      "restored_png_sha256": {
+        "portrait": "067b08b1dc84f825d070198a32e76d5c30eaeb4c6630beca7b9905074d958dd1",
+        "square": "7fd03b950e35da1ae56c39e8b4f815bb06b39dedddadce4f27d61e26b961f9e5"
+      }
+    },
+    "lego": {
+      "status": "EXPORTED",
+      "seconds": 26.89,
+      "public_pages": 4,
+      "stale_export_http": 409,
+      "rejected_copy_http": null,
+      "stale_copy_packet_rejected": false,
+      "accepted_copy_fields": [],
+      "restored_png_sha256": {
+        "portrait": "ff6ce06257df48ee199d3e04e4fb669951c9ffec7fbf6701000813f6a82bb8fe",
+        "square": "cf2a462f2fe865369b9550bf7c30465244d5bb21d5e1b1ef66470de54ad8a71e"
+      }
+    },
+    "rijksmuseum": {
+      "status": "EXPORTED",
+      "seconds": 26.33,
+      "public_pages": 2,
+      "stale_export_http": 409,
+      "rejected_copy_http": 409,
+      "stale_copy_packet_rejected": true,
+      "accepted_copy_fields": [
+        "headline",
+        "message"
+      ],
+      "restored_png_sha256": {
+        "portrait": "9f5031893ce3cb3ff8d94aad1b88d7d0a574c1d4f886f30be0b8696bd84a6f85",
+        "square": "46735bb1aa6301590c0c65d366ffd22bde18d107a3be3b263a67746203a7f625"
+      }
+    }
+  },
+  "elapsed_seconds": 113.69,
+  "campaign_runs": 12,
+  "automated_review_actions": 8,
+  "provider_usage_rows": 0,
+  "browser_errors": []
+}

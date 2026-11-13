@@ -1,0 +1,40 @@
+{
+  "model": "gemini-3.1-flash-lite",
+  "prompt_sha256": "87d7d8daa23134914958688ee39543416c34727590b5db1ed295612d587466cc",
+  "input": {
+    "brief": {
+      "objective": "Increase visits to the Diffchecker image comparison split view and synchronized zoom explanation",
+      "summary": "Both images side by side with synchronized zoom and pan.",
+      "audience": "Audience hypothesis after reviewing the draft.",
+      "language": "en",
+      "tone": "Plain and concise",
+      "strategy_reason": "The goal is a visit to a specific explanation. Reopen the choice if it disappears or the goal changes to an action."
+    },
+    "evidence": [
+      {
+        "page_url": "https://www.diffchecker.com/image-compare/",
+        "label": "Split view",
+        "quote": "Both images side by side with synchronized zoom and pan.",
+        "context": "Both images side by side with synchronized zoom and pan. Zoom into a corner of one and the other follows, so you are always looking at the same region of both.",
+        "constraints": {
+          "basis": "FULL_SOURCE_CONTEXT",
+          "branch": null,
+          "market": "UNCONFIRMED",
+          "page_path": "/image-compare/",
+          "price": null,
+          "valid_until": null
+        }
+      }
+    ],
+    "destination": "https://www.diffchecker.com/image-compare/",
+    "action": "READ_FEATURE",
+    "baseline": {
+      "cta": "Read the explanation",
+      "headline": "Split view",
+      "message": "Both images side by side with synchronized zoom and pan."
+    }
+  },
+  "output_limit": 1300,
+  "reserve_usd": "0.01",
+  "task_exposure_before": "0.03348290"
+}

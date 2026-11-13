@@ -1,6 +1,7 @@
 # سجل تطوير حزم الحملات العامة
 
 المتابعة من الرابط والهدف واللغة موثقة في [سجل Campaign Planner](planner/EXECUTION.md).
+تطوير جودة الحملة الثابتة بعد `85e1edf` موثق في [سجل التنفيذ](quality/EXECUTION.md) و[القياس](quality/RESULTS.md).
 
 ## نقطة الاستئناف
 

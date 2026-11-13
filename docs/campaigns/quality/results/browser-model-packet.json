@@ -1,0 +1,20 @@
+{
+  "cases": {
+    "rijksmuseum": {
+      "status": "EXPORTED",
+      "seconds": 23.92,
+      "public_pages": 2,
+      "stale_export_http": 409,
+      "rejected_copy_http": 409,
+      "restored_png_sha256": {
+        "portrait": "9f5031893ce3cb3ff8d94aad1b88d7d0a574c1d4f886f30be0b8696bd84a6f85",
+        "square": "46735bb1aa6301590c0c65d366ffd22bde18d107a3be3b263a67746203a7f625"
+      }
+    }
+  },
+  "elapsed_seconds": 30.56,
+  "campaign_runs": 3,
+  "automated_review_actions": 2,
+  "provider_usage_rows": 0,
+  "browser_errors": []
+}

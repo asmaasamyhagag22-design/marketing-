@@ -1,0 +1,10 @@
+{
+  "outcome": "COMPLETE",
+  "estimated_charge": "0.00112365",
+  "content": "{\n  \"directions\": [\n    {\n      \"angle\": \"Precision comparison\",\n      \"headline\": \"Compare images with synchronized zoom\",\n      \"message\": \"View two images side by side. Zoom or pan one, and the other follows to keep your focus aligned.\",\n      \"cta\": \"See how it works\",\n      \"caption\": \"Stop manually aligning your images. Our split view tool handles the synchronization for you.\",\n      \"visual\": \"Split-screen interface showing two images being zoomed simultaneously.\",\n      \"evidence_index\": 0\n    },\n    {\n      \"angle\": \"Efficiency\",\n      \"headline\": \"Need to compare two images?\",\n      \"message\": \"Our side-by-side view lets you zoom and pan both images at once to spot differences instantly.\",\n      \"cta\": \"Try the split view\",\n      \"caption\": \"Perfect for detailed inspections where precision matters. See both images in sync.\",\n      \"visual\": \"Close-up of a cursor moving across a synchronized image comparison tool.\",\n      \"evidence_index\": 0\n    },\n    {\n      \"angle\": \"Feature focus\",\n      \"headline\": \"Synchronized image viewing\",\n      \"message\": \"Explore our split view tool that keeps both images locked together while you zoom and pan.\",\n      \"cta\": \"Learn about the feature\",\n      \"caption\": \"Always look at the same region of both images. Discover how our synchronized view works.\",\n      \"visual\": \"A split-view interface highlighting the synchronized zoom functionality.\",\n      \"evidence_index\": 0\n    }\n  ]\n}",
+  "finish_reason": "STOP",
+  "model": "gemini-3.1-flash-lite",
+  "prompt_tokens": 409,
+  "completion_tokens": 348,
+  "seconds": 3.21
+}

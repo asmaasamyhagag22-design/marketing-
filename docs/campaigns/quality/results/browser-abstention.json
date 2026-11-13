@@ -1,0 +1,15 @@
+{
+  "cases": {
+    "firefox-unproven-offer": {
+      "status": "BLOCKED",
+      "reason": "COMMERCIAL_TERMS",
+      "public_pages": 4,
+      "seconds": 6.86
+    }
+  },
+  "elapsed_seconds": 18.61,
+  "campaign_runs": 1,
+  "automated_review_actions": 0,
+  "provider_usage_rows": 0,
+  "browser_errors": []
+}
