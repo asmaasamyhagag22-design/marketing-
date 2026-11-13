@@ -1,0 +1,53 @@
+{
+  "domain_key": "buffaloburger_com",
+  "run_id": "a551f52c-aad3-4d3f-8d81-6005ce388414",
+  "profile_snapshot_id": "b5c3b2eb-8be4-4c7d-bc4e-04986ce44cff",
+  "proposal": {
+    "schema_version": 2,
+    "kind": "SOURCE_CAMPAIGN",
+    "brand_name": "buffaloburger.com",
+    "brief": null,
+    "evidence": [],
+    "status": "BLOCKED",
+    "package": null,
+    "changes": [],
+    "planner": {
+      "policy": "source-campaign-planner@1",
+      "input": {
+        "url": "https://buffaloburger.com",
+        "objective": "تشجيع المستخدم على تصفّح المنيو واختيار برجر يناسبه",
+        "language": "ar"
+      },
+      "intent": "DISCOVERY",
+      "question": "أين يشرح الموقع الميزة المرتبطة بالهدف؟",
+      "trace": [
+        {
+          "page_url": "https://buffaloburger.com",
+          "reason": "BRAND_ENTRY",
+          "anchor": "",
+          "outcome": "SOURCE_UNAVAILABLE",
+          "http_status": 403,
+          "gap_after": "FEATURE_EVIDENCE"
+        }
+      ],
+      "pages": [],
+      "conflicts": [],
+      "gap": "FEATURE_EVIDENCE",
+      "missing_question": "أدخل رابط الصفحة الرسمية التي تشرح الميزة المطلوبة.",
+      "stop": "NO_MORE_RELEVANT_SOURCES",
+      "page_calls": 1,
+      "elapsed_ms": 269.44,
+      "provider_calls": 0,
+      "cost_usd": 0,
+      "brief_reviewed": false,
+      "opportunity_hypothesis": "اختبر هل ربط الميزة بالخطوة المطلوبة يرفع معدل النقر من الشريحة المقترحة.",
+      "request_id": "bb819bcc-76a3-4d2c-87fc-e83d8d7513b8"
+    },
+    "sha256": "af76b28632abe478f987ca1209d1b085f0af62f69e5fc90b1e0e89e8f2837e4a"
+  },
+  "reason": "EVIDENCE_GAP",
+  "checked_at": "2026-11-13T13:36:38.580709+00:00",
+  "decision": null,
+  "approved": false,
+  "approval_id": null
+}

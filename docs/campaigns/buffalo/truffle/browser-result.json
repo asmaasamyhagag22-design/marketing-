@@ -1,0 +1,26 @@
+{
+  "cases": {
+    "truffle": {
+      "status": "EXPORTED",
+      "seconds": 28.81,
+      "public_pages": 2,
+      "stale_export_http": 409,
+      "rejected_copy_http": null,
+      "stale_copy_packet_rejected": false,
+      "accepted_copy_fields": [],
+      "reviewed_png_sha256": {
+        "portrait": "7142db9fc0501a9302bfb5d5240bb5437c7daaf0df13e34e15bd4dbdf02f5346",
+        "square": "84b5cdb32dcdf4d9ba9889b1d1c76ecc5d7d17e40d3a2e8b5bc451e106dc47a7"
+      },
+      "restored_png_sha256": {
+        "portrait": "7142db9fc0501a9302bfb5d5240bb5437c7daaf0df13e34e15bd4dbdf02f5346",
+        "square": "84b5cdb32dcdf4d9ba9889b1d1c76ecc5d7d17e40d3a2e8b5bc451e106dc47a7"
+      }
+    }
+  },
+  "elapsed_seconds": 35.36,
+  "campaign_runs": 4,
+  "automated_review_actions": 3,
+  "provider_usage_rows": 0,
+  "browser_errors": []
+}

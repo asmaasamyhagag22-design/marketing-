@@ -1,0 +1,28 @@
+{
+  "cases": {
+    "menu": {
+      "status": "EXPORTED",
+      "seconds": 40.15,
+      "public_pages": 4,
+      "stale_export_http": 409,
+      "rejected_copy_http": 409,
+      "stale_copy_packet_rejected": false,
+      "accepted_copy_fields": [
+        "message"
+      ],
+      "reviewed_png_sha256": {
+        "portrait": "a291e6a0f97b72e9f64658e0315321119151c129e014f63c0ba97e0dda056365",
+        "square": "c73c2cdac4201091c823cfea2b77d8fd2ff6140e2a52a91aafcdfce5c55f7166"
+      },
+      "restored_png_sha256": {
+        "portrait": "a291e6a0f97b72e9f64658e0315321119151c129e014f63c0ba97e0dda056365",
+        "square": "c73c2cdac4201091c823cfea2b77d8fd2ff6140e2a52a91aafcdfce5c55f7166"
+      }
+    }
+  },
+  "elapsed_seconds": 47.49,
+  "campaign_runs": 4,
+  "automated_review_actions": 3,
+  "provider_usage_rows": 0,
+  "browser_errors": []
+}

@@ -1,0 +1,15 @@
+{
+  "cases": {
+    "menu": {
+      "status": "BLOCKED",
+      "reason": "FEATURE_EVIDENCE",
+      "public_pages": 1,
+      "seconds": 2.41
+    }
+  },
+  "elapsed_seconds": 8.93,
+  "campaign_runs": 1,
+  "automated_review_actions": 0,
+  "provider_usage_rows": 0,
+  "browser_errors": []
+}

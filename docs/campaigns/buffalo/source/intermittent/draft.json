@@ -1,0 +1,84 @@
+{
+  "domain_key": "buffaloburger_com",
+  "run_id": "08302fca-79b2-4be2-8b3a-2329a5c0061e",
+  "profile_snapshot_id": "4f1d967b-6311-4979-80dd-e99100a7d8d8",
+  "proposal": {
+    "schema_version": 2,
+    "kind": "SOURCE_CAMPAIGN",
+    "brand_name": "Buffalo Burger",
+    "brief": null,
+    "evidence": [
+      {
+        "page_url": "https://buffaloburger.com/menu",
+        "capture_kind": "public_http",
+        "field": "title",
+        "captured_at": "2026-11-13T13:50:50.323174+00:00",
+        "body_sha256": "90e8ca67dff4ab074ac2f7801a467b7b7ec7decce7827ed027d73018540de475",
+        "text_sha256": "80ce24e3740b1a56c6b1770a46edce63633e31fa53da8149f1f2daaa0eee2369",
+        "quote": "قائمة بافلو برجر",
+        "context": "قائمة بافلو برجر",
+        "source_title": "قائمة بافلو برجر",
+        "scope": "عنوان صفحة المنيو الرسمية",
+        "outcome": "QUOTE_OBSERVED"
+      }
+    ],
+    "status": "BLOCKED",
+    "package": null,
+    "changes": [],
+    "planner": {
+      "policy": "editorial-campaign@1",
+      "edition": "buffalo-truffle-20261113",
+      "edition_sha256": "38f1202b29d90e7949777cc3dc70623ce4ca81e62e69c3917af727d3c5851411",
+      "input": {
+        "url": "https://buffaloburger.com/menu/truffle-beef-burger",
+        "objective": "تشجيع المستخدم على التعرّف على مكونات ترافل بيف برجر",
+        "language": "ar"
+      },
+      "intent": "INSPECT_ITEM",
+      "question": "إيه المكوّنات اللي تخلّي الزائر يفتح صفحة ترافل بيف برجر؟",
+      "opportunity_hypothesis": "نفترض إن المشروم والبصل الكرسبي تفاصيل تساعد الزائر يقرر إذا كان عايز يعرف أكتر.",
+      "trace": [
+        {
+          "page_url": "https://buffaloburger.com/menu/truffle-beef-burger",
+          "reason": "EDITORIAL_SOURCE",
+          "outcome": "SOURCE_UNAVAILABLE"
+        },
+        {
+          "page_url": "https://buffaloburger.com/menu",
+          "reason": "EDITORIAL_SOURCE",
+          "outcome": "QUOTE_OBSERVED"
+        }
+      ],
+      "pages": [
+        {
+          "page_url": "https://buffaloburger.com/menu",
+          "capture_kind": "public_http",
+          "field": "title",
+          "captured_at": "2026-11-13T13:50:50.323174+00:00",
+          "body_sha256": "90e8ca67dff4ab074ac2f7801a467b7b7ec7decce7827ed027d73018540de475",
+          "text_sha256": "80ce24e3740b1a56c6b1770a46edce63633e31fa53da8149f1f2daaa0eee2369",
+          "quote": "قائمة بافلو برجر",
+          "context": "قائمة بافلو برجر",
+          "source_title": "قائمة بافلو برجر",
+          "scope": "عنوان صفحة المنيو الرسمية",
+          "outcome": "QUOTE_OBSERVED"
+        }
+      ],
+      "stop": "EDITORIAL_SOURCE_GAP",
+      "gap": "EDITORIAL_SOURCE_GAP",
+      "missing_question": "راجع صفحة المنيو ووصف الصنف المذكور في خطوات البحث. لازم الدليل يتطابق قبل تجهيز الحزمة.",
+      "page_calls": 2,
+      "elapsed_ms": 4180.51,
+      "provider_calls": 0,
+      "cost_usd": 0,
+      "brief_reviewed": false,
+      "request_id": "10f5f34a-aaa1-455a-8699-3e511ca91899"
+    },
+    "sha256": "41da963fdd29909c75b57bf86bc0056ec3fa41634069c3f70f15b0d6fbdb9d88"
+  },
+  "reason": "EVIDENCE_GAP",
+  "checked_at": "2026-11-13T13:50:50.357502+00:00",
+  "decision": null,
+  "approved": false,
+  "approval_id": null
+}

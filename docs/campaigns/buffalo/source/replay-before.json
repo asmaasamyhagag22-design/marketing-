@@ -1,0 +1,42 @@
+{
+  "menu": {
+    "status": "BLOCKED",
+    "gap": "FEATURE_EVIDENCE",
+    "trace": [
+      {
+        "page_url": "https://buffaloburger.com",
+        "reason": "BRAND_ENTRY",
+        "anchor": "",
+        "outcome": "SOURCE_READ",
+        "candidate_count": 0,
+        "gap_after": "FEATURE_EVIDENCE"
+      }
+    ],
+    "evidence_count": 0,
+    "directions": 0,
+    "destination": null,
+    "snapshots": {
+      "https://buffaloburger.com": "c9ef4f288e932a213799a5d71918c4643518e0ce84f8a0288f3ec7a1e5f4dffd"
+    }
+  },
+  "truffle": {
+    "status": "BLOCKED",
+    "gap": "FEATURE_EVIDENCE",
+    "trace": [
+      {
+        "page_url": "https://buffaloburger.com/menu/truffle-beef-burger",
+        "reason": "BRAND_ENTRY",
+        "anchor": "",
+        "outcome": "SOURCE_READ",
+        "candidate_count": 0,
+        "gap_after": "FEATURE_EVIDENCE"
+      }
+    ],
+    "evidence_count": 0,
+    "directions": 0,
+    "destination": null,
+    "snapshots": {
+      "https://buffaloburger.com/menu/truffle-beef-burger": "83d1633020ae7e27873fa593e641d823d843d7001e439a86f8e8eb9662e5ab77"
+    }
+  }
+}

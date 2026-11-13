@@ -1,0 +1,52 @@
+{
+  "domain_key": "firefox_com",
+  "run_id": "6b155a88-6097-4277-a6b2-974cade456b4",
+  "profile_snapshot_id": "8a398e42-1fcf-4025-9f49-669faa7721b6",
+  "proposal": {
+    "schema_version": 2,
+    "kind": "SOURCE_CAMPAIGN",
+    "brand_name": "www.firefox.com",
+    "brief": null,
+    "evidence": [],
+    "status": "BLOCKED",
+    "package": null,
+    "changes": [],
+    "planner": {
+      "policy": "source-campaign-planner@1",
+      "input": {
+        "url": "https://www.firefox.com/en-US/features/",
+        "objective": "Increase visits to the Enhanced Tracking Protection explanation",
+        "language": "ar"
+      },
+      "intent": "DISCOVERY",
+      "question": "أين يشرح الموقع الميزة المرتبطة بالهدف؟",
+      "trace": [
+        {
+          "page_url": "https://www.firefox.com/en-US/features/",
+          "reason": "BRAND_ENTRY",
+          "anchor": "",
+          "outcome": "SOURCE_DEADLINE",
+          "gap_after": "FEATURE_EVIDENCE"
+        }
+      ],
+      "pages": [],
+      "conflicts": [],
+      "gap": "FEATURE_EVIDENCE",
+      "missing_question": "أدخل رابط الصفحة الرسمية التي تشرح الميزة المطلوبة.",
+      "stop": "NO_MORE_RELEVANT_SOURCES",
+      "page_calls": 1,
+      "elapsed_ms": 5445.19,
+      "provider_calls": 0,
+      "cost_usd": 0,
+      "brief_reviewed": false,
+      "opportunity_hypothesis": "اختبر هل ربط الميزة بالخطوة المطلوبة يرفع معدل النقر من الشريحة المقترحة.",
+      "request_id": "b1f7a737-86fe-4e15-9dce-972940ca79e8"
+    },
+    "sha256": "71651bcbcbf603b9a1fb4879bb1d3ab3bf10c6baa464cfd7ca60882a137aecb3"
+  },
+  "reason": "EVIDENCE_GAP",
+  "checked_at": "2026-11-13T13:56:13.001385+00:00",
+  "decision": null,
+  "approved": false,
+  "approval_id": null
+}

@@ -1,0 +1,11 @@
+{
+  "date": "2026-11-13",
+  "scope": "buffalo-burger-static-campaign",
+  "authorized_paid_budget_usd": null,
+  "provider_calls": 0,
+  "observed_provider_usage_records": 0,
+  "operation_cost_usd": 0,
+  "new_reservation_usd": 0,
+  "telemetry_remote_requests": 0,
+  "measurement": ["no-spend demo", "UsageRecord count after Chromium runs", "local Langfuse SDK exporter test"]
+}

@@ -1,0 +1,32 @@
+{
+  "https://buffaloburger.com": {
+    "file": "75697e0dce11.html",
+    "sha256": "c9ef4f288e932a213799a5d71918c4643518e0ce84f8a0288f3ec7a1e5f4dffd",
+    "captured_at": "2026-11-13T13:51:00Z",
+    "title": "بافلو برجر"
+  },
+  "https://buffaloburger.com/menu": {
+    "file": "c6f56e7dba65.html",
+    "sha256": "608803d5856eb4e35ead6a560be0a7609f2c34fcfe6eb0ea40179ba0a734ece6",
+    "captured_at": "2026-11-13T13:51:03Z",
+    "title": "قائمة بافلو برجر"
+  },
+  "https://buffaloburger.com/menu/old-school": {
+    "file": "39a42cc6a2ac.html",
+    "sha256": "7bae315110122387085cc919c567948cc92972e2b1d9cada449930c0d59ea31c",
+    "captured_at": "2026-11-13T13:51:04Z",
+    "title": "أولد سكول - بافلو برجر"
+  },
+  "https://buffaloburger.com/menu/the-rastafari": {
+    "file": "cbc853515515.html",
+    "sha256": "b141d8f7fc04438689da0a2f8efcba7cb0206366afa4fe7153bf49505d59df6a",
+    "captured_at": "2026-11-13T13:51:09Z",
+    "title": "راستافاري - بافلو برجر"
+  },
+  "https://buffaloburger.com/menu/truffle-beef-burger": {
+    "file": "d5b00871cd90.html",
+    "sha256": "83d1633020ae7e27873fa593e641d823d843d7001e439a86f8e8eb9662e5ab77",
+    "captured_at": "2026-11-13T13:51:10Z",
+    "title": "ترافل بيف برجر - بافلو برجر"
+  }
+}

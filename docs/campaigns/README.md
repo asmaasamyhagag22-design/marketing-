@@ -4,6 +4,7 @@
 
 | البراند | الفكرة | المخرجات |
 |---|---|---|
+| Buffalo Burger | شيدر كلاسيك ولا هالبينو؟ | [التشغيل والحزمة](buffalo/README.md) · [المقارنة](buffalo/design/comparison.png) |
 | Firefox | ماذا يحظر متصفّحك؟ | [الحزمة](firefox/deliverables/campaign.zip) · [الطولي](firefox/deliverables/poster-portrait.png) · [السابق](firefox/deliverables/initial/campaign.zip) |
 | LEGO Pick a Brick | ما فكرتك للقطعة الأولى؟ | [الحزمة](lego/deliverables/campaign.zip) · [الطولي](lego/deliverables/poster-portrait.png) · [السابق](lego/deliverables/initial/campaign.zip) |
 | Rijksmuseum | See two artworks side by side | [الحزمة](rijksmuseum/deliverables/campaign.zip) · [الطولي](rijksmuseum/deliverables/poster-portrait.png) · [السابق](rijksmuseum/deliverables/initial/campaign.zip) |

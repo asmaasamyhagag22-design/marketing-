@@ -1,0 +1,495 @@
+{
+  "approval_id": "d912d729-410b-43a5-a92e-784506d5ed0b",
+  "poster_measurements": {
+    "portrait": {
+      "geometry": [
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 130.890625,
+          "color": "rgb(38, 24, 20)",
+          "field": "brand",
+          "overflow": false,
+          "right": 1004,
+          "size": 34,
+          "x": 76,
+          "y": 68
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 395.109375,
+          "color": "rgb(38, 24, 20)",
+          "field": "H1",
+          "overflow": false,
+          "right": 1004,
+          "size": 93,
+          "x": 76,
+          "y": 158.890625
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 1057.875,
+          "color": "rgb(38, 24, 20)",
+          "field": "motif",
+          "overflow": false,
+          "right": 1004,
+          "size": 16,
+          "x": 76,
+          "y": 423.109375
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 1199.8125,
+          "color": "rgb(38, 24, 20)",
+          "field": "message",
+          "overflow": false,
+          "right": 1004,
+          "size": 39,
+          "x": 307,
+          "y": 1142.875
+        },
+        {
+          "background": "rgb(38, 24, 20)",
+          "bottom": 1282,
+          "color": "rgb(255, 242, 217)",
+          "field": "cta",
+          "overflow": false,
+          "right": 1004,
+          "size": 36,
+          "x": 611,
+          "y": 1211.8125
+        }
+      ],
+      "height": 1350,
+      "sha256": "7142db9fc0501a9302bfb5d5240bb5437c7daaf0df13e34e15bd4dbdf02f5346",
+      "width": 1080
+    },
+    "square": {
+      "geometry": [
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 130.890625,
+          "color": "rgb(38, 24, 20)",
+          "field": "brand",
+          "overflow": false,
+          "right": 1004,
+          "size": 34,
+          "x": 76,
+          "y": 68
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 395.109375,
+          "color": "rgb(38, 24, 20)",
+          "field": "H1",
+          "overflow": false,
+          "right": 1004,
+          "size": 93,
+          "x": 76,
+          "y": 158.890625
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 787.875,
+          "color": "rgb(38, 24, 20)",
+          "field": "motif",
+          "overflow": false,
+          "right": 1004,
+          "size": 16,
+          "x": 76,
+          "y": 423.109375
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "bottom": 929.8125,
+          "color": "rgb(38, 24, 20)",
+          "field": "message",
+          "overflow": false,
+          "right": 1004,
+          "size": 39,
+          "x": 307,
+          "y": 872.875
+        },
+        {
+          "background": "rgb(38, 24, 20)",
+          "bottom": 1012,
+          "color": "rgb(255, 242, 217)",
+          "field": "cta",
+          "overflow": false,
+          "right": 1004,
+          "size": 36,
+          "x": 611,
+          "y": 941.8125
+        }
+      ],
+      "height": 1080,
+      "sha256": "84b5cdb32dcdf4d9ba9889b1d1c76ecc5d7d17e40d3a2e8b5bc451e106dc47a7",
+      "width": 1080
+    }
+  },
+  "profile_snapshot_id": "a61e6e58-a3fe-48c6-aaf0-24760388bddb",
+  "proposal": {
+    "brand_name": "Buffalo Burger",
+    "brief": {
+      "alternatives": [
+        {
+          "name": "قرمشة مع المشروم",
+          "plan": "ندخل على صفحة الصنف من مكوّنين سهل تمييزهم في الوصف.",
+          "tradeoff": "يقلل الخطوات قبل قراءة وصف الصنف."
+        },
+        {
+          "name": "من الصنف لباقي المنيو",
+          "plan": "نستخدم ترافل بيف برجر كنقطة بداية للتصفح.",
+          "tradeoff": "يفتح التصفح عبر المنيو بعد جذب الاهتمام بالصنف."
+        }
+      ],
+      "assumption": "نفترض إن المشروم والبصل الكرسبي تفاصيل تساعد الزائر يقرر إذا كان عايز يعرف أكتر.",
+      "audience": "فرضية جمهور بعد مراجعة المسودة.",
+      "competitor": null,
+      "direction": "rtl",
+      "directions": [
+        {
+          "caption": "لو بتدور على المشروم والبصل الكرسبي مع بعض، افتح صفحة ترافل بيف برجر واقرأ المكوّنات قبل ما تختار.",
+          "cta": "شوف ترافل بيف برجر",
+          "end_shot": "شوف ترافل بيف برجر",
+          "headline": "مشروم سوتيه وبصل كرسبي؟",
+          "hook": "مشروم سوتيه وبصل كرسبي؟",
+          "message": "الاتنين في ترافل بيف برجر، مع صوص الترافل.",
+          "middle_shot": "الاتنين في ترافل بيف برجر، مع صوص الترافل.",
+          "name": "قرمشة مع المشروم",
+          "rationale": "ندخل على صفحة الصنف من مكوّنين سهل تمييزهم في الوصف.",
+          "shot": "اسم الصنف على بطاقة كبيرة مع رسم ساندوتش وإشارة للمشروم والبصل.",
+          "theme": "ember"
+        },
+        {
+          "caption": "مهتم بصوص الترافل والمشروم؟ ابدأ بترافل بيف برجر، وبعدها لفّ في المنيو وشوف الاختيارات التانية.",
+          "cta": "افتح المنيو",
+          "end_shot": "افتح المنيو",
+          "headline": "بدأت بترافل بيف برجر؟",
+          "hook": "بدأت بترافل بيف برجر؟",
+          "message": "شوف صوص الترافل والمشروم في وصف الصنف.",
+          "middle_shot": "شوف صوص الترافل والمشروم في وصف الصنف.",
+          "name": "من الصنف لباقي المنيو",
+          "rationale": "نستخدم ترافل بيف برجر كنقطة بداية للتصفح.",
+          "shot": "بطاقة ترافل بيف برجر بجوار بطاقة تدعو لفتح المنيو.",
+          "theme": "forest"
+        }
+      ],
+      "human_review": [
+        "راجع وصف الصنف والرسم التوضيحي على المقاسين قبل أي استخدام خارجي.",
+        "المؤشر المقترح هو النقر على الوجهة. الحكم على فهم الجمهور يحتاج اختبارًا مستقلًا."
+      ],
+      "language": "ar",
+      "market": "العربية المصرية، والجمهور المقترح فرضية للتحرير.",
+      "metric": "نقرات على صفحة الصنف لكل ظهور.",
+      "objective": "تشجيع المستخدم على التعرّف على مكونات ترافل بيف برجر",
+      "peer_rationale": null,
+      "peer_source": null,
+      "selected": 0,
+      "source": {
+        "quote": "قطع المشروم السوتيه و البصل الكرسبى والجبنة شيدر مع صوص الترافل وبرجر اللحم الصافي",
+        "scope": "وصف ترافل بيف برجر من بطاقة مشاركة صفحة الصنف",
+        "url": "https://buffaloburger.com/menu/truffle-beef-burger"
+      },
+      "strategy_index": 0,
+      "strategy_reason": "اختار المراجع هذا البديل ضمن نفس البحث.",
+      "summary": "قطع المشروم السوتيه و البصل الكرسبى والجبنة شيدر مع صوص الترافل وبرجر اللحم الصافي",
+      "tone": "مصري مباشر"
+    },
+    "changes": [
+      {
+        "after": 0,
+        "before": 1,
+        "field": "selected"
+      }
+    ],
+    "evidence": [
+      {
+        "body_sha256": "7b358424f01aade3059a43b2c71ee26cda65fef528a27744545f81c39ce4424c",
+        "capture_kind": "public_http",
+        "captured_at": "2026-11-13T13:54:05.375358+00:00",
+        "context": "قطع المشروم السوتيه و البصل الكرسبى والجبنة شيدر مع صوص الترافل وبرجر اللحم الصافي",
+        "field": "og:description",
+        "outcome": "QUOTE_OBSERVED",
+        "page_url": "https://buffaloburger.com/menu/truffle-beef-burger",
+        "quote": "قطع المشروم السوتيه و البصل الكرسبى والجبنة شيدر مع صوص الترافل وبرجر اللحم الصافي",
+        "scope": "وصف ترافل بيف برجر من بطاقة مشاركة صفحة الصنف",
+        "source_title": "ترافل بيف برجر - بافلو برجر",
+        "text_sha256": "89e98391fa65a8a5b01d6096fc77bdd6975151f241086dd3683479dcc4f99df1"
+      },
+      {
+        "body_sha256": "599f14d6ece989a79677b18dab7ab9a9b88bb828d04418b5e101adbd150a5ead",
+        "capture_kind": "public_http",
+        "captured_at": "2026-11-13T13:54:06.508431+00:00",
+        "context": "قائمة بافلو برجر",
+        "field": "title",
+        "outcome": "QUOTE_OBSERVED",
+        "page_url": "https://buffaloburger.com/menu",
+        "quote": "قائمة بافلو برجر",
+        "scope": "عنوان صفحة المنيو الرسمية",
+        "source_title": "قائمة بافلو برجر",
+        "text_sha256": "80ce24e3740b1a56c6b1770a46edce63633e31fa53da8149f1f2daaa0eee2369"
+      }
+    ],
+    "kind": "SOURCE_CAMPAIGN",
+    "package": {
+      "art": {
+        "evidence": [
+          0
+        ],
+        "mode": "spotlight",
+        "origin": "ORIGINAL_SCHEMATIC_ILLUSTRATION",
+        "subjects": [
+          {
+            "detail": "مشروم سوتيه وبصل كرسبي",
+            "name": "ترافل بيف برجر",
+            "palette": "mushroom"
+          }
+        ]
+      },
+      "brand_name": "Buffalo Burger",
+      "caption": "لو بتدور على المشروم والبصل الكرسبي مع بعض، افتح صفحة ترافل بيف برجر واقرأ المكوّنات قبل ما تختار.",
+      "claims": [
+        {
+          "basis": "INGREDIENT_QUESTION",
+          "evidence": [
+            0
+          ],
+          "field": "headline"
+        },
+        {
+          "basis": "BOUNDED_INGREDIENT_PARAPHRASE",
+          "evidence": [
+            0
+          ],
+          "field": "message"
+        },
+        {
+          "basis": "INGREDIENTS_AND_NAVIGATION",
+          "evidence": [
+            0
+          ],
+          "field": "caption"
+        },
+        {
+          "basis": "OBSERVED_DESTINATION",
+          "evidence": [
+            0
+          ],
+          "field": "cta"
+        },
+        {
+          "basis": "PUBLISHER_ITEM_NAMES_AND_INGREDIENTS",
+          "evidence": [
+            0
+          ],
+          "field": "art"
+        }
+      ],
+      "copy": {
+        "cta": "شوف ترافل بيف برجر",
+        "headline": "مشروم سوتيه وبصل كرسبي؟",
+        "message": "الاتنين في ترافل بيف برجر، مع صوص الترافل."
+      },
+      "direction": "rtl",
+      "factual_review": "EXACT_SOURCE_ANCHORS_AND_EDITORIAL_REVIEW",
+      "language": "ar",
+      "poster_layout": "source-campaign@3",
+      "source_evidence_index": 0,
+      "source_url": "https://buffaloburger.com/menu/truffle-beef-burger",
+      "theme": "ember"
+    },
+    "planner": {
+      "brief_reviewed": true,
+      "cost_usd": 0,
+      "destination_evidence_index": 0,
+      "edition": "buffalo-truffle-20261113",
+      "edition_sha256": "38f1202b29d90e7949777cc3dc70623ce4ca81e62e69c3917af727d3c5851411",
+      "elapsed_ms": 3823.28,
+      "gap": null,
+      "input": {
+        "language": "ar",
+        "objective": "تشجيع المستخدم على التعرّف على مكونات ترافل بيف برجر",
+        "url": "https://buffaloburger.com/menu/truffle-beef-burger"
+      },
+      "intent": "INSPECT_ITEM",
+      "missing_question": null,
+      "opportunity_hypothesis": "نفترض إن المشروم والبصل الكرسبي تفاصيل تساعد الزائر يقرر إذا كان عايز يعرف أكتر.",
+      "options": [
+        {
+          "action": "OPEN_ITEM",
+          "art": {
+            "evidence": [
+              0
+            ],
+            "mode": "spotlight",
+            "origin": "ORIGINAL_SCHEMATIC_ILLUSTRATION",
+            "subjects": [
+              {
+                "detail": "مشروم سوتيه وبصل كرسبي",
+                "name": "ترافل بيف برجر",
+                "palette": "mushroom"
+              }
+            ]
+          },
+          "audience": "فرضية: ناس عايزة تقرأ المكونات قبل اختيار الساندوتش.",
+          "claims": [
+            {
+              "basis": "INGREDIENT_QUESTION",
+              "evidence": [
+                0
+              ],
+              "field": "headline"
+            },
+            {
+              "basis": "BOUNDED_INGREDIENT_PARAPHRASE",
+              "evidence": [
+                0
+              ],
+              "field": "message"
+            },
+            {
+              "basis": "INGREDIENTS_AND_NAVIGATION",
+              "evidence": [
+                0
+              ],
+              "field": "caption"
+            },
+            {
+              "basis": "OBSERVED_DESTINATION",
+              "evidence": [
+                0
+              ],
+              "field": "cta"
+            },
+            {
+              "basis": "PUBLISHER_ITEM_NAMES_AND_INGREDIENTS",
+              "evidence": [
+                0
+              ],
+              "field": "art"
+            }
+          ],
+          "cta": "شوف ترافل بيف برجر",
+          "destination": "https://buffaloburger.com/menu/truffle-beef-burger",
+          "evidence_index": 0,
+          "metric": "نقرات على صفحة الصنف لكل ظهور.",
+          "name": "قرمشة مع المشروم",
+          "variants": {}
+        },
+        {
+          "action": "OPEN_CATALOG",
+          "art": {
+            "evidence": [
+              0
+            ],
+            "mode": "spotlight",
+            "origin": "ORIGINAL_SCHEMATIC_ILLUSTRATION",
+            "subjects": [
+              {
+                "detail": "مشروم سوتيه وبصل كرسبي",
+                "name": "ترافل بيف برجر",
+                "palette": "mushroom"
+              }
+            ]
+          },
+          "audience": "فرضية: ناس بدأت من صنف محدد ولسه بتقارن.",
+          "claims": [
+            {
+              "basis": "PUBLISHER_ITEM_NAME",
+              "evidence": [
+                0
+              ],
+              "field": "headline"
+            },
+            {
+              "basis": "BOUNDED_INGREDIENT_PARAPHRASE",
+              "evidence": [
+                0
+              ],
+              "field": "message"
+            },
+            {
+              "basis": "INGREDIENTS_AND_NAVIGATION",
+              "evidence": [
+                0,
+                1
+              ],
+              "field": "caption"
+            },
+            {
+              "basis": "OBSERVED_DESTINATION",
+              "evidence": [
+                1
+              ],
+              "field": "cta"
+            },
+            {
+              "basis": "PUBLISHER_ITEM_NAMES_AND_INGREDIENTS",
+              "evidence": [
+                0
+              ],
+              "field": "art"
+            }
+          ],
+          "cta": "افتح المنيو",
+          "destination": "https://buffaloburger.com/menu",
+          "evidence_index": 1,
+          "metric": "نقرات على رابط المنيو لكل ظهور.",
+          "name": "من الصنف لباقي المنيو",
+          "variants": {}
+        }
+      ],
+      "page_calls": 2,
+      "pages": [
+        {
+          "body_sha256": "7b358424f01aade3059a43b2c71ee26cda65fef528a27744545f81c39ce4424c",
+          "capture_kind": "public_http",
+          "captured_at": "2026-11-13T13:54:05.375358+00:00",
+          "context": "قطع المشروم السوتيه و البصل الكرسبى والجبنة شيدر مع صوص الترافل وبرجر اللحم الصافي",
+          "field": "og:description",
+          "outcome": "QUOTE_OBSERVED",
+          "page_url": "https://buffaloburger.com/menu/truffle-beef-burger",
+          "quote": "قطع المشروم السوتيه و البصل الكرسبى والجبنة شيدر مع صوص الترافل وبرجر اللحم الصافي",
+          "scope": "وصف ترافل بيف برجر من بطاقة مشاركة صفحة الصنف",
+          "source_title": "ترافل بيف برجر - بافلو برجر",
+          "text_sha256": "89e98391fa65a8a5b01d6096fc77bdd6975151f241086dd3683479dcc4f99df1"
+        },
+        {
+          "body_sha256": "599f14d6ece989a79677b18dab7ab9a9b88bb828d04418b5e101adbd150a5ead",
+          "capture_kind": "public_http",
+          "captured_at": "2026-11-13T13:54:06.508431+00:00",
+          "context": "قائمة بافلو برجر",
+          "field": "title",
+          "outcome": "QUOTE_OBSERVED",
+          "page_url": "https://buffaloburger.com/menu",
+          "quote": "قائمة بافلو برجر",
+          "scope": "عنوان صفحة المنيو الرسمية",
+          "source_title": "قائمة بافلو برجر",
+          "text_sha256": "80ce24e3740b1a56c6b1770a46edce63633e31fa53da8149f1f2daaa0eee2369"
+        }
+      ],
+      "policy": "editorial-campaign@1",
+      "provider_calls": 0,
+      "question": "إيه المكوّنات اللي تخلّي الزائر يفتح صفحة ترافل بيف برجر؟",
+      "request_id": null,
+      "stop": "DECISION_EVIDENCE_FOUND",
+      "trace": [
+        {
+          "outcome": "QUOTE_OBSERVED",
+          "page_url": "https://buffaloburger.com/menu/truffle-beef-burger",
+          "reason": "EDITORIAL_SOURCE"
+        },
+        {
+          "outcome": "QUOTE_OBSERVED",
+          "page_url": "https://buffaloburger.com/menu",
+          "reason": "EDITORIAL_SOURCE"
+        }
+      ]
+    },
+    "schema_version": 2,
+    "sha256": "e3a6b8f41f826f0c7130924c9e6791273b6dab4981d1744561fd0876ece0b715",
+    "status": "READY"
+  },
+  "review_status": "LOCAL_REVIEW",
+  "run_id": "7b3e10e8-66a8-42af-876a-24dbbfc35eb1"
+}

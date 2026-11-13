@@ -1,0 +1,66 @@
+{
+  "cases": {
+    "firefox": {
+      "status": "BLOCKED",
+      "reason": "FEATURE_EVIDENCE",
+      "public_pages": 1,
+      "seconds": 7.41
+    },
+    "firefox-download": {
+      "status": "EXPORTED",
+      "seconds": 26.41,
+      "public_pages": 4,
+      "stale_export_http": 409,
+      "rejected_copy_http": null,
+      "stale_copy_packet_rejected": false,
+      "accepted_copy_fields": [],
+      "reviewed_png_sha256": {
+        "portrait": "726b826f1fc2745e6f5628ac468609e4915efd4e97257d3755558b4d277cc810",
+        "square": "2786cf013568711e434a0acb8503761b733112998677387ae850dccf46607853"
+      },
+      "restored_png_sha256": {
+        "portrait": "067b08b1dc84f825d070198a32e76d5c30eaeb4c6630beca7b9905074d958dd1",
+        "square": "7fd03b950e35da1ae56c39e8b4f815bb06b39dedddadce4f27d61e26b961f9e5"
+      }
+    },
+    "lego": {
+      "status": "EXPORTED",
+      "seconds": 29.75,
+      "public_pages": 4,
+      "stale_export_http": 409,
+      "rejected_copy_http": null,
+      "stale_copy_packet_rejected": false,
+      "accepted_copy_fields": [],
+      "reviewed_png_sha256": {
+        "portrait": "903a37590154e59ed37046120ae73e0a393d6675414f1b12487ca49c0a436ddb",
+        "square": "dee345d32b3590c2e07969cf2f4ee3ab870cfd2beaf89b3c757c5508085de364"
+      },
+      "restored_png_sha256": {
+        "portrait": "ff6ce06257df48ee199d3e04e4fb669951c9ffec7fbf6701000813f6a82bb8fe",
+        "square": "cf2a462f2fe865369b9550bf7c30465244d5bb21d5e1b1ef66470de54ad8a71e"
+      }
+    },
+    "rijksmuseum": {
+      "status": "EXPORTED",
+      "seconds": 26.34,
+      "public_pages": 2,
+      "stale_export_http": 409,
+      "rejected_copy_http": null,
+      "stale_copy_packet_rejected": false,
+      "accepted_copy_fields": [],
+      "reviewed_png_sha256": {
+        "portrait": "c42d42c0b4748dc79c8355458f017603b8a90aa04f7f78ff5d8d7bcfa4b3c36a",
+        "square": "0df73ba0898ce39354d2fd87935909f7ca046a94d492fd5cf25842959c2291c4"
+      },
+      "restored_png_sha256": {
+        "portrait": "9f5031893ce3cb3ff8d94aad1b88d7d0a574c1d4f886f30be0b8696bd84a6f85",
+        "square": "46735bb1aa6301590c0c65d366ffd22bde18d107a3be3b263a67746203a7f625"
+      }
+    }
+  },
+  "elapsed_seconds": 96.43,
+  "campaign_runs": 10,
+  "automated_review_actions": 6,
+  "provider_usage_rows": 0,
+  "browser_errors": []
+}
