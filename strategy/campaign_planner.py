@@ -13,6 +13,7 @@ from scraper.extractors.links import extract_links_from_html
 from strategy.campaign_package import Brief, Input, Source, digest, proposal, public_soup, valid_source_url
 from strategy.campaign_research import ResearchGap, same_source
 from strategy.campaign_v2 import CampaignConflict
+from strategy.campaign_copy import CopyEdit, plan_copy, validate_copy, writing_for
 
 
 PAGE_LIMIT = 4
@@ -50,6 +51,7 @@ class BriefReview(Input):
     audience: str = Field(min_length=4, max_length=200)
     tone: str = Field(min_length=2, max_length=75)
     selected: int = Field(ge=0, le=2)
+    copy_edit: CopyEdit | None = None
 
 
 def words(text):
@@ -311,7 +313,7 @@ def draft_brief(request, fact, destination):
     ]
     selected = 2 if destination else 0
     directions = []
-    for option in options:
+    for option, writing in zip(options, plan_copy(fact, options, request.language)):
         title = option["headline"]
         if option["action"] == "READ_FEATURE" and heading_is_specific and len(label) <= 55:
             title = label
@@ -324,6 +326,16 @@ def draft_brief(request, fact, destination):
         caption = f"{title.rstrip('.?!؟')} — {card_message.rstrip('.?!؟')}. {option['cta']}."
         if arabic:
             caption = f"{title.rstrip('.?!؟')} · {card_message.rstrip('.?!؟')}. {option['cta']}."
+        if writing:
+            title, card_message, caption = writing.headline, writing.message, writing.caption
+            option["cta"] = writing.cta
+            option["concept"] = writing.concept
+            if option["action"] == "COMPARE_FIT":
+                title = ("إيه اللي يهمّك في الاختيار؟" if arabic else "What matters in the comparison?")
+                caption = f"{title} {writing.caption}"
+            elif option["action"] == "EXPLORE_TOPIC":
+                title = ("ابدأ بسؤال" if arabic else "Start with a question")
+                caption = f"{title} · {writing.caption}"
         directions.append({
             "name": option["name"], "rationale": option["message"], "headline": title,
             "message": card_message, "cta": option["cta"], "theme": option["theme"], "caption": caption,
@@ -384,8 +396,13 @@ def review_draft(previous, edit):
     planner = {**previous["planner"], "brief_reviewed": True, "request_id": None}
     brief = Brief.model_validate(previous["brief"])
     option = planner["options"][edit.selected]
+    directions = list(brief.directions)
+    if edit.copy_edit:
+        writing = writing_for(previous["evidence"][0], option["action"], brief.language)
+        directions[edit.selected] = validate_copy(directions[edit.selected], edit.copy_edit, writing)
     revised = brief.model_copy(update={
         "audience": edit.audience, "tone": edit.tone, "selected": edit.selected,
+        "directions": tuple(directions),
         "strategy_index": edit.selected, "metric": option["metric"],
         "strategy_reason": brief.strategy_reason if brief.strategy_index == edit.selected else (
             "اختار المراجع هذا البديل ضمن نفس البحث." if brief.direction == "rtl"
@@ -394,9 +411,15 @@ def review_draft(previous, edit):
     })
     changes = [{"field": key, "before": getattr(brief, key), "after": getattr(revised, key)}
                for key in ("audience", "tone", "selected") if getattr(brief, key) != getattr(revised, key)]
+    if directions[edit.selected] != brief.directions[edit.selected]:
+        changes.append({"field": "copy", "before": brief.directions[edit.selected].message,
+                        "after": directions[edit.selected].message})
     result = proposal(revised, previous["brand_name"], previous["evidence"], changes=changes, planner=planner)
-    if not anchored_claim(result, "brief.summary", revised.summary) or not anchored_claim(
-        result, "package.copy.message", result["package"]["copy"]["message"],
+    message = result["package"]["copy"]["message"]
+    writing = writing_for(previous["evidence"][0], option["action"], brief.language)
+    licensed = writing and writing.license("message", message)
+    if not anchored_claim(result, "brief.summary", revised.summary) or (
+        not anchored_claim(result, "package.copy.message", message) and not licensed
     ):
         raise CampaignConflict("CLAIM_EXCEEDS_SOURCE")
     return result

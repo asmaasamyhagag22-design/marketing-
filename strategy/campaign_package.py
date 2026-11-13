@@ -182,6 +182,9 @@ def proposal(brief, brand_name, sources, *, changes=(), planner=None):
         choice = planner["options"][brief.selected]
         package.update(source_url=choice["destination"], source_evidence_index=choice["evidence_index"],
                        factual_review="SOURCE_LABEL_REUSE_REQUIRES_HUMAN_REVIEW")
+        if choice.get("concept"):
+            package.update(concept=choice["concept"], poster_layout="source-campaign@2",
+                           factual_review="BOUNDED_REWRITE_REQUIRES_HUMAN_REVIEW")
         planner = {**planner, "destination_evidence_index": choice["evidence_index"]}
     result = {
         "schema_version": 2, "kind": "SOURCE_CAMPAIGN", "brand_name": brand_name,

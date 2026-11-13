@@ -138,6 +138,10 @@ def main():
                             "فرضية جمهور بعد مراجعة المسودة." if case["language"] == "ar"
                             else "Audience hypothesis after reviewing the draft.",
                         )
+                        if case.get("copy_edit"):
+                            editor.locator("#v2-copy-details summary").click()
+                            for field, value in case["copy_edit"].items():
+                                editor.locator(f'[name="{field}"]').fill(value)
                         editor.locator('button').click()
                         expect(page.locator("#v2-approve")).to_be_visible()
                     api_path = "/api/v2/campaigns/" + domain
@@ -159,6 +163,9 @@ def main():
                         assert initial["run_id"] != generated["run_id"]
                         assert initial["proposal"]["evidence"] == generated["proposal"]["evidence"]
                         assert initial["proposal"]["planner"]["input"] == generated["proposal"]["planner"]["input"]
+                        for field, value in case.get("copy_edit", {}).items():
+                            actual = initial["proposal"]["package"]["caption"] if field == "caption" else initial["proposal"]["package"]["copy"][field]
+                            assert actual == value
                     previews = {}
                     for size in ("portrait", "square"):
                         with page.expect_response(lambda response: response.url.endswith("&size=" + size)) as preview:
@@ -199,7 +206,7 @@ def main():
                     final = saved()
                     restart(log)
                     page.reload()
-                    expect(page.locator("#v2-download")).to_be_visible()
+                    expect(page.locator("#v2-download")).to_be_visible(timeout=20000)
                     recovered = saved()
                     assert recovered["run_id"] == final["run_id"] and recovered["approval_id"] == final["approval_id"]
                     assert recovered["proposal"]["sha256"] == final["proposal"]["sha256"]

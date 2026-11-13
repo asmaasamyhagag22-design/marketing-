@@ -29,6 +29,7 @@
     POSTER_CLIPPING: 'النص أطول من مساحة البوستر. عدّل اتجاه الحملة وراجع المعاينة.',
     POSTER_RENDER_UNAVAILABLE: 'تعذّر تشغيل محرّك رسم البوستر.',
     SOURCE_RECHECK_REQUIRED: 'أعد فحص المصادر قبل اعتماد الحزمة.',
+    COPY_REQUIRES_EVIDENCE_REVIEW: 'الصياغة تحتاج مراجعة دليل. استخدم النص المحافظ أو صياغة مقبولة من نفس المصدر.',
     BRIEF_REVIEW_REQUIRED: 'راجع الـCreative brief عشان تجهّز الحزمة.',
     PLANNED_BRIEF_REQUIRED: 'ابدأ البحث عشان يظهر الـbrief المقترح.',
     CAMPAIGN_RESEARCH_BUSY: 'فيه بحث شغّال. جرّب بعد ما يخلص.',
@@ -122,12 +123,21 @@
     const changes = proposal.changes.map(item => `<li>${esc(item.field)} · ${esc(label(item.before))} ← ${esc(label(item.after))}</li>`).join('');
     const shots = creative?.storyboard.map(item => `<li><bdi>${esc(item.seconds)}</bdi> ثوانٍ
       <p>${esc(item.visual)}</p><p dir="auto">${esc(item.line)}</p></li>`).join('');
+    const copyEditor = planner && brief ? `<details id="v2-copy-details">
+      <summary>تعديل نص الاتجاه</summary>
+      <label>العنوان<input name="headline" maxlength="55"></label>
+      <label>الرسالة<input name="message" maxlength="105"></label>
+      <label>الدعوة للفعل<input name="cta" maxlength="30"></label>
+      <label>نص المنشور<textarea name="caption" maxlength="220" rows="3"></textarea></label>
+      <p>لو الصياغة الجديدة تجاوزت حدود الدليل، التطبيق هيطلب مراجعتها.</p>
+    </details>` : '';
     const editor = planner && brief && (!reason || reason === 'BRIEF_REVIEW_REQUIRED') ? `
       <form id="v2-brief-form">
         <label>فرضية الجمهور<input name="audience" value="${esc(brief.audience)}" minlength="4" maxlength="200" required></label>
         <label>النبرة<input name="tone" value="${esc(brief.tone)}" minlength="2" maxlength="75" required></label>
         <label>الاتجاه<select name="selected">${brief.directions.map((item, i) =>
           `<option value="${i}" ${i === brief.selected ? 'selected' : ''}>${esc(item.name)}</option>`).join('')}</select></label>
+        ${copyEditor}
         <button class="adzy-btn blue" type="submit">احفظ الـbrief وجهّز الحزمة</button>
       </form>` : '';
     return `${research}
@@ -248,12 +258,24 @@
       root.innerHTML = packagePanel(proposal, approved, reason, decision);
       wireReview(root);
       const editor = byId('v2-brief-form');
-      if (editor) editor.onsubmit = event => {
-        event.preventDefault();
-        const fields = new FormData(editor);
-        submit('/brief', {run_id: state.run_id, audience: fields.get('audience'),
-                          tone: fields.get('tone'), selected: Number(fields.get('selected'))});
-      };
+      if (editor) {
+        const keys = ['headline', 'message', 'cta', 'caption'];
+        const syncCopy = () => {
+          const direction = proposal.brief.directions[Number(editor.elements.selected.value)];
+          for (const key of keys) editor.elements[key].value = direction[key];
+        };
+        syncCopy();
+        editor.elements.selected.addEventListener('change', syncCopy);
+        editor.onsubmit = event => {
+          event.preventDefault();
+          const fields = new FormData(editor);
+          const selected = Number(fields.get('selected'));
+          const copy = Object.fromEntries(keys.map(key => [key, fields.get(key)]));
+          const changed = keys.some(key => copy[key] !== proposal.brief.directions[selected][key]);
+          submit('/brief', {run_id: state.run_id, audience: fields.get('audience'),
+                            tone: fields.get('tone'), selected, ...(changed ? {copy_edit: copy} : {})});
+        };
+      }
       byId('v2-download')?.addEventListener('click', () => packageFile());
       for (const preview of root.querySelectorAll('[data-v2-preview]')) {
         preview.addEventListener('click', () => packageFile(preview.dataset.v2Preview));
@@ -353,7 +375,8 @@
     const seq = ++requestNumber;
     busy = true;
     render();
-    showStatus(suffix === '/review' ? 'بنسجّل قرارك…' : 'بنبحث في صفحات المصدر…');
+    showStatus(suffix === '/review' ? 'بنسجّل قرارك…'
+      : suffix === '/brief' ? 'بنراجع النص وبنحفظ التعديل…' : 'بنبحث في صفحات المصدر…');
     try {
       const next = await window.api('POST', path(suffix), body);
       if (seq !== requestNumber) return;
@@ -363,11 +386,23 @@
         : state.approved ? 'تم اعتماد نسخة الحملة الحالية.' : 'حُفظت نتيجة النسخة الحالية.');
     } catch (error) {
       if (seq !== requestNumber) return;
-      if (error.status === 409) await load();
       const code = errorCode(error);
+      if (error.status === 409 && code !== 'COPY_REQUIRES_EVIDENCE_REVIEW') await load();
+      if (code === 'COPY_REQUIRES_EVIDENCE_REVIEW' && body.copy_edit) {
+        busy = false;
+        render();
+        const editor = byId('v2-brief-form');
+        if (editor) {
+          editor.elements.selected.value = String(body.selected);
+          editor.elements.audience.value = body.audience;
+          editor.elements.tone.value = body.tone;
+          for (const [key, value] of Object.entries(body.copy_edit)) editor.elements[key].value = value;
+          byId('v2-copy-details').open = true;
+        }
+      }
       showStatus(code ? label(code) : 'تعذّر إكمال الطلب.');
     } finally {
-      if (seq === requestNumber) {
+      if (seq === requestNumber && busy) {
         busy = false;
         render();
       }

@@ -39,6 +39,12 @@ def poster_html(package, width, height):
     text = {key: escape(value) for key, value in package["copy"].items()}
     brand = escape(package["brand_name"])
     lang, direction = escape(package["language"]), escape(package["direction"])
+    concept = package.get("concept") if package["poster_layout"] == "source-campaign@2" else None
+    art = {
+        "compare": '<div class="frames"><span></span><span></span></div>',
+        "assemble": '<div class="tiles"><span></span><span></span><span></span><span></span></div>',
+        "filter": '<div class="filter"><span></span><span></span><span></span><b></b></div>',
+    }.get(concept, '<i></i><i></i><i></i>')
     return f"""<!doctype html>
 <html lang="{lang}" dir="{direction}">
 <meta charset="utf-8">
@@ -72,6 +78,21 @@ main[data-theme=forest] .motif i{{border-radius:16%;width:24%;height:64%;
  transform:translateX(52%) rotate(-24deg);background:linear-gradient(40deg,{accent}77,{shape})}}
 main[data-theme=forest] .motif i:nth-child(2){{transform:rotate(12deg)}}
 main[data-theme=forest] .motif i:nth-child(3){{transform:translateX(-51%) rotate(-9deg)}}
+.frames,.tiles,.filter{{position:absolute;inset:8% 7%;display:grid;align-content:center;justify-content:center}}
+.frames{{grid-template-columns:repeat(2,minmax(120px,1fr));gap:7%;direction:ltr}}
+.frames span{{height:clamp(160px,29vh,375px);border:7px solid {accent};outline:2px solid {light};
+ outline-offset:10px;border-radius:8px;background:linear-gradient(155deg,{shape} 0 43%,{light} 43% 46%,{bg} 46% 100%)}}
+.frames span+span{{background:radial-gradient(circle at 44% 42%,{accent} 0 11%,{light} 11% 18%,transparent 18%),linear-gradient(28deg,{shape} 0 50%,{bg} 50%)}}
+.tiles{{grid-template-columns:repeat(2,clamp(90px,15vh,190px));gap:18px;direction:ltr}}
+.tiles span{{aspect-ratio:1;border-radius:20px;background:{shape};border:4px solid {light};
+ box-shadow:inset 0 0 0 16px {bg}44}}
+.tiles span:nth-child(2){{border:4px dashed {accent};background:transparent;transform:translate(18px,-14px)}}
+.tiles span:nth-child(4){{background:{accent};border-color:{accent}}}
+.filter{{inset:10% 10%;grid-template-rows:repeat(3,8px);row-gap:42px;justify-content:stretch;direction:ltr}}
+.filter span{{width:100%;border-radius:8px;background:linear-gradient(90deg,{light} 0 49%,transparent 49% 56%,{light}55 56% 100%)}}
+.filter span:nth-child(2){{background:linear-gradient(90deg,{accent} 0 49%,transparent 49% 100%)}}
+.filter span:nth-child(3){{background:linear-gradient(90deg,{light} 0 49%,transparent 49% 100%)}}
+.filter b{{position:absolute;left:50%;inset-block:13%;width:7px;border-radius:9px;background:{accent}}}
 .copy{{display:grid;gap:18px;min-width:0}}
 h1,p{{margin:0;overflow-wrap:anywhere}}
 h1{{font-weight:700;font-size:88px;line-height:1.26;letter-spacing:-.012em;text-wrap:balance}}
@@ -81,7 +102,7 @@ h1{{font-weight:700;font-size:88px;line-height:1.26;letter-spacing:-.012em;text-
 </style>
 <main data-theme="{escape(package["theme"])}">
  <header class="brand" dir="auto">{brand}</header>
- <div class="motif" aria-hidden="true"><i></i><i></i><i></i></div>
+ <div class="motif" aria-hidden="true">{art}</div>
  <section class="copy"><h1>{text["headline"]}</h1><p class="message">{text["message"]}</p>
  <p class="cta">{text["cta"]}</p></section>
 </main>
@@ -118,7 +139,7 @@ def layout_poster(page, width, height):
 
 
 def render_poster(package, label, path):
-    if package["poster_layout"] != "source-campaign@1":
+    if package["poster_layout"] not in {"source-campaign@1", "source-campaign@2"}:
         raise PosterLayoutError("POSTER_LAYOUT_UNAVAILABLE")
     width, height = SIZES[label]
     geometry = []
