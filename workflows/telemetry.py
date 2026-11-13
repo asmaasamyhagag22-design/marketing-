@@ -6,9 +6,16 @@ import re
 
 
 def mask(data, **kwargs):
-    # Allow only protocol tokens and digests, never arbitrary callback/customer strings.
+    from workflows.campaign_telemetry import MODES, REASONS
+
     if isinstance(data, dict):
-        return {k: mask(v) for k, v in data.items() if k in {'status','workflow_ref','cost_status','error','policy_version','method','copy_hash','evidence_hash','repair_count'}}
+        bounded = {key: data[key] for key in ('reason', 'source_mode') if key in data
+                   and isinstance(data[key], str) and data[key] in (REASONS if key == 'reason' else MODES)}
+        return {**bounded, **{k: mask(v) for k, v in data.items() if k in {
+            'status','workflow_ref','cost_status','error','policy_version','method','copy_hash','evidence_hash','repair_count'
+        }}}
+
+    # Allow only protocol tokens and digests, never arbitrary callback/customer strings.
     if isinstance(data, int) and not isinstance(data, bool) and 0 <= data <= 100: return data
     if isinstance(data, str) and data in ('adzy.poster.copy-evidence@1', 'adzy.poster.copy-evidence@1.1', 'exact-approved-quotation@1'):
         return data
@@ -56,13 +63,13 @@ class Telemetry:
         self.events.append({'status':'ERROR'})
 
     @contextmanager
-    def observation(self, name, kind='span', metadata=None):
+    def observation(self, name, kind='span', metadata=None, result=None):
         self.events.append({'name':name, 'status':'START'})
         cm = obs = None
         if self.client:
             try:
                 cm = self.client.start_as_current_observation(name=name, as_type=kind,
-                    trace_context={'trace_id':self.trace_id} if self.trace_id else None,
+                    trace_context={'trace_id':self.trace_id} if self.trace_id and not self._frames else None,
                     metadata={'workflow_ref':self.trace_id, 'cost_status':'UNKNOWN', **(metadata or {})})
                 obs = cm.__enter__()
             except Exception:
@@ -76,11 +83,11 @@ class Telemetry:
         except BaseException as exc:
             failure = exc
         self._frames.pop()
-        status = ('PAUSED' if type(failure).__name__ == 'GraphInterrupt' else 'ERROR') if failure else frame['status']
+        status = ('PAUSED' if type(failure).__name__ == 'GraphInterrupt' else 'ERROR') if failure else (result or frame)['status']
         self.events.append({'name':name, 'status':status})
         if cm:
             try:
-                obs.update(output={'status':status}, level='ERROR' if failure else 'DEFAULT')
+                obs.update(output={**(result or {}), 'status': status}, level='ERROR' if failure else 'DEFAULT')
                 cm.__exit__(None, None, None)
             except Exception:
                 pass

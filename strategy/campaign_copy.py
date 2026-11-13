@@ -96,11 +96,13 @@ def plan_copy(fact, options, language):
     return [writing_for(fact, option["action"], language) for option in options]
 
 
-def validate_copy(direction, edit, writing):
+def validate_copy(direction, edit, writing, *, source_heading=None):
     """Only the bounded, source-licensed wording can enter an automated package."""
     fields = direction.model_dump()
     for key, value in edit.model_dump().items():
         permitted = [fields[key]]
+        if key == "headline" and source_heading:
+            permitted.append(source_heading)
         if value not in permitted and not (writing and writing.license(key, value)):
             raise CampaignConflict("COPY_REQUIRES_EVIDENCE_REVIEW")
     return direction.model_copy(update={**edit.model_dump(), "hook": edit.headline})

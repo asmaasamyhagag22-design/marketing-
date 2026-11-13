@@ -81,7 +81,7 @@ def seed(service,provider, *, insufficient=False, brand_source=None, owner=None)
     return {'actor':str(user.id),'domain':domain,'subject':str(run.id),'url':url}
 
 
-def init(directory, *, seed_demo=seed):
+def init(directory, *, seed_demo=None):
     if directory.exists(): raise ValueError('Use a new demo directory')
     directory.mkdir(parents=True)
     name = 'adzy-review-demo-' + uuid4().hex[:12]
@@ -112,7 +112,7 @@ def init(directory, *, seed_demo=seed):
             cfg.attributes['connection'] = conn
             alembic_command.upgrade(cfg,'head')
         service,provider = connect(manifest)
-        manifest.update(seed_demo(service, provider))
+        manifest.update((seed_demo if seed_demo is not None else seed)(service, provider))
         from .runtime import setup
         setup(directory)
         (directory/'demo.json').write_text(json.dumps(manifest,indent=2))

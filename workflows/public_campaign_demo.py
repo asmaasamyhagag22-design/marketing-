@@ -42,8 +42,12 @@ def main():
     parser.add_argument("--case", type=Path, action="append", default=[])
     parser.add_argument("--port", type=int, default=8020)
     parser.add_argument("--snapshot", type=Path, help="Replay curated publisher HTML on a frozen demo clock")
+    parser.add_argument("--simulate-case", choices=("nandos-page-cap", "nandos-timeout"),
+                        help="Inject the specified Campaign transport fault in the local demo")
     args = parser.parse_args()
-    demo.isolate(offline=args.action != "serve" or args.snapshot is not None)
+    if args.simulate_case and (args.action != "serve" or args.snapshot):
+        parser.error("--simulate-case requires serve and has its own snapshot")
+    demo.isolate(offline=args.action != "serve" or bool(args.snapshot or args.simulate_case))
     directory = args.directory.resolve()
     if args.action == "init":
         demo.init(directory, seed_demo=lambda service, _: seed_brands(service, args.case))
@@ -71,15 +75,26 @@ def main():
     import uvicorn
     from api.main import app
 
-    if args.snapshot:
-        from api.routes.v2_campaigns import get_clock, get_package_loader
+    def serve(load=None, clock=None):
+        if load is not None:
+            from api.routes.v2_campaigns import get_clock, get_package_loader
+
+            app.dependency_overrides[get_package_loader] = lambda: load
+            app.dependency_overrides[get_clock] = lambda: clock
+        uvicorn.run(app, host="127.0.0.1", port=args.port)
+
+    if args.simulate_case:
+        from workflows.campaign_eval import case_set, case_source
+
+        case = next(item for item in case_set()[0] if item["id"] == args.simulate_case)
+        with case_source(case) as (load, clock, _):
+            serve(load, clock)
+    elif args.snapshot:
         from workflows.campaign_snapshot import open_snapshot
 
-        load, clock = open_snapshot(args.snapshot)
-        app.dependency_overrides[get_package_loader] = lambda: load
-        app.dependency_overrides[get_clock] = lambda: clock
-
-    uvicorn.run(app, host="127.0.0.1", port=args.port)
+        serve(*open_snapshot(args.snapshot))
+    else:
+        serve()
 
 
 if __name__ == "__main__":

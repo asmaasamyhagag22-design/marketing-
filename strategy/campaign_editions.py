@@ -12,6 +12,7 @@ from urllib.parse import urljoin, urlsplit
 from strategy.campaign_package import Brief, digest, proposal, public_soup, valid_source_url
 from strategy.campaign_research import ResearchGap, same_source
 from strategy.campaign_v2 import CampaignConflict
+from strategy.campaign_release import release_metadata
 
 
 def find_edition(request, intent):
@@ -98,53 +99,64 @@ def capture_edition_source(url, entry, spec, load, clock, trace, deadline, reaso
     return None
 
 
-def build_edition(request, edition, load, clock, request_id):
+def build_edition(request, edition, load, clock, request_id, *, trace, release, snapshot_id):
     started = monotonic()
     deadline = started + 12
-    trace = []
-    # Entry diagnostics are independent of the publisher fields the copy depends on.
-    if edition.get("observe_entry"):
-        capture_edition_source(request.url, request.url, edition["observe_entry"], load, clock,
-                               trace, deadline, "BRAND_ENTRY")
-    rows = [
-        capture_edition_source(item["url"], request.url, item, load, clock, trace, deadline, "EDITORIAL_SOURCE")
-        for item in edition["sources"]
-    ]
-    sources = [item for item in rows if item]
-    missing = len(sources) != len(rows)
+    steps = []
+    with trace.stage("campaign.research") as outcome:
+        # Entry diagnostics are independent of the publisher fields the copy depends on.
+        if edition.get("observe_entry"):
+            capture_edition_source(request.url, request.url, edition["observe_entry"], load, clock,
+                                   steps, deadline, "BRAND_ENTRY")
+        rows = [
+            capture_edition_source(item["url"], request.url, item, load, clock, steps, deadline, "EDITORIAL_SOURCE")
+            for item in edition["sources"]
+        ]
+        sources = [item for item in rows if item]
+        missing = len(sources) != len(rows)
+        outcome.update(status="BLOCKED" if missing else "OK",
+                       reason="EDITORIAL_SOURCE_GAP" if missing else "DECISION_EVIDENCE_FOUND")
+    with trace.stage("campaign.select_evidence") as outcome:
+        if missing:
+            outcome.update(status="BLOCKED", reason="EDITORIAL_SOURCE_GAP")
+        else:
+            outcome["evidence_hash"] = digest([(row["body_sha256"], row["scope"], row["quote"]) for row in sources])
     planner = {
         "policy": "editorial-campaign@1", "edition": edition["id"], "edition_sha256": digest(edition),
         "input": request.model_dump(mode="json"), "intent": edition["intent"], "question": edition["question"],
-        "opportunity_hypothesis": edition["brief"]["assumption"], "trace": trace,
+        "opportunity_hypothesis": edition["brief"]["assumption"], "trace": steps,
         "pages": sources, "stop": "EDITORIAL_SOURCE_GAP" if missing else "DECISION_EVIDENCE_FOUND",
         "gap": "EDITORIAL_SOURCE_GAP" if missing else None,
         "missing_question": edition["missing_question"] if missing else None,
-        "page_calls": len(trace), "elapsed_ms": round((monotonic() - started) * 1000, 2),
+        "page_calls": len(steps), "elapsed_ms": round((monotonic() - started) * 1000, 2),
         "provider_calls": 0, "cost_usd": 0, "brief_reviewed": False, "request_id": request_id,
     }
+    planner.update(trace_id=trace.ref, source_mode=trace.mode, snapshot_id=snapshot_id,
+                   version=release_metadata(release, planner["policy"], planner["edition_sha256"]))
     if missing:
         return proposal(None, edition["brand_name"], sources, planner=planner)
-    options = []
-    for item, direction in zip(edition["options"], edition["brief"]["directions"], strict=True):
-        refs = [index for claim in item["claims"] for index in claim["evidence"]]
-        refs.extend(item["art"]["evidence"])
-        refs.append(item["evidence_index"])
-        if any(not isinstance(index, int) or not 0 <= index < len(rows) for index in refs):
-            raise ValueError("Invalid edition evidence reference")
-        destination = rows[item["evidence_index"]]["page_url"]
-        options.append({
-            **item, "destination": destination,
-            "variants": {field: [direction[field], *values] for field, values in item.get("variants", {}).items()},
+    with trace.stage("campaign.write_copy"):
+        options = []
+        for item, direction in zip(edition["options"], edition["brief"]["directions"], strict=True):
+            refs = [index for claim in item["claims"] for index in claim["evidence"]]
+            refs.extend(item["art"]["evidence"])
+            refs.append(item["evidence_index"])
+            if any(not isinstance(index, int) or not 0 <= index < len(rows) for index in refs):
+                raise ValueError("Invalid edition evidence reference")
+            destination = rows[item["evidence_index"]]["page_url"]
+            options.append({
+                **item, "destination": destination,
+                "variants": {field: [direction[field], *values] for field, values in item.get("variants", {}).items()},
+            })
+        planner.update(options=options)
+        source = sources[0]
+        brief = Brief.model_validate({
+            **edition["brief"], "objective": request.objective,
+            "source": {"url": source["page_url"], "quote": source["quote"], "scope": source["scope"]},
+            "summary": source["quote"], "language": request.language,
+            "direction": "rtl" if request.language.startswith("ar") else "ltr",
         })
-    planner.update(options=options)
-    source = sources[0]
-    brief = Brief.model_validate({
-        **edition["brief"], "objective": request.objective,
-        "source": {"url": source["page_url"], "quote": source["quote"], "scope": source["scope"]},
-        "summary": source["quote"], "language": request.language,
-        "direction": "rtl" if request.language.startswith("ar") else "ltr",
-    })
-    return proposal(brief, edition["brand_name"], sources, planner=planner)
+        return proposal(brief, edition["brand_name"], sources, planner=planner)
 
 
 def edit_edition_copy(direction, edit, option):

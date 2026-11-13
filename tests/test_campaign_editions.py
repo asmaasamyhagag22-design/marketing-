@@ -145,12 +145,14 @@ def test_campaign_observations_redact_publisher_and_copy(edition, monkeypatch):
     assert response.status_code == 409
     telemetry.flush()
     spans = exporter.get_finished_spans()
-    assert {span.name for span in spans} == {"campaign.plan", "campaign.research_and_compile",
-                                          "campaign.persist", "campaign.review_copy"}
+    assert {span.name for span in spans} == {
+        "campaign.plan", "campaign.research", "campaign.fetch", "campaign.select_evidence",
+        "campaign.write_copy", "campaign.persist", "campaign.review_copy", "campaign.verify",
+    }
     assert len({span.context.trace_id for span in spans}) == 1
     serialized = str([dict(span.attributes) for span in spans])
     assert root not in serialized and "PRIVATE_EXPANDED_CLAIM" not in serialized
-    assert "NEEDS_REVIEW" in serialized and "ERROR" in serialized
+    assert "NEEDS_REVIEW" in serialized and "COPY_REQUIRES_EVIDENCE_REVIEW" in serialized
 
 
 def test_timeout_retries_once_inside_research_trace(edition):

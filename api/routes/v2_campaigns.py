@@ -16,6 +16,7 @@ from strategy.campaign_package import Brief, load_package_page, proposal, resear
 from strategy.campaign_planner import BriefReview, PlanInput, build_plan, refresh_plan, review_draft
 from strategy.campaign_research import load_public_page, research, same_source
 from strategy.campaign_v2 import CampaignConflict, CampaignNotFound, propose, refresh
+from workflows.campaign_telemetry import CampaignTrace
 from workflows.telemetry import Telemetry
 
 
@@ -88,6 +89,23 @@ def execute(action):
         raise HTTPException(409, detail={"code": str(exc), **exc.context}) from None
 
 
+def campaign_trace(key, *, planner=None, loader=None):
+    planner = planner or {}
+    telemetry = Telemetry.from_env()
+    if planner.get("trace_id"):
+        telemetry.trace_id = planner["trace_id"]
+    else:
+        telemetry.correlate(key)
+    mode = (getattr(loader, "campaign_source_mode", "public_http") if loader is not None
+            else planner.get("source_mode") or "public_http")
+    return CampaignTrace(telemetry, mode=mode, emit=True)
+
+
+def trace_for_run(run, *, loader=None):
+    planner = run.output.get("planner") or {}
+    return campaign_trace(planner.get("request_id") or str(run.id), planner=planner, loader=loader)
+
+
 @router.get("/planning-state")
 def planning_state(url: str, service=Depends(store)):
     if len(url) > 500 or not valid_source_url(url):
@@ -119,13 +137,14 @@ def plan_campaign(request: PlanRequest, service=Depends(store), loader=Depends(g
             raise HTTPException(503, detail={"code": "CAMPAIGN_RESEARCH_BUSY"})
         try:
             name = (snapshot.brand_name if snapshot else "") or urlsplit(request.url).hostname
-            telemetry = Telemetry.from_env()
-            telemetry.correlate(str(request.request_id))
-            with telemetry.observation("campaign.plan"):
-                with telemetry.observation("campaign.research_and_compile"):
-                    result = build_plan(inputs, name, loader, service.clock, request_id=str(request.request_id))
-                    telemetry.outcome("BLOCKED" if result["status"] == "BLOCKED" else "NEEDS_REVIEW")
-                with telemetry.observation("campaign.persist"):
+            trace = campaign_trace(f"{service.actor}:{request.request_id}", loader=loader)
+            with trace.stage("campaign.plan") as outcome:
+                result = build_plan(inputs, name, loader, service.clock, request_id=str(request.request_id), trace=trace)
+                if result["status"] == "BLOCKED":
+                    outcome.update(status="BLOCKED", reason=result["planner"]["gap"])
+                else:
+                    outcome["status"] = "NEEDS_REVIEW"
+                with trace.stage("campaign.persist"):
                     return {"domain_key": domain, **service.write_plan(domain, snapshot, result, request.url)}
         finally:
             research_slots.release()
@@ -147,10 +166,9 @@ def save_brief(domain: str, request: BriefReviewRequest, service=Depends(store))
             raise CampaignConflict("PLANNED_BRIEF_REQUIRED")
         if view["reason"] not in (None, "BRIEF_REVIEW_REQUIRED"):
             raise CampaignConflict(view["reason"])
-        telemetry = Telemetry.from_env()
-        telemetry.correlate(run.output["planner"].get("request_id") or str(run.id))
-        with telemetry.observation("campaign.review_copy"):
-            result = review_draft(run.output, request)
+        trace = trace_for_run(run)
+        with trace.stage("campaign.review_copy"):
+            result = review_draft(run.output, request, trace=trace)
             if not result["changes"] and run.output["planner"]["brief_reviewed"]:
                 return service.write(domain, snapshot, None)
             return service.write(domain, snapshot, result, revision=True)
@@ -183,7 +201,16 @@ def start(domain: str, request: StartRequest, service=Depends(store),
 
 @router.post("/{domain}/review")
 def review(domain: str, request: ReviewRequest, service=Depends(store)):
-    return execute(lambda: service.decide(domain, request.run_id, request.decision))
+    def decide():
+        snapshot = service.snapshot(domain)
+        if snapshot.run is None or snapshot.run.id != request.run_id:
+            raise CampaignConflict("CAMPAIGN_CHANGED")
+        with trace_for_run(snapshot.run).stage("campaign.approval") as outcome:
+            view = service.decide(domain, request.run_id, request.decision)
+            outcome["status"] = "OK" if view["approved"] else "REJECTED"
+            return view
+
+    return execute(decide)
 
 
 def package_snapshot(service, domain, expected_run_id):
@@ -223,7 +250,8 @@ def revise_direction(domain: str, request: DirectionRequest, service=Depends(sto
         if previous.get("planner"):
             if request.selected == brief.selected:
                 return service.write(domain, snapshot, None)
-            result = review_draft(previous, BriefReview(audience=brief.audience, tone=brief.tone, selected=request.selected))
+            result = review_draft(previous, BriefReview(audience=brief.audience, tone=brief.tone, selected=request.selected),
+                                  trace=trace_for_run(run))
             return service.write(domain, snapshot, result, revision=True)
         if request.selected == brief.selected:
             return service.write(domain, snapshot, None)
@@ -290,10 +318,16 @@ def preview_package(domain: str, run_id: UUID, size: Literal["portrait", "square
 def download_package(domain: str, run_id: UUID, service=Depends(store)):
     from poster.campaign_package import export_package
 
-    bundle = execute(lambda: render_package(
-        service, domain, run_id, lambda view: export_package(view, webapp_dir() / "campaign-posters"),
-        require_approval=True,
-    ))
+    def export():
+        snapshot = service.snapshot(domain)
+        if snapshot.run is None or snapshot.run.id != run_id:
+            raise CampaignConflict("CAMPAIGN_CHANGED")
+        with trace_for_run(snapshot.run).stage("campaign.export"):
+            return render_package(service, domain, run_id,
+                                  lambda view: export_package(view, webapp_dir() / "campaign-posters"),
+                                  require_approval=True)
+
+    bundle = execute(export)
     return Response(bundle, media_type="application/zip", headers={
         "Content-Disposition": f'attachment; filename="adzy-{run_id}.zip"',
         "Cache-Control": "private, no-store",
@@ -313,8 +347,10 @@ def recheck(domain: str, request: RefreshRequest, service=Depends(store),
         if not research_slots.acquire(blocking=False):
             raise HTTPException(503, detail={"code": "CAMPAIGN_RESEARCH_BUSY"})
         try:
-            result = refresh_plan(run.output, package_loader, service.clock)
-            return execute(lambda: service.write(domain, snapshot, result, revision=True))
+            trace = trace_for_run(run, loader=package_loader)
+            with trace.stage("campaign.refresh"):
+                result = refresh_plan(run.output, package_loader, service.clock, trace=trace)
+                return execute(lambda: service.write(domain, snapshot, result, revision=True))
         finally:
             research_slots.release()
     if run.output.get("kind") == "SOURCE_CAMPAIGN":

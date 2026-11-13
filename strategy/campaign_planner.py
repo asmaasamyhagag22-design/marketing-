@@ -15,6 +15,8 @@ from strategy.campaign_research import ResearchGap, same_source
 from strategy.campaign_v2 import CampaignConflict
 from strategy.campaign_editions import build_edition, edit_edition_copy, find_edition
 from strategy.campaign_copy import CopyEdit, plan_copy, validate_copy, writing_for
+from strategy.campaign_release import GUARDRAILS, STABLE_GUARDRAILS, active_release, release_metadata
+from workflows.campaign_telemetry import CampaignTrace, source_error
 
 
 PAGE_LIMIT = 4
@@ -209,18 +211,19 @@ def question(kind, arabic):
     return questions[kind][not arabic]
 
 
-def research_plan(request, load, clock):
+def research_plan(request, load, clock, *, trace=None):
     started = monotonic()
     kind = goal_kind(request.objective)
     terms = words(request.objective)
     arabic = request.language.split("-")[0] == "ar"
-    pages, trace, visited, links, action_links = [], [], set(), {}, {}
+    observed = trace if trace is not None else CampaignTrace()
+    pages, steps, visited, links, action_links = [], [], set(), {}, {}
     url, reason, anchor = request.url, "BRAND_ENTRY", ""
     destination = None
     while url and len(visited) < PAGE_LIMIT and monotonic() - started < SECONDS:
         visited.add(url)
         step = {"page_url": url, "reason": reason, "anchor": anchor, "outcome": "SOURCE_UNAVAILABLE"}
-        trace.append(step)
+        steps.append(step)
         try:
             page = load(url, min(5.0, max(.05, SECONDS - (monotonic() - started))))
             if page.url != url:
@@ -246,7 +249,7 @@ def research_plan(request, load, clock):
             step["http_status"] = exc.code
             exc.close()
         except (OSError, ResearchGap) as exc:
-            step["outcome"] = str(exc) if isinstance(exc, ResearchGap) else "SOURCE_UNAVAILABLE"
+            step["outcome"] = source_error(exc)
         fact = best_fact(pages, terms)
         conflicts = conflicting_evidence(fact, pages)
         step["gap_after"] = "SOURCE_CONFLICT" if conflicts else "FEATURE_EVIDENCE" if fact is None else (
@@ -267,8 +270,13 @@ def research_plan(request, load, clock):
             reason = "FIND_COMMERCIAL_TERMS" if kind in {"OFFER", "TRANSACTION"} else "FILL_FEATURE_GAP"
         url = max(pending, key=lambda key: (pending[key][0], not bool(urlsplit(key).query), -len(key)), default=None)
         anchor = pending[url][1] if url else ""
-    fact = best_fact(pages, terms)
-    gap = trace[-1]["gap_after"] if trace else "FEATURE_EVIDENCE"
+    with observed.stage("campaign.select_evidence") as outcome:
+        fact = best_fact(pages, terms)
+        if fact is not None:
+            outcome["evidence_hash"] = digest([fact["body_sha256"], fact["scope"], fact["quote"]])
+        else:
+            outcome.update(status="BLOCKED", reason="FEATURE_EVIDENCE")
+    gap = steps[-1]["gap_after"] if steps else "FEATURE_EVIDENCE"
     if fact and kind == "DOWNLOAD" and not destination and gap != "SOURCE_CONFLICT":
         gap = "ACTION_DESTINATION"
     if kind in {"OFFER", "TRANSACTION"} and gap != "SOURCE_CONFLICT":
@@ -281,13 +289,13 @@ def research_plan(request, load, clock):
     }
     plan = {
         "policy": POLICY, "input": request.model_dump(mode="json"), "intent": kind,
-        "question": question(kind, arabic), "trace": trace, "pages": pages,
+        "question": question(kind, arabic), "trace": steps, "pages": pages,
         "conflicts": conflicting_evidence(fact, pages),
         "gap": gap, "missing_question": missing[gap][not arabic] if gap else None,
         "stop": "SOURCE_CONFLICT" if gap == "SOURCE_CONFLICT" else "DECISION_EVIDENCE_FOUND" if not gap else
                 "BUDGET_EXHAUSTED" if len(visited) >= PAGE_LIMIT or monotonic() - started >= SECONDS
                 else "NO_MORE_RELEVANT_SOURCES",
-        "page_calls": len(trace), "elapsed_ms": round((monotonic() - started) * 1000, 2),
+        "page_calls": len(steps), "elapsed_ms": round((monotonic() - started) * 1000, 2),
         "provider_calls": 0, "cost_usd": 0, "brief_reviewed": False,
         "opportunity_hypothesis": (
             "اختبر هل ربط الميزة بالخطوة المطلوبة يرفع معدل النقر من الشريحة المقترحة."
@@ -297,12 +305,15 @@ def research_plan(request, load, clock):
     return plan, fact, destination
 
 
+def specific_heading(fact, objective):
+    label = fact["label"]
+    return len(label) <= 55 and len(words(label) & words(objective)) >= 2
+
+
 def draft_brief(request, fact, destination):
     arabic = request.language.split("-")[0] == "ar"
     language_index = not arabic
     label = fact["label"]
-    terms = words(request.objective)
-    heading_is_specific = len(words(label) & terms) >= 2
     proof = fact["quote"]
     guide = fact["page_url"]
     options = [
@@ -352,7 +363,7 @@ def draft_brief(request, fact, destination):
     directions = []
     for option, writing in zip(options, plan_copy(fact, options, request.language)):
         title = option["headline"]
-        if option["action"] == "READ_FEATURE" and heading_is_specific and len(label) <= 55:
+        if option["action"] == "READ_FEATURE" and specific_heading(fact, request.objective):
             title = label
         if not arabic and len(proof) <= 105:
             card_message = proof
@@ -405,7 +416,11 @@ def draft_brief(request, fact, destination):
     return brief, options
 
 
-def build_plan(request, brand_name, load, clock, *, request_id=None):
+def build_plan(request, brand_name, load, clock, *, request_id=None, trace=None):
+    trace = trace if trace is not None else CampaignTrace()
+    release = active_release()
+    snapshot_id = getattr(load, "campaign_snapshot_id", None)
+    load = trace.loader(load)
     intent = goal_kind(request.objective)
     if intent == "DISCOVERY":
         if re.search(r"\b(?:menu|catalogue|catalog|range)\b|المنيو|القائمة|كتالوج", request.objective, re.I):
@@ -414,18 +429,22 @@ def build_plan(request, brand_name, load, clock, *, request_id=None):
             intent = "INSPECT_ITEM"
     edition = find_edition(request, intent)
     if edition:
-        return build_edition(request, edition, load, clock, request_id)
-    planner, fact, destination = research_plan(request, load, clock)
-    planner["request_id"] = request_id
+        return build_edition(request, edition, load, clock, request_id, trace=trace, release=release, snapshot_id=snapshot_id)
+    with trace.stage("campaign.research") as outcome:
+        planner, fact, destination = research_plan(request, load, clock, trace=trace)
+        outcome.update(status="BLOCKED" if planner["gap"] else "OK", reason=planner["stop"])
+    planner.update(request_id=request_id, trace_id=trace.ref, source_mode=trace.mode, snapshot_id=snapshot_id,
+                   version=release_metadata(release, POLICY))
     if planner["gap"]:
         return proposal(None, brand_name, [fact] if fact else [], planner=planner)
-    brief, options = draft_brief(request, fact, destination)
-    sources = [fact] + ([destination] if destination else [])
-    planner.update(options=options, claims=[
-        {"fields": ["brief.summary", "package.copy.message"], "evidence_index": 0,
-         "basis": "PUBLISHER_QUOTE_AND_SECTION_LABEL", "semantic_review": "HUMAN_REVIEW_REQUIRED"},
-    ])
-    return proposal(brief, brand_name, sources, planner=planner)
+    with trace.stage("campaign.write_copy"):
+        brief, options = draft_brief(request, fact, destination)
+        sources = [fact] + ([destination] if destination else [])
+        planner.update(options=options, claims=[
+            {"fields": ["brief.summary", "package.copy.message"], "evidence_index": 0,
+             "basis": "PUBLISHER_QUOTE_AND_SECTION_LABEL", "semantic_review": "HUMAN_REVIEW_REQUIRED"},
+        ])
+        return proposal(brief, brand_name, sources, planner=planner)
 
 
 def anchored_claim(previous, field, text):
@@ -438,8 +457,16 @@ def anchored_claim(previous, field, text):
     return False
 
 
-def review_draft(previous, edit):
+def review_draft(previous, edit, *, trace=None):
+    trace = trace if trace is not None else CampaignTrace()
+    with trace.stage("campaign.verify"):
+        return _review_draft(previous, edit, trace.ref)
+
+
+def _review_draft(previous, edit, trace_id):
     planner = {**previous["planner"], "brief_reviewed": True, "request_id": None}
+    if trace_id:
+        planner["trace_id"] = trace_id
     brief = Brief.model_validate(previous["brief"])
     if edit.selected >= len(brief.directions):
         raise CampaignConflict("DIRECTION_NOT_FOUND")
@@ -449,7 +476,17 @@ def review_draft(previous, edit):
         directions[edit.selected] = edit_edition_copy(directions[edit.selected], edit.copy_edit, option)
     elif edit.copy_edit:
         writing = writing_for(previous["evidence"][0], option["action"], brief.language)
-        directions[edit.selected] = validate_copy(directions[edit.selected], edit.copy_edit, writing)
+        fact = previous["evidence"][0]
+        source_heading = None
+        guardrails = (planner.get("version") or {}).get("guardrails", {}).get("policy", STABLE_GUARDRAILS)
+        # Only reuse the baseline's feature headline for directions pointing to the same source.
+        if (guardrails == GUARDRAILS["candidate"] and not writing
+                and option["destination"] == fact["page_url"]
+                and specific_heading(fact, brief.objective)):
+            source_heading = fact["label"]
+        directions[edit.selected] = validate_copy(
+            directions[edit.selected], edit.copy_edit, writing, source_heading=source_heading,
+        )
     audience = edit.audience
     if planner.get("edition") and edit.selected != brief.selected:
         if audience == planner["options"][brief.selected]["audience"]:
@@ -483,9 +520,9 @@ def review_draft(previous, edit):
     return result
 
 
-def refresh_plan(previous, load, clock):
+def refresh_plan(previous, load, clock, *, trace=None):
     request = PlanInput.model_validate(previous["planner"]["input"])
-    updated = build_plan(request, previous["brand_name"], load, clock)
+    updated = build_plan(request, previous["brand_name"], load, clock, trace=trace)
     old = {(item["page_url"], item["text_sha256"]) for item in previous["planner"]["pages"]}
     new = {(item["page_url"], item["text_sha256"]) for item in updated["planner"]["pages"]}
     from strategy.campaign_package import check

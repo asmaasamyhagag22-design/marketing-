@@ -8,7 +8,8 @@ from strategy.campaign_research import Page, ResearchGap
 
 
 def open_snapshot(directory: Path):
-    records = json.loads((directory / "manifest.json").read_text(encoding="utf-8"))
+    manifest = (directory / "manifest.json").read_bytes()
+    records = json.loads(manifest)
     pages = {}
     dates = []
     for url, record in records.items():
@@ -30,4 +31,6 @@ def open_snapshot(directory: Path):
             raise ResearchGap("SOURCE_NOT_IN_SNAPSHOT")
         return pages[url]
 
+    load.campaign_source_mode = "publisher_replay"
+    load.campaign_snapshot_id = sha256(manifest).hexdigest()
     return load, lambda: frozen_time

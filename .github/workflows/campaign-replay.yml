@@ -1,0 +1,29 @@
+name: Campaign replay release gate
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+
+jobs:
+  replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        if: ${{ !env.ACT }}
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements-app.txt
+      - name: Install locked dependencies
+        if: ${{ !env.ACT }}
+        run: python -m pip install -r requirements-app.txt
+      - name: Evaluate the frozen replay
+        run: python -m workflows.campaign_eval --output "${RUNNER_TEMP}/campaign-eval.json"
+      - name: Check replay and monitor contracts
+        run: python -m workflows.verify -q tests/test_campaign_lifecycle.py tests/test_campaign_copy_quality.py
+      - uses: actions/upload-artifact@v4
+        if: ${{ always() && !env.ACT }}
+        with:
+          name: campaign-replay-result
+          path: ${{ runner.temp }}/campaign-eval.json
