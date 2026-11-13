@@ -18,3 +18,5 @@ No authorization objects, usage/run snapshots, customer databases/media, environ
 ## Campaign review materials
 
 The Buffalo review uses original CSS ingredient illustrations from `poster/campaign_catalog.py` and the existing Noto fonts. Brand and product names identify the public source. The dated HTML fragments retain the titles and short excerpts needed to reproduce the decision, with URLs and digests. The review ZIPs, UI screenshots, and JSON receipts come from disposable demo accounts and recorded public evidence. Full publisher HTML, photos, logos, telemetry exports, databases, and account files are excluded from these additions. The publisher names and excerpts remain attributed to their owners. [Fixture provenance](docs/demo/campaign-snapshots/README.md) · [Campaign artifacts](docs/campaigns/buffalo/README.md)
+
+The lifecycle replay adds text-only captures from [Python.org](https://www.python.org/about/) and [OpenStreetMap](https://www.openstreetmap.org/about), with their publisher URLs and body hashes in [snapshot manifests](docs/campaigns/lifecycle/snapshots/). The fixtures contain no publisher artwork.

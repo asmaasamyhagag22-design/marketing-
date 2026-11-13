@@ -74,3 +74,20 @@ The clean checkout passed **142 focused tests** and the Chromium journeys for Bu
 - The general planner matches explicit section phrases using bounded HTML. Named-section coverage depends on publisher markup and vocabulary, and the ranking does not prove semantic entailment. The Nando’s snapshot exported, while live acquisition stopped at the HTML size limit. Audience fit, copy beyond approved wording, and ad performance require independent review. [Execution notes and measured limits](docs/campaigns/buffalo/EXECUTION.md)
 
 The repository also includes separate strategy and creative workflows. [Arabic engineering walkthrough](docs/campaigns/INTERVIEW.md) · [Application architecture](docs/architecture/app_review.md) · [Other demo modes](docs/demo/README.md)
+
+## Campaign release lifecycle
+
+The [replay protocol](docs/campaigns/lifecycle/PROTOCOL.md) freezes the case labels and release conditions. The same gate runs both review policies against hashed publisher snapshots, reports the decision as JSON, and exits with status 1 when the candidate is blocked. The default policy is `stable`. The deterministic Campaign path uses no model calls or model prompts.
+
+With the dependencies, Chromium, and PostgreSQL image installed as above:
+
+```bash
+output=$(mktemp -d)
+python -m workflows.campaign_eval --output "$output/replay.json"
+python tools/demo_campaign_lifecycle.py --output-dir "$output/demo"
+python -m workflows.campaign_monitor "$output/demo/server.log"
+```
+
+The demo checks the gate before starting the candidate, exercises the authenticated Campaign API and both PNG exports, triggers a simulated source incident, and restarts on the stable policy. It records the alert, the old approval and proposal identifiers, and the byte comparison in `result.json`. Its database is disposable.
+
+For separate public-source diagnostics, run `python -m workflows.campaign_eval --live --output "$output/live.json"`. To reproduce the failed CI job and the rollback, follow the [lifecycle walkthrough](docs/campaigns/lifecycle/README.md). The [interview guide](docs/campaigns/INTERVIEW.md#دورة-إصدار-campaign) traces the decisions to functions and tests.

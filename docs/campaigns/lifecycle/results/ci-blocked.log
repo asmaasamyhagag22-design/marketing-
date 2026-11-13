@@ -1,0 +1,15 @@
+time="2026-11-13T23:34:21+02:00" level=info msg="Using docker host 'unix:///var/run/docker.sock', and daemon socket 'unix:///var/run/docker.sock'"
+[Campaign replay release gate/replay] ⭐ Run Set up job
+[Campaign replay release gate/replay]   ✅  Success - Set up job
+[Campaign replay release gate/replay]   ☁  git clone 'https://github.com/actions/setup-python' # ref=v5
+[Campaign replay release gate/replay]   ☁  git clone 'https://github.com/actions/upload-artifact' # ref=v4
+[Campaign replay release gate/replay] ⭐ Run Main actions/checkout@v4
+[Campaign replay release gate/replay]   ✅  Success - Main actions/checkout@v4 [1.581355905s]
+[Campaign replay release gate/replay] ⭐ Run Main Evaluate the frozen replay
+[Campaign replay release gate/replay]   | {"decision": "KEEP_STABLE", "blockers": [{"case": "buffalo-menu", "release": "candidate", "failures": ["UNSAFE_COPY_OR_GUARD_FAILURE"]}, {"case": "five-guys-bacon", "release": "candidate", "failures": ["WRONG_EVIDENCE_SELECTION", "UNSAFE_COPY_OR_GUARD_FAILURE"]}, {"case": "five-guys-bacon", "failures": ["CHANGE_OUTSIDE_REVIEW_POLICY"]}], "restored_edits": [{"case": "nandos-wrap", "edit": "verbatim-heading", "split": "development"}, {"case": "osm-local-knowledge", "edit": "verbatim-heading", "split": "generalization"}], "default_release": "stable"}
+[Campaign replay release gate/replay]   ❌  Failure - Main Evaluate the frozen replay [6.384621164s]
+[Campaign replay release gate/replay] exit status 1
+[Campaign replay release gate/replay] ⭐ Run Complete job
+[Campaign replay release gate/replay]   ✅  Success - Complete job
+[Campaign replay release gate/replay] 🏁  Job failed
+Error: Job 'replay' failed

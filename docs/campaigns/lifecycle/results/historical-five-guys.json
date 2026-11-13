@@ -1,0 +1,11 @@
+{
+  "commit": "9cb6f42",
+  "planner": "source-campaign-planner@1",
+  "snapshot_id": "6270a602411f1d60b85f673a0a128d5d1d906785eaf1003cdb316ad7fbb11d67",
+  "scope": "Little Bacon Burger",
+  "quote": "A fresh, 100% beef patty hot off the grill with strips of crispy Applewood smoked bacon on top.",
+  "page_calls": 1,
+  "elapsed_ms": 25.871,
+  "provider_calls": 0,
+  "cost_usd": 0
+}

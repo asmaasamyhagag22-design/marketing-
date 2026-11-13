@@ -1,0 +1,899 @@
+{
+  "schema": "adzy.campaign-eval-result@1",
+  "eval_set_id": "eeb536e59932dfb95b3cd4b2db9d8c32dc214a3bb0d24beeda5bf2b5dfadfc22",
+  "started_at": "2026-11-13T21:34:22.999169+00:00",
+  "mode": "public_http",
+  "results": {
+    "stable": [
+      {
+        "case_id": "buffalo-menu",
+        "split": "development",
+        "eval_set_id": "eeb536e59932dfb95b3cd4b2db9d8c32dc214a3bb0d24beeda5bf2b5dfadfc22",
+        "fixtures": null,
+        "source_mode": "public_http",
+        "simulated_transport": null,
+        "version": {
+          "schema": "adzy.campaign-release@1",
+          "release": "stable",
+          "commit": "f46f176340bbd1d94e7fb6861bb5b8da2909b986",
+          "reference_commit": "4648fbc043219661023fa97d92446bec9323fba4",
+          "model": {
+            "provider": null,
+            "model_id": null,
+            "mode": "deterministic"
+          },
+          "prompt": {
+            "id": null,
+            "mode": "no_model_prompt"
+          },
+          "planner": {
+            "policy": "editorial-campaign@1",
+            "sha256": "e6eccf053d49377e05f1a8636b5c761c37130173a8beac79c896980b316ae3a7",
+            "edition_sha256": "6a3f45863d9676554efce1f8eb3e1b340bfd45e66cebfb136a0d9948ad148582",
+            "edition_implementation_sha256": "3eb341719cf44d10b9f121379328b65ce9640c328980ecf518f85916947ae9d1",
+            "transport_sha256": "5d022857bb9820f1a5206aaa0487c75a5bd3decfc28af36dd4dcd831bbc3796f",
+            "package_sha256": "2530cee4ce36188775e6beef49db6d350c657fd975d30c28d3652d359185f803"
+          },
+          "guardrails": {
+            "policy": "campaign-copy@1",
+            "sha256": "482d85f78e50becbb70c85e24d7a81be40c9f9f39044e3fb19bb4e279dccb370"
+          }
+        },
+        "trace_id": "6d26c81de6ce90bd9e0881bb4998593e",
+        "elapsed_ms": 7124.338,
+        "fetch": [
+          "QUOTE_OBSERVED",
+          "QUOTE_OBSERVED",
+          "QUOTE_OBSERVED",
+          "QUOTE_OBSERVED"
+        ],
+        "source_failed": false,
+        "stop": "DECISION_EVIDENCE_FOUND",
+        "gap": null,
+        "evidence_match": true,
+        "evidence": [
+          {
+            "scope": "عنوان صفحة المنيو الرسمية",
+            "quote": "قائمة بافلو برجر",
+            "page_url": "https://buffaloburger.com/menu",
+            "capture_kind": "public_http",
+            "body_sha256": "588db52c7da85589f04bb5270fa83d703a7d6856d6cf2a132260e357def75719"
+          },
+          {
+            "scope": "وصف أولد سكول من بطاقة مشاركة صفحة الصنف",
+            "quote": "Pure beef burger patty, topped with our signature Buffalo sauce and cheddar cheese.",
+            "page_url": "https://buffaloburger.com/menu/old-school",
+            "capture_kind": "public_http",
+            "body_sha256": "a2e45f53ac7cc787ff691434e32a32088791fabc5e2120a6915483b012a23537"
+          },
+          {
+            "scope": "وصف راستافاري من بطاقة مشاركة صفحة الصنف",
+            "quote": "بايتس الجبنة الشيدر المحشوه بالهالپنيو وصوص البافالو الكريمي و مع قطعة البرجر.",
+            "page_url": "https://buffaloburger.com/menu/the-rastafari",
+            "capture_kind": "public_http",
+            "body_sha256": "1193d8202ded134e38f7f7cf9ef1fbc92f0ae807d56f162b2b3fd3b9a7bb91b6"
+          }
+        ],
+        "cta_match": true,
+        "journey": "READY",
+        "cta": {
+          "url": "https://buffaloburger.com/menu",
+          "evidence_index": 0,
+          "text": "شوف المنيو",
+          "action": "OPEN_CATALOG"
+        },
+        "edits": [
+          {
+            "id": "shared-sauce-registered",
+            "field": "message",
+            "supported": true,
+            "critical": false,
+            "accepted": true,
+            "observed": "الاتنين فيهم صوص بافالو.",
+            "reason": null,
+            "classification": "EXPECTED"
+          },
+          {
+            "id": "shared-sauce-unregistered",
+            "field": "message",
+            "supported": true,
+            "critical": false,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "SUPPORTED_COPY_REJECTED"
+          },
+          {
+            "id": "whole-menu-jalapeno",
+            "field": "headline",
+            "supported": false,
+            "critical": true,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "EXPECTED"
+          }
+        ],
+        "failures": [],
+        "page_calls": 4,
+        "provider_calls": 0,
+        "cost_usd": 0
+      },
+      {
+        "case_id": "five-guys-bacon",
+        "split": "development",
+        "eval_set_id": "eeb536e59932dfb95b3cd4b2db9d8c32dc214a3bb0d24beeda5bf2b5dfadfc22",
+        "fixtures": null,
+        "source_mode": "public_http",
+        "simulated_transport": null,
+        "version": {
+          "schema": "adzy.campaign-release@1",
+          "release": "stable",
+          "commit": "f46f176340bbd1d94e7fb6861bb5b8da2909b986",
+          "reference_commit": "4648fbc043219661023fa97d92446bec9323fba4",
+          "model": {
+            "provider": null,
+            "model_id": null,
+            "mode": "deterministic"
+          },
+          "prompt": {
+            "id": null,
+            "mode": "no_model_prompt"
+          },
+          "planner": {
+            "policy": "source-campaign-planner@2",
+            "sha256": "e6eccf053d49377e05f1a8636b5c761c37130173a8beac79c896980b316ae3a7",
+            "edition_sha256": null,
+            "edition_implementation_sha256": "3eb341719cf44d10b9f121379328b65ce9640c328980ecf518f85916947ae9d1",
+            "transport_sha256": "5d022857bb9820f1a5206aaa0487c75a5bd3decfc28af36dd4dcd831bbc3796f",
+            "package_sha256": "2530cee4ce36188775e6beef49db6d350c657fd975d30c28d3652d359185f803"
+          },
+          "guardrails": {
+            "policy": "campaign-copy@1",
+            "sha256": "482d85f78e50becbb70c85e24d7a81be40c9f9f39044e3fb19bb4e279dccb370"
+          }
+        },
+        "trace_id": "356cd3255a102c6070f66405a413c273",
+        "elapsed_ms": 2183.123,
+        "fetch": [
+          "SOURCE_READ"
+        ],
+        "source_failed": false,
+        "stop": "DECISION_EVIDENCE_FOUND",
+        "gap": null,
+        "evidence_match": true,
+        "evidence": [
+          {
+            "scope": "Bacon Burger",
+            "quote": "Fresh, 100% beef patties hot off the grill, layered with strips of crispy Applewood smoked bacon and placed on a soft, toasted sesame seed bun.",
+            "page_url": "https://www.fiveguys.com/menu/burgers/",
+            "capture_kind": "public_http",
+            "body_sha256": "007dcf00294678327d4cb6e1e22844fef9dcf7e2b5b4b462dd8d4d09ec87aec4"
+          }
+        ],
+        "cta_match": true,
+        "journey": "READY",
+        "cta": {
+          "url": "https://www.fiveguys.com/menu/burgers/",
+          "evidence_index": 0,
+          "text": "Read the explanation",
+          "action": "READ_FEATURE"
+        },
+        "edits": [
+          {
+            "id": "wrong-variant",
+            "field": "headline",
+            "supported": false,
+            "critical": true,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "EXPECTED"
+          }
+        ],
+        "failures": [],
+        "page_calls": 1,
+        "provider_calls": 0,
+        "cost_usd": 0
+      },
+      {
+        "case_id": "nandos-wrap",
+        "split": "development",
+        "eval_set_id": "eeb536e59932dfb95b3cd4b2db9d8c32dc214a3bb0d24beeda5bf2b5dfadfc22",
+        "fixtures": null,
+        "source_mode": "public_http",
+        "simulated_transport": null,
+        "version": {
+          "schema": "adzy.campaign-release@1",
+          "release": "stable",
+          "commit": "f46f176340bbd1d94e7fb6861bb5b8da2909b986",
+          "reference_commit": "4648fbc043219661023fa97d92446bec9323fba4",
+          "model": {
+            "provider": null,
+            "model_id": null,
+            "mode": "deterministic"
+          },
+          "prompt": {
+            "id": null,
+            "mode": "no_model_prompt"
+          },
+          "planner": {
+            "policy": "source-campaign-planner@2",
+            "sha256": "e6eccf053d49377e05f1a8636b5c761c37130173a8beac79c896980b316ae3a7",
+            "edition_sha256": null,
+            "edition_implementation_sha256": "3eb341719cf44d10b9f121379328b65ce9640c328980ecf518f85916947ae9d1",
+            "transport_sha256": "5d022857bb9820f1a5206aaa0487c75a5bd3decfc28af36dd4dcd831bbc3796f",
+            "package_sha256": "2530cee4ce36188775e6beef49db6d350c657fd975d30c28d3652d359185f803"
+          },
+          "guardrails": {
+            "policy": "campaign-copy@1",
+            "sha256": "482d85f78e50becbb70c85e24d7a81be40c9f9f39044e3fb19bb4e279dccb370"
+          }
+        },
+        "trace_id": "83352ce2ab1cd38c3b8d9122886e12b5",
+        "elapsed_ms": 1260.357,
+        "fetch": [
+          "PAGE_TOO_LARGE"
+        ],
+        "source_failed": true,
+        "stop": "NO_MORE_RELEVANT_SOURCES",
+        "gap": "FEATURE_EVIDENCE",
+        "evidence_match": null,
+        "evidence": [],
+        "cta_match": null,
+        "journey": "BLOCKED",
+        "cta": null,
+        "edits": [],
+        "failures": [
+          "SOURCE_FETCH_FAILURE"
+        ],
+        "page_calls": 1,
+        "provider_calls": 0,
+        "cost_usd": 0
+      },
+      {
+        "case_id": "python-applications",
+        "split": "generalization",
+        "eval_set_id": "eeb536e59932dfb95b3cd4b2db9d8c32dc214a3bb0d24beeda5bf2b5dfadfc22",
+        "fixtures": null,
+        "source_mode": "public_http",
+        "simulated_transport": null,
+        "version": {
+          "schema": "adzy.campaign-release@1",
+          "release": "stable",
+          "commit": "f46f176340bbd1d94e7fb6861bb5b8da2909b986",
+          "reference_commit": "4648fbc043219661023fa97d92446bec9323fba4",
+          "model": {
+            "provider": null,
+            "model_id": null,
+            "mode": "deterministic"
+          },
+          "prompt": {
+            "id": null,
+            "mode": "no_model_prompt"
+          },
+          "planner": {
+            "policy": "source-campaign-planner@2",
+            "sha256": "e6eccf053d49377e05f1a8636b5c761c37130173a8beac79c896980b316ae3a7",
+            "edition_sha256": null,
+            "edition_implementation_sha256": "3eb341719cf44d10b9f121379328b65ce9640c328980ecf518f85916947ae9d1",
+            "transport_sha256": "5d022857bb9820f1a5206aaa0487c75a5bd3decfc28af36dd4dcd831bbc3796f",
+            "package_sha256": "2530cee4ce36188775e6beef49db6d350c657fd975d30c28d3652d359185f803"
+          },
+          "guardrails": {
+            "policy": "campaign-copy@1",
+            "sha256": "482d85f78e50becbb70c85e24d7a81be40c9f9f39044e3fb19bb4e279dccb370"
+          }
+        },
+        "trace_id": "33833c08bc83ec5f8a81f8e1f8e6974e",
+        "elapsed_ms": 3411.106,
+        "fetch": [
+          "SOURCE_READ",
+          "SOURCE_READ",
+          "SOURCE_READ",
+          "SOURCE_READ"
+        ],
+        "source_failed": false,
+        "stop": "DECISION_EVIDENCE_FOUND",
+        "gap": null,
+        "evidence_match": true,
+        "evidence": [
+          {
+            "scope": "Applications",
+            "quote": "The Python Package Index (PyPI) hosts thousands of third-party modules for Python.",
+            "page_url": "https://www.python.org/about/",
+            "capture_kind": "public_http",
+            "body_sha256": "fe970304e554f2584f6ef18c1b6955e3107a59dfbdf2dc1cdc49fcb72879eee1"
+          }
+        ],
+        "cta_match": true,
+        "journey": "READY",
+        "cta": {
+          "url": "https://www.python.org/about/",
+          "evidence_index": 0,
+          "text": "Read the explanation",
+          "action": "READ_FEATURE"
+        },
+        "edits": [
+          {
+            "id": "all-modules-verified",
+            "field": "headline",
+            "supported": false,
+            "critical": true,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "EXPECTED"
+          }
+        ],
+        "failures": [],
+        "page_calls": 4,
+        "provider_calls": 0,
+        "cost_usd": 0
+      },
+      {
+        "case_id": "osm-local-knowledge",
+        "split": "generalization",
+        "eval_set_id": "eeb536e59932dfb95b3cd4b2db9d8c32dc214a3bb0d24beeda5bf2b5dfadfc22",
+        "fixtures": null,
+        "source_mode": "public_http",
+        "simulated_transport": null,
+        "version": {
+          "schema": "adzy.campaign-release@1",
+          "release": "stable",
+          "commit": "f46f176340bbd1d94e7fb6861bb5b8da2909b986",
+          "reference_commit": "4648fbc043219661023fa97d92446bec9323fba4",
+          "model": {
+            "provider": null,
+            "model_id": null,
+            "mode": "deterministic"
+          },
+          "prompt": {
+            "id": null,
+            "mode": "no_model_prompt"
+          },
+          "planner": {
+            "policy": "source-campaign-planner@2",
+            "sha256": "e6eccf053d49377e05f1a8636b5c761c37130173a8beac79c896980b316ae3a7",
+            "edition_sha256": null,
+            "edition_implementation_sha256": "3eb341719cf44d10b9f121379328b65ce9640c328980ecf518f85916947ae9d1",
+            "transport_sha256": "5d022857bb9820f1a5206aaa0487c75a5bd3decfc28af36dd4dcd831bbc3796f",
+            "package_sha256": "2530cee4ce36188775e6beef49db6d350c657fd975d30c28d3652d359185f803"
+          },
+          "guardrails": {
+            "policy": "campaign-copy@1",
+            "sha256": "482d85f78e50becbb70c85e24d7a81be40c9f9f39044e3fb19bb4e279dccb370"
+          }
+        },
+        "trace_id": "c01fe1477e6916bd24b5b63d93b2d166",
+        "elapsed_ms": 592.077,
+        "fetch": [
+          "SOURCE_READ"
+        ],
+        "source_failed": false,
+        "stop": "DECISION_EVIDENCE_FOUND",
+        "gap": null,
+        "evidence_match": true,
+        "evidence": [
+          {
+            "scope": "Local Knowledge",
+            "quote": "Contributors use aerial imagery, GPS devices, and low-tech field maps to verify that OSM is accurate and up to date.",
+            "page_url": "https://www.openstreetmap.org/about",
+            "capture_kind": "public_http",
+            "body_sha256": "fc69dbf1f108c64214b9136f6de954a7c9bd23826ff5f3e6e7c7be33d462a80d"
+          }
+        ],
+        "cta_match": true,
+        "journey": "READY",
+        "cta": {
+          "url": "https://www.openstreetmap.org/about",
+          "evidence_index": 0,
+          "text": "Read the explanation",
+          "action": "READ_FEATURE"
+        },
+        "edits": [
+          {
+            "id": "verbatim-heading",
+            "field": "headline",
+            "supported": true,
+            "critical": false,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "SUPPORTED_COPY_REJECTED"
+          },
+          {
+            "id": "every-road-verified",
+            "field": "headline",
+            "supported": false,
+            "critical": true,
+            "accepted": false,
+            "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+            "classification": "EXPECTED"
+          }
+        ],
+        "failures": [],
+        "page_calls": 1,
+        "provider_calls": 0,
+        "cost_usd": 0
+      }
+    ]
+  },
+  "gate": null,
+  "langfuse_spans": [
+    {
+      "name": "campaign.fetch",
+      "trace_id": "6d26c81de6ce90bd9e0881bb4998593e",
+      "span_id": "5286276c59dd366e",
+      "parent_span_id": "b4e692493efccace",
+      "elapsed_ms": 1965.079,
+      "source_mode": "public_http",
+      "outcome": {
+        "reason": "SOURCE_READ",
+        "status": "OK"
+      }
+    },
+    {
+      "name": "campaign.fetch",
+      "trace_id": "6d26c81de6ce90bd9e0881bb4998593e",
+      "span_id": "8f92225762b7895e",
+      "parent_span_id": "b4e692493efccace",
+      "elapsed_ms": 1483.08,
+      "source_mode": "public_http",
+      "outcome": {
+        "reason": "SOURCE_READ",
+        "status": "OK"
+      }
+    },
+    {
+      "name": "campaign.fetch",
+      "trace_id": "6d26c81de6ce90bd9e0881bb4998593e",
+      "span_id": "d6e30b3fd121e61c",
+      "parent_span_id": "b4e692493efccace",
+      "elapsed_ms": 1840.207,
+      "source_mode": "public_http",
+      "outcome": {
+        "reason": "SOURCE_READ",
+        "status": "OK"
+      }
+    },
+    {
+      "name": "campaign.fetch",
+      "trace_id": "6d26c81de6ce90bd9e0881bb4998593e",
+      "span_id": "2f374bab1fa3f760",
+      "parent_span_id": "b4e692493efccace",
+      "elapsed_ms": 1225.604,
+      "source_mode": "public_http",
+      "outcome": {
+        "reason": "SOURCE_READ",
+        "status": "OK"
+      }
+    },
+    {
+      "name": "campaign.research",
+      "trace_id": "6d26c81de6ce90bd9e0881bb4998593e",
+      "span_id": "b4e692493efccace",
+      "parent_span_id": "32c71ad9c2d1c282",
+      "elapsed_ms": 7085.575,
+      "source_mode": "public_http",
+      "outcome": {
+        "reason": "DECISION_EVIDENCE_FOUND",
+        "status": "OK"
+      }
+    },
+    {
+      "name": "campaign.select_evidence",
+      "trace_id": "6d26c81de6ce90bd9e0881bb4998593e",
+      "span_id": "17076095fdd58e68",
+      "parent_span_id": "32c71ad9c2d1c282",
+      "elapsed_ms": 0.982,
+      "source_mode": "public_http",
+      "outcome": {
+        "status": "OK",
+        "evidence_hash": "f5d015d941a5b419169b6e497ec0d012e623ed2709b519b7ed339c52f9d80907"
+      }
+    },
+    {
+      "name": "campaign.write_copy",
+      "trace_id": "6d26c81de6ce90bd9e0881bb4998593e",
+      "span_id": "40f2bbbe1966b088",
+      "parent_span_id": "32c71ad9c2d1c282",
+      "elapsed_ms": 1.908,
+      "source_mode": "public_http",
+      "outcome": {
+        "status": "OK"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "6d26c81de6ce90bd9e0881bb4998593e",
+      "span_id": "7ed3bafe2d9c2dec",
+      "parent_span_id": "32c71ad9c2d1c282",
+      "elapsed_ms": 2.299,
+      "source_mode": "public_http",
+      "outcome": {
+        "status": "OK"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "6d26c81de6ce90bd9e0881bb4998593e",
+      "span_id": "c673a5815e462f49",
+      "parent_span_id": "32c71ad9c2d1c282",
+      "elapsed_ms": 1.89,
+      "source_mode": "public_http",
+      "outcome": {
+        "status": "OK"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "6d26c81de6ce90bd9e0881bb4998593e",
+      "span_id": "266f2ba5a8aa0e6a",
+      "parent_span_id": "32c71ad9c2d1c282",
+      "elapsed_ms": 0.92,
+      "source_mode": "public_http",
+      "outcome": {
+        "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+        "status": "ERROR"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "6d26c81de6ce90bd9e0881bb4998593e",
+      "span_id": "9ae1625c3ac8eaf5",
+      "parent_span_id": "32c71ad9c2d1c282",
+      "elapsed_ms": 0.869,
+      "source_mode": "public_http",
+      "outcome": {
+        "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+        "status": "ERROR"
+      }
+    },
+    {
+      "name": "campaign.eval",
+      "trace_id": "6d26c81de6ce90bd9e0881bb4998593e",
+      "span_id": "32c71ad9c2d1c282",
+      "parent_span_id": "1ccb6c52f05d816e",
+      "elapsed_ms": 7121.132,
+      "source_mode": "public_http",
+      "outcome": {
+        "status": "OK"
+      }
+    },
+    {
+      "name": "campaign.fetch",
+      "trace_id": "356cd3255a102c6070f66405a413c273",
+      "span_id": "d7b15c6fa3244a78",
+      "parent_span_id": "fff3c5bb33a7155b",
+      "elapsed_ms": 1223.938,
+      "source_mode": "public_http",
+      "outcome": {
+        "reason": "SOURCE_READ",
+        "status": "OK"
+      }
+    },
+    {
+      "name": "campaign.select_evidence",
+      "trace_id": "356cd3255a102c6070f66405a413c273",
+      "span_id": "cfa217dfb811661b",
+      "parent_span_id": "fff3c5bb33a7155b",
+      "elapsed_ms": 1.731,
+      "source_mode": "public_http",
+      "outcome": {
+        "status": "OK",
+        "evidence_hash": "d434719a739625b63a7a7dd6e78d8ec14f0a6f598e30fd8fc8b649db31f32ef4"
+      }
+    },
+    {
+      "name": "campaign.research",
+      "trace_id": "356cd3255a102c6070f66405a413c273",
+      "span_id": "fff3c5bb33a7155b",
+      "parent_span_id": "ea2dc2cf14a9827d",
+      "elapsed_ms": 2167.7,
+      "source_mode": "public_http",
+      "outcome": {
+        "reason": "DECISION_EVIDENCE_FOUND",
+        "status": "OK"
+      }
+    },
+    {
+      "name": "campaign.write_copy",
+      "trace_id": "356cd3255a102c6070f66405a413c273",
+      "span_id": "5208f8b10b665f1c",
+      "parent_span_id": "ea2dc2cf14a9827d",
+      "elapsed_ms": 6.338,
+      "source_mode": "public_http",
+      "outcome": {
+        "status": "OK"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "356cd3255a102c6070f66405a413c273",
+      "span_id": "ee1d98a26d060f2b",
+      "parent_span_id": "ea2dc2cf14a9827d",
+      "elapsed_ms": 2.351,
+      "source_mode": "public_http",
+      "outcome": {
+        "status": "OK"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "356cd3255a102c6070f66405a413c273",
+      "span_id": "ac730de21bfa3cf9",
+      "parent_span_id": "ea2dc2cf14a9827d",
+      "elapsed_ms": 1.338,
+      "source_mode": "public_http",
+      "outcome": {
+        "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+        "status": "ERROR"
+      }
+    },
+    {
+      "name": "campaign.eval",
+      "trace_id": "356cd3255a102c6070f66405a413c273",
+      "span_id": "ea2dc2cf14a9827d",
+      "parent_span_id": "cc640300f105356b",
+      "elapsed_ms": 2180.934,
+      "source_mode": "public_http",
+      "outcome": {
+        "status": "OK"
+      }
+    },
+    {
+      "name": "campaign.fetch",
+      "trace_id": "83352ce2ab1cd38c3b8d9122886e12b5",
+      "span_id": "db97bab757b63735",
+      "parent_span_id": "aebb3fea7d9a0e05",
+      "elapsed_ms": 1254.422,
+      "source_mode": "public_http",
+      "outcome": {
+        "reason": "PAGE_TOO_LARGE",
+        "status": "ERROR"
+      }
+    },
+    {
+      "name": "campaign.select_evidence",
+      "trace_id": "83352ce2ab1cd38c3b8d9122886e12b5",
+      "span_id": "3ba4c609c250bb72",
+      "parent_span_id": "aebb3fea7d9a0e05",
+      "elapsed_ms": 0.879,
+      "source_mode": "public_http",
+      "outcome": {
+        "reason": "FEATURE_EVIDENCE",
+        "status": "BLOCKED"
+      }
+    },
+    {
+      "name": "campaign.research",
+      "trace_id": "83352ce2ab1cd38c3b8d9122886e12b5",
+      "span_id": "aebb3fea7d9a0e05",
+      "parent_span_id": "03e1f61989539014",
+      "elapsed_ms": 1256.823,
+      "source_mode": "public_http",
+      "outcome": {
+        "reason": "NO_MORE_RELEVANT_SOURCES",
+        "status": "BLOCKED"
+      }
+    },
+    {
+      "name": "campaign.eval",
+      "trace_id": "83352ce2ab1cd38c3b8d9122886e12b5",
+      "span_id": "03e1f61989539014",
+      "parent_span_id": "8d5d9effa5edd52f",
+      "elapsed_ms": 1258.275,
+      "source_mode": "public_http",
+      "outcome": {
+        "reason": "SOURCE_FETCH_FAILURE",
+        "status": "ERROR"
+      }
+    },
+    {
+      "name": "campaign.fetch",
+      "trace_id": "33833c08bc83ec5f8a81f8e1f8e6974e",
+      "span_id": "32fe7ca6ae58c61e",
+      "parent_span_id": "f83ebeede2aab282",
+      "elapsed_ms": 612.446,
+      "source_mode": "public_http",
+      "outcome": {
+        "reason": "SOURCE_READ",
+        "status": "OK"
+      }
+    },
+    {
+      "name": "campaign.fetch",
+      "trace_id": "33833c08bc83ec5f8a81f8e1f8e6974e",
+      "span_id": "d1e19e16d0e9dd88",
+      "parent_span_id": "f83ebeede2aab282",
+      "elapsed_ms": 432.421,
+      "source_mode": "public_http",
+      "outcome": {
+        "reason": "SOURCE_READ",
+        "status": "OK"
+      }
+    },
+    {
+      "name": "campaign.fetch",
+      "trace_id": "33833c08bc83ec5f8a81f8e1f8e6974e",
+      "span_id": "64c9e67a12ae9e73",
+      "parent_span_id": "f83ebeede2aab282",
+      "elapsed_ms": 414.266,
+      "source_mode": "public_http",
+      "outcome": {
+        "reason": "SOURCE_READ",
+        "status": "OK"
+      }
+    },
+    {
+      "name": "campaign.fetch",
+      "trace_id": "33833c08bc83ec5f8a81f8e1f8e6974e",
+      "span_id": "22dec4eb4c4215ee",
+      "parent_span_id": "f83ebeede2aab282",
+      "elapsed_ms": 346.587,
+      "source_mode": "public_http",
+      "outcome": {
+        "reason": "SOURCE_READ",
+        "status": "OK"
+      }
+    },
+    {
+      "name": "campaign.select_evidence",
+      "trace_id": "33833c08bc83ec5f8a81f8e1f8e6974e",
+      "span_id": "6c473407248d083e",
+      "parent_span_id": "f83ebeede2aab282",
+      "elapsed_ms": 1.726,
+      "source_mode": "public_http",
+      "outcome": {
+        "status": "OK",
+        "evidence_hash": "6e9b98f0b11005bb84c090e014d1157970de5b5a7edcf5ecdd1b2e589ee00e4c"
+      }
+    },
+    {
+      "name": "campaign.research",
+      "trace_id": "33833c08bc83ec5f8a81f8e1f8e6974e",
+      "span_id": "f83ebeede2aab282",
+      "parent_span_id": "4125155b9bf78680",
+      "elapsed_ms": 3399.575,
+      "source_mode": "public_http",
+      "outcome": {
+        "reason": "DECISION_EVIDENCE_FOUND",
+        "status": "OK"
+      }
+    },
+    {
+      "name": "campaign.write_copy",
+      "trace_id": "33833c08bc83ec5f8a81f8e1f8e6974e",
+      "span_id": "f77a00976e2edf2f",
+      "parent_span_id": "4125155b9bf78680",
+      "elapsed_ms": 2.49,
+      "source_mode": "public_http",
+      "outcome": {
+        "status": "OK"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "33833c08bc83ec5f8a81f8e1f8e6974e",
+      "span_id": "912175b199cd8c2a",
+      "parent_span_id": "4125155b9bf78680",
+      "elapsed_ms": 2.092,
+      "source_mode": "public_http",
+      "outcome": {
+        "status": "OK"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "33833c08bc83ec5f8a81f8e1f8e6974e",
+      "span_id": "54e87e2e97896162",
+      "parent_span_id": "4125155b9bf78680",
+      "elapsed_ms": 1.455,
+      "source_mode": "public_http",
+      "outcome": {
+        "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+        "status": "ERROR"
+      }
+    },
+    {
+      "name": "campaign.eval",
+      "trace_id": "33833c08bc83ec5f8a81f8e1f8e6974e",
+      "span_id": "4125155b9bf78680",
+      "parent_span_id": "f48cce09f146d2c7",
+      "elapsed_ms": 3408.423,
+      "source_mode": "public_http",
+      "outcome": {
+        "status": "OK"
+      }
+    },
+    {
+      "name": "campaign.fetch",
+      "trace_id": "c01fe1477e6916bd24b5b63d93b2d166",
+      "span_id": "794bab7413771181",
+      "parent_span_id": "b10be56b9184fd07",
+      "elapsed_ms": 397.458,
+      "source_mode": "public_http",
+      "outcome": {
+        "reason": "SOURCE_READ",
+        "status": "OK"
+      }
+    },
+    {
+      "name": "campaign.select_evidence",
+      "trace_id": "c01fe1477e6916bd24b5b63d93b2d166",
+      "span_id": "b2d779be28a61627",
+      "parent_span_id": "b10be56b9184fd07",
+      "elapsed_ms": 1.203,
+      "source_mode": "public_http",
+      "outcome": {
+        "status": "OK",
+        "evidence_hash": "9f0fe890dc166f7bc6eafbaa510801f28f4e1583c0244e538607a50c5f78a50d"
+      }
+    },
+    {
+      "name": "campaign.research",
+      "trace_id": "c01fe1477e6916bd24b5b63d93b2d166",
+      "span_id": "b10be56b9184fd07",
+      "parent_span_id": "b159b17c5c0f6da9",
+      "elapsed_ms": 575.777,
+      "source_mode": "public_http",
+      "outcome": {
+        "reason": "DECISION_EVIDENCE_FOUND",
+        "status": "OK"
+      }
+    },
+    {
+      "name": "campaign.write_copy",
+      "trace_id": "c01fe1477e6916bd24b5b63d93b2d166",
+      "span_id": "dbd96e23af57527e",
+      "parent_span_id": "b159b17c5c0f6da9",
+      "elapsed_ms": 1.75,
+      "source_mode": "public_http",
+      "outcome": {
+        "status": "OK"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "c01fe1477e6916bd24b5b63d93b2d166",
+      "span_id": "ae649f86ce2c04a3",
+      "parent_span_id": "b159b17c5c0f6da9",
+      "elapsed_ms": 4.694,
+      "source_mode": "public_http",
+      "outcome": {
+        "status": "OK"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "c01fe1477e6916bd24b5b63d93b2d166",
+      "span_id": "87b03a69a1ad3825",
+      "parent_span_id": "b159b17c5c0f6da9",
+      "elapsed_ms": 0.899,
+      "source_mode": "public_http",
+      "outcome": {
+        "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+        "status": "ERROR"
+      }
+    },
+    {
+      "name": "campaign.verify",
+      "trace_id": "c01fe1477e6916bd24b5b63d93b2d166",
+      "span_id": "013dc7ba0ca6ef50",
+      "parent_span_id": "b159b17c5c0f6da9",
+      "elapsed_ms": 4.068,
+      "source_mode": "public_http",
+      "outcome": {
+        "reason": "COPY_REQUIRES_EVIDENCE_REVIEW",
+        "status": "ERROR"
+      }
+    },
+    {
+      "name": "campaign.eval",
+      "trace_id": "c01fe1477e6916bd24b5b63d93b2d166",
+      "span_id": "b159b17c5c0f6da9",
+      "parent_span_id": "e26ca1c14d5ed780",
+      "elapsed_ms": 590.099,
+      "source_mode": "public_http",
+      "outcome": {
+        "status": "OK"
+      }
+    }
+  ]
+}

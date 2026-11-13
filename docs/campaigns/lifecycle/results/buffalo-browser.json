@@ -1,0 +1,43 @@
+{
+  "cases": {
+    "menu": {
+      "status": "EXPORTED",
+      "seconds": 74.78,
+      "public_pages": 4,
+      "plan_run_id": "189f1282-e244-4206-ab22-368b51a45636",
+      "reviewed_run_id": "c8b2dd12-85d4-4764-9965-1f1e30505ec0",
+      "direction_revision_run_id": "f6342bc6-b042-4553-84a3-f53c97bb52d9",
+      "restored_run_id": "382fdc64-c018-46b1-b99c-6d3c19cdb428",
+      "restored_approval_id": "247d41ee-bc8b-4344-a8da-e4c72612359f",
+      "restored_zip_sha256": "8982611326068158db8d2c11d017bae4020867845dacaa568e1b1ad5b412da06",
+      "visited_destination": null,
+      "stale_export_http": 409,
+      "rejected_copy_http": 409,
+      "unregistered_copy_response": {
+        "detail": {
+          "code": "COPY_REQUIRES_EVIDENCE_REVIEW",
+          "fields": [
+            "message"
+          ]
+        }
+      },
+      "stale_copy_packet_rejected": false,
+      "accepted_copy_fields": [
+        "message"
+      ],
+      "reviewed_png_sha256": {
+        "portrait": "aa1f475c16884cdcfa685651d437189b759fd81dabd7e1863a5ca178381758a2",
+        "square": "6ebd511150744253876d48775e5454b29a839a3e65ee707406d66566918c1f51"
+      },
+      "restored_png_sha256": {
+        "portrait": "aa1f475c16884cdcfa685651d437189b759fd81dabd7e1863a5ca178381758a2",
+        "square": "6ebd511150744253876d48775e5454b29a839a3e65ee707406d66566918c1f51"
+      }
+    }
+  },
+  "elapsed_seconds": 90.47,
+  "campaign_runs": 4,
+  "automated_review_actions": 3,
+  "provider_usage_rows": 0,
+  "browser_errors": []
+}

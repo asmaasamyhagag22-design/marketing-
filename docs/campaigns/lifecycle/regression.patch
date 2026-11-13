@@ -1,0 +1,24 @@
+diff --git a/strategy/campaign_editions.py b/strategy/campaign_editions.py
+index adcbdb4..b4b4a52 100644
+--- a/strategy/campaign_editions.py
++++ b/strategy/campaign_editions.py
+@@ -14,3 +14,3 @@ from strategy.campaign_research import ResearchGap, same_source
+ from strategy.campaign_v2 import CampaignConflict
+-from strategy.campaign_release import release_metadata
++from strategy.campaign_release import active_release, release_metadata
+
+@@ -167,3 +167,3 @@ def edit_edition_copy(direction, edit, option):
+     ]
+-    if unsupported:
++    if unsupported and not (active_release() == "candidate" and "headline" in unsupported):
+         raise CampaignConflict("COPY_REQUIRES_EVIDENCE_REVIEW", {"fields": unsupported})
+diff --git a/strategy/campaign_planner.py b/strategy/campaign_planner.py
+index b0602ec..396959f 100644
+--- a/strategy/campaign_planner.py
++++ b/strategy/campaign_planner.py
+@@ -230,3 +230,4 @@ def research_plan(request, load, clock, *, trace=None):
+                 raise ResearchGap("SOURCE_URL_CHANGED")
+-            captured = inspect(page, clock, terms, request.objective if kind == "DISCOVERY" else "")
++            captured = inspect(page, clock, terms, request.objective
++                               if kind == "DISCOVERY" and active_release() != "candidate" else "")
+             pages.append(captured)
