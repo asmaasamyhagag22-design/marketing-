@@ -1,0 +1,52 @@
+{
+  "domain_key": "proton_me",
+  "run_id": "c38ea6ec-a2f7-449c-8053-b5773da3ea84",
+  "profile_snapshot_id": "ce4c53f0-8237-44bf-8059-e716f5bfdadf",
+  "proposal": {
+    "schema_version": 2,
+    "kind": "SOURCE_CAMPAIGN",
+    "brand_name": "proton.me",
+    "brief": null,
+    "evidence": [],
+    "status": "BLOCKED",
+    "package": null,
+    "changes": [],
+    "planner": {
+      "policy": "source-campaign-planner@1",
+      "input": {
+        "url": "https://proton.me/support/schedule-email-send",
+        "objective": "Increase visits to the Proton Mail schedule send guide",
+        "language": "en"
+      },
+      "intent": "DISCOVERY",
+      "question": "Which brand page describes the feature in the goal?",
+      "trace": [
+        {
+          "page_url": "https://proton.me/support/schedule-email-send",
+          "reason": "BRAND_ENTRY",
+          "anchor": "",
+          "outcome": "SOURCE_UNAVAILABLE",
+          "gap_after": "FEATURE_EVIDENCE"
+        }
+      ],
+      "pages": [],
+      "conflicts": [],
+      "gap": "FEATURE_EVIDENCE",
+      "missing_question": "Provide the official page explaining the feature in the goal.",
+      "stop": "NO_MORE_RELEVANT_SOURCES",
+      "page_calls": 1,
+      "elapsed_ms": 2375.73,
+      "provider_calls": 0,
+      "cost_usd": 0,
+      "brief_reviewed": false,
+      "opportunity_hypothesis": "Test whether connecting the feature to a specific action improves clicks from the proposed audience.",
+      "request_id": "a0bcf077-8c26-4a2f-b442-2b127e2cb0d1"
+    },
+    "sha256": "78b27491a429ff59191c778f3efbf476b4380bc7212ad57bb11a0bffc306117d"
+  },
+  "reason": "EVIDENCE_GAP",
+  "checked_at": "2026-11-13T08:04:16.705033+00:00",
+  "decision": null,
+  "approved": false,
+  "approval_id": null
+}

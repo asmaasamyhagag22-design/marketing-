@@ -1,0 +1,53 @@
+{
+  "model": "qwen3.5:9b",
+  "prompt_sha256": "d1543f819407d7d887d3ee783950a050b1dbf844acb36ab6d1680a58cad640e6",
+  "request_sha256": "daaef1e48d7a0e4a50ea4709b4707d2ae9b85a98dfc7d5add036fba3178e0f94",
+  "public_visits_reused": 2,
+  "model_calls": 1,
+  "elapsed_seconds": 150.16,
+  "cost_usd": 0,
+  "error": "DEADLINE",
+  "receipt": {},
+  "raw": "{\n  \"status\": \"ready\",\n  \"missing_question\": null,\n  \"audience_hypothesis\": \"Arabic-speaking web users concerned about privacy who may not realize Firefox offers built-in protection without setup.\",\n  \"alternatives\": [\n    {\n      \"action\": \"Direct traffic to the Enhanced Tracking Protection page via social media and email.\",\n      \"message\": \"تصفح الإنترنت بأمان فور فتح متصفح فايرفوكس. نحن نمنع آلاف أدوات التتبع تلقائياً دون أي إعدادات منك.\",\n      \"",
+  "parsed": null,
+  "source_blocks": [
+    {
+      "url": "https://www.firefox.com/en-US/features/",
+      "title": "Learn about Firefox features — Firefox.com"
+    },
+    {
+      "url": "https://www.firefox.com/en-US/features/protection/",
+      "heading": "Enhanced Tracking Protection",
+      "quote": "Just open Firefox and browse with protection already in place.",
+      "context": "Firefox blocks thousands of known trackers before they can follow you around the web. No setup required. Just open Firefox and browse with protection already in place. You can also see what’s being blocked by clicking the shield icon in your address bar."
+    },
+    {
+      "url": "https://www.firefox.com/en-US/features/protection/",
+      "heading": "Enhanced Tracking Protection",
+      "quote": "Firefox blocks thousands of known trackers before they can follow you around the web.",
+      "context": "Firefox blocks thousands of known trackers before they can follow you around the web. No setup required. Just open Firefox and browse with protection already in place. You can also see what’s being blocked by clicking the shield icon in your address bar."
+    },
+    {
+      "url": "https://www.firefox.com/en-US/features/protection/",
+      "heading": "Enhanced Tracking Protection",
+      "quote": "You can also see what’s being blocked by clicking the shield icon in your address bar.",
+      "context": "Firefox blocks thousands of known trackers before they can follow you around the web. No setup required. Just open Firefox and browse with protection already in place. You can also see what’s being blocked by clicking the shield icon in your address bar."
+    },
+    {
+      "url": "https://www.firefox.com/en-US/features/protection/",
+      "heading": "Total cookie protection",
+      "quote": "Cookies are one of the web’s favorite tracking tools, following you from site to site and quietly building a profile of your activity.",
+      "context": "Cookies are one of the web’s favorite tracking tools, following you from site to site and quietly building a profile of your activity. Total Cookie Protection keeps each site’s cookies separate, so companies can’t connect the dots across your browsing."
+    },
+    {
+      "url": "https://www.firefox.com/en-US/features/protection/",
+      "title": "Protection — Firefox.com"
+    }
+  ],
+  "input": {
+    "url": "https://www.firefox.com/en-US/features/",
+    "objective": "Increase visits to the Enhanced Tracking Protection explanation",
+    "language": "ar"
+  },
+  "model_digest": "56671c2ab9385f9cfcb404638e32cd62d88e3501d44822208363c010179a3c90"
+}

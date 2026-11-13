@@ -1,0 +1,12 @@
+{
+  "blender": {
+    "url": "https://docs.blender.org/manual/en/latest/grease_pencil/",
+    "objective": "Increase visits to the Grease Pencil documentation for drawing and animation",
+    "language": "en"
+  },
+  "w3c-wai": {
+    "url": "https://www.w3.org/WAI/fundamentals/accessibility-intro/",
+    "objective": "Increase visits to the web accessibility introduction for designers",
+    "language": "en"
+  }
+}

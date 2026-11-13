@@ -1,0 +1,27 @@
+{
+  "label": "REDUCED_SCOPE_DIAGNOSTIC",
+  "payload": {
+    "model": "qwen3.5:9b",
+    "think": false,
+    "stream": true,
+    "format": "json",
+    "options": {
+      "temperature": 0,
+      "num_predict": 80,
+      "num_ctx": 1024,
+      "num_thread": 2,
+      "seed": 11
+    },
+    "prompt": "Return exactly JSON {headline,cta}. Arabic. No new fact. Goal: visits to feature explanation. Source: Firefox blocks thousands of known trackers before they can follow you around the web."
+  },
+  "raw": "{\n  \"headline\": \"تصفح آمن مع Firefox: نمنع آلاف أدوات التتبع المعروفة قبل أن تتابعك عبر الويب\",\n  \"cta\": \"اكتشف كيف تحمي خصوصيتك\"\n}",
+  "receipt": {
+    "eval_count": 50,
+    "prompt_eval_count": 50,
+    "done_reason": "stop"
+  },
+  "error": null,
+  "elapsed_seconds": 83.41,
+  "model_calls": 1,
+  "cost_usd": 0
+}

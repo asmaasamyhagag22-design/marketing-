@@ -1,0 +1,291 @@
+{
+  "domain_key": "firefox_com",
+  "run_id": "c1f43c65-d24f-4d82-99ca-078317748d4c",
+  "profile_snapshot_id": "40c79078-084c-4a61-be34-4123f1a95de9",
+  "proposal": {
+    "schema_version": 2,
+    "kind": "SOURCE_CAMPAIGN",
+    "brand_name": "www.firefox.com",
+    "brief": {
+      "summary": "Firefox blocks thousands of known trackers before they can follow you around the web.",
+      "audience": "مهتمون يريدون فهم الميزة قبل اتخاذ قرار.",
+      "market": "نطاق السوق يحتاج تأكيدًا قبل النشر.",
+      "competitor": null,
+      "peer_rationale": null,
+      "source": {
+        "url": "https://www.firefox.com/en-US/features/protection/",
+        "quote": "Firefox blocks thousands of known trackers before they can follow you around the web.",
+        "scope": "Enhanced Tracking Protection"
+      },
+      "peer_source": null,
+      "objective": "Increase visits to the Enhanced Tracking Protection explanation",
+      "metric": "النقرات إلى الشرح لكل ظهور.",
+      "assumption": "الجمهور فرضية تحريرية. نختبر هل اهتمامه بالميزة يدفعه للنقر.",
+      "alternatives": [
+        {
+          "name": "شرح الميزة",
+          "plan": "ابدأ باسم الميزة ووجّه القارئ إلى شرحها الرسمي.",
+          "tradeoff": "يقلّل خطوة البحث للقارئ ويترك التقييم له."
+        },
+        {
+          "name": "قيّم الملاءمة",
+          "plan": "اطرح سؤال ملاءمة. استخدم شرح الناشر كنقطة للمقارنة.",
+          "tradeoff": "يخدم مرحلة الاختيار ويحتاج بيانات قبل ادعاء تفوّق."
+        },
+        {
+          "name": "استكشاف الموضوع",
+          "plan": "قدّم اسم الموضوع كمدخل للقراءة المفتوحة.",
+          "tradeoff": "أوسع في الاستكشاف ويستخدم نفس صفحة الشرح."
+        }
+      ],
+      "strategy_index": 0,
+      "strategy_reason": "الهدف زيارة شرح محدد. لو اختفى شرح الميزة أو تغيّر الهدف لإجراء، أعد البحث عن الوجهة.",
+      "tone": "واضحة وهادئة",
+      "directions": [
+        {
+          "name": "شرح الميزة",
+          "rationale": "ابدأ باسم الميزة ووجّه القارئ إلى شرحها الرسمي.",
+          "headline": "Enhanced Tracking Protection",
+          "message": "الدليل والشرح من موقع البراند.",
+          "cta": "اقرأ الشرح",
+          "theme": "cobalt",
+          "caption": "Enhanced Tracking Protection · الدليل والشرح من موقع البراند. اقرأ الشرح.",
+          "hook": "Enhanced Tracking Protection",
+          "shot": "يظهر سؤال الحملة فوق شكل هندسي بسيط.",
+          "middle_shot": "يظهر اسم الميزة وتظل الخلفية ثابتة.",
+          "end_shot": "تظهر بطاقة باسم البراند والدعوة."
+        },
+        {
+          "name": "قيّم الملاءمة",
+          "rationale": "اطرح سؤال ملاءمة. استخدم شرح الناشر كنقطة للمقارنة.",
+          "headline": "هل تناسب احتياجك؟",
+          "message": "Enhanced Tracking Protection",
+          "cta": "راجع تفاصيل الميزة",
+          "theme": "forest",
+          "caption": "هل تناسب احتياجك · Enhanced Tracking Protection. راجع تفاصيل الميزة.",
+          "hook": "هل تناسب احتياجك؟",
+          "shot": "يظهر سؤال الحملة فوق شكل هندسي بسيط.",
+          "middle_shot": "يظهر اسم الميزة وتظل الخلفية ثابتة.",
+          "end_shot": "تظهر بطاقة باسم البراند والدعوة."
+        },
+        {
+          "name": "استكشاف الموضوع",
+          "rationale": "قدّم اسم الموضوع كمدخل للقراءة المفتوحة.",
+          "headline": "من أين تبدأ؟",
+          "message": "Enhanced Tracking Protection",
+          "cta": "افتح صفحة الموضوع",
+          "theme": "ember",
+          "caption": "من أين تبدأ · Enhanced Tracking Protection. افتح صفحة الموضوع.",
+          "hook": "من أين تبدأ؟",
+          "shot": "يظهر سؤال الحملة فوق شكل هندسي بسيط.",
+          "middle_shot": "يظهر اسم الميزة وتظل الخلفية ثابتة.",
+          "end_shot": "تظهر بطاقة باسم البراند والدعوة."
+        }
+      ],
+      "selected": 0,
+      "human_review": [
+        "راجع الاسم الأصلي للميزة واللغة ونطاق المصدر والحقوق.",
+        "راجع الوجهة على الموبايل ووسيلة قياس النتيجة."
+      ],
+      "language": "ar",
+      "direction": "rtl"
+    },
+    "evidence": [
+      {
+        "page_url": "https://www.firefox.com/en-US/features/protection/",
+        "capture_kind": "public_http",
+        "captured_at": "2026-11-13T08:09:15.317359+00:00",
+        "body_sha256": "b18e2e05accfb7d93e7b4a893e11bfdb422854ab371fe7bfd41fa625eb8164ea",
+        "text_sha256": "d490c5161a0b2a3a25930cf75695840d01afd59bb6b1da8b9e0f3992c1a033fc",
+        "title": "Protection — Firefox.com",
+        "label": "Enhanced Tracking Protection",
+        "quote": "Firefox blocks thousands of known trackers before they can follow you around the web.",
+        "context": "Firefox blocks thousands of known trackers before they can follow you around the web. No setup required. Just open Firefox and browse with protection already in place. You can also see what’s being blocked by clicking the shield icon in your address bar.",
+        "score": 7,
+        "specificity": 0.333,
+        "scope": "Enhanced Tracking Protection",
+        "outcome": "QUOTE_OBSERVED",
+        "constraints": {
+          "basis": "FULL_SOURCE_CONTEXT",
+          "page_path": "/en-US/features/protection/",
+          "price": null,
+          "branch": null,
+          "valid_until": null,
+          "market": "UNCONFIRMED"
+        }
+      }
+    ],
+    "status": "DRAFT",
+    "package": null,
+    "changes": [],
+    "planner": {
+      "policy": "source-campaign-planner@1",
+      "input": {
+        "url": "https://www.firefox.com/en-US/features/",
+        "objective": "Increase visits to the Enhanced Tracking Protection explanation",
+        "language": "ar"
+      },
+      "intent": "DISCOVERY",
+      "question": "أين يشرح الموقع الميزة المرتبطة بالهدف؟",
+      "trace": [
+        {
+          "page_url": "https://www.firefox.com/en-US/features/",
+          "reason": "BRAND_ENTRY",
+          "anchor": "",
+          "outcome": "SOURCE_READ",
+          "candidate_count": 1,
+          "gap_after": "FEATURE_EVIDENCE"
+        },
+        {
+          "page_url": "https://www.firefox.com/en-US/features/protection/",
+          "reason": "FILL_FEATURE_GAP",
+          "anchor": "Protection",
+          "outcome": "SOURCE_READ",
+          "candidate_count": 6,
+          "gap_after": null
+        }
+      ],
+      "pages": [
+        {
+          "page_url": "https://www.firefox.com/en-US/features/",
+          "capture_kind": "public_http",
+          "captured_at": "2026-11-13T08:09:13.875232+00:00",
+          "body_sha256": "0d972188dea79e8b20c8f4461e697557a7df9f863117e76a9ef5cc6bcccee4f1",
+          "text_sha256": "f64beea17eebc7036b2a1b0be09b5c404c6729819f811e9fff9f24cb4cff4645",
+          "title": "Learn about Firefox features — Firefox.com",
+          "entries": [
+            {
+              "label": "Made by people on the internet, for people on the internet",
+              "quote": "Firefox blocks trackers automatically and protects your privacy by default, so you can browse confidently without becoming a privacy expert.",
+              "context": "Staying safe online shouldn’t demand constant attention. Firefox blocks trackers automatically and protects your privacy by default, so you can browse confidently without becoming a privacy expert.",
+              "score": 1,
+              "specificity": 1.0
+            }
+          ]
+        },
+        {
+          "page_url": "https://www.firefox.com/en-US/features/protection/",
+          "capture_kind": "public_http",
+          "captured_at": "2026-11-13T08:09:15.317359+00:00",
+          "body_sha256": "b18e2e05accfb7d93e7b4a893e11bfdb422854ab371fe7bfd41fa625eb8164ea",
+          "text_sha256": "d490c5161a0b2a3a25930cf75695840d01afd59bb6b1da8b9e0f3992c1a033fc",
+          "title": "Protection — Firefox.com",
+          "entries": [
+            {
+              "label": "Total cookie protection",
+              "quote": "Total Cookie Protection keeps each site’s cookies separate, so companies can’t connect the dots across your browsing.",
+              "context": "Cookies are one of the web’s favorite tracking tools, following you from site to site and quietly building a profile of your activity. Total Cookie Protection keeps each site’s cookies separate, so companies can’t connect the dots across your browsing.",
+              "score": 3,
+              "specificity": 0.5
+            },
+            {
+              "label": "Your online life belongs to you",
+              "quote": "Protection shouldn’t be a premium feature.",
+              "context": "Protection shouldn’t be a premium feature. With Firefox, it’s built in. We block trackers automatically, protect your privacy by default, and give you clear visibility into what’s happening behind the scenes.",
+              "score": 1,
+              "specificity": 0.5
+            },
+            {
+              "label": "Enhanced Tracking Protection",
+              "quote": "Firefox blocks thousands of known trackers before they can follow you around the web.",
+              "context": "Firefox blocks thousands of known trackers before they can follow you around the web. No setup required. Just open Firefox and browse with protection already in place. You can also see what’s being blocked by clicking the shield icon in your address bar.",
+              "score": 7,
+              "specificity": 0.333
+            },
+            {
+              "label": "Total cookie protection",
+              "quote": "Cookies are one of the web’s favorite tracking tools, following you from site to site and quietly building a profile of your activity.",
+              "context": "Cookies are one of the web’s favorite tracking tools, following you from site to site and quietly building a profile of your activity. Total Cookie Protection keeps each site’s cookies separate, so companies can’t connect the dots across your browsing.",
+              "score": 3,
+              "specificity": 0.333
+            },
+            {
+              "label": "Your online life belongs to you",
+              "quote": "We block trackers automatically, protect your privacy by default, and give you clear visibility into what’s happening behind the scenes.",
+              "context": "Protection shouldn’t be a premium feature. With Firefox, it’s built in. We block trackers automatically, protect your privacy by default, and give you clear visibility into what’s happening behind the scenes.",
+              "score": 1,
+              "specificity": 0.333
+            },
+            {
+              "label": "Enhanced Tracking Protection",
+              "quote": "You can also see what’s being blocked by clicking the shield icon in your address bar.",
+              "context": "Firefox blocks thousands of known trackers before they can follow you around the web. No setup required. Just open Firefox and browse with protection already in place. You can also see what’s being blocked by clicking the shield icon in your address bar.",
+              "score": 6,
+              "specificity": 0
+            }
+          ]
+        }
+      ],
+      "conflicts": [],
+      "gap": null,
+      "missing_question": null,
+      "stop": "DECISION_EVIDENCE_FOUND",
+      "page_calls": 2,
+      "elapsed_ms": 2695.88,
+      "provider_calls": 0,
+      "cost_usd": 0,
+      "brief_reviewed": false,
+      "opportunity_hypothesis": "اختبر هل ربط الميزة بالخطوة المطلوبة يرفع معدل النقر من الشريحة المقترحة.",
+      "request_id": "5de2714a-9c62-45a2-b337-7cf80d31f41c",
+      "options": [
+        {
+          "action": "READ_FEATURE",
+          "destination": "https://www.firefox.com/en-US/features/protection/",
+          "evidence_index": 0,
+          "name": "شرح الميزة",
+          "audience": "مهتمون يريدون فهم الميزة قبل اتخاذ قرار.",
+          "message": "ابدأ باسم الميزة ووجّه القارئ إلى شرحها الرسمي.",
+          "headline": "افهم الميزة أولًا",
+          "cta": "اقرأ الشرح",
+          "metric": "النقرات إلى الشرح لكل ظهور.",
+          "tradeoff": "يقلّل خطوة البحث للقارئ ويترك التقييم له.",
+          "theme": "cobalt"
+        },
+        {
+          "action": "COMPARE_FIT",
+          "destination": "https://www.firefox.com/en-US/features/protection/",
+          "evidence_index": 0,
+          "name": "قيّم الملاءمة",
+          "audience": "أشخاص يقارنون بدائل ويحتاجون مراجعة التفاصيل.",
+          "message": "اطرح سؤال ملاءمة. استخدم شرح الناشر كنقطة للمقارنة.",
+          "headline": "هل تناسب احتياجك؟",
+          "cta": "راجع تفاصيل الميزة",
+          "metric": "زيارات صفحة الشرح بعد النقر على سؤال المقارنة.",
+          "tradeoff": "يخدم مرحلة الاختيار ويحتاج بيانات قبل ادعاء تفوّق.",
+          "theme": "forest"
+        },
+        {
+          "action": "EXPLORE_TOPIC",
+          "destination": "https://www.firefox.com/en-US/features/protection/",
+          "evidence_index": 0,
+          "name": "استكشاف الموضوع",
+          "audience": "جمهور في مرحلة الاستكشاف الأولي.",
+          "message": "قدّم اسم الموضوع كمدخل للقراءة المفتوحة.",
+          "headline": "من أين تبدأ؟",
+          "cta": "افتح صفحة الموضوع",
+          "metric": "النقرات من مادة الاستكشاف إلى صفحة الموضوع.",
+          "tradeoff": "أوسع في الاستكشاف ويستخدم نفس صفحة الشرح.",
+          "theme": "ember"
+        }
+      ],
+      "claims": [
+        {
+          "fields": [
+            "brief.summary",
+            "package.copy.message"
+          ],
+          "evidence_index": 0,
+          "basis": "PUBLISHER_QUOTE_AND_SECTION_LABEL",
+          "semantic_review": "HUMAN_REVIEW_REQUIRED"
+        }
+      ]
+    },
+    "sha256": "9bd5d26bfc1b9d2f485eb09000c2188f5ef19f75ac182198f6038cd2a491ed29"
+  },
+  "reason": "BRIEF_REVIEW_REQUIRED",
+  "checked_at": "2026-11-13T08:09:15.564766+00:00",
+  "recheck_at": "2026-11-20T08:09:15.317359+00:00",
+  "decision": null,
+  "approved": false,
+  "approval_id": null
+}

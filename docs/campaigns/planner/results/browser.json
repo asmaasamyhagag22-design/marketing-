@@ -1,0 +1,49 @@
+{
+  "cases": {
+    "firefox": {
+      "status": "EXPORTED",
+      "seconds": 52.3,
+      "public_pages": 2,
+      "stale_export_http": 409,
+      "restored_png_sha256": {
+        "portrait": "30d157a1dbc11d7b9da41dd92b6d929bfc70c266aa2cc8ee6d4608ddf607803a",
+        "square": "76475f925af04935c771e29ce9dafa3a6560fa5e1dbfbf886bd3c70005ba939f"
+      }
+    },
+    "firefox-download": {
+      "status": "EXPORTED",
+      "seconds": 50.0,
+      "public_pages": 4,
+      "stale_export_http": 409,
+      "restored_png_sha256": {
+        "portrait": "20faef2c9bf295bc1962f313249fa82751d64685260db2e6263a18dff4a4cb92",
+        "square": "462e504ba505854c5573bbb17e28c7606c9fdda65e69b36ddb4fd846f7c55133"
+      }
+    },
+    "lego": {
+      "status": "EXPORTED",
+      "seconds": 49.47,
+      "public_pages": 4,
+      "stale_export_http": 409,
+      "restored_png_sha256": {
+        "portrait": "ec9f033b307940182d62ba9cfdc4689ff03722d756cf43fc8df4d27caa4fbaa2",
+        "square": "ae826b6907ae6f0fc9b305496048da81a244f290a57bf7be34caa748328a042c"
+      }
+    },
+    "rijksmuseum": {
+      "status": "EXPORTED",
+      "seconds": 36.31,
+      "public_pages": 2,
+      "stale_export_http": 409,
+      "restored_png_sha256": {
+        "portrait": "7a10a8d52b0b2bf2b7c000114dc64a107d91993a03f206ac2864cb983f8d0fb4",
+        "square": "93da7519003461a413514886893e034fdad11dd05d41aec55992b1d73b7708eb"
+      }
+    }
+  },
+  "elapsed_seconds": 200.28,
+  "campaign_runs": 12,
+  "automated_review_actions": 8,
+  "provider_usage_rows": 0,
+  "browser_errors": []
+}

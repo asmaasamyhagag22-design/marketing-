@@ -1,0 +1,25 @@
+{
+  "cases": {
+    "blender": {
+      "status": "BLOCKED",
+      "reason": "FEATURE_EVIDENCE",
+      "public_pages": 1,
+      "seconds": 5.96
+    },
+    "w3c-wai": {
+      "status": "EXPORTED",
+      "seconds": 47.43,
+      "public_pages": 1,
+      "stale_export_http": 409,
+      "restored_png_sha256": {
+        "portrait": "ec1e32e1e68deb2bbb727fb3ba0d15dbc95c999dbc68ee2d80c0edde72d21d37",
+        "square": "494ebd187e408d29e49b86f047b1990d9fe1c932a0d6a94265202081379472fe"
+      }
+    }
+  },
+  "elapsed_seconds": 68.22,
+  "campaign_runs": 4,
+  "automated_review_actions": 2,
+  "provider_usage_rows": 0,
+  "browser_errors": []
+}

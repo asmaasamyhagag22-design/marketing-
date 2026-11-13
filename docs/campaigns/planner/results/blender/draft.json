@@ -1,0 +1,53 @@
+{
+  "domain_key": "docs_blender_org",
+  "run_id": "cbcc4fa5-66f7-4828-8bdb-c08a3adbd53e",
+  "profile_snapshot_id": "7086ea13-341d-42d8-8b72-ac119fe39e5d",
+  "proposal": {
+    "schema_version": 2,
+    "kind": "SOURCE_CAMPAIGN",
+    "brand_name": "docs.blender.org",
+    "brief": null,
+    "evidence": [],
+    "status": "BLOCKED",
+    "package": null,
+    "changes": [],
+    "planner": {
+      "policy": "source-campaign-planner@1",
+      "input": {
+        "url": "https://docs.blender.org/manual/en/latest/grease_pencil/",
+        "objective": "Increase visits to the Grease Pencil documentation for drawing and animation",
+        "language": "en"
+      },
+      "intent": "DISCOVERY",
+      "question": "Which brand page describes the feature in the goal?",
+      "trace": [
+        {
+          "page_url": "https://docs.blender.org/manual/en/latest/grease_pencil/",
+          "reason": "BRAND_ENTRY",
+          "anchor": "",
+          "outcome": "SOURCE_UNAVAILABLE",
+          "http_status": 403,
+          "gap_after": "FEATURE_EVIDENCE"
+        }
+      ],
+      "pages": [],
+      "conflicts": [],
+      "gap": "FEATURE_EVIDENCE",
+      "missing_question": "Provide the official page explaining the feature in the goal.",
+      "stop": "NO_MORE_RELEVANT_SOURCES",
+      "page_calls": 1,
+      "elapsed_ms": 596.12,
+      "provider_calls": 0,
+      "cost_usd": 0,
+      "brief_reviewed": false,
+      "opportunity_hypothesis": "Test whether connecting the feature to a specific action improves clicks from the proposed audience.",
+      "request_id": "be0e9359-187d-4170-8c70-ae91ff74bec6"
+    },
+    "sha256": "917c8c9b1d4104d8e420b78a2f477528b8b41b407f046cf564fc1bbbe3f1a809"
+  },
+  "reason": "EVIDENCE_GAP",
+  "checked_at": "2026-11-13T08:01:13.663871+00:00",
+  "decision": null,
+  "approved": false,
+  "approval_id": null
+}

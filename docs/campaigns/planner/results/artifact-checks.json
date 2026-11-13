@@ -1,0 +1,95 @@
+{
+  "firefox": {
+    "reviewed_png": 4,
+    "minimum_margin_px": 64,
+    "minimum_gap_px": 18.0,
+    "titles_and_destinations": [
+      [
+        "Enhanced Tracking Protection",
+        "اقرأ الشرح",
+        "https://www.firefox.com/en-US/features/protection/"
+      ],
+      [
+        "هل تناسب احتياجك؟",
+        "راجع تفاصيل الميزة",
+        "https://www.firefox.com/en-US/features/protection/"
+      ]
+    ],
+    "research_ms": 2695.88,
+    "page_calls": 2,
+    "evidence_quotes": [
+      "Firefox blocks thousands of known trackers before they can follow you around the web."
+    ],
+    "zip_sha256": "ffb93cdc39e95c4fcc721d23568b2ab7d6ca06757a0387a0e6d8ae6ba428d5aa"
+  },
+  "firefox-download": {
+    "reviewed_png": 4,
+    "minimum_margin_px": 64,
+    "minimum_gap_px": 18.0,
+    "titles_and_destinations": [
+      [
+        "اختر نسخة التنزيل",
+        "اعرض خيارات التنزيل",
+        "https://www.firefox.com/en-US/download/all/"
+      ],
+      [
+        "Enhanced Tracking Protection",
+        "اقرأ الشرح",
+        "https://www.firefox.com/en-US/features/protection/"
+      ]
+    ],
+    "research_ms": 4307.71,
+    "page_calls": 4,
+    "evidence_quotes": [
+      "Firefox blocks thousands of known trackers before they can follow you around the web.",
+      "Download Firefox in English (US) and more than 90 other languages — Firefox.com"
+    ],
+    "zip_sha256": "ad2ea048bdae683123d106bd1127963516e29106855124493e429fb816636755"
+  },
+  "lego": {
+    "reviewed_png": 4,
+    "minimum_margin_px": 64,
+    "minimum_gap_px": 18.0,
+    "titles_and_destinations": [
+      [
+        "LEGO® Pick a Brick",
+        "اقرأ الشرح",
+        "https://www.lego.com/en-us/pick-and-build/pick-a-brick"
+      ],
+      [
+        "هل تناسب احتياجك؟",
+        "راجع تفاصيل الميزة",
+        "https://www.lego.com/en-us/pick-and-build/pick-a-brick"
+      ]
+    ],
+    "research_ms": 7142.61,
+    "page_calls": 4,
+    "evidence_quotes": [
+      "Whether you're searching for the perfect piece to complete your masterpiece, starting a brand-new build, or customize an existing LEGO® set, it's all possible with Pick a Brick."
+    ],
+    "zip_sha256": "50e4760aa215f67fe80d23f7e10dacb775a543c476ff3f62b7396387730a9134"
+  },
+  "rijksmuseum": {
+    "reviewed_png": 4,
+    "minimum_margin_px": 64,
+    "minimum_gap_px": 18.0,
+    "titles_and_destinations": [
+      [
+        "About Collection Online",
+        "Read the explanation",
+        "https://www.rijksmuseum.nl/en/about-collection-online"
+      ],
+      [
+        "Would it fit your needs?",
+        "Review the details",
+        "https://www.rijksmuseum.nl/en/about-collection-online"
+      ]
+    ],
+    "research_ms": 3052.88,
+    "page_calls": 2,
+    "evidence_quotes": [
+      "Use the Comparator to place artworks side by side and zoom in on the smallest details."
+    ],
+    "zip_sha256": "d3e45bad5cc4d14c5d046c3f2707895ee4eb7b8c4188526e0c2d4815ddb7a95e"
+  }
+}

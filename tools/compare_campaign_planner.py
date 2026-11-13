@@ -12,7 +12,7 @@ MODEL = "qwen3.5:9b"
 BASE = "http://127.0.0.1:11434"
 
 
-def compare(planner, prompt):
+def source_blocks(planner):
     blocks = []
     for page in planner["pages"]:
         for entry in page["entries"][:4]:
@@ -20,9 +20,13 @@ def compare(planner, prompt):
                            "quote": entry["quote"], "context": entry["context"][:650]})
         if page["title"]:
             blocks.append({"url": page["page_url"], "title": page["title"]})
+    return blocks
+
+
+def compare(inputs, blocks, page_calls, prompt):
     payload = {"model": MODEL, "think": False, "stream": True, "format": "json",
                "options": {"temperature": 0, "num_predict": 420, "num_ctx": 4096, "seed": 11},
-               "prompt": prompt + "\n" + json.dumps({"input": planner["input"], "sources": blocks}, ensure_ascii=False)}
+               "prompt": prompt + "\n" + json.dumps({"input": inputs, "sources": blocks}, ensure_ascii=False)}
     request = Request(BASE + "/api/generate", json.dumps(payload).encode(),
                       {"Content-Type": "application/json"})
     started = monotonic()
@@ -49,11 +53,11 @@ def compare(planner, prompt):
     except ValueError:
         parsed = None
     return {"model": MODEL, "prompt_sha256": sha256(prompt.encode()).hexdigest(),
-            "request_sha256": sha256(request.data).hexdigest(), "public_visits_reused": planner["page_calls"],
+            "request_sha256": sha256(request.data).hexdigest(), "public_visits_reused": page_calls,
             "model_calls": 1, "elapsed_seconds": round(monotonic() - started, 2), "cost_usd": 0,
             "error": reason or ("INCOMPLETE_JSON" if parsed is None else None),
             "receipt": receipt, "raw": text, "parsed": parsed, "source_blocks": blocks,
-            "input": planner["input"]}
+            "input": inputs}
 
 
 def main():
@@ -68,11 +72,19 @@ def main():
     model_digest = next(item["digest"] for item in tags if item["name"] == MODEL)
     for path in args.captures:
         data = json.loads(path.read_text())
-        planner = data.get("proposal", {}).get("planner") or data.get("planner") or data
-        result = compare(planner, prompt)
+        if "source_blocks" in data:
+            if data["prompt_sha256"] != sha256(prompt.encode()).hexdigest() or data["model_digest"] != model_digest:
+                raise ValueError("Frozen prompt or model digest changed")
+            result = compare(data["input"], data["source_blocks"], data["public_visits_reused"], prompt)
+            if result["request_sha256"] != data["request_sha256"]:
+                raise ValueError("Frozen request changed")
+        else:
+            planner = data.get("proposal", {}).get("planner") or data.get("planner") or data
+            result = compare(planner["input"], source_blocks(planner), planner["page_calls"], prompt)
         result["model_digest"] = model_digest
-        (args.output / path.name).write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n")
-        print(path.name, result["error"], result["elapsed_seconds"], result["receipt"], flush=True)
+        name = f"{path.parent.name}.json" if path.name == "draft.json" else path.name
+        (args.output / name).write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n")
+        print(name, result["error"], result["elapsed_seconds"], result["receipt"], flush=True)
 
 
 if __name__ == "__main__":

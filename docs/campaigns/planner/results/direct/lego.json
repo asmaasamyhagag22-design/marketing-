@@ -1,0 +1,77 @@
+{
+  "model": "qwen3.5:9b",
+  "prompt_sha256": "d1543f819407d7d887d3ee783950a050b1dbf844acb36ab6d1680a58cad640e6",
+  "request_sha256": "8f2f6c298fe9b680e7d6b063095bfa0e22cfc826d30269f1874b54294ce3257e",
+  "public_visits_reused": 4,
+  "model_calls": 1,
+  "elapsed_seconds": 150.11,
+  "cost_usd": 0,
+  "error": "TimeoutError",
+  "receipt": {},
+  "raw": "",
+  "parsed": null,
+  "source_blocks": [
+    {
+      "url": "https://www.lego.com/en-us/pick-and-build",
+      "heading": "Bricks and Pieces",
+      "quote": "Explore Pick a Brick inspiration , browse the collection of mini-builds or take a look at what bricks and pieces are trending here.",
+      "context": "If you’re looking to create something truly unique, or wanting to customise an existing build, Bricks and Pieces is your go-to destination! Discover an extensive selection of individual bricks and minifigure pieces to mix, match, and create your next masterpiece. Whether you're a seasoned builder or just starting your LEGO® journey, you'll find everything you need right here. Explore Pick a Brick inspiration , browse the collection of mini-builds or take a look at what bricks and pieces are trending here."
+    },
+    {
+      "url": "https://www.lego.com/en-us/pick-and-build",
+      "heading": "What is the largest LEGO piece available?",
+      "quote": "If you're looking to add this piece to your build, search for the element ID 6421400 on Pick a Brick.",
+      "context": "Outside of the baseplates, the largest LEGO piece is the Boat Hull, which measures an impressive 28 x 8 x 3 in studs. This large piece provides a solid foundation for creating intricate boat designs and adds significant size to any LEGO build! If you're looking to add this piece to your build, search for the element ID 6421400 on Pick a Brick."
+    },
+    {
+      "url": "https://www.lego.com/en-us/pick-and-build",
+      "heading": "Bricks and Pieces",
+      "quote": "If you’re looking to create something truly unique, or wanting to customise an existing build, Bricks and Pieces is your go-to destination!",
+      "context": "If you’re looking to create something truly unique, or wanting to customise an existing build, Bricks and Pieces is your go-to destination! Discover an extensive selection of individual bricks and minifigure pieces to mix, match, and create your next masterpiece. Whether you're a seasoned builder or just starting your LEGO® journey, you'll find everything you need right here. Explore Pick a Brick inspiration , browse the collection of mini-builds or take a look at what bricks and pieces are trending here."
+    },
+    {
+      "url": "https://www.lego.com/en-us/pick-and-build",
+      "heading": "Bricks and Pieces",
+      "quote": "Discover an extensive selection of individual bricks and minifigure pieces to mix, match, and create your next masterpiece.",
+      "context": "If you’re looking to create something truly unique, or wanting to customise an existing build, Bricks and Pieces is your go-to destination! Discover an extensive selection of individual bricks and minifigure pieces to mix, match, and create your next masterpiece. Whether you're a seasoned builder or just starting your LEGO® journey, you'll find everything you need right here. Explore Pick a Brick inspiration , browse the collection of mini-builds or take a look at what bricks and pieces are trending here."
+    },
+    {
+      "url": "https://www.lego.com/en-us/pick-and-build",
+      "title": "LEGO® Bricks, Pieces and Minifigures | Official LEGO® Shop US"
+    },
+    {
+      "url": "https://www.lego.com/en-us/pick-and-build/pick-a-brick",
+      "heading": "LEGO® Pick a Brick",
+      "quote": "Whether you're searching for the perfect piece to complete your masterpiece, starting a brand-new build, or customize an existing LEGO® set, it's all possible with Pick a Brick.",
+      "context": "Unleash your creativity and bring your ideas to life with LEGO® Pick a Brick! Whether you're searching for the perfect piece to complete your masterpiece, starting a brand-new build, or customize an existing LEGO® set, it's all possible with Pick a Brick. Our extensive selection of bricks, plates, tiles, minifigure pieces and more has everything you need. Looking for something specific? You can easily browse by piece type, color , and more so you can find the perfect brick for your next creation. There’s no limit to what you can build!"
+    },
+    {
+      "url": "https://www.lego.com/en-us/pick-and-build/pick-a-brick",
+      "heading": "LEGO® Pick a Brick",
+      "quote": "Unleash your creativity and bring your ideas to life with LEGO® Pick a Brick!",
+      "context": "Unleash your creativity and bring your ideas to life with LEGO® Pick a Brick! Whether you're searching for the perfect piece to complete your masterpiece, starting a brand-new build, or customize an existing LEGO® set, it's all possible with Pick a Brick. Our extensive selection of bricks, plates, tiles, minifigure pieces and more has everything you need. Looking for something specific? You can easily browse by piece type, color , and more so you can find the perfect brick for your next creation. There’s no limit to what you can build!"
+    },
+    {
+      "url": "https://www.lego.com/en-us/pick-and-build/pick-a-brick",
+      "heading": "LEGO® Pick a Brick",
+      "quote": "Our extensive selection of bricks, plates, tiles, minifigure pieces and more has everything you need.",
+      "context": "Unleash your creativity and bring your ideas to life with LEGO® Pick a Brick! Whether you're searching for the perfect piece to complete your masterpiece, starting a brand-new build, or customize an existing LEGO® set, it's all possible with Pick a Brick. Our extensive selection of bricks, plates, tiles, minifigure pieces and more has everything you need. Looking for something specific? You can easily browse by piece type, color , and more so you can find the perfect brick for your next creation. There’s no limit to what you can build!"
+    },
+    {
+      "url": "https://www.lego.com/en-us/pick-and-build/pick-a-brick",
+      "heading": "LEGO® Pick a Brick",
+      "quote": "You can easily browse by piece type, color , and more so you can find the perfect brick for your next creation.",
+      "context": "Unleash your creativity and bring your ideas to life with LEGO® Pick a Brick! Whether you're searching for the perfect piece to complete your masterpiece, starting a brand-new build, or customize an existing LEGO® set, it's all possible with Pick a Brick. Our extensive selection of bricks, plates, tiles, minifigure pieces and more has everything you need. Looking for something specific? You can easily browse by piece type, color , and more so you can find the perfect brick for your next creation. There’s no limit to what you can build!"
+    },
+    {
+      "url": "https://www.lego.com/en-us/pick-and-build/pick-a-brick",
+      "title": "LEGO® Pick a Brick | Official LEGO® Shop US"
+    }
+  ],
+  "input": {
+    "url": "https://www.lego.com/en-us/pick-and-build",
+    "objective": "Increase visits to the Pick a Brick catalog to find a piece for a build",
+    "language": "ar"
+  },
+  "model_digest": "56671c2ab9385f9cfcb404638e32cd62d88e3501d44822208363c010179a3c90"
+}

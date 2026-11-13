@@ -1,0 +1,15 @@
+{
+  "cases": {
+    "proton-mail": {
+      "status": "BLOCKED",
+      "reason": "FEATURE_EVIDENCE",
+      "public_pages": 1,
+      "seconds": 5.35
+    }
+  },
+  "elapsed_seconds": 17.41,
+  "campaign_runs": 1,
+  "automated_review_actions": 0,
+  "provider_usage_rows": 0,
+  "browser_errors": []
+}

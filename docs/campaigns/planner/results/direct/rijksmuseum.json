@@ -1,0 +1,53 @@
+{
+  "model": "qwen3.5:9b",
+  "prompt_sha256": "d1543f819407d7d887d3ee783950a050b1dbf844acb36ab6d1680a58cad640e6",
+  "request_sha256": "28dc1f4cbf1186f8f2e00f454836046cbf34c7d5a4f094bfa6b32eb7032f8a81",
+  "public_visits_reused": 2,
+  "model_calls": 1,
+  "elapsed_seconds": 150.01,
+  "cost_usd": 0,
+  "error": "DEADLINE",
+  "receipt": {},
+  "raw": "{\n  \"status\": \"ready\",\n  \"missing_question\":",
+  "parsed": null,
+  "source_blocks": [
+    {
+      "url": "https://www.rijksmuseum.nl/en/collection",
+      "title": "Collection - Rijksmuseum"
+    },
+    {
+      "url": "https://www.rijksmuseum.nl/en/about-collection-online",
+      "heading": "About Collection Online",
+      "quote": "Use the Comparator to place artworks side by side and zoom in on the smallest details.",
+      "context": "Discover & Create For instance, create your own Collections , which automatically generate an interactive video clip featuring your selected artworks. Use the Comparator to place artworks side by side and zoom in on the smallest details. What will you discover? Share your findings with the rest of the world. Visitors are also welcomed into My Gallery of Honour , a virtual space inspired by the Rijksmuseum's most iconic room. Curate your own Gallery of Honour and tell your story in this legendary setting. Thanks to the Art Explorer , exploring the collection has become even more accessible. This new AI-powered tool invites visitors to answer t"
+    },
+    {
+      "url": "https://www.rijksmuseum.nl/en/about-collection-online",
+      "heading": "About Collection Online",
+      "quote": "With the launch of the new Online Collection, the Rijksmuseum brings art and history closer than ever.",
+      "context": "With the launch of the new Online Collection, the Rijksmuseum brings art and history closer than ever. This innovative platform opens a world of beauty and knowledge, where images, archival sources, stories, and research come together."
+    },
+    {
+      "url": "https://www.rijksmuseum.nl/en/about-collection-online",
+      "heading": "About Collection Online",
+      "quote": "The introduction of the new Online Collection marks another step in the Rijksmuseum's important mission: making art and heritage accessible to everyone.",
+      "context": "The introduction of the new Online Collection marks another step in the Rijksmuseum's important mission: making art and heritage accessible to everyone. Through an innovative search bar and hundreds of automatically generated theme pages, you step into a treasure trove of art, history, and knowledge. The possibilities are endless."
+    },
+    {
+      "url": "https://www.rijksmuseum.nl/en/about-collection-online",
+      "heading": "About Collection Online",
+      "quote": "Linked Open Data The Online Collection uses Linked Open Data, making art and knowledge available in a structured and accessible way.",
+      "context": "Linked Open Data The Online Collection uses Linked Open Data, making art and knowledge available in a structured and accessible way. The platform continues to grow with new images, data, and an expanding range of collection sources. The Rijksmuseum offers renewed open data services, enabling the collection to be easily used in personal applications via open APIs. All freely available works can be downloaded in high resolution for both personal and commercial use."
+    },
+    {
+      "url": "https://www.rijksmuseum.nl/en/about-collection-online",
+      "title": "about-collection-online - Rijksmuseum"
+    }
+  ],
+  "input": {
+    "url": "https://www.rijksmuseum.nl/en/collection",
+    "objective": "Increase visits to the Collection Online Comparator explanation",
+    "language": "en"
+  },
+  "model_digest": "56671c2ab9385f9cfcb404638e32cd62d88e3501d44822208363c010179a3c90"
+}

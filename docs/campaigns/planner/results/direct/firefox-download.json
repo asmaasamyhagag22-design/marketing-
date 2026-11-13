@@ -1,0 +1,105 @@
+{
+  "model": "qwen3.5:9b",
+  "prompt_sha256": "d1543f819407d7d887d3ee783950a050b1dbf844acb36ab6d1680a58cad640e6",
+  "request_sha256": "216392bbab28d3db504af1477ee738778b8d48d6f128c1d482d089434a5f82e5",
+  "public_visits_reused": 4,
+  "model_calls": 1,
+  "elapsed_seconds": 150.1,
+  "cost_usd": 0,
+  "error": "TimeoutError",
+  "receipt": {},
+  "raw": "",
+  "parsed": null,
+  "source_blocks": [
+    {
+      "url": "https://www.firefox.com/en-US/features/",
+      "heading": "Keep up with all things Firefox",
+      "quote": "Get how-tos, advice and news to make your Firefox experience work best for you.",
+      "context": "Get how-tos, advice and news to make your Firefox experience work best for you."
+    },
+    {
+      "url": "https://www.firefox.com/en-US/features/",
+      "heading": "Browse with features that put you first",
+      "quote": "Firefox was built to give you control.",
+      "context": "Most browsers were built to capture your attention and monetize your data. Firefox was built to give you control."
+    },
+    {
+      "url": "https://www.firefox.com/en-US/features/",
+      "heading": "Made by people on the internet, for people on the internet",
+      "quote": "Firefox blocks trackers automatically and protects your privacy by default, so you can browse confidently without becoming a privacy expert.",
+      "context": "Staying safe online shouldn’t demand constant attention. Firefox blocks trackers automatically and protects your privacy by default, so you can browse confidently without becoming a privacy expert."
+    },
+    {
+      "url": "https://www.firefox.com/en-US/features/",
+      "heading": "Made by people on the internet, for people on the internet",
+      "quote": "Firefox gives you real choices without burying you in settings.",
+      "context": "Firefox gives you real choices without burying you in settings. Choose your tools, customize your experience, and decide how your browser works, instead of adapting to someone else’s defaults."
+    },
+    {
+      "url": "https://www.firefox.com/en-US/features/",
+      "title": "Learn about Firefox features — Firefox.com"
+    },
+    {
+      "url": "https://www.firefox.com/en-US/download/all/",
+      "heading": "Choose which Firefox Browser to download in your language",
+      "quote": "That’s why — with the help of dedicated volunteers around the world — we make Firefox available in more than 90 languages.",
+      "context": "Everyone deserves access to the internet — your language should never be a barrier. That’s why — with the help of dedicated volunteers around the world — we make Firefox available in more than 90 languages."
+    },
+    {
+      "url": "https://www.firefox.com/en-US/download/all/",
+      "heading": "Firefox",
+      "quote": "The standard Firefox browser — fast and private.",
+      "context": "The standard Firefox browser — fast and private. If you’re not sure which Firefox to choose, choose this."
+    },
+    {
+      "url": "https://www.firefox.com/en-US/download/all/",
+      "heading": "Firefox",
+      "quote": "If you’re not sure which Firefox to choose, choose this.",
+      "context": "The standard Firefox browser — fast and private. If you’re not sure which Firefox to choose, choose this."
+    },
+    {
+      "url": "https://www.firefox.com/en-US/download/all/",
+      "heading": "Firefox Beta",
+      "quote": "Get a sneak peek at the latest Firefox browser features before they’re released.",
+      "context": "Get a sneak peek at the latest Firefox browser features before they’re released."
+    },
+    {
+      "url": "https://www.firefox.com/en-US/download/all/",
+      "title": "Download Firefox in English (US) and more than 90 other languages — Firefox.com"
+    },
+    {
+      "url": "https://www.firefox.com/en-US/features/protection/",
+      "heading": "Total cookie protection",
+      "quote": "Cookies are one of the web’s favorite tracking tools, following you from site to site and quietly building a profile of your activity.",
+      "context": "Cookies are one of the web’s favorite tracking tools, following you from site to site and quietly building a profile of your activity. Total Cookie Protection keeps each site’s cookies separate, so companies can’t connect the dots across your browsing."
+    },
+    {
+      "url": "https://www.firefox.com/en-US/features/protection/",
+      "heading": "Enhanced Tracking Protection",
+      "quote": "Just open Firefox and browse with protection already in place.",
+      "context": "Firefox blocks thousands of known trackers before they can follow you around the web. No setup required. Just open Firefox and browse with protection already in place. You can also see what’s being blocked by clicking the shield icon in your address bar."
+    },
+    {
+      "url": "https://www.firefox.com/en-US/features/protection/",
+      "heading": "Total cookie protection",
+      "quote": "Total Cookie Protection keeps each site’s cookies separate, so companies can’t connect the dots across your browsing.",
+      "context": "Cookies are one of the web’s favorite tracking tools, following you from site to site and quietly building a profile of your activity. Total Cookie Protection keeps each site’s cookies separate, so companies can’t connect the dots across your browsing."
+    },
+    {
+      "url": "https://www.firefox.com/en-US/features/protection/",
+      "heading": "Your online life belongs to you",
+      "quote": "Protection shouldn’t be a premium feature.",
+      "context": "Protection shouldn’t be a premium feature. With Firefox, it’s built in. We block trackers automatically, protect your privacy by default, and give you clear visibility into what’s happening behind the scenes."
+    },
+    {
+      "url": "https://www.firefox.com/en-US/features/protection/",
+      "title": "Protection — Firefox.com"
+    }
+  ],
+  "input": {
+    "url": "https://www.firefox.com/en-US/features/",
+    "objective": "Increase Firefox downloads for people concerned about Enhanced Tracking Protection",
+    "language": "ar"
+  },
+  "model_digest": "56671c2ab9385f9cfcb404638e32cd62d88e3501d44822208363c010179a3c90"
+}

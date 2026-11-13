@@ -1,0 +1,118 @@
+{
+  "domain_key": "lego_com",
+  "run_id": "1d647d56-fcc1-4eca-bf5a-7de03256ccf9",
+  "profile_snapshot_id": "474b531a-9786-4d70-89ec-72aaab0864ba",
+  "proposal": {
+    "schema_version": 2,
+    "kind": "SOURCE_CAMPAIGN",
+    "brand_name": "www.lego.com",
+    "brief": null,
+    "evidence": [],
+    "status": "BLOCKED",
+    "package": null,
+    "changes": [],
+    "planner": {
+      "policy": "source-campaign-planner@1",
+      "input": {
+        "url": "https://www.lego.com/en-us/pick-and-build",
+        "objective": "Increase visits to the Collection Online Comparator explanation",
+        "language": "en"
+      },
+      "intent": "DISCOVERY",
+      "question": "Which brand page describes the feature in the goal?",
+      "trace": [
+        {
+          "page_url": "https://www.lego.com/en-us/pick-and-build",
+          "reason": "BRAND_ENTRY",
+          "anchor": "",
+          "outcome": "SOURCE_READ",
+          "candidate_count": 3,
+          "gap_after": "FEATURE_EVIDENCE"
+        },
+        {
+          "page_url": "https://www.lego.com/en-us/themes/nike",
+          "reason": "FILL_FEATURE_GAP",
+          "anchor": "Nike x LEGO® Collection",
+          "outcome": "SOURCE_READ",
+          "candidate_count": 0,
+          "gap_after": "FEATURE_EVIDENCE"
+        },
+        {
+          "page_url": "https://www.lego.com/en-us/product/nike-x-lego-collection-jacket-5009949",
+          "reason": "FILL_FEATURE_GAP",
+          "anchor": "Nike x LEGO® Collection Jacket",
+          "outcome": "SOURCE_UNAVAILABLE",
+          "http_status": 403,
+          "gap_after": "FEATURE_EVIDENCE"
+        },
+        {
+          "page_url": "https://www.lego.com/en-us/product/nike-x-lego-collection-t-shirt-5010037",
+          "reason": "FILL_FEATURE_GAP",
+          "anchor": "NIKE x LEGO® Collection T-Shirt",
+          "outcome": "SOURCE_UNAVAILABLE",
+          "http_status": 403,
+          "gap_after": "FEATURE_EVIDENCE"
+        }
+      ],
+      "pages": [
+        {
+          "page_url": "https://www.lego.com/en-us/pick-and-build",
+          "capture_kind": "public_http",
+          "captured_at": "2026-11-13T07:56:41.731713+00:00",
+          "body_sha256": "2cb2011e1c392cee571c5a7984ce7e4855dad51909957f4466a0133a9cb420d7",
+          "text_sha256": "b6a26e0b96666ce3fa16284b75d87f7ca34efe7694d2538d29ed2ee636404fb7",
+          "title": "LEGO® Bricks, Pieces and Minifigures | Official LEGO® Shop US",
+          "entries": [
+            {
+              "label": "Bricks and Pieces",
+              "quote": "Explore Pick a Brick inspiration , browse the collection of mini-builds or take a look at what bricks and pieces are trending here.",
+              "context": "If you’re looking to create something truly unique, or wanting to customise an existing build, Bricks and Pieces is your go-to destination! Discover an extensive selection of individual bricks and minifigure pieces to mix, match, and create your next masterpiece. Whether you're a seasoned builder or just starting your LEGO® journey, you'll find everything you need right here. Explore Pick a Brick inspiration , browse the collection of mini-builds or take a look at what bricks and pieces are trending here.",
+              "score": 1,
+              "specificity": 1.0
+            },
+            {
+              "label": "What is Pick and Build?",
+              "quote": "The popular Pick a Brick and Build a Minifigure experiences are now available online, as well as in-store.",
+              "context": "LEGO® Pick and Build is the one-stop shop for browsing individual LEGO® bricks and customizing minifigures. The popular Pick a Brick and Build a Minifigure experiences are now available online, as well as in-store.",
+              "score": 1,
+              "specificity": 0.5
+            },
+            {
+              "label": "What is Pick and Build?",
+              "quote": "Now you can enjoy the same in-store experience online with ease!",
+              "context": "If you visited one of our local LEGO Stores , you may think of the Pick & Build walls! Builders can choose from a variety of colors, elements, and shapes of LEGO bricks. Now you can enjoy the same in-store experience online with ease!",
+              "score": 1,
+              "specificity": 0.5
+            }
+          ]
+        },
+        {
+          "page_url": "https://www.lego.com/en-us/themes/nike",
+          "capture_kind": "public_http",
+          "captured_at": "2026-11-13T07:56:46.523359+00:00",
+          "body_sha256": "46046ed74d84c62d8ce9743cfdff7ce05f156395aa79e2a66b5c3ca02bd91c5d",
+          "text_sha256": "0bfee70a6a3eb28fc31341e00078071e9b03404f78eca1304e189f5e72009a85",
+          "title": "LEGO® Nike sets | Official LEGO® Shop US",
+          "entries": []
+        }
+      ],
+      "conflicts": [],
+      "gap": "FEATURE_EVIDENCE",
+      "missing_question": "Provide the official page explaining the feature in the goal.",
+      "stop": "BUDGET_EXHAUSTED",
+      "page_calls": 4,
+      "elapsed_ms": 9757.21,
+      "provider_calls": 0,
+      "cost_usd": 0,
+      "brief_reviewed": false,
+      "opportunity_hypothesis": "Test whether connecting the feature to a specific action improves clicks from the proposed audience.",
+      "request_id": "abe564e7-ac77-4f04-9a2d-7749a7aa7c80"
+    },
+    "sha256": "0ee1d5aefcc9e3c7b9f247a034d9e51feddfdef74792a9a566c8b37fa3fb1d75"
+  },
+  "reason": "EVIDENCE_GAP",
+  "checked_at": "2026-11-13T07:56:48.951711+00:00",
+  "decision": null,
+  "approved": false,
+  "approval_id": null
+}
